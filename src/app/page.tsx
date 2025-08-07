@@ -12,7 +12,6 @@ import { Input } from "@/components/ui/input"
 import type { StockItem } from "@/lib/types"
 import { StatCard } from "@/components/stat-card"
 import { StockTable } from "@/components/stock-table"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useState, useEffect } from "react"
 import { listenToStockItems, addStockItem, updateStockItem, deleteStockItem } from "@/services/stockService"
 
@@ -40,12 +39,6 @@ export default function Home() {
     return acc + item.currentStock * item.costPrice;
   }, 0);
 
-  const years = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i);
-  const months = [
-    'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 
-    'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
-  ];
-  
   const categories = [...new Set(stockItems.map(item => item.category))];
 
   return (
@@ -54,28 +47,6 @@ export default function Home() {
         <div className="flex items-center gap-2">
             <Leaf className="h-6 w-6 text-primary" />
             <h1 className="text-xl font-bold tracking-tight font-headline">ผู้จัดการสต็อกสินค้าเกษตร</h1>
-        </div>
-        <div className="ml-4 flex items-center gap-2">
-            <Select defaultValue={new Date().getFullYear().toString()}>
-              <SelectTrigger className="w-[100px]">
-                <SelectValue placeholder="เลือกปี" />
-              </SelectTrigger>
-              <SelectContent>
-                {years.map(year => (
-                  <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select defaultValue={(new Date().getMonth()).toString()}>
-              <SelectTrigger className="w-[120px]">
-                <SelectValue placeholder="เลือกเดือน" />
-              </SelectTrigger>
-              <SelectContent>
-                {months.map((month, index) => (
-                  <SelectItem key={month} value={index.toString()}>{month}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
         </div>
         <div className="relative ml-auto flex-1 md:grow-0">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
