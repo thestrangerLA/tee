@@ -126,7 +126,6 @@ export function StockTable({ data, setData, categories }: { data: StockItem[], s
               <TableHead className="text-right text-red-600">ราคาต้นทุน</TableHead>
               <TableHead className="text-right text-green-600">ราคาขายส่ง</TableHead>
               <TableHead className="text-right text-purple-600">ราคาขายปลีก</TableHead>
-              <TableHead className="text-right text-orange-600">สต็อกเปิด</TableHead>
               <TableHead className="text-right w-[120px] text-cyan-600">สต็อกปัจจุบัน</TableHead>
               <TableHead className="text-right text-fuchsia-600">มูลค่า</TableHead>
               <TableHead>
@@ -140,7 +139,7 @@ export function StockTable({ data, setData, categories }: { data: StockItem[], s
                 return (
                 <React.Fragment key={category}>
                     <TableRow className={cn("cursor-pointer", getCategoryColor(category))} onClick={() => toggleCategory(category)}>
-                         <TableCell colSpan={8} className="p-2">
+                         <TableCell colSpan={7} className="p-2">
                             <div className="flex items-center gap-2">
                                 {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                                 <span className="font-semibold">{category}</span>
@@ -184,14 +183,6 @@ export function StockTable({ data, setData, categories }: { data: StockItem[], s
                                     step="0.01"
                                     defaultValue={item.sellingPrice}
                                     onBlur={(e) => handleFieldChange(item.id, 'sellingPrice', parseFloat(e.target.value) || 0)}
-                                    className="h-8 w-24 text-right"
-                                />
-                            </TableCell>
-                            <TableCell className="text-right p-2">
-                                <Input
-                                    type="number"
-                                    defaultValue={item.openingStock}
-                                    onBlur={(e) => handleFieldChange(item.id, 'openingStock', parseInt(e.target.value, 10) || 0)}
                                     className="h-8 w-24 text-right"
                                 />
                             </TableCell>

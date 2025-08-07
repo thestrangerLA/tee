@@ -20,7 +20,7 @@ import { useState } from "react"
 type AddItemDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAddItem: (item: Omit<StockItem, 'id'>) => void;
+  onAddItem: (item: Omit<StockItem, 'id' | 'openingStock'>) => void;
   categories: string[];
 }
 
@@ -31,12 +31,11 @@ export function AddItemDialog({ open, onOpenChange, onAddItem, categories }: Add
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
-        const openingStock = parseInt(formData.get('openingStock') as string, 10) || 0;
+        const currentStock = parseInt(formData.get('currentStock') as string, 10) || 0;
         const newItem: Omit<StockItem, 'id'> = {
             name: formData.get('name') as string,
             category: selectedCategory,
-            openingStock: openingStock,
-            currentStock: openingStock,
+            currentStock: currentStock,
             costPrice: parseFloat(formData.get('costPrice') as string) || 0,
             wholesalePrice: parseFloat(formData.get('wholesalePrice') as string) || 0,
             sellingPrice: parseFloat(formData.get('sellingPrice') as string) || 0,
@@ -92,8 +91,8 @@ export function AddItemDialog({ open, onOpenChange, onAddItem, categories }: Add
                     </Select>
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="openingStock" className="text-right">สต็อกเปิด</Label>
-                    <Input id="openingStock" name="openingStock" type="number" placeholder="0" className="col-span-3" required />
+                    <Label htmlFor="currentStock" className="text-right">สต็อกปัจจุบัน</Label>
+                    <Input id="currentStock" name="currentStock" type="number" placeholder="0" className="col-span-3" required />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="costPrice" className="text-right">ราคาต้นทุน</Label>

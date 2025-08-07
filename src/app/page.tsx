@@ -15,23 +15,28 @@ import { StockTable } from "@/components/stock-table"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useState } from "react"
 
-const initialStockItems: StockItem[] = [
-    { id: 'PROD001', name: 'ปุ๋ยตรากระต่าย สูตร 16-16-16', category: 'ปุ๋ย', openingStock: 100, currentStock: 100, costPrice: 450, wholesalePrice: 500, sellingPrice: 550 },
-    { id: 'PROD002', name: 'เมล็ดพันธุ์ผักกาดขาว', category: 'เมล็ดพันธุ์', openingStock: 500, currentStock: 500, costPrice: 10, wholesalePrice: 15, sellingPrice: 20 },
-    { id: 'PROD003', name: 'ยาฆ่าแมลง (ไซเปอร์เมทริน)', category: 'ยาพืช', openingStock: 50, currentStock: 50, costPrice: 120, wholesalePrice: 140, sellingPrice: 160 },
-    { id: 'PROD004', name: 'จอบ', category: 'อุปกรณ์', openingStock: 80, currentStock: 80, costPrice: 80, wholesalePrice: 95, sellingPrice: 120 },
-    { id: 'PROD005', name: 'ปุ๋ยยูเรีย 46-0-0', category: 'ปุ๋ย', openingStock: 120, currentStock: 120, costPrice: 550, wholesalePrice: 600, sellingPrice: 680 },
-    { id: 'PROD006', name: 'เมล็ดข้าวโพด', category: 'เมล็ดพันธุ์', openingStock: 1000, currentStock: 1000, costPrice: 5, wholesalePrice: 8, sellingPrice: 12 },
-    { id: 'PROD007', name: 'บัวรดน้ำ', category: 'อุปกรณ์', openingStock: 150, currentStock: 150, costPrice: 45, wholesalePrice: 55, sellingPrice: 70 },
-    { id: 'PROD008', name: 'ยาคุมหญ้า (ไกลโฟเซต)', category: 'ยาพืช', openingStock: 60, currentStock: 60, costPrice: 150, wholesalePrice: 170, sellingPrice: 200 },
-    { id: 'PROD009', name: 'ข้าวหอมมะลิ', category: 'ข้าว', openingStock: 200, currentStock: 200, costPrice: 35, wholesalePrice: 40, sellingPrice: 45 },
-    { id: 'PROD010', name: 'หัวอาหารไก่', category: 'หัวอาหาร', openingStock: 300, currentStock: 300, costPrice: 250, wholesalePrice: 280, sellingPrice: 320 },
-    { id: 'PROD011', name: 'วิตามินรวมสำหรับพืช', category: 'วิตามิน', openingStock: 100, currentStock: 100, costPrice: 80, wholesalePrice: 90, sellingPrice: 110 },
-    { id: 'PROD012', name: 'ยาถ่ายพยาธิสุนัข', category: 'ยาสัตว์', openingStock: 40, currentStock: 40, costPrice: 50, wholesalePrice: 60, sellingPrice: 75 },
+const initialStockItems: Omit<StockItem, 'id'>[] = [
+    { name: 'ปุ๋ยตรากระต่าย สูตร 16-16-16', category: 'ปุ๋ย', currentStock: 100, costPrice: 450, wholesalePrice: 500, sellingPrice: 550 },
+    { name: 'เมล็ดพันธุ์ผักกาดขาว', category: 'เมล็ดพันธุ์', currentStock: 500, costPrice: 10, wholesalePrice: 15, sellingPrice: 20 },
+    { name: 'ยาฆ่าแมลง (ไซเปอร์เมทริน)', category: 'ยาพืช', currentStock: 50, costPrice: 120, wholesalePrice: 140, sellingPrice: 160 },
+    { name: 'จอบ', category: 'อุปกรณ์', currentStock: 80, costPrice: 80, wholesalePrice: 95, sellingPrice: 120 },
+    { name: 'ปุ๋ยยูเรีย 46-0-0', category: 'ปุ๋ย', currentStock: 120, costPrice: 550, wholesalePrice: 600, sellingPrice: 680 },
+    { name: 'เมล็ดข้าวโพด', category: 'เมล็ดพันธุ์', currentStock: 1000, costPrice: 5, wholesalePrice: 8, sellingPrice: 12 },
+    { name: 'บัวรดน้ำ', category: 'อุปกรณ์', currentStock: 150, costPrice: 45, wholesalePrice: 55, sellingPrice: 70 },
+    { name: 'ยาคุมหญ้า (ไกลโฟเซต)', category: 'ยาพืช', currentStock: 60, costPrice: 150, wholesalePrice: 170, sellingPrice: 200 },
+    { name: 'ข้าวหอมมะลิ', category: 'ข้าว', currentStock: 200, costPrice: 35, wholesalePrice: 40, sellingPrice: 45 },
+    { name: 'หัวอาหารไก่', category: 'หัวอาหาร', currentStock: 300, costPrice: 250, wholesalePrice: 280, sellingPrice: 320 },
+    { name: 'วิตามินรวมสำหรับพืช', category: 'วิตามิน', currentStock: 100, costPrice: 80, wholesalePrice: 90, sellingPrice: 110 },
+    { name: 'ยาถ่ายพยาธิสุนัข', category: 'ยาสัตว์', currentStock: 40, costPrice: 50, wholesalePrice: 60, sellingPrice: 75 },
 ];
 
+const initialStockItemsWithId: StockItem[] = initialStockItems.map((item, index) => ({
+    ...item,
+    id: `PROD${(Date.now() + index).toString(36)}`,
+}));
+
 export default function Home() {
-  const [stockItems, setStockItems] = useState<StockItem[]>(initialStockItems);
+  const [stockItems, setStockItems] = useState<StockItem[]>(initialStockItemsWithId);
 
   const totalValue = stockItems.reduce((acc, item) => {
     return acc + item.currentStock * item.costPrice;
