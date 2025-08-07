@@ -157,7 +157,6 @@ export function StockTable({ data, setData, categories }: { data: StockItem[], s
                                     defaultValue={item.openingStock}
                                     onBlur={(e) => handleFieldChange(item.id, 'openingStock', parseInt(e.target.value, 10) || 0)}
                                     className="h-8 w-24 text-right"
-                                    readOnly
                                 />
                             </TableCell>
                             <TableCell className="text-right">
