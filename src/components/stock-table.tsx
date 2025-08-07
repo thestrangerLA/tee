@@ -40,16 +40,16 @@ function formatCurrency(amount: number) {
 }
 
 const categoryColors: Record<string, string> = {
-    'ปุ๋ย': 'bg-green-200',
-    'เมล็ดพันธุ์': 'bg-yellow-200',
-    'ยา': 'bg-red-200',
-    'อุปกรณ์': 'bg-blue-200',
-    'ข้าว': 'bg-amber-200',
-    'หัวอาหาร': 'bg-orange-200',
-    'วิตามิน': 'bg-purple-200',
+    'ปุ๋ย': 'bg-green-100',
+    'เมล็ดพันธุ์': 'bg-yellow-100',
+    'ยา': 'bg-red-100',
+    'อุปกรณ์': 'bg-blue-100',
+    'ข้าว': 'bg-amber-100',
+    'หัวอาหาร': 'bg-orange-100',
+    'วิตามิน': 'bg-purple-100',
 };
 
-const getCategoryColor = (category: string) => categoryColors[category] || 'bg-gray-200';
+const getCategoryColor = (category: string) => categoryColors[category] || 'bg-gray-100';
 
 
 export function StockTable({ data, setData, categories }: { data: StockItem[], setData: React.Dispatch<React.SetStateAction<StockItem[]>>, categories: string[] }) {
@@ -130,10 +130,9 @@ export function StockTable({ data, setData, categories }: { data: StockItem[], s
           <TableBody>
             {Object.entries(groupedData).map(([category, items]) => (
                 <React.Fragment key={category}>
-                    <TableRow className="bg-muted/50 hover:bg-muted/60">
+                    <TableRow className={getCategoryColor(category)}>
                          <TableCell colSpan={8} className="p-2">
                             <div className="flex items-center gap-2">
-                                <span className={`w-2 h-4 rounded-full ${getCategoryColor(category)}`}></span>
                                 <span className="font-semibold">{category}</span>
                             </div>
                         </TableCell>
@@ -144,7 +143,6 @@ export function StockTable({ data, setData, categories }: { data: StockItem[], s
                         <TableRow key={item.id}>
                             <TableCell className="font-medium p-2">
                                 <div className="flex items-center gap-2">
-                                     <span className={`w-2 h-4 rounded-full ${getCategoryColor(item.category)}`}></span>
                                      <Input
                                         defaultValue={item.name}
                                         onBlur={(e) => handleFieldChange(item.id, 'name', e.target.value)}
