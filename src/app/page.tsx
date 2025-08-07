@@ -97,7 +97,7 @@ export default function Home() {
                 description="จำนวนรายการสินค้าในสต็อก"
             />
         </div>
-        <div>
+        <div className="overflow-y-auto">
             <StockTable data={stockItems} setData={setStockItems} categories={categories} />
         </div>
       </main>

@@ -31,9 +31,26 @@ import type { StockItem } from "@/lib/types"
 import { AddItemDialog } from "./add-item-dialog"
 import { Input } from "./ui/input"
 
+function formatNumber(amount: number) {
+    return new Intl.NumberFormat('th-TH').format(amount);
+}
+
 function formatCurrency(amount: number) {
     return new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'LAK', currencyDisplay: 'code', minimumFractionDigits: 0 }).format(amount);
 }
+
+const categoryColors: Record<string, string> = {
+    'ปุ๋ย': 'bg-green-200',
+    'เมล็ดพันธุ์': 'bg-yellow-200',
+    'ยา': 'bg-red-200',
+    'อุปกรณ์': 'bg-blue-200',
+    'ข้าว': 'bg-amber-200',
+    'หัวอาหาร': 'bg-orange-200',
+    'วิตามิน': 'bg-purple-200',
+};
+
+const getCategoryColor = (category: string) => categoryColors[category] || 'bg-gray-200';
+
 
 export function StockTable({ data, setData, categories }: { data: StockItem[], setData: React.Dispatch<React.SetStateAction<StockItem[]>>, categories: string[] }) {
     const [isAddItemOpen, setAddItemOpen] = React.useState(false)
@@ -94,17 +111,17 @@ export function StockTable({ data, setData, categories }: { data: StockItem[], s
                 </div>
             </div>
         </CardHeader>
-      <CardContent>
+      <CardContent className="relative">
         <Table>
-          <TableHeader>
+          <TableHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur">
             <TableRow>
-              <TableHead className="w-[250px]">ชื่อสินค้า</TableHead>
-              <TableHead className="text-right">ราคาต้นทุน</TableHead>
-              <TableHead className="text-right">ราคาขายส่ง</TableHead>
-              <TableHead className="text-right">ราคาขายปลีก</TableHead>
-              <TableHead className="text-right">สต็อกเปิด</TableHead>
-              <TableHead className="text-right w-[120px]">สต็อกปัจจุบัน</TableHead>
-              <TableHead className="text-right">มูลค่า</TableHead>
+              <TableHead className="w-[250px] text-blue-600">ชื่อสินค้า</TableHead>
+              <TableHead className="text-right text-red-600">ราคาต้นทุน</TableHead>
+              <TableHead className="text-right text-green-600">ราคาขายส่ง</TableHead>
+              <TableHead className="text-right text-purple-600">ราคาขายปลีก</TableHead>
+              <TableHead className="text-right text-orange-600">สต็อกเปิด</TableHead>
+              <TableHead className="text-right w-[120px] text-cyan-600">สต็อกปัจจุบัน</TableHead>
+              <TableHead className="text-right text-fuchsia-600">มูลค่า</TableHead>
               <TableHead>
                 <span className="sr-only">การดำเนินการ</span>
               </TableHead>
@@ -113,45 +130,38 @@ export function StockTable({ data, setData, categories }: { data: StockItem[], s
           <TableBody>
             {Object.entries(groupedData).map(([category, items]) => (
                 <React.Fragment key={category}>
-                    <TableRow className="bg-muted/50">
-                        <TableCell colSpan={8} className="font-semibold">{category}</TableCell>
+                    <TableRow className="bg-muted/50 hover:bg-muted/60">
+                         <TableCell colSpan={8} className="p-2">
+                            <div className="flex items-center gap-2">
+                                <span className={`w-2 h-4 rounded-full ${getCategoryColor(category)}`}></span>
+                                <span className="font-semibold">{category}</span>
+                            </div>
+                        </TableCell>
                     </TableRow>
                     {items.map((item) => {
                         const value = item.costPrice * item.currentStock;
                         return (
                         <TableRow key={item.id}>
-                            <TableCell className="font-medium">
-                                 <Input
-                                    defaultValue={item.name}
-                                    onBlur={(e) => handleFieldChange(item.id, 'name', e.target.value)}
-                                    className="h-8"
-                                />
+                            <TableCell className="font-medium p-2">
+                                <div className="flex items-center gap-2">
+                                     <span className={`w-2 h-4 rounded-full ${getCategoryColor(item.category)}`}></span>
+                                     <Input
+                                        defaultValue={item.name}
+                                        onBlur={(e) => handleFieldChange(item.id, 'name', e.target.value)}
+                                        className="h-8 border-none"
+                                    />
+                                </div>
                             </TableCell>
-                            <TableCell className="text-right">
-                                <Input
-                                    type="number"
-                                    defaultValue={item.costPrice}
-                                    onBlur={(e) => handleFieldChange(item.id, 'costPrice', parseFloat(e.target.value) || 0)}
-                                    className="h-8 w-28 text-right"
-                                />
+                            <TableCell className="text-right p-2">
+                                {formatNumber(item.costPrice)}
                             </TableCell>
-                            <TableCell className="text-right">
-                                <Input
-                                    type="number"
-                                    defaultValue={item.wholesalePrice}
-                                    onBlur={(e) => handleFieldChange(item.id, 'wholesalePrice', parseFloat(e.target.value) || 0)}
-                                    className="h-8 w-28 text-right"
-                                />
+                            <TableCell className="text-right p-2">
+                                {formatNumber(item.wholesalePrice)}
                             </TableCell>
-                            <TableCell className="text-right">
-                                <Input
-                                    type="number"
-                                    defaultValue={item.sellingPrice}
-                                    onBlur={(e) => handleFieldChange(item.id, 'sellingPrice', parseFloat(e.target.value) || 0)}
-                                    className="h-8 w-28 text-right"
-                                />
+                            <TableCell className="text-right p-2">
+                                {formatNumber(item.sellingPrice)}
                             </TableCell>
-                            <TableCell className="text-right">
+                            <TableCell className="text-right p-2">
                                 <Input
                                     type="number"
                                     defaultValue={item.openingStock}
@@ -159,7 +169,7 @@ export function StockTable({ data, setData, categories }: { data: StockItem[], s
                                     className="h-8 w-24 text-right"
                                 />
                             </TableCell>
-                            <TableCell className="text-right">
+                            <TableCell className="text-right p-2">
                                 <Input
                                     type="number"
                                     defaultValue={item.currentStock}
@@ -167,8 +177,8 @@ export function StockTable({ data, setData, categories }: { data: StockItem[], s
                                     className="h-8 w-24 text-right"
                                 />
                             </TableCell>
-                             <TableCell className="text-right">{formatCurrency(value)}</TableCell>
-                            <TableCell>
+                             <TableCell className="text-right p-2">{formatCurrency(value)}</TableCell>
+                            <TableCell className="p-2">
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                     <Button
