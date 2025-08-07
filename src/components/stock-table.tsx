@@ -26,10 +26,11 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
-import { File, MoreHorizontal, PlusCircle } from "lucide-react"
+import { File, MoreHorizontal, PlusCircle, ChevronDown, ChevronRight } from "lucide-react"
 import type { StockItem } from "@/lib/types"
 import { AddItemDialog } from "./add-item-dialog"
 import { Input } from "./ui/input"
+import { cn } from "@/lib/utils"
 
 function formatNumber(amount: number) {
     return new Intl.NumberFormat('th-TH').format(amount);
@@ -55,6 +56,11 @@ const getCategoryColor = (category: string) => categoryColors[category] || 'bg-g
 
 export function StockTable({ data, setData, categories }: { data: StockItem[], setData: React.Dispatch<React.SetStateAction<StockItem[]>>, categories: string[] }) {
     const [isAddItemOpen, setAddItemOpen] = React.useState(false)
+    const [collapsedCategories, setCollapsedCategories] = React.useState<Record<string, boolean>>({});
+
+    const toggleCategory = (category: string) => {
+        setCollapsedCategories(prev => ({ ...prev, [category]: !prev[category] }));
+    };
 
     const handleFieldChange = (id: string, field: keyof StockItem, value: string | number) => {
         const newStockData = data.map(item =>
@@ -129,16 +135,19 @@ export function StockTable({ data, setData, categories }: { data: StockItem[], s
             </TableRow>
           </TableHeader>
           <TableBody>
-            {Object.entries(groupedData).map(([category, items]) => (
+            {Object.entries(groupedData).map(([category, items]) => {
+                const isCollapsed = collapsedCategories[category];
+                return (
                 <React.Fragment key={category}>
-                    <TableRow className={getCategoryColor(category)}>
+                    <TableRow className={cn("cursor-pointer", getCategoryColor(category))} onClick={() => toggleCategory(category)}>
                          <TableCell colSpan={8} className="p-2">
                             <div className="flex items-center gap-2">
+                                {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                                 <span className="font-semibold">{category}</span>
                             </div>
                         </TableCell>
                     </TableRow>
-                    {items.map((item) => {
+                    {!isCollapsed && items.map((item) => {
                         const value = item.costPrice * item.currentStock;
                         return (
                         <TableRow key={item.id}>
@@ -217,7 +226,7 @@ export function StockTable({ data, setData, categories }: { data: StockItem[], s
                     )}
                     )}
                 </React.Fragment>
-            ))}
+            )})}
           </TableBody>
         </Table>
       </CardContent>
