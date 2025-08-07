@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -31,22 +32,21 @@ import { AddItemDialog } from "./add-item-dialog"
 import { Input } from "./ui/input"
 
 function formatCurrency(amount: number) {
-    return new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB', minimumFractionDigits: 0 }).format(amount);
+    return new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'LAK', currencyDisplay: 'code', minimumFractionDigits: 0 }).format(amount);
 }
 
-export function StockTable({ data }: { data: StockItem[] }) {
+export function StockTable({ data, setData, categories }: { data: StockItem[], setData: React.Dispatch<React.SetStateAction<StockItem[]>>, categories: string[] }) {
     const [isAddItemOpen, setAddItemOpen] = React.useState(false)
-    const [stockData, setStockData] = React.useState(data);
 
     const handleFieldChange = (id: string, field: keyof StockItem, value: string | number) => {
-        const newStockData = stockData.map(item =>
+        const newStockData = data.map(item =>
             item.id === id ? { ...item, [field]: value } : item
         );
-        setStockData(newStockData);
+        setData(newStockData);
     };
 
     const handleDeleteItem = (id: string) => {
-        setStockData(stockData.filter(item => item.id !== id));
+        setData(data.filter(item => item.id !== id));
     };
 
     const handleAddItem = (newItem: Omit<StockItem, 'id'>) => {
@@ -54,10 +54,10 @@ export function StockTable({ data }: { data: StockItem[] }) {
             id: `PROD${(Date.now() + Math.random()).toString(36)}`, // simple unique id
             ...newItem
         };
-        setStockData([...stockData, newStockItem]);
+        setData([...data, newStockItem]);
     };
 
-    const groupedData = stockData.reduce((acc, item) => {
+    const groupedData = data.reduce((acc, item) => {
         const category = item.category;
         if (!acc[category]) {
             acc[category] = [];
@@ -104,6 +104,7 @@ export function StockTable({ data }: { data: StockItem[] }) {
               <TableHead className="text-right">ราคาขายปลีก</TableHead>
               <TableHead className="text-right">สต็อกเปิด</TableHead>
               <TableHead className="text-right w-[120px]">สต็อกปัจจุบัน</TableHead>
+              <TableHead className="text-right">มูลค่า</TableHead>
               <TableHead>
                 <span className="sr-only">การดำเนินการ</span>
               </TableHead>
@@ -113,9 +114,10 @@ export function StockTable({ data }: { data: StockItem[] }) {
             {Object.entries(groupedData).map(([category, items]) => (
                 <React.Fragment key={category}>
                     <TableRow className="bg-muted/50">
-                        <TableCell colSpan={7} className="font-semibold">{category}</TableCell>
+                        <TableCell colSpan={8} className="font-semibold">{category}</TableCell>
                     </TableRow>
                     {items.map((item) => {
+                        const value = item.costPrice * item.currentStock;
                         return (
                         <TableRow key={item.id}>
                             <TableCell className="font-medium">
@@ -155,15 +157,18 @@ export function StockTable({ data }: { data: StockItem[] }) {
                                     defaultValue={item.openingStock}
                                     onBlur={(e) => handleFieldChange(item.id, 'openingStock', parseInt(e.target.value, 10) || 0)}
                                     className="h-8 w-24 text-right"
+                                    readOnly
                                 />
                             </TableCell>
                             <TableCell className="text-right">
                                 <Input
                                     type="number"
-                                    defaultValue={item.openingStock} // This should be currentStock if available
+                                    defaultValue={item.currentStock}
+                                    onBlur={(e) => handleFieldChange(item.id, 'currentStock', parseInt(e.target.value, 10) || 0)}
                                     className="h-8 w-24 text-right"
                                 />
                             </TableCell>
+                             <TableCell className="text-right">{formatCurrency(value)}</TableCell>
                             <TableCell>
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
@@ -192,11 +197,11 @@ export function StockTable({ data }: { data: StockItem[] }) {
       </CardContent>
       <CardFooter>
         <div className="text-xs text-muted-foreground">
-          แสดง <strong>1-{stockData.length}</strong> จาก <strong>{stockData.length}</strong> สินค้า
+          แสดง <strong>1-{data.length}</strong> จาก <strong>{data.length}</strong> สินค้า
         </div>
       </CardFooter>
     </Card>
-    <AddItemDialog open={isAddItemOpen} onOpenChange={setAddItemOpen} onAddItem={handleAddItem} />
+    <AddItemDialog open={isAddItemOpen} onOpenChange={setAddItemOpen} onAddItem={handleAddItem} categories={categories} />
     </>
   )
 }

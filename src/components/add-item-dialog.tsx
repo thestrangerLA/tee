@@ -1,3 +1,4 @@
+
 "use client"
 
 import { Button } from "@/components/ui/button"
@@ -11,29 +12,44 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import type { StockItem } from "@/lib/types"
+import { useState } from "react"
 
 type AddItemDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onAddItem: (item: Omit<StockItem, 'id'>) => void;
+  categories: string[];
 }
 
-export function AddItemDialog({ open, onOpenChange, onAddItem }: AddItemDialogProps) {
+export function AddItemDialog({ open, onOpenChange, onAddItem, categories }: AddItemDialogProps) {
     const { toast } = useToast()
+    const [selectedCategory, setSelectedCategory] = useState<string>("");
 
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
+        const openingStock = parseInt(formData.get('openingStock') as string, 10) || 0;
         const newItem: Omit<StockItem, 'id'> = {
             name: formData.get('name') as string,
-            category: formData.get('category') as string,
-            openingStock: parseInt(formData.get('openingStock') as string, 10) || 0,
+            category: selectedCategory,
+            openingStock: openingStock,
+            currentStock: openingStock,
             costPrice: parseFloat(formData.get('costPrice') as string) || 0,
             wholesalePrice: parseFloat(formData.get('wholesalePrice') as string) || 0,
             sellingPrice: parseFloat(formData.get('sellingPrice') as string) || 0,
         };
+
+        if (!newItem.category) {
+            toast({
+                title: "ข้อผิดพลาด",
+                description: "กรุณาเลือกหมวดหมู่",
+                variant: "destructive",
+            });
+            return;
+        }
 
         onAddItem(newItem);
 
@@ -44,6 +60,7 @@ export function AddItemDialog({ open, onOpenChange, onAddItem }: AddItemDialogPr
         });
         onOpenChange(false);
         event.currentTarget.reset();
+        setSelectedCategory("");
     };
 
   return (
@@ -63,7 +80,16 @@ export function AddItemDialog({ open, onOpenChange, onAddItem }: AddItemDialogPr
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="category" className="text-right">หมวดหมู่</Label>
-                    <Input id="category" name="category" placeholder="เช่น ปุ๋ย" className="col-span-3" required />
+                    <Select onValueChange={setSelectedCategory} value={selectedCategory}>
+                        <SelectTrigger className="col-span-3">
+                            <SelectValue placeholder="เลือกหมวดหมู่" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {categories.map((category) => (
+                                <SelectItem key={category} value={category}>{category}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="openingStock" className="text-right">สต็อกเปิด</Label>
