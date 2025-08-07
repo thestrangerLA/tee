@@ -42,7 +42,8 @@ function formatCurrency(amount: number) {
 const categoryColors: Record<string, string> = {
     'ปุ๋ย': 'bg-green-100',
     'เมล็ดพันธุ์': 'bg-yellow-100',
-    'ยา': 'bg-red-100',
+    'ยาพืช': 'bg-red-100',
+    'ยาสัตว์': 'bg-rose-100',
     'อุปกรณ์': 'bg-blue-100',
     'ข้าว': 'bg-amber-100',
     'หัวอาหาร': 'bg-orange-100',
@@ -151,13 +152,31 @@ export function StockTable({ data, setData, categories }: { data: StockItem[], s
                                 </div>
                             </TableCell>
                             <TableCell className="text-right p-2">
-                                {formatNumber(item.costPrice)}
+                                <Input
+                                    type="number"
+                                    step="0.01"
+                                    defaultValue={item.costPrice}
+                                    onBlur={(e) => handleFieldChange(item.id, 'costPrice', parseFloat(e.target.value) || 0)}
+                                    className="h-8 w-24 text-right"
+                                />
                             </TableCell>
                             <TableCell className="text-right p-2">
-                                {formatNumber(item.wholesalePrice)}
+                                <Input
+                                    type="number"
+                                    step="0.01"
+                                    defaultValue={item.wholesalePrice}
+                                    onBlur={(e) => handleFieldChange(item.id, 'wholesalePrice', parseFloat(e.target.value) || 0)}
+                                    className="h-8 w-24 text-right"
+                                />
                             </TableCell>
                             <TableCell className="text-right p-2">
-                                {formatNumber(item.sellingPrice)}
+                                <Input
+                                    type="number"
+                                    step="0.01"
+                                    defaultValue={item.sellingPrice}
+                                    onBlur={(e) => handleFieldChange(item.id, 'sellingPrice', parseFloat(e.target.value) || 0)}
+                                    className="h-8 w-24 text-right"
+                                />
                             </TableCell>
                             <TableCell className="text-right p-2">
                                 <Input

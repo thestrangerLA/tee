@@ -85,7 +85,7 @@ export function AddItemDialog({ open, onOpenChange, onAddItem, categories }: Add
                             <SelectValue placeholder="เลือกหมวดหมู่" />
                         </SelectTrigger>
                         <SelectContent>
-                            {categories.map((category) => (
+                            {[...categories, "ยาพืช", "ยาสัตว์"].filter((v, i, a) => a.indexOf(v) === i).sort().map((category) => (
                                 <SelectItem key={category} value={category}>{category}</SelectItem>
                             ))}
                         </SelectContent>
