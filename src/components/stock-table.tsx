@@ -38,11 +38,23 @@ export function StockTable({ data }: { data: StockItem[] }) {
     const [isAddItemOpen, setAddItemOpen] = React.useState(false)
     const [stockData, setStockData] = React.useState(data);
 
-    const handleCurrentStockChange = (id: string, value: string) => {
-        const newStockData = stockData.map(item => 
-            item.id === id ? { ...item, currentStock: parseInt(value, 10) || 0 } : item
+    const handleFieldChange = (id: string, field: keyof StockItem, value: string | number) => {
+        const newStockData = stockData.map(item =>
+            item.id === id ? { ...item, [field]: value } : item
         );
         setStockData(newStockData);
+    };
+
+    const handleDeleteItem = (id: string) => {
+        setStockData(stockData.filter(item => item.id !== id));
+    };
+
+    const handleAddItem = (newItem: Omit<StockItem, 'id'>) => {
+        const newStockItem: StockItem = {
+            id: `PROD${(Date.now() + Math.random()).toString(36)}`, // simple unique id
+            ...newItem
+        };
+        setStockData([...stockData, newStockItem]);
     };
 
     const groupedData = stockData.reduce((acc, item) => {
@@ -86,7 +98,7 @@ export function StockTable({ data }: { data: StockItem[] }) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>ชื่อสินค้า</TableHead>
+              <TableHead className="w-[250px]">ชื่อสินค้า</TableHead>
               <TableHead className="text-right">ราคาต้นทุน</TableHead>
               <TableHead className="text-right">ราคาขายส่ง</TableHead>
               <TableHead className="text-right">ราคาขายปลีก</TableHead>
@@ -106,16 +118,50 @@ export function StockTable({ data }: { data: StockItem[] }) {
                     {items.map((item) => {
                         return (
                         <TableRow key={item.id}>
-                            <TableCell className="font-medium">{item.name}</TableCell>
-                            <TableCell className="text-right">{formatCurrency(item.costPrice)}</TableCell>
-                            <TableCell className="text-right">{formatCurrency(item.wholesalePrice)}</TableCell>
-                            <TableCell className="text-right">{formatCurrency(item.sellingPrice)}</TableCell>
-                            <TableCell className="text-right">{item.openingStock}</TableCell>
+                            <TableCell className="font-medium">
+                                 <Input
+                                    defaultValue={item.name}
+                                    onBlur={(e) => handleFieldChange(item.id, 'name', e.target.value)}
+                                    className="h-8"
+                                />
+                            </TableCell>
                             <TableCell className="text-right">
-                                <Input 
-                                    type="number" 
-                                    className="h-8 w-24 text-right"
+                                <Input
+                                    type="number"
+                                    defaultValue={item.costPrice}
+                                    onBlur={(e) => handleFieldChange(item.id, 'costPrice', parseFloat(e.target.value) || 0)}
+                                    className="h-8 w-28 text-right"
+                                />
+                            </TableCell>
+                            <TableCell className="text-right">
+                                <Input
+                                    type="number"
+                                    defaultValue={item.wholesalePrice}
+                                    onBlur={(e) => handleFieldChange(item.id, 'wholesalePrice', parseFloat(e.target.value) || 0)}
+                                    className="h-8 w-28 text-right"
+                                />
+                            </TableCell>
+                            <TableCell className="text-right">
+                                <Input
+                                    type="number"
+                                    defaultValue={item.sellingPrice}
+                                    onBlur={(e) => handleFieldChange(item.id, 'sellingPrice', parseFloat(e.target.value) || 0)}
+                                    className="h-8 w-28 text-right"
+                                />
+                            </TableCell>
+                            <TableCell className="text-right">
+                                <Input
+                                    type="number"
                                     defaultValue={item.openingStock}
+                                    onBlur={(e) => handleFieldChange(item.id, 'openingStock', parseInt(e.target.value, 10) || 0)}
+                                    className="h-8 w-24 text-right"
+                                />
+                            </TableCell>
+                            <TableCell className="text-right">
+                                <Input
+                                    type="number"
+                                    defaultValue={item.openingStock} // This should be currentStock if available
+                                    className="h-8 w-24 text-right"
                                 />
                             </TableCell>
                             <TableCell>
@@ -132,8 +178,7 @@ export function StockTable({ data }: { data: StockItem[] }) {
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
                                     <DropdownMenuLabel>การดำเนินการ</DropdownMenuLabel>
-                                    <DropdownMenuItem>แก้ไข</DropdownMenuItem>
-                                    <DropdownMenuItem>ลบ</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleDeleteItem(item.id)}>ลบ</DropdownMenuItem>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
                             </TableCell>
@@ -147,11 +192,11 @@ export function StockTable({ data }: { data: StockItem[] }) {
       </CardContent>
       <CardFooter>
         <div className="text-xs text-muted-foreground">
-          แสดง <strong>1-{data.length}</strong> จาก <strong>{data.length}</strong> สินค้า
+          แสดง <strong>1-{stockData.length}</strong> จาก <strong>{stockData.length}</strong> สินค้า
         </div>
       </CardFooter>
     </Card>
-    <AddItemDialog open={isAddItemOpen} onOpenChange={setAddItemOpen} />
+    <AddItemDialog open={isAddItemOpen} onOpenChange={setAddItemOpen} onAddItem={handleAddItem} />
     </>
   )
 }
