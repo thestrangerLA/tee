@@ -53,8 +53,15 @@ const categoryColors: Record<string, string> = {
 
 const getCategoryColor = (category: string) => categoryColors[category] || 'bg-gray-100';
 
+type StockTableProps = {
+    data: StockItem[];
+    categories: string[];
+    onAddItem: (item: Omit<StockItem, 'id'>) => Promise<void>;
+    onUpdateItem: (id: string, updatedFields: Partial<StockItem>) => Promise<void>;
+    onDeleteItem: (id: string) => Promise<void>;
+}
 
-export function StockTable({ data, setData, categories }: { data: StockItem[], setData: React.Dispatch<React.SetStateAction<StockItem[]>>, categories: string[] }) {
+export function StockTable({ data, categories, onAddItem, onUpdateItem, onDeleteItem }: StockTableProps) {
     const [isAddItemOpen, setAddItemOpen] = React.useState(false)
     const [collapsedCategories, setCollapsedCategories] = React.useState<Record<string, boolean>>({});
 
@@ -63,22 +70,7 @@ export function StockTable({ data, setData, categories }: { data: StockItem[], s
     };
 
     const handleFieldChange = (id: string, field: keyof StockItem, value: string | number) => {
-        const newStockData = data.map(item =>
-            item.id === id ? { ...item, [field]: value } : item
-        );
-        setData(newStockData);
-    };
-
-    const handleDeleteItem = (id: string) => {
-        setData(data.filter(item => item.id !== id));
-    };
-
-    const handleAddItem = (newItem: Omit<StockItem, 'id'>) => {
-        const newStockItem: StockItem = {
-            id: `PROD${(Date.now() + Math.random()).toString(36)}`, // simple unique id
-            ...newItem
-        };
-        setData([...data, newStockItem]);
+        onUpdateItem(id, { [field]: value });
     };
 
     const groupedData = data.reduce((acc, item) => {
@@ -209,7 +201,7 @@ export function StockTable({ data, setData, categories }: { data: StockItem[], s
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
                                     <DropdownMenuLabel>การดำเนินการ</DropdownMenuLabel>
-                                    <DropdownMenuItem onClick={() => handleDeleteItem(item.id)}>ลบ</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => onDeleteItem(item.id)}>ลบ</DropdownMenuItem>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
                             </TableCell>
@@ -227,7 +219,7 @@ export function StockTable({ data, setData, categories }: { data: StockItem[], s
         </div>
       </CardFooter>
     </Card>
-    <AddItemDialog open={isAddItemOpen} onOpenChange={setAddItemOpen} onAddItem={handleAddItem} categories={categories} />
+    <AddItemDialog open={isAddItemOpen} onOpenChange={setAddItemOpen} onAddItem={onAddItem} categories={categories} />
     </>
   )
 }

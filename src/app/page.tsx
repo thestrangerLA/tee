@@ -13,30 +13,28 @@ import type { StockItem } from "@/lib/types"
 import { StatCard } from "@/components/stat-card"
 import { StockTable } from "@/components/stock-table"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useState } from "react"
-
-const initialStockItems: Omit<StockItem, 'id'>[] = [
-    { name: 'ปุ๋ยตรากระต่าย สูตร 16-16-16', category: 'ปุ๋ย', currentStock: 100, costPrice: 450, wholesalePrice: 500, sellingPrice: 550 },
-    { name: 'เมล็ดพันธุ์ผักกาดขาว', category: 'เมล็ดพันธุ์', currentStock: 500, costPrice: 10, wholesalePrice: 15, sellingPrice: 20 },
-    { name: 'ยาฆ่าแมลง (ไซเปอร์เมทริน)', category: 'ยาพืช', currentStock: 50, costPrice: 120, wholesalePrice: 140, sellingPrice: 160 },
-    { name: 'จอบ', category: 'อุปกรณ์', currentStock: 80, costPrice: 80, wholesalePrice: 95, sellingPrice: 120 },
-    { name: 'ปุ๋ยยูเรีย 46-0-0', category: 'ปุ๋ย', currentStock: 120, costPrice: 550, wholesalePrice: 600, sellingPrice: 680 },
-    { name: 'เมล็ดข้าวโพด', category: 'เมล็ดพันธุ์', currentStock: 1000, costPrice: 5, wholesalePrice: 8, sellingPrice: 12 },
-    { name: 'บัวรดน้ำ', category: 'อุปกรณ์', currentStock: 150, costPrice: 45, wholesalePrice: 55, sellingPrice: 70 },
-    { name: 'ยาคุมหญ้า (ไกลโฟเซต)', category: 'ยาพืช', currentStock: 60, costPrice: 150, wholesalePrice: 170, sellingPrice: 200 },
-    { name: 'ข้าวหอมมะลิ', category: 'ข้าว', currentStock: 200, costPrice: 35, wholesalePrice: 40, sellingPrice: 45 },
-    { name: 'หัวอาหารไก่', category: 'หัวอาหาร', currentStock: 300, costPrice: 250, wholesalePrice: 280, sellingPrice: 320 },
-    { name: 'วิตามินรวมสำหรับพืช', category: 'วิตามิน', currentStock: 100, costPrice: 80, wholesalePrice: 90, sellingPrice: 110 },
-    { name: 'ยาถ่ายพยาธิสุนัข', category: 'ยาสัตว์', currentStock: 40, costPrice: 50, wholesalePrice: 60, sellingPrice: 75 },
-];
-
-const initialStockItemsWithId: StockItem[] = initialStockItems.map((item, index) => ({
-    ...item,
-    id: `PROD${(Date.now() + index).toString(36)}`,
-}));
+import { useState, useEffect } from "react"
+import { listenToStockItems, addStockItem, updateStockItem, deleteStockItem } from "@/services/stockService"
 
 export default function Home() {
-  const [stockItems, setStockItems] = useState<StockItem[]>(initialStockItemsWithId);
+  const [stockItems, setStockItems] = useState<StockItem[]>([]);
+
+  useEffect(() => {
+    const unsubscribe = listenToStockItems(setStockItems);
+    return () => unsubscribe();
+  }, []);
+
+  const handleAddItem = async (newItem: Omit<StockItem, 'id'>) => {
+    await addStockItem(newItem);
+  };
+
+  const handleUpdateItem = async (id: string, updatedFields: Partial<StockItem>) => {
+    await updateStockItem(id, updatedFields);
+  };
+
+  const handleDeleteItem = async (id: string) => {
+    await deleteStockItem(id);
+  };
 
   const totalValue = stockItems.reduce((acc, item) => {
     return acc + item.currentStock * item.costPrice;
@@ -48,7 +46,7 @@ export default function Home() {
     'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
   ];
   
-  const categories = [...new Set(initialStockItems.map(item => item.category))];
+  const categories = [...new Set(stockItems.map(item => item.category))];
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
@@ -104,7 +102,13 @@ export default function Home() {
             />
         </div>
         <div className="flex-1 overflow-auto">
-            <StockTable data={stockItems} setData={setStockItems} categories={categories} />
+            <StockTable 
+              data={stockItems} 
+              categories={categories}
+              onAddItem={handleAddItem}
+              onUpdateItem={handleUpdateItem}
+              onDeleteItem={handleDeleteItem}
+            />
         </div>
       </main>
     </div>

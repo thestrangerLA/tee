@@ -20,7 +20,7 @@ import { useState } from "react"
 type AddItemDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAddItem: (item: Omit<StockItem, 'id' | 'openingStock'>) => void;
+  onAddItem: (item: Omit<StockItem, 'id'>) => Promise<void>;
   categories: string[];
 }
 
@@ -28,7 +28,7 @@ export function AddItemDialog({ open, onOpenChange, onAddItem, categories }: Add
     const { toast } = useToast()
     const [selectedCategory, setSelectedCategory] = useState<string>("");
 
-    const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
         const currentStock = parseInt(formData.get('currentStock') as string, 10) || 0;
@@ -50,7 +50,7 @@ export function AddItemDialog({ open, onOpenChange, onAddItem, categories }: Add
             return;
         }
 
-        onAddItem(newItem);
+        await onAddItem(newItem);
 
         toast({
             title: "สำเร็จ!",
@@ -58,7 +58,7 @@ export function AddItemDialog({ open, onOpenChange, onAddItem, categories }: Add
             variant: "default",
         });
         onOpenChange(false);
-        event.currentTarget.reset();
+        (event.currentTarget as HTMLFormElement).reset();
         setSelectedCategory("");
     };
 
