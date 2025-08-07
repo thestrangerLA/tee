@@ -1,5 +1,5 @@
 
-import { initializeApp } from 'firebase/app';
+import { initializeApp, getApps } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
@@ -12,7 +12,14 @@ const firebaseConfig = {
   "messagingSenderId": "772228625471"
 };
 
-const app = initializeApp(firebaseConfig);
+// Initialize Firebase
+let app;
+if (!getApps().length) {
+  app = initializeApp(firebaseConfig);
+} else {
+  app = getApps()[0];
+}
+
 const db = getFirestore(app);
 
 export { db };
