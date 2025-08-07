@@ -126,7 +126,7 @@ export function StockTable({ data, categories, onAddItem, onUpdateItem, onDelete
             </TableRow>
           </TableHeader>
           <TableBody>
-            {Object.entries(groupedData).map(([category, items]) => {
+            {Object.entries(groupedData).sort(([a], [b]) => a.localeCompare(b)).map(([category, items]) => {
                 const isCollapsed = collapsedCategories[category];
                 return (
                 <React.Fragment key={category}>
@@ -215,7 +215,7 @@ export function StockTable({ data, categories, onAddItem, onUpdateItem, onDelete
       </CardContent>
       <CardFooter>
         <div className="text-xs text-muted-foreground">
-          แสดง <strong>1-{data.length}</strong> จาก <strong>{data.length}</strong> สินค้า
+          แสดง <strong>{data.length}</strong> จาก <strong>{data.length}</strong> สินค้า
         </div>
       </CardFooter>
     </Card>

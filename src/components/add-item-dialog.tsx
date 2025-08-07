@@ -50,16 +50,24 @@ export function AddItemDialog({ open, onOpenChange, onAddItem, categories }: Add
             return;
         }
 
-        await onAddItem(newItem);
-
-        toast({
-            title: "สำเร็จ!",
-            description: "เพิ่มรายการใหม่ในสต็อกเรียบร้อยแล้ว",
-            variant: "default",
-        });
-        onOpenChange(false);
-        (event.currentTarget as HTMLFormElement).reset();
-        setSelectedCategory("");
+        try {
+            await onAddItem(newItem);
+            toast({
+                title: "สำเร็จ!",
+                description: "เพิ่มรายการใหม่ในสต็อกเรียบร้อยแล้ว",
+                variant: "default",
+            });
+            onOpenChange(false);
+            (event.currentTarget as HTMLFormElement).reset();
+            setSelectedCategory("");
+        } catch (error) {
+            toast({
+                title: "เกิดข้อผิดพลาด",
+                description: "ไม่สามารถเพิ่มรายการได้ กรุณาลองใหม่อีกครั้ง",
+                variant: "destructive",
+            });
+            console.error("Error adding item: ", error);
+        }
     };
 
   return (
@@ -84,7 +92,7 @@ export function AddItemDialog({ open, onOpenChange, onAddItem, categories }: Add
                             <SelectValue placeholder="เลือกหมวดหมู่" />
                         </SelectTrigger>
                         <SelectContent>
-                            {[...categories, "ยาพืช", "ยาสัตว์"].filter((v, i, a) => a.indexOf(v) === i).sort().map((category) => (
+                            {[...categories, "ปุ๋ย", "เมล็ดพันธุ์", "ยาพืช", "ยาสัตว์", "อุปกรณ์", "ข้าว", "หัวอาหาร", "วิตามิน"].filter((v, i, a) => a.indexOf(v) === i).sort().map((category) => (
                                 <SelectItem key={category} value={category}>{category}</SelectItem>
                             ))}
                         </SelectContent>
