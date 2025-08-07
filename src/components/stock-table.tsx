@@ -13,10 +13,10 @@ import {
 import {
     Card,
     CardContent,
-    CardDescription,
     CardFooter,
     CardHeader,
     CardTitle,
+    CardDescription,
 } from "@/components/ui/card"
 import {
     DropdownMenu,
@@ -93,7 +93,7 @@ export function StockTable({ data, setData, categories }: { data: StockItem[], s
 
   return (
     <>
-    <Card>
+    <Card className="h-full flex flex-col">
         <CardHeader>
             <div className="flex items-center justify-between">
                 <div>
@@ -118,7 +118,7 @@ export function StockTable({ data, setData, categories }: { data: StockItem[], s
                 </div>
             </div>
         </CardHeader>
-      <CardContent className="relative">
+      <CardContent className="relative flex-1 overflow-auto">
         <Table>
           <TableHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur">
             <TableRow>

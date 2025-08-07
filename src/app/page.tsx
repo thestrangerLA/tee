@@ -47,7 +47,7 @@ export default function Home() {
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
-      <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
+      <header className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
         <div className="flex items-center gap-2">
             <Leaf className="h-6 w-6 text-primary" />
             <h1 className="text-xl font-bold tracking-tight font-headline">ผู้จัดการสต็อกสินค้าเกษตร</h1>
@@ -98,7 +98,7 @@ export default function Home() {
                 description="จำนวนรายการสินค้าในสต็อก"
             />
         </div>
-        <div className="overflow-y-auto">
+        <div className="flex-1 overflow-auto">
             <StockTable data={stockItems} setData={setStockItems} categories={categories} />
         </div>
       </main>
