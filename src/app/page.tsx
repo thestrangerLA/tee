@@ -1,3 +1,86 @@
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Search, Leaf, DollarSign, Package, TrendingUp } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import type { StockItem } from "@/lib/types"
+import { StatCard } from "@/components/stat-card"
+import { StockTable } from "@/components/stock-table"
+
+const mockStockItems: StockItem[] = [
+  { id: 'PROD001', name: 'ปุ๋ยตรากระต่าย สูตร 16-16-16', category: 'ปุ๋ย', openingStock: 100, purchases: 50, sales: 75, costPrice: 450, wholesalePrice: 500, sellingPrice: 550 },
+  { id: 'PROD002', name: 'เมล็ดพันธุ์ผักกาดขาว', category: 'เมล็ดพันธุ์', openingStock: 500, purchases: 200, sales: 450, costPrice: 10, wholesalePrice: 15, sellingPrice: 20 },
+  { id: 'PROD003', name: 'ยาฆ่าแมลง (ไซเปอร์เมทริน)', category: 'สารเคมี', openingStock: 50, purchases: 30, sales: 42, costPrice: 120, wholesalePrice: 140, sellingPrice: 160 },
+  { id: 'PROD004', name: 'จอบ', category: 'อุปกรณ์', openingStock: 80, purchases: 20, sales: 55, costPrice: 80, wholesalePrice: 95, sellingPrice: 120 },
+  { id: 'PROD005', name: 'ปุ๋ยยูเรีย 46-0-0', category: 'ปุ๋ย', openingStock: 120, purchases: 60, sales: 90, costPrice: 550, wholesalePrice: 600, sellingPrice: 680 },
+  { id: 'PROD006', name: 'เมล็ดข้าวโพด', category: 'เมล็ดพันธุ์', openingStock: 1000, purchases: 500, sales: 850, costPrice: 5, wholesalePrice: 8, sellingPrice: 12 },
+  { id: 'PROD007', name: 'บัวรดน้ำ', category: 'อุปกรณ์', openingStock: 150, purchases: 50, sales: 120, costPrice: 45, wholesalePrice: 55, sellingPrice: 70 },
+  { id: 'PROD008', name: 'ยาคุมหญ้า (ไกลโฟเซต)', category: 'สารเคมี', openingStock: 60, purchases: 40, sales: 50, costPrice: 150, wholesalePrice: 170, sellingPrice: 200 },
+];
+
 export default function Home() {
-  return <></>;
+  const totalValue = mockStockItems.reduce((acc, item) => {
+    const currentStock = item.openingStock + item.purchases - item.sales;
+    return acc + currentStock * item.costPrice;
+  }, 0);
+
+  const totalRevenue = mockStockItems.reduce((acc, item) => {
+    return acc + item.sales * item.sellingPrice;
+  }, 0);
+
+  return (
+    <div className="flex min-h-screen w-full flex-col bg-muted/40">
+      <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
+        <div className="flex items-center gap-2">
+            <Leaf className="h-6 w-6 text-primary" />
+            <h1 className="text-xl font-bold tracking-tight font-headline">Kaset Stock Manager</h1>
+        </div>
+        <div className="relative ml-auto flex-1 md:grow-0">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+            type="search"
+            placeholder="Search products..."
+            className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[320px]"
+            />
+        </div>
+      </header>
+      <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
+        <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
+            <StatCard 
+                title="Total Stock Value"
+                value={new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(totalValue)}
+                icon={<DollarSign className="h-4 w-4 text-muted-foreground" />}
+                description="Estimated value of all items"
+            />
+             <StatCard 
+                title="Total Revenue (Period)"
+                value={new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(totalRevenue)}
+                icon={<TrendingUp className="h-4 w-4 text-muted-foreground" />}
+                description="Total sales in this period"
+            />
+             <StatCard 
+                title="Total Products"
+                value={mockStockItems.length.toString()}
+                icon={<Package className="h-4 w-4 text-muted-foreground" />}
+                description="Distinct items in inventory"
+            />
+            <StatCard 
+                title="Reports"
+                value="View"
+                icon={<Leaf className="h-4 w-4 text-muted-foreground" />}
+                description="Monthly, Quarterly, Annual"
+                isAction={true}
+            />
+        </div>
+        <div>
+            <StockTable data={mockStockItems} />
+        </div>
+      </main>
+    </div>
+  )
 }
