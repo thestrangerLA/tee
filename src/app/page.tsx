@@ -38,13 +38,13 @@ export default function Home() {
       <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
         <div className="flex items-center gap-2">
             <Leaf className="h-6 w-6 text-primary" />
-            <h1 className="text-xl font-bold tracking-tight font-headline">Kaset Stock Manager</h1>
+            <h1 className="text-xl font-bold tracking-tight font-headline">ผู้จัดการสต็อกสินค้าเกษตร</h1>
         </div>
         <div className="relative ml-auto flex-1 md:grow-0">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
             type="search"
-            placeholder="Search products..."
+            placeholder="ค้นหาสินค้า..."
             className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[320px]"
             />
         </div>
@@ -52,28 +52,28 @@ export default function Home() {
       <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
         <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
             <StatCard 
-                title="Total Stock Value"
+                title="มูลค่าสต็อกทั้งหมด"
                 value={new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(totalValue)}
                 icon={<DollarSign className="h-4 w-4 text-muted-foreground" />}
-                description="Estimated value of all items"
+                description="มูลค่าโดยประมาณของสินค้าทั้งหมด"
             />
              <StatCard 
-                title="Total Revenue (Period)"
+                title="รายได้ทั้งหมด (ช่วงเวลา)"
                 value={new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(totalRevenue)}
                 icon={<TrendingUp className="h-4 w-4 text-muted-foreground" />}
-                description="Total sales in this period"
+                description="ยอดขายทั้งหมดในรอบนี้"
             />
              <StatCard 
-                title="Total Products"
+                title="สินค้าทั้งหมด"
                 value={mockStockItems.length.toString()}
                 icon={<Package className="h-4 w-4 text-muted-foreground" />}
-                description="Distinct items in inventory"
+                description="จำนวนรายการสินค้าในสต็อก"
             />
             <StatCard 
-                title="Reports"
-                value="View"
+                title="รายงาน"
+                value="ดู"
                 icon={<Leaf className="h-4 w-4 text-muted-foreground" />}
-                description="Monthly, Quarterly, Annual"
+                description="รายเดือน, รายไตรมาส, รายปี"
                 isAction={true}
             />
         </div>

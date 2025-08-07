@@ -28,8 +28,8 @@ export function RecordTransactionDialog({ open, onOpenChange, items }: RecordTra
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         toast({
-            title: "Success!",
-            description: "Transaction has been recorded.",
+            title: "สำเร็จ!",
+            description: "บันทึกธุรกรรมเรียบร้อยแล้ว",
             variant: "default",
         });
         onOpenChange(false);
@@ -41,17 +41,17 @@ export function RecordTransactionDialog({ open, onOpenChange, items }: RecordTra
       <DialogContent className="sm:max-w-[425px]">
         <form onSubmit={handleSubmit}>
             <DialogHeader>
-            <DialogTitle>Record Transaction</DialogTitle>
+            <DialogTitle>บันทึกธุรกรรม</DialogTitle>
             <DialogDescription>
-                Select an item and record a new purchase or sale.
+                เลือกรายการและบันทึกการซื้อหรือการขายใหม่
             </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="item" className="text-right">Product</Label>
+                <Label htmlFor="item" className="text-right">สินค้า</Label>
                 <Select required>
                     <SelectTrigger className="col-span-3">
-                        <SelectValue placeholder="Select a product" />
+                        <SelectValue placeholder="เลือกสินค้า" />
                     </SelectTrigger>
                     <SelectContent>
                         {items.map(item => (
@@ -61,28 +61,28 @@ export function RecordTransactionDialog({ open, onOpenChange, items }: RecordTra
                 </Select>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="type" className="text-right">Type</Label>
+                <Label htmlFor="type" className="text-right">ประเภท</Label>
                  <RadioGroup defaultValue="purchase" className="col-span-3 flex gap-4">
                     <div className="flex items-center space-x-2">
                         <RadioGroupItem value="purchase" id="purchase" />
-                        <Label htmlFor="purchase">Purchase</Label>
+                        <Label htmlFor="purchase">ซื้อ</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                         <RadioGroupItem value="sale" id="sale" />
-                        <Label htmlFor="sale">Sale</Label>
+                        <Label htmlFor="sale">ขาย</Label>
                     </div>
                 </RadioGroup>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="quantity" className="text-right">
-                Quantity
+                จำนวน
                 </Label>
                 <Input id="quantity" type="number" placeholder="0" className="col-span-3" required />
             </div>
             </div>
             <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-                <Button type="submit">Record</Button>
+                <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>ยกเลิก</Button>
+                <Button type="submit">บันทึก</Button>
             </DialogFooter>
         </form>
       </DialogContent>

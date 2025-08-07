@@ -35,6 +35,12 @@ function formatCurrency(amount: number) {
     return new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB', minimumFractionDigits: 0 }).format(amount);
 }
 
+const statusTranslations: Record<string, string> = {
+    'in-stock': 'มีสินค้า',
+    'low-stock': 'ใกล้หมด',
+    'out-of-stock': 'สินค้าหมด'
+};
+
 export function StockTable({ data }: { data: StockItem[] }) {
     const [isAddItemOpen, setAddItemOpen] = React.useState(false)
     const [isRecordTxOpen, setRecordTxOpen] = React.useState(false)
@@ -45,9 +51,9 @@ export function StockTable({ data }: { data: StockItem[] }) {
         <CardHeader>
             <div className="flex items-center justify-between">
                 <div>
-                    <CardTitle>Inventory</CardTitle>
+                    <CardTitle>สินค้าคงคลัง</CardTitle>
                     <CardDescription>
-                    Manage your products and view their stock levels.
+                    จัดการสินค้าและดูระดับสต็อกของคุณ
                     </CardDescription>
                 </div>
                 <div className="flex items-center gap-2">
@@ -56,32 +62,32 @@ export function StockTable({ data }: { data: StockItem[] }) {
                         <Button variant="outline" size="sm" className="h-8 gap-1">
                             <ListFilter className="h-3.5 w-3.5" />
                             <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                            Filter
+                            ตัวกรอง
                             </span>
                         </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Filter by</DropdownMenuLabel>
-                        <DropdownMenuItem>In Stock</DropdownMenuItem>
-                        <DropdownMenuItem>Low Stock</DropdownMenuItem>
-                        <DropdownMenuItem>Out of Stock</DropdownMenuItem>
+                        <DropdownMenuLabel>กรองโดย</DropdownMenuLabel>
+                        <DropdownMenuItem>มีสินค้า</DropdownMenuItem>
+                        <DropdownMenuItem>ใกล้หมด</DropdownMenuItem>
+                        <DropdownMenuItem>สินค้าหมด</DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
                     <Button size="sm" variant="outline" className="h-8 gap-1">
                         <File className="h-3.5 w-3.5" />
                         <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                        Export
+                        ส่งออก
                         </span>
                     </Button>
                     <Button size="sm" className="h-8 gap-1" onClick={() => setAddItemOpen(true)}>
                         <PlusCircle className="h-3.5 w-3.5" />
                         <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                        Add Product
+                        เพิ่มสินค้า
                         </span>
                     </Button>
                     <Button size="sm" variant="secondary" className="h-8 gap-1" onClick={() => setRecordTxOpen(true)}>
                          <PlusCircle className="h-3.5 w-3.5" />
-                        <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">Record Transaction</span>
+                        <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">บันทึกธุรกรรม</span>
                     </Button>
                 </div>
             </div>
@@ -90,18 +96,18 @@ export function StockTable({ data }: { data: StockItem[] }) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Product Name</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead className="text-center">Status</TableHead>
-              <TableHead className="text-right">Opening Stock</TableHead>
-              <TableHead className="text-right">Purchases</TableHead>
-              <TableHead className="text-right">Sales</TableHead>
-              <TableHead className="text-right">Current Stock</TableHead>
-              <TableHead className="text-right">Cost Price</TableHead>
-              <TableHead className="text-right">Wholesale Price</TableHead>
-              <TableHead className="text-right">Selling Price</TableHead>
+              <TableHead>ชื่อสินค้า</TableHead>
+              <TableHead>หมวดหมู่</TableHead>
+              <TableHead className="text-center">สถานะ</TableHead>
+              <TableHead className="text-right">สต็อกเปิด</TableHead>
+              <TableHead className="text-right">ซื้อเข้า</TableHead>
+              <TableHead className="text-right">ขายออก</TableHead>
+              <TableHead className="text-right">สต็อกปัจจุบัน</TableHead>
+              <TableHead className="text-right">ราคาต้นทุน</TableHead>
+              <TableHead className="text-right">ราคาขายส่ง</TableHead>
+              <TableHead className="text-right">ราคาขายปลีก</TableHead>
               <TableHead>
-                <span className="sr-only">Actions</span>
+                <span className="sr-only">การดำเนินการ</span>
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -119,7 +125,7 @@ export function StockTable({ data }: { data: StockItem[] }) {
                     <TableCell className="text-center">
                         <Badge variant={status === 'out-of-stock' ? 'destructive' : status === 'low-stock' ? 'secondary' : 'default'}
                                className={status === 'low-stock' ? 'bg-orange-200 text-orange-800' : ''}>
-                           {status.replace('-', ' ')}
+                           {statusTranslations[status]}
                         </Badge>
                     </TableCell>
                     <TableCell className="text-right">{item.openingStock}</TableCell>
@@ -138,13 +144,13 @@ export function StockTable({ data }: { data: StockItem[] }) {
                                 variant="ghost"
                             >
                                 <MoreHorizontal className="h-4 w-4" />
-                                <span className="sr-only">Toggle menu</span>
+                                <span className="sr-only">สลับเมนู</span>
                             </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem>Edit</DropdownMenuItem>
-                            <DropdownMenuItem>Delete</DropdownMenuItem>
+                            <DropdownMenuLabel>การดำเนินการ</DropdownMenuLabel>
+                            <DropdownMenuItem>แก้ไข</DropdownMenuItem>
+                            <DropdownMenuItem>ลบ</DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </TableCell>
@@ -156,7 +162,7 @@ export function StockTable({ data }: { data: StockItem[] }) {
       </CardContent>
       <CardFooter>
         <div className="text-xs text-muted-foreground">
-          Showing <strong>1-{data.length}</strong> of <strong>{data.length}</strong> products
+          แสดง <strong>1-{data.length}</strong> จาก <strong>{data.length}</strong> สินค้า
         </div>
       </CardFooter>
     </Card>
