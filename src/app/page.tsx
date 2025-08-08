@@ -17,6 +17,7 @@ import { listenToStockItems, addStockItem, updateStockItem, deleteStockItem } fr
 
 export default function Home() {
   const [stockItems, setStockItems] = useState<StockItem[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const unsubscribe = listenToStockItems(setStockItems);
@@ -38,8 +39,12 @@ export default function Home() {
   const totalValue = stockItems.reduce((acc, item) => {
     return acc + item.currentStock * item.costPrice;
   }, 0);
-
+  
   const categories = [...new Set(stockItems.map(item => item.category))];
+
+  const filteredStockItems = stockItems.filter(item =>
+    item.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
@@ -51,9 +56,11 @@ export default function Home() {
         <div className="relative ml-auto flex-1 md:grow-0">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-            type="search"
-            placeholder="ค้นหาสินค้า..."
-            className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[320px]"
+              type="search"
+              placeholder="ค้นหาสินค้า..."
+              className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[320px]"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
         </div>
       </header>
@@ -74,7 +81,7 @@ export default function Home() {
         </div>
         <div className="flex-1 overflow-auto">
             <StockTable 
-              data={stockItems} 
+              data={filteredStockItems} 
               categories={categories}
               onAddItem={handleAddItem}
               onUpdateItem={handleUpdateItem}
