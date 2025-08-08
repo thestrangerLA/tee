@@ -7,7 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Search, Leaf, DollarSign, Package } from "lucide-react"
+import { Search, Leaf, DollarSign, Package, Tags } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import type { StockItem } from "@/lib/types"
 import { StatCard } from "@/components/stat-card"
@@ -46,6 +46,15 @@ export default function Home() {
     item.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const valuePerCategory = stockItems.reduce((acc, item) => {
+    const value = item.currentStock * item.costPrice;
+    if (!acc[item.category]) {
+      acc[item.category] = 0;
+    }
+    acc[item.category] += value;
+    return acc;
+  }, {} as Record<string, number>);
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <header className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
@@ -78,7 +87,30 @@ export default function Home() {
                 icon={<Package className="h-4 w-4 text-muted-foreground" />}
                 description="จำนวนรายการสินค้าในสต็อก"
             />
+             <StatCard 
+                title="หมวดหมู่ทั้งหมด"
+                value={categories.length.toString()}
+                icon={<Tags className="h-4 w-4 text-muted-foreground" />}
+                description="จำนวนหมวดหมู่สินค้าทั้งหมด"
+            />
         </div>
+        <Card>
+            <CardHeader>
+                <CardTitle>มูลค่าตามหมวดหมู่</CardTitle>
+                <CardDescription>มูลค่ารวมของสินค้าในแต่ละหมวดหมู่</CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                {Object.entries(valuePerCategory).sort(([a], [b]) => a.localeCompare(b)).map(([category, value]) => (
+                    <StatCard
+                        key={category}
+                        title={category}
+                        value={new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'LAK', currencyDisplay: 'code' }).format(value)}
+                        icon={<Tags className="h-4 w-4 text-muted-foreground" />}
+                        description={`มูลค่ารวมในหมวดหมู่ ${category}`}
+                    />
+                ))}
+            </CardContent>
+        </Card>
         <div className="flex-1 overflow-auto">
             <StockTable 
               data={filteredStockItems} 
