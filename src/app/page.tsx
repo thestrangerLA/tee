@@ -55,6 +55,10 @@ export default function Home() {
     return acc;
   }, {} as Record<string, number>);
 
+  const formatCurrencyKip = (value: number) => {
+    return new Intl.NumberFormat('th-TH', { minimumFractionDigits: 0 }).format(value) + ' กีบ';
+  }
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <header className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
@@ -77,7 +81,7 @@ export default function Home() {
         <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
             <StatCard 
                 title="มูลค่าสต็อกทั้งหมด"
-                value={new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'LAK', currencyDisplay: 'code' }).format(totalValue)}
+                value={formatCurrencyKip(totalValue)}
                 icon={<DollarSign className="h-4 w-4 text-muted-foreground" />}
                 description="มูลค่าโดยประมาณของสินค้าทั้งหมด"
             />
@@ -104,7 +108,7 @@ export default function Home() {
                     <StatCard
                         key={category}
                         title={category}
-                        value={new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'LAK', currencyDisplay: 'code' }).format(value)}
+                        value={formatCurrencyKip(value)}
                         icon={<Tags className="h-4 w-4 text-muted-foreground" />}
                         description={`มูลค่ารวมในหมวดหมู่ ${category}`}
                     />

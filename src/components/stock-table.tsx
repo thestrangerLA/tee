@@ -37,7 +37,7 @@ function formatNumber(amount: number) {
 }
 
 function formatCurrency(amount: number) {
-    return new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'LAK', currencyDisplay: 'code', minimumFractionDigits: 0 }).format(amount);
+    return new Intl.NumberFormat('th-TH', { minimumFractionDigits: 0 }).format(amount) + ' กีบ';
 }
 
 const categoryColors: Record<string, string> = {
