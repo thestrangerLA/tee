@@ -40,10 +40,6 @@ export default function Home() {
     return acc + item.currentStock * item.costPrice;
   }, 0);
 
-  const totalValueBaht = stockItems.reduce((acc, item) => {
-    return acc + item.currentStock * (item.costPriceBaht || 0);
-  }, 0);
-  
   const categories = [...new Set(stockItems.map(item => item.category))];
 
   const filteredStockItems = stockItems.filter(item =>
@@ -87,12 +83,6 @@ export default function Home() {
             <StatCard 
                 title="มูลค่าสต็อกทั้งหมด (กีบ)"
                 value={formatCurrency(totalValueKip, 'Kip')}
-                icon={<DollarSign className="h-4 w-4 text-muted-foreground" />}
-                description="มูลค่าโดยประมาณของสินค้าทั้งหมด"
-            />
-            <StatCard 
-                title="มูลค่าสต็อกทั้งหมด (บาท)"
-                value={formatCurrency(totalValueBaht, 'Baht')}
                 icon={<DollarSign className="h-4 w-4 text-muted-foreground" />}
                 description="มูลค่าโดยประมาณของสินค้าทั้งหมด"
             />
