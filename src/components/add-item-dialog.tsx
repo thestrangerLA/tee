@@ -37,6 +37,7 @@ export function AddItemDialog({ open, onOpenChange, onAddItem, categories }: Add
             category: selectedCategory,
             currentStock: currentStock,
             costPrice: parseFloat(formData.get('costPrice') as string) || 0,
+            costPriceBaht: parseFloat(formData.get('costPriceBaht') as string) || 0,
             wholesalePrice: parseFloat(formData.get('wholesalePrice') as string) || 0,
             sellingPrice: parseFloat(formData.get('sellingPrice') as string) || 0,
         };
@@ -103,8 +104,12 @@ export function AddItemDialog({ open, onOpenChange, onAddItem, categories }: Add
                     <Input id="currentStock" name="currentStock" type="number" placeholder="0" className="col-span-3" required />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="costPrice" className="text-right">ราคาต้นทุน</Label>
+                    <Label htmlFor="costPrice" className="text-right">ราคาต้นทุน (กีบ)</Label>
                     <Input id="costPrice" name="costPrice" type="number" placeholder="0.00" step="0.01" className="col-span-3" required />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="costPriceBaht" className="text-right">ราคาต้นทุน (บาท)</Label>
+                    <Input id="costPriceBaht" name="costPriceBaht" type="number" placeholder="0.00" step="0.01" className="col-span-3" required />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="wholesalePrice" className="text-right">ราคาขายส่ง</Label>

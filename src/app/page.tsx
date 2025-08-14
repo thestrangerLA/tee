@@ -36,8 +36,12 @@ export default function Home() {
     await deleteStockItem(id);
   };
 
-  const totalValue = stockItems.reduce((acc, item) => {
+  const totalValueKip = stockItems.reduce((acc, item) => {
     return acc + item.currentStock * item.costPrice;
+  }, 0);
+
+  const totalValueBaht = stockItems.reduce((acc, item) => {
+    return acc + item.currentStock * (item.costPriceBaht || 0);
   }, 0);
   
   const categories = [...new Set(stockItems.map(item => item.category))];
@@ -55,8 +59,9 @@ export default function Home() {
     return acc;
   }, {} as Record<string, number>);
 
-  const formatCurrencyKip = (value: number) => {
-    return new Intl.NumberFormat('th-TH', { minimumFractionDigits: 0 }).format(value) + ' กีบ';
+  const formatCurrency = (value: number, currency: 'Kip' | 'Baht') => {
+    const currencySymbol = currency === 'Kip' ? ' กีบ' : ' บาท';
+    return new Intl.NumberFormat('th-TH', { minimumFractionDigits: 0 }).format(value) + currencySymbol;
   }
 
   return (
@@ -80,8 +85,14 @@ export default function Home() {
       <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
         <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
             <StatCard 
-                title="มูลค่าสต็อกทั้งหมด"
-                value={formatCurrencyKip(totalValue)}
+                title="มูลค่าสต็อกทั้งหมด (กีบ)"
+                value={formatCurrency(totalValueKip, 'Kip')}
+                icon={<DollarSign className="h-4 w-4 text-muted-foreground" />}
+                description="มูลค่าโดยประมาณของสินค้าทั้งหมด"
+            />
+            <StatCard 
+                title="มูลค่าสต็อกทั้งหมด (บาท)"
+                value={formatCurrency(totalValueBaht, 'Baht')}
                 icon={<DollarSign className="h-4 w-4 text-muted-foreground" />}
                 description="มูลค่าโดยประมาณของสินค้าทั้งหมด"
             />
@@ -100,7 +111,7 @@ export default function Home() {
         </div>
         <Card>
             <CardHeader>
-                <CardTitle>มูลค่าตามหมวดหมู่</CardTitle>
+                <CardTitle>มูลค่าตามหมวดหมู่ (กีบ)</CardTitle>
                 <CardDescription>มูลค่ารวมของสินค้าในแต่ละหมวดหมู่</CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -108,14 +119,14 @@ export default function Home() {
                     <StatCard
                         key={category}
                         title={category}
-                        value={formatCurrencyKip(value)}
+                        value={formatCurrency(value, 'Kip')}
                         icon={<Tags className="h-4 w-4 text-muted-foreground" />}
                         description={`มูลค่ารวมในหมวดหมู่ ${category}`}
                     />
                 ))}
             </CardContent>
         </Card>
-        <div className="flex-1 overflow-auto">
+        <div className="grid grid-cols-1 overflow-auto">
             <StockTable 
               data={filteredStockItems} 
               categories={categories}

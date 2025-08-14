@@ -32,12 +32,9 @@ import { AddItemDialog } from "./add-item-dialog"
 import { Input } from "./ui/input"
 import { cn } from "@/lib/utils"
 
-function formatNumber(amount: number) {
-    return new Intl.NumberFormat('th-TH').format(amount);
-}
-
-function formatCurrency(amount: number) {
-    return new Intl.NumberFormat('th-TH', { minimumFractionDigits: 0 }).format(amount) + ' กีบ';
+function formatCurrency(amount: number, currency: 'Kip' | 'Baht') {
+    const currencySymbol = currency === 'Kip' ? ' กีบ' : ' บาท';
+    return new Intl.NumberFormat('th-TH', { minimumFractionDigits: 0 }).format(amount) + currencySymbol;
 }
 
 const categoryColors: Record<string, string> = {
@@ -85,8 +82,8 @@ export function StockTable({ data, categories, onAddItem, onUpdateItem, onDelete
 
   return (
     <>
-    <Card className="h-full flex flex-col">
-        <CardHeader>
+    <Card className="flex flex-col h-full">
+        <CardHeader className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm">
             <div className="flex items-center justify-between">
                 <div>
                     <CardTitle>สินค้าคงคลัง</CardTitle>
@@ -110,17 +107,18 @@ export function StockTable({ data, categories, onAddItem, onUpdateItem, onDelete
                 </div>
             </div>
         </CardHeader>
-      <CardContent className="flex-1 overflow-auto">
+      <CardContent className="flex-1 overflow-auto p-0">
         <div className="relative w-full">
             <Table>
-            <TableHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur">
+            <TableHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm">
                 <TableRow>
                 <TableHead className="w-[250px] text-blue-600">ชื่อสินค้า</TableHead>
-                <TableHead className="text-right text-red-600">ราคาต้นทุน</TableHead>
+                <TableHead className="text-right text-red-600">ราคาต้นทุน (กีบ)</TableHead>
+                <TableHead className="text-right text-red-600">ราคาต้นทุน (บาท)</TableHead>
                 <TableHead className="text-right text-green-600">ราคาขายส่ง</TableHead>
                 <TableHead className="text-right text-purple-600">ราคาขายปลีก</TableHead>
                 <TableHead className="text-right w-[120px] text-cyan-600">สต็อกปัจจุบัน</TableHead>
-                <TableHead className="text-right text-fuchsia-600">มูลค่า</TableHead>
+                <TableHead className="text-right text-fuchsia-600">มูลค่า (กีบ)</TableHead>
                 <TableHead>
                     <span className="sr-only">การดำเนินการ</span>
                 </TableHead>
@@ -132,7 +130,7 @@ export function StockTable({ data, categories, onAddItem, onUpdateItem, onDelete
                     return (
                     <React.Fragment key={category}>
                         <TableRow className={cn("cursor-pointer", getCategoryColor(category))} onClick={() => toggleCategory(category)}>
-                            <TableCell colSpan={7} className="p-2">
+                            <TableCell colSpan={8} className="p-2">
                                 <div className="flex items-center gap-2">
                                     {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                                     <span className="font-semibold">{category}</span>
@@ -144,13 +142,11 @@ export function StockTable({ data, categories, onAddItem, onUpdateItem, onDelete
                             return (
                             <TableRow key={item.id}>
                                 <TableCell className="font-medium p-2">
-                                    <div className="flex items-center gap-2">
-                                        <Input
-                                            defaultValue={item.name}
-                                            onBlur={(e) => handleFieldChange(item.id, 'name', e.target.value)}
-                                            className="h-8 border-none"
-                                        />
-                                    </div>
+                                    <Input
+                                        defaultValue={item.name}
+                                        onBlur={(e) => handleFieldChange(item.id, 'name', e.target.value)}
+                                        className="h-8 border-none"
+                                    />
                                 </TableCell>
                                 <TableCell className="text-right p-2">
                                     <Input
@@ -158,6 +154,15 @@ export function StockTable({ data, categories, onAddItem, onUpdateItem, onDelete
                                         step="0.01"
                                         defaultValue={item.costPrice}
                                         onBlur={(e) => handleFieldChange(item.id, 'costPrice', parseFloat(e.target.value) || 0)}
+                                        className="h-8 w-24 text-right"
+                                    />
+                                </TableCell>
+                                <TableCell className="text-right p-2">
+                                    <Input
+                                        type="number"
+                                        step="0.01"
+                                        defaultValue={item.costPriceBaht}
+                                        onBlur={(e) => handleFieldChange(item.id, 'costPriceBaht', parseFloat(e.target.value) || 0)}
                                         className="h-8 w-24 text-right"
                                     />
                                 </TableCell>
@@ -187,7 +192,7 @@ export function StockTable({ data, categories, onAddItem, onUpdateItem, onDelete
                                         className="h-8 w-24 text-right"
                                     />
                                 </TableCell>
-                                <TableCell className="text-right p-2">{formatCurrency(value)}</TableCell>
+                                <TableCell className="text-right p-2">{formatCurrency(value, 'Kip')}</TableCell>
                                 <TableCell className="p-2">
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
