@@ -84,7 +84,7 @@ export function StockTable({ data, categories, onAddItem, onUpdateItem, onDelete
 
   return (
     <>
-    <Card>
+    <Card className="flex flex-col max-h-full">
         <CardHeader>
             <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                 <div>
@@ -121,14 +121,14 @@ export function StockTable({ data, categories, onAddItem, onUpdateItem, onDelete
                 </div>
             </div>
         </CardHeader>
-      <CardContent className="p-0">
-        <div className="relative w-full overflow-auto">
+      <CardContent className="p-0 flex-grow overflow-auto">
+        <div className="relative w-full">
             <Table>
-            <TableHeader>
+            <TableHeader className="sticky top-0 bg-background z-10">
                 <TableRow>
                 <TableHead className="w-[250px] text-blue-600">ชื่อสินค้า</TableHead>
                 <TableHead className="text-right text-red-600">ราคาต้นทุน (กีบ)</TableHead>
-                <TableHead className="text-right text-red-600">ราคาต้นทุน (กีบ)</TableHead>
+                <TableHead className="text-right text-red-600">ราคาต้นทุน (บาท)</TableHead>
                 <TableHead className="text-right text-green-600">ราคาขายส่ง</TableHead>
                 <TableHead className="text-right text-purple-600">ราคาขายปลีก</TableHead>
                 <TableHead className="text-right w-[120px] text-cyan-600">สต็อกปัจจุบัน</TableHead>
@@ -152,7 +152,7 @@ export function StockTable({ data, categories, onAddItem, onUpdateItem, onDelete
                             </TableCell>
                         </TableRow>
                         {!isCollapsed && items.map((item) => {
-                            const value = item.costPriceBaht * item.currentStock;
+                            const value = item.costPrice * item.currentStock;
                             return (
                             <TableRow key={item.id}>
                                 <TableCell className="font-medium p-2">
@@ -206,7 +206,7 @@ export function StockTable({ data, categories, onAddItem, onUpdateItem, onDelete
                                         className="h-8 w-24 text-right"
                                     />
                                 </TableCell>
-                                <TableCell className="text-right p-2">{formatCurrency(value, 'Baht')}</TableCell>
+                                <TableCell className="text-right p-2">{formatCurrency(value, 'Kip')}</TableCell>
                                 <TableCell className="p-2">
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
