@@ -26,7 +26,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
-import { File, MoreHorizontal, PlusCircle, ChevronDown, ChevronRight } from "lucide-react"
+import { File, MoreHorizontal, PlusCircle, ChevronDown, ChevronRight, Search } from "lucide-react"
 import type { StockItem } from "@/lib/types"
 import { AddItemDialog } from "./add-item-dialog"
 import { Input } from "./ui/input"
@@ -56,9 +56,11 @@ type StockTableProps = {
     onAddItem: (item: Omit<StockItem, 'id'>) => Promise<void>;
     onUpdateItem: (id: string, updatedFields: Partial<StockItem>) => Promise<void>;
     onDeleteItem: (id: string) => Promise<void>;
+    searchQuery: string;
+    onSearchQueryChange: (query: string) => void;
 }
 
-export function StockTable({ data, categories, onAddItem, onUpdateItem, onDeleteItem }: StockTableProps) {
+export function StockTable({ data, categories, onAddItem, onUpdateItem, onDeleteItem, searchQuery, onSearchQueryChange }: StockTableProps) {
     const [isAddItemOpen, setAddItemOpen] = React.useState(false)
     const [collapsedCategories, setCollapsedCategories] = React.useState<Record<string, boolean>>({});
 
@@ -82,23 +84,33 @@ export function StockTable({ data, categories, onAddItem, onUpdateItem, onDelete
 
   return (
     <>
-    <Card className="flex flex-col h-full">
-        <CardHeader className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm">
-            <div className="flex items-center justify-between">
+    <Card className="flex flex-col h-[calc(100vh-280px)]">
+        <CardHeader className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm px-4 pt-4 pb-2 md:px-6 md:pt-6 md:pb-4">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
                     <CardTitle>สินค้าคงคลัง</CardTitle>
                     <CardDescription>
                     จัดการสินค้าและดูระดับสต็อกของคุณ
                     </CardDescription>
                 </div>
-                <div className="flex items-center gap-2">
-                    <Button size="sm" variant="outline" className="h-8 gap-1">
+                <div className="flex items-center gap-2 w-full md:w-auto">
+                    <div className="relative flex-1 md:grow-0">
+                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          type="search"
+                          placeholder="ค้นหาสินค้า..."
+                          className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[320px]"
+                          value={searchQuery}
+                          onChange={(e) => onSearchQueryChange(e.target.value)}
+                        />
+                    </div>
+                    <Button size="sm" variant="outline" className="h-9 gap-1 shrink-0">
                         <File className="h-3.5 w-3.5" />
                         <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
                         ส่งออก
                         </span>
                     </Button>
-                    <Button size="sm" className="h-8 gap-1" onClick={() => setAddItemOpen(true)}>
+                    <Button size="sm" className="h-9 gap-1 shrink-0" onClick={() => setAddItemOpen(true)}>
                         <PlusCircle className="h-3.5 w-3.5" />
                         <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
                         เพิ่มสินค้า
@@ -113,12 +125,12 @@ export function StockTable({ data, categories, onAddItem, onUpdateItem, onDelete
             <TableHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm">
                 <TableRow>
                 <TableHead className="w-[250px] text-blue-600">ชื่อสินค้า</TableHead>
-                <TableHead className="text-right text-red-600">ราคาต้นทุน (กีบ)</TableHead>
+                <TableHead className="text-right text-red-600">ราคาต้นทุน (บาท)</TableHead>
                 <TableHead className="text-right text-red-600">ราคาต้นทุน (บาท)</TableHead>
                 <TableHead className="text-right text-green-600">ราคาขายส่ง</TableHead>
                 <TableHead className="text-right text-purple-600">ราคาขายปลีก</TableHead>
                 <TableHead className="text-right w-[120px] text-cyan-600">สต็อกปัจจุบัน</TableHead>
-                <TableHead className="text-right text-fuchsia-600">มูลค่า (กีบ)</TableHead>
+                <TableHead className="text-right text-fuchsia-600">มูลค่า (บาท)</TableHead>
                 <TableHead>
                     <span className="sr-only">การดำเนินการ</span>
                 </TableHead>
@@ -138,7 +150,7 @@ export function StockTable({ data, categories, onAddItem, onUpdateItem, onDelete
                             </TableCell>
                         </TableRow>
                         {!isCollapsed && items.map((item) => {
-                            const value = item.costPrice * item.currentStock;
+                            const value = item.costPriceBaht * item.currentStock;
                             return (
                             <TableRow key={item.id}>
                                 <TableCell className="font-medium p-2">
@@ -192,7 +204,7 @@ export function StockTable({ data, categories, onAddItem, onUpdateItem, onDelete
                                         className="h-8 w-24 text-right"
                                     />
                                 </TableCell>
-                                <TableCell className="text-right p-2">{formatCurrency(value, 'Kip')}</TableCell>
+                                <TableCell className="text-right p-2">{formatCurrency(value, 'Baht')}</TableCell>
                                 <TableCell className="p-2">
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
@@ -220,7 +232,7 @@ export function StockTable({ data, categories, onAddItem, onUpdateItem, onDelete
             </Table>
         </div>
       </CardContent>
-      <CardFooter>
+      <CardFooter className="px-4 py-2 md:px-6 md:py-3">
         <div className="text-xs text-muted-foreground">
           แสดง <strong>{data.length}</strong> จาก <strong>{data.length}</strong> สินค้า
         </div>
