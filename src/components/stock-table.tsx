@@ -85,16 +85,16 @@ export function StockTable({ data, categories, onAddItem, onUpdateItem, onDelete
   return (
     <>
     <Card>
-        <CardHeader className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm px-4 pt-4 pb-2 md:px-6 md:pt-6 md:pb-4">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <CardHeader>
+            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                 <div>
                     <CardTitle>สินค้าคงคลัง</CardTitle>
                     <CardDescription>
                     จัดการสินค้าและดูระดับสต็อกของคุณ
                     </CardDescription>
                 </div>
-                <div className="flex items-center gap-2 w-full md:w-auto">
-                    <div className="relative flex-1 md:grow-0">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full md:w-auto">
+                    <div className="relative flex-1 md:grow-0 w-full sm:w-auto">
                         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                         <Input
                           type="search"
@@ -104,33 +104,35 @@ export function StockTable({ data, categories, onAddItem, onUpdateItem, onDelete
                           onChange={(e) => onSearchQueryChange(e.target.value)}
                         />
                     </div>
-                    <Button size="sm" variant="outline" className="h-9 gap-1 shrink-0">
-                        <File className="h-3.5 w-3.5" />
-                        <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                        ส่งออก
-                        </span>
-                    </Button>
-                    <Button size="sm" className="h-9 gap-1 shrink-0" onClick={() => setAddItemOpen(true)}>
-                        <PlusCircle className="h-3.5 w-3.5" />
-                        <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                        เพิ่มสินค้า
-                        </span>
-                    </Button>
+                    <div className="flex gap-2">
+                        <Button size="sm" variant="outline" className="h-9 gap-1 shrink-0">
+                            <File className="h-3.5 w-3.5" />
+                            <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+                            ส่งออก
+                            </span>
+                        </Button>
+                        <Button size="sm" className="h-9 gap-1 shrink-0" onClick={() => setAddItemOpen(true)}>
+                            <PlusCircle className="h-3.5 w-3.5" />
+                            <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+                            เพิ่มสินค้า
+                            </span>
+                        </Button>
+                    </div>
                 </div>
             </div>
         </CardHeader>
       <CardContent className="p-0">
         <div className="relative w-full overflow-auto">
             <Table>
-            <TableHeader className="sticky top-[110px] z-10 bg-background/95 backdrop-blur-sm">
+            <TableHeader>
                 <TableRow>
                 <TableHead className="w-[250px] text-blue-600">ชื่อสินค้า</TableHead>
-                <TableHead className="text-right text-red-600">ราคาต้นทุน (บาท)</TableHead>
-                <TableHead className="text-right text-red-600">ราคาต้นทุน (บาท)</TableHead>
+                <TableHead className="text-right text-red-600">ราคาต้นทุน (กีบ)</TableHead>
+                <TableHead className="text-right text-red-600">ราคาต้นทุน (กีบ)</TableHead>
                 <TableHead className="text-right text-green-600">ราคาขายส่ง</TableHead>
                 <TableHead className="text-right text-purple-600">ราคาขายปลีก</TableHead>
                 <TableHead className="text-right w-[120px] text-cyan-600">สต็อกปัจจุบัน</TableHead>
-                <TableHead className="text-right text-fuchsia-600">มูลค่า (บาท)</TableHead>
+                <TableHead className="text-right text-fuchsia-600">มูลค่า (กีบ)</TableHead>
                 <TableHead>
                     <span className="sr-only">การดำเนินการ</span>
                 </TableHead>
