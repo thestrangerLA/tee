@@ -84,7 +84,7 @@ export function StockTable({ data, categories, onAddItem, onUpdateItem, onDelete
 
   return (
     <>
-    <Card className="flex flex-col h-[calc(100vh-280px)]">
+    <Card>
         <CardHeader className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm px-4 pt-4 pb-2 md:px-6 md:pt-6 md:pb-4">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
@@ -119,10 +119,10 @@ export function StockTable({ data, categories, onAddItem, onUpdateItem, onDelete
                 </div>
             </div>
         </CardHeader>
-      <CardContent className="flex-1 overflow-auto p-0">
-        <div className="relative w-full">
+      <CardContent className="p-0">
+        <div className="relative w-full overflow-auto">
             <Table>
-            <TableHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm">
+            <TableHeader className="sticky top-[110px] z-10 bg-background/95 backdrop-blur-sm">
                 <TableRow>
                 <TableHead className="w-[250px] text-blue-600">ชื่อสินค้า</TableHead>
                 <TableHead className="text-right text-red-600">ราคาต้นทุน (บาท)</TableHead>

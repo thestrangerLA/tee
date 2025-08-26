@@ -105,7 +105,7 @@ export default function Home() {
                 ))}
             </CardContent>
         </Card>
-        <div className="grid grid-cols-1 overflow-auto">
+        <div className="grid grid-cols-1">
             <StockTable 
               data={filteredStockItems} 
               categories={categories}
