@@ -122,22 +122,31 @@ export default function AccountancyPage() {
                 .filter(tx => tx.type === 'expense')
                 .reduce((sum, tx) => sum + tx.amount, 0);
 
-            return { income, expense, netProfit: income - expense };
+            // Previous implementation had netProfit here, but it's ambiguous.
+            // Let's return raw income/expense and calculate profits separately for clarity.
+            return { income, expense };
         };
 
         const currentMonthData = calculateMonthlySummary(historyDisplayMonth);
-        const previousMonthData = calculateMonthlySummary(subMonths(historyDisplayMonth, 1));
         
-        const broughtForward = previousMonthData.netProfit;
+        // Brought forward is the net of all transactions *before* the start of the current display month.
+        const broughtForwardStart = startOfMonth(historyDisplayMonth);
+        const previousTransactions = allTransactions.filter(tx => tx.date < broughtForwardStart);
+        const broughtForward = previousTransactions.reduce((acc, tx) => {
+            return tx.type === 'income' ? acc + tx.amount : acc - tx.amount;
+        }, 0);
+        
         const totalIncome = broughtForward + currentMonthData.income;
-        const netProfit = totalIncome - currentMonthData.expense;
+        const netProfitMonthly = currentMonthData.income - currentMonthData.expense;
+        const netProfitCumulative = totalIncome - currentMonthData.expense;
 
         return { 
             broughtForward, 
             income: currentMonthData.income, 
             totalIncome, 
             expense: currentMonthData.expense, 
-            netProfit 
+            netProfitMonthly,
+            netProfitCumulative,
         };
     }, [allTransactions, historyDisplayMonth]);
 
@@ -182,7 +191,7 @@ export default function AccountancyPage() {
             if (newTransaction.type === 'income') {
                 updatedSummary[newTransaction.paymentMethod] += newTransaction.amount;
             } else {
-                updatedSummary[newTransaction.paymentMethod] -= newTransaction.amount;
+                updatedSummary[new-transaction.paymentMethod] -= newTransaction.amount;
             }
             await updateAccountSummary(updatedSummary);
             
@@ -365,11 +374,11 @@ export default function AccountancyPage() {
                      <SummaryCard title="รวมเงินทั้งหมด" value={formatCurrency(totalMoney)} icon={<div className="font-bold text-2xl">💰</div>} />
                      <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                           <CardTitle className="text-sm font-medium">กำไรสุทธิเดือนนี้</CardTitle>
+                           <CardTitle className="text-sm font-medium">กำไรสะสมเดือนนี้</CardTitle>
                            <TrendingUp className="h-5 w-5 text-primary" />
                         </CardHeader>
                         <CardContent>
-                           <div className="text-2xl font-bold">{formatCurrency(performanceData.netProfit)}</div>
+                           <div className="text-2xl font-bold">{formatCurrency(performanceData.netProfitCumulative)}</div>
                            <p className="text-xs text-muted-foreground">สำหรับเดือน {format(historyDisplayMonth, "LLLL yyyy", { locale: th })}</p>
                         </CardContent>
                      </Card>
@@ -386,9 +395,9 @@ export default function AccountancyPage() {
                     <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                         <SummaryCard title="ยอดยกมา" value={formatCurrency(performanceData.broughtForward)} icon={<FileText className="h-5 w-5 text-primary" />} />
                         <SummaryCard title="รายรับ" value={formatCurrency(performanceData.income)} icon={<ArrowUpCircle className="h-5 w-5 text-green-500" />} />
-                        <SummaryCard title="รวมรายรับ" value={formatCurrency(performanceData.totalIncome)} icon={<Banknote className="h-5 w-5 text-blue-500" />} />
                         <SummaryCard title="รายจ่าย" value={formatCurrency(performanceData.expense)} icon={<ArrowDownCircle className="h-5 w-5 text-red-500" />} />
-                        <SummaryCard title="กำไรสุทธิ" value={formatCurrency(performanceData.netProfit)} icon={performanceData.netProfit >= 0 ? <Equal className="h-5 w-5 text-indigo-500" /> : <Minus className="h-5 w-5 text-red-500" />} />
+                        <SummaryCard title="กำไรสุทธิ (เดือน)" value={formatCurrency(performanceData.netProfitMonthly)} icon={performanceData.netProfitMonthly >= 0 ? <Equal className="h-5 w-5 text-indigo-500" /> : <Minus className="h-5 w-5 text-red-500" />} />
+                        <SummaryCard title="กำไรสะสม" value={formatCurrency(performanceData.netProfitCumulative)} icon={<Banknote className="h-5 w-5 text-blue-500" />} />
                     </CardContent>
                 </Card>
 
@@ -696,3 +705,6 @@ export default function AccountancyPage() {
     );
 }
 
+
+
+    

@@ -12,7 +12,8 @@ import {
     orderBy,
     limit,
     getDoc,
-    setDoc
+    setDoc,
+    Timestamp
 } from 'firebase/firestore';
 
 const transactionsCollectionRef = collection(db, 'transactions');
@@ -28,7 +29,7 @@ export const listenToTransactions = (callback: (items: Transaction[]) => void) =
             transactions.push({ 
                 id: doc.id, 
                 ...data,
-                date: data.date.toDate() // Convert Firestore Timestamp to JS Date
+                date: (data.date as Timestamp).toDate() // Convert Firestore Timestamp to JS Date
             } as Transaction);
         });
         callback(transactions);
@@ -37,12 +38,23 @@ export const listenToTransactions = (callback: (items: Transaction[]) => void) =
 };
 
 export const addTransaction = async (transaction: Omit<Transaction, 'id'>) => {
-    await addDoc(transactionsCollectionRef, transaction);
+    // Convert JS Date to Firestore Timestamp before saving
+    const transactionWithTimestamp = {
+        ...transaction,
+        date: Timestamp.fromDate(transaction.date)
+    };
+    await addDoc(transactionsCollectionRef, transactionWithTimestamp);
 };
 
 export const updateTransaction = async (id: string, updatedFields: Partial<Omit<Transaction, 'id'>>) => {
     const transactionDoc = doc(db, 'transactions', id);
-    await updateDoc(transactionDoc, updatedFields);
+    // If date is being updated, convert it to a Timestamp
+    if (updatedFields.date) {
+        const { date, ...rest } = updatedFields;
+        await updateDoc(transactionDoc, { ...rest, date: Timestamp.fromDate(date) });
+    } else {
+        await updateDoc(transactionDoc, updatedFields);
+    }
 };
 
 export const deleteTransaction = async (id: string) => {
@@ -62,6 +74,10 @@ export const listenToAccountSummary = (callback: (summary: AccountSummary | null
     return unsubscribe;
 };
 
-export const updateAccountSummary = async (summary: Omit<AccountSummary, 'id'>) => {
+export const updateAccountSummary = async (summary: Partial<Omit<AccountSummary, 'id'>>) => {
+    // Using setDoc with merge:true will create the document if it doesn't exist,
+    // or update it if it does. This simplifies the logic.
     await setDoc(accountSummaryDocRef, summary, { merge: true });
 };
+
+    
