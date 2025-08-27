@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Landmark, Wallet, Plus, Save, PlusCircle, Calendar as CalendarIcon } from "lucide-react"
+import { ArrowLeft, Landmark, Wallet, Plus, Save, PlusCircle, Calendar as CalendarIcon, ChevronDown, ChevronUp } from "lucide-react"
 import Link from 'next/link'
 import { useToast } from "@/hooks/use-toast"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
@@ -64,6 +64,8 @@ export default function AccountancyPage() {
         description: '',
         paymentMethod: 'cash' as 'cash' | 'transfer'
     });
+    const [isTransactionFormVisible, setTransactionFormVisible] = useState(false);
+
 
     const totalMoney = useMemo(() => cash + transfer, [cash, transfer]);
 
@@ -90,6 +92,17 @@ export default function AccountancyPage() {
             date: date,
             ...newTransaction
         };
+        
+        const balanceToUpdate = newTransaction.paymentMethod === 'cash' ? cash : transfer;
+        const updatedBalance = newTransaction.type === 'income' 
+            ? balanceToUpdate + newTransaction.amount 
+            : balanceToUpdate - newTransaction.amount;
+
+        if (newTransaction.paymentMethod === 'cash') {
+            setCash(updatedBalance);
+        } else {
+            setTransfer(updatedBalance);
+        }
 
         setTransactions(prev => [newTx, ...prev]);
 
@@ -174,9 +187,18 @@ export default function AccountancyPage() {
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     <Card className="lg:col-span-1">
                         <CardHeader>
-                            <CardTitle>เพิ่มธุรกรรม</CardTitle>
-                            <CardDescription>บันทึกรายรับ-รายจ่ายใหม่ของคุณ</CardDescription>
+                            <div className="flex justify-between items-center">
+                                <div>
+                                    <CardTitle>เพิ่มธุรกรรม</CardTitle>
+                                    <CardDescription>บันทึกรายรับ-รายจ่ายใหม่ของคุณ</CardDescription>
+                                </div>
+                                <Button variant="ghost" size="icon" onClick={() => setTransactionFormVisible(!isTransactionFormVisible)}>
+                                    {isTransactionFormVisible ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                                    <span className="sr-only">Toggle form</span>
+                                </Button>
+                            </div>
                         </CardHeader>
+                        {isTransactionFormVisible && (
                         <CardContent>
                             <form onSubmit={handleAddTransaction}>
                                 <div className="grid gap-6">
@@ -228,7 +250,7 @@ export default function AccountancyPage() {
 
                                     <div className="grid gap-3">
                                         <Label htmlFor="category">หมวดหมู่</Label>
-                                        <Input id="category" placeholder="เช่น ค่าปุ๋ย, ขายข้าว" value={newTransaction.category} onChange={(e) => setNewTransaction({ ...newTransaction, category: e.target.value})} required />
+                                        <Input id="category" value={newTransaction.category} onChange={(e) => setNewTransaction({ ...newTransaction, category: e.target.value})} required />
                                     </div>
 
                                     <div className="grid gap-3">
@@ -261,6 +283,7 @@ export default function AccountancyPage() {
                                 </div>
                             </form>
                         </CardContent>
+                        )}
                     </Card>
                     <Card className="lg:col-span-2">
                         <CardHeader>
