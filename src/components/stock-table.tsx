@@ -84,7 +84,7 @@ export function StockTable({ data, categories, onAddItem, onUpdateItem, onDelete
 
   return (
     <>
-    <Card className="flex flex-col max-h-full">
+    <Card>
         <CardHeader>
             <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                 <div>
@@ -121,10 +121,10 @@ export function StockTable({ data, categories, onAddItem, onUpdateItem, onDelete
                 </div>
             </div>
         </CardHeader>
-      <CardContent className="p-0 flex-grow overflow-auto">
-        <div className="relative w-full">
+      <CardContent className="p-0">
+        <div className="relative w-full overflow-x-auto">
             <Table>
-            <TableHeader className="sticky top-0 bg-background z-10">
+            <TableHeader>
                 <TableRow>
                 <TableHead className="w-[250px] text-blue-600">ชื่อสินค้า</TableHead>
                 <TableHead className="text-right text-red-600">ราคาต้นทุน (กีบ)</TableHead>
