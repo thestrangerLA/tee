@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -25,6 +25,8 @@ import {
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { listenToTransactions, addTransaction, listenToAccountSummary, updateAccountSummary } from '@/services/accountancyService';
+import type { Transaction } from '@/lib/types';
 
 
 const formatCurrency = (value: number) => {
@@ -43,21 +45,12 @@ const SummaryCard = ({ title, value, icon }: { title: string, value: string, ico
     </Card>
 );
 
-interface Transaction {
-    id: string;
-    type: 'income' | 'expense';
-    date: Date;
-    amount: number;
-    description: string;
-    paymentMethod: 'cash' | 'transfer';
-}
-
 export default function AccountancyPage() {
     const { toast } = useToast();
     const [cash, setCash] = useState<number>(0);
     const [transfer, setTransfer] = useState<number>(0);
     const [date, setDate] = useState<Date | undefined>(new Date());
-    const [transactions, setTransactions] = useState<Transaction[]>([]);
+    const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
     const [newTransaction, setNewTransaction] = useState({
         type: 'expense' as 'income' | 'expense',
         amount: 0,
@@ -67,10 +60,25 @@ export default function AccountancyPage() {
     const [isTransactionFormVisible, setTransactionFormVisible] = useState(false);
     const [selectedMonth, setSelectedMonth] = useState<string>(format(new Date(), 'yyyy-MM'));
 
+    useEffect(() => {
+        const unsubscribeTransactions = listenToTransactions(setAllTransactions);
+        const unsubscribeSummary = listenToAccountSummary((summary) => {
+            if (summary) {
+                setCash(summary.cash);
+                setTransfer(summary.transfer);
+            }
+        });
+
+        return () => {
+            unsubscribeTransactions();
+            unsubscribeSummary();
+        };
+    }, []);
+
     const totalMoney = useMemo(() => cash + transfer, [cash, transfer]);
     
     const availableMonths = useMemo(() => {
-        const months = new Set(transactions.map(tx => format(tx.date, 'yyyy-MM')));
+        const months = new Set(allTransactions.map(tx => format(tx.date, 'yyyy-MM')));
         const currentYear = getYear(new Date());
         for (let i = 0; i < 12; i++) {
             const monthDate = setMonth(new Date(), i);
@@ -78,20 +86,30 @@ export default function AccountancyPage() {
             months.add(yearMonth);
         }
         return Array.from(months).sort((a, b) => b.localeCompare(a));
-    }, [transactions]);
+    }, [allTransactions]);
     
     const filteredTransactions = useMemo(() => {
-        return transactions.filter(tx => format(tx.date, 'yyyy-MM') === selectedMonth);
-    }, [transactions, selectedMonth]);
+        return allTransactions.filter(tx => format(tx.date, 'yyyy-MM') === selectedMonth);
+    }, [allTransactions, selectedMonth]);
 
-    const handleSave = () => {
-        toast({
-            title: "สำเร็จ!",
-            description: `บันทึกยอดเงินสดและเงินโอนเรียบร้อยแล้ว`,
-        });
+    const handleSave = async () => {
+        try {
+            await updateAccountSummary({ cash, transfer });
+            toast({
+                title: "สำเร็จ!",
+                description: `บันทึกยอดเงินสดและเงินโอนเรียบร้อยแล้ว`,
+            });
+        } catch (error) {
+            console.error("Error saving account summary: ", error);
+            toast({
+                title: "เกิดข้อผิดพลาด",
+                description: "ไม่สามารถบันทึกยอดเงินได้",
+                variant: "destructive",
+            });
+        }
     };
 
-    const handleAddTransaction = (e: React.FormEvent) => {
+    const handleAddTransaction = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!date) {
             toast({
@@ -102,33 +120,41 @@ export default function AccountancyPage() {
             return;
         }
         
-        const newTx: Transaction = {
-            id: new Date().toISOString(),
-            date: date,
-            ...newTransaction
-        };
-        
-        const balanceToUpdate = newTransaction.paymentMethod === 'cash' ? cash : transfer;
-        const updatedBalance = newTransaction.type === 'income' 
-            ? balanceToUpdate + newTransaction.amount 
-            : balanceToUpdate - newTransaction.amount;
+        const newTxData = { date, ...newTransaction };
 
-        if (newTransaction.paymentMethod === 'cash') {
-            setCash(updatedBalance);
-        } else {
-            setTransfer(updatedBalance);
+        try {
+            await addTransaction(newTxData);
+            
+            // Update cash/transfer balance locally for immediate feedback
+            // This will be overwritten by the listener, but provides a better UX
+            const balanceToUpdate = newTransaction.paymentMethod === 'cash' ? cash : transfer;
+            const updatedBalance = newTransaction.type === 'income' 
+                ? balanceToUpdate + newTransaction.amount 
+                : balanceToUpdate - newTransaction.amount;
+    
+            if (newTransaction.paymentMethod === 'cash') {
+                setCash(updatedBalance);
+            } else {
+                setTransfer(updatedBalance);
+            }
+
+            toast({
+                title: "เพิ่มธุรกรรมใหม่สำเร็จ",
+                description: `เพิ่มรายการใหม่จำนวน ${formatCurrency(newTransaction.amount)}`,
+            });
+    
+            // Reset form
+            setNewTransaction({ type: 'expense', amount: 0, description: '', paymentMethod: 'cash' });
+            setDate(new Date());
+
+        } catch (error) {
+             console.error("Error adding transaction: ", error);
+             toast({
+                title: "เกิดข้อผิดพลาด",
+                description: "ไม่สามารถเพิ่มธุรกรรมได้",
+                variant: "destructive",
+            });
         }
-
-        setTransactions(prev => [newTx, ...prev]);
-
-        toast({
-            title: "เพิ่มธุรกรรมใหม่สำเร็จ",
-            description: `เพิ่มรายการใหม่จำนวน ${formatCurrency(newTransaction.amount)}`,
-        });
-
-        // Reset form
-        setNewTransaction({ type: 'expense', amount: 0, description: '', paymentMethod: 'cash' });
-        setDate(new Date());
     }
 
     return (

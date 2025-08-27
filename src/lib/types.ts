@@ -9,3 +9,18 @@ export type StockItem = {
   wholesalePrice: number;
   sellingPrice: number;
 };
+
+export interface Transaction {
+    id: string;
+    type: 'income' | 'expense';
+    date: Date; // Stored as Timestamp in Firestore, converted to Date on client
+    amount: number;
+    description: string;
+    paymentMethod: 'cash' | 'transfer';
+}
+
+export interface AccountSummary {
+    id: string;
+    cash: number;
+    transfer: number;
+}
