@@ -239,25 +239,26 @@ export default function AccountancyPage() {
 
         const currentMonthData = calculateMonthlySummary(historyDisplayMonth);
         
+        // Calculate Brought Forward from all previous transactions, excluding capital
         const broughtForwardStart = startOfMonth(historyDisplayMonth);
         const previousTransactions = allTransactions.filter(tx => tx.date < broughtForwardStart);
         const broughtForward = previousTransactions.reduce((acc, tx) => {
             return tx.type === 'income' ? acc + tx.amount : acc - tx.amount;
-        }, 0) + (accountSummary.capital || 0);
+        }, 0);
         
-        const totalIncome = broughtForward + currentMonthData.income;
+        const totalIncomeForMonth = broughtForward + currentMonthData.income;
         const netProfitMonthly = currentMonthData.income - currentMonthData.expense;
-        const netProfitCumulative = totalIncome - currentMonthData.expense;
+        const netProfitCumulative = broughtForward + netProfitMonthly;
 
         return { 
             broughtForward, 
             income: currentMonthData.income, 
-            totalIncome, 
+            totalIncome: totalIncomeForMonth, 
             expense: currentMonthData.expense, 
             netProfitMonthly,
             netProfitCumulative,
         };
-    }, [allTransactions, historyDisplayMonth, accountSummary.capital]);
+    }, [allTransactions, historyDisplayMonth]);
 
     const dailySummariesForMonth = useMemo(() => {
         const start = startOfMonth(historyDisplayMonth);
@@ -516,7 +517,7 @@ export default function AccountancyPage() {
                         <SummaryCard title="รายรับ" value={formatCurrency(performanceData.income)} icon={<ArrowUpCircle className="h-5 w-5 text-green-500" />} />
                         <SummaryCard title="รายจ่าย" value={formatCurrency(performanceData.expense)} icon={<ArrowDownCircle className="h-5 w-5 text-red-500" />} />
                         <SummaryCard title="กำไรสุทธิ (เดือน)" value={formatCurrency(performanceData.netProfitMonthly)} icon={performanceData.netProfitMonthly >= 0 ? <Equal className="h-5 w-5 text-indigo-500" /> : <Minus className="h-5 w-5 text-red-500" />} />
-                        <SummaryCard title="กำไรสะสม" value={formatCurrency(performanceData.netProfitCumulative)} icon={<Banknote className="h-5 w-5 text-blue-500" />} />
+                        <SummaryCard title="ยอดคงเหลือสิ้นเดือน" value={formatCurrency(performanceData.netProfitCumulative)} icon={<Banknote className="h-5 w-5 text-blue-500" />} />
                     </CardContent>
                 </Card>
 
@@ -824,5 +825,3 @@ export default function AccountancyPage() {
         </div>
     );
 }
-
-    
