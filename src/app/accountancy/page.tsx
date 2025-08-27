@@ -108,6 +108,18 @@ export default function AccountancyPage() {
         return allTransactions.filter(tx => isSameDay(tx.date, selectedHistoryDate));
     }, [allTransactions, selectedHistoryDate]);
 
+    const dailySummary = useMemo(() => {
+        return transactionsForSelectedDate.reduce((acc, tx) => {
+            if (tx.type === 'income') {
+                acc.income += tx.amount;
+            } else {
+                acc.expense += tx.amount;
+            }
+            return acc;
+        }, { income: 0, expense: 0 });
+    }, [transactionsForSelectedDate]);
+
+
     const performanceData = useMemo(() => {
         const start = startOfMonth(historyDisplayMonth);
         const end = endOfMonth(historyDisplayMonth);
@@ -444,57 +456,63 @@ export default function AccountancyPage() {
                             </div>
                             <div className="flex-1">
                                 {transactionsForSelectedDate.length > 0 ? (
-                                    <Table>
-                                        <TableHeader>
-                                            <TableRow>
-                                                <TableHead>คำอธิบาย</TableHead>
-                                                <TableHead>ประเภท</TableHead>
-                                                <TableHead>การชำระเงิน</TableHead>
-                                                <TableHead className="text-right">จำนวนเงิน</TableHead>
-                                                <TableHead><span className="sr-only">Actions</span></TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                        {transactionsForSelectedDate.map((tx) => (
-                                            <TableRow key={tx.id}>
-                                                <TableCell>
-                                                    <div className="font-medium">{tx.description || "-"}</div>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Badge variant={tx.type === 'income' ? 'secondary' : 'destructive'}>
-                                                        {tx.type === 'income' ? 'รายรับ' : 'รายจ่าย'}
-                                                    </Badge>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Badge variant="outline">{tx.paymentMethod === 'cash' ? 'เงินสด' : 'เงินโอน'}</Badge>
-                                                </TableCell>
-                                                <TableCell className="text-right">{formatCurrency(tx.amount)}</TableCell>
-                                                <TableCell className="text-right">
-                                                    <DropdownMenu>
-                                                        <DropdownMenuTrigger asChild>
-                                                            <Button variant="ghost" className="h-8 w-8 p-0">
-                                                                <span className="sr-only">Open menu</span>
-                                                                <MoreHorizontal className="h-4 w-4" />
-                                                            </Button>
-                                                        </DropdownMenuTrigger>
-                                                        <DropdownMenuContent align="end">
-                                                            <DropdownMenuLabel>การดำเนินการ</DropdownMenuLabel>
-                                                            <DropdownMenuItem onClick={() => openEditDialog(tx)}>
-                                                                แก้ไข
-                                                            </DropdownMenuItem>
-                                                            <DropdownMenuItem
-                                                                className="text-red-600"
-                                                                onClick={() => handleDeleteTransaction(tx)}
-                                                            >
-                                                                ลบ
-                                                            </DropdownMenuItem>
-                                                        </DropdownMenuContent>
-                                                    </DropdownMenu>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                        </TableBody>
-                                    </Table>
+                                    <>
+                                        <div className="flex justify-around p-2 mb-2 bg-muted rounded-md">
+                                            <div className="text-center">
+                                                <p className="text-sm text-muted-foreground">รวมรับ</p>
+                                                <p className="font-bold text-green-600">{formatCurrency(dailySummary.income)}</p>
+                                            </div>
+                                            <div className="text-center">
+                                                <p className="text-sm text-muted-foreground">รวมจ่าย</p>
+                                                <p className="font-bold text-red-600">{formatCurrency(dailySummary.expense)}</p>
+                                            </div>
+                                        </div>
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead>คำอธิบาย</TableHead>
+                                                    <TableHead>การชำระเงิน</TableHead>
+                                                    <TableHead className="text-right">จำนวนเงิน</TableHead>
+                                                    <TableHead><span className="sr-only">Actions</span></TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                            {transactionsForSelectedDate.map((tx) => (
+                                                <TableRow key={tx.id} className={tx.type === 'income' ? 'bg-green-50/50' : 'bg-red-50/50'}>
+                                                    <TableCell>
+                                                        <div className="font-medium">{tx.description || "-"}</div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Badge variant="outline">{tx.paymentMethod === 'cash' ? 'เงินสด' : 'เงินโอน'}</Badge>
+                                                    </TableCell>
+                                                    <TableCell className={`text-right font-semibold ${tx.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>{formatCurrency(tx.amount)}</TableCell>
+                                                    <TableCell className="text-right">
+                                                        <DropdownMenu>
+                                                            <DropdownMenuTrigger asChild>
+                                                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                                                    <span className="sr-only">Open menu</span>
+                                                                    <MoreHorizontal className="h-4 w-4" />
+                                                                </Button>
+                                                            </DropdownMenuTrigger>
+                                                            <DropdownMenuContent align="end">
+                                                                <DropdownMenuLabel>การดำเนินการ</DropdownMenuLabel>
+                                                                <DropdownMenuItem onClick={() => openEditDialog(tx)}>
+                                                                    แก้ไข
+                                                                </DropdownMenuItem>
+                                                                <DropdownMenuItem
+                                                                    className="text-red-600"
+                                                                    onClick={() => handleDeleteTransaction(tx)}
+                                                                >
+                                                                    ลบ
+                                                                </DropdownMenuItem>
+                                                            </DropdownMenuContent>
+                                                        </DropdownMenu>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                            </TableBody>
+                                        </Table>
+                                    </>
                                 ) : (
                                     <div className="text-center text-muted-foreground py-8">
                                         {selectedHistoryDate ? 'ไม่มีธุรกรรมในวันที่เลือก' : 'กรุณาเลือกวัน'}
@@ -590,3 +608,5 @@ export default function AccountancyPage() {
         </div>
     );
 }
+
+    
