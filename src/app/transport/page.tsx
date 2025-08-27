@@ -2,7 +2,7 @@
 "use client"
 
 import { useState, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -78,6 +78,16 @@ export default function TransportPage() {
         }, 0);
     }, [transportRows]);
 
+    const transportRemaining = useMemo(() => {
+        return transportRows.reduce((total, row) => {
+            let remaining = 0;
+            if (!row.ans_finished) remaining += (row.ans_amount || 0);
+            if (!row.hal_finished) remaining += (row.hal_amount || 0);
+            if (!row.mx_finished) remaining += (row.mx_amount || 0);
+            return total + remaining;
+        }, 0);
+    }, [transportRows]);
+
     const handleAddTransportRow = () => {
         setTransportRows([...transportRows, initialRowState]);
     };
@@ -120,64 +130,86 @@ export default function TransportPage() {
                     <h1 className="text-xl font-bold tracking-tight">บัญชีขนส่ง</h1>
                 </div>
             </header>
-            <main className="flex-1 p-4 sm:px-6 sm:py-0">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>บันทึกค่าขนส่ง</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="overflow-x-auto">
-                            <Table className="min-w-full whitespace-nowrap">
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead colSpan={4} className="text-center border-r">ANS</TableHead>
-                                        <TableHead colSpan={4} className="text-center border-r">HAL</TableHead>
-                                        <TableHead colSpan={4} className="text-center border-r">MX</TableHead>
-                                        <TableHead className="text-center">ลบ</TableHead>
-                                    </TableRow>
-                                    <TableRow>
-                                        {/* ANS */}
-                                        <TableHead className="text-center">วันที่</TableHead>
-                                        <TableHead className="text-center">ต้นทุน</TableHead>
-                                        <TableHead className="text-center">จำนวนเงิน</TableHead>
-                                        <TableHead className="text-center border-r">เสร็จสิ้น</TableHead>
-                                        {/* HAL */}
-                                        <TableHead className="text-center">วันที่</TableHead>
-                                        <TableHead className="text-center">ต้นทุน</TableHead>
-                                        <TableHead className="text-center">จำนวนเงิน</TableHead>
-                                        <TableHead className="text-center border-r">เสร็จสิ้น</TableHead>
-                                        {/* MX */}
-                                        <TableHead className="text-center">วันที่</TableHead>
-                                        <TableHead className="text-center">ต้นทุน</TableHead>
-                                        <TableHead className="text-center">จำนวนเงิน</TableHead>
-                                        <TableHead className="text-center border-r">เสร็จสิ้น</TableHead>
-                                        {/* Actions */}
-                                        <TableHead className="text-center"></TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {transportRows.map((row, index) => (
-                                        <TransportEntryRow 
-                                            key={index}
-                                            index={index}
-                                            row={row} 
-                                            onRowChange={handleTransportRowChange}
-                                            onRowDelete={handleTransportRowDelete}
-                                        />
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </div>
-                        <div className="mt-4 flex flex-col gap-2">
-                            <Button variant="outline" onClick={handleAddTransportRow}>เพิ่มแถว</Button>
-                            <Button onClick={handleSaveTransportData}>บันทึกข้อมูล</Button>
-                            <div className="flex justify-between items-center p-2 bg-muted rounded-md">
-                                <span className="font-semibold">สรุปรวม</span>
-                                <span className="font-bold">{formatCurrency(transportTotal)}</span>
+            <main className="flex-1 p-4 sm:px-6 sm:py-0 md:grid md:grid-cols-3 md:gap-8">
+                <div className="md:col-span-2">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>บันทึกค่าขนส่ง</CardTitle>
+                            <CardDescription>กรอกข้อมูลค่าใช้จ่ายในการขนส่งแต่ละประเภท</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="overflow-x-auto">
+                                <Table className="min-w-full whitespace-nowrap">
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead colSpan={4} className="text-center border-r bg-blue-50">ANS</TableHead>
+                                            <TableHead colSpan={4} className="text-center border-r bg-green-50">HAL</TableHead>
+                                            <TableHead colSpan={4} className="text-center border-r bg-orange-50">MX</TableHead>
+                                            <TableHead className="text-center bg-gray-50">ลบ</TableHead>
+                                        </TableRow>
+                                        <TableRow>
+                                            {/* ANS */}
+                                            <TableHead className="text-center">วันที่</TableHead>
+                                            <TableHead className="text-center">ต้นทุน</TableHead>
+                                            <TableHead className="text-center">จำนวนเงิน</TableHead>
+                                            <TableHead className="text-center border-r">เสร็จสิ้น</TableHead>
+                                            {/* HAL */}
+                                            <TableHead className="text-center">วันที่</TableHead>
+                                            <TableHead className="text-center">ต้นทุน</TableHead>
+                                            <TableHead className="text-center">จำนวนเงิน</TableHead>
+                                            <TableHead className="text-center border-r">เสร็จสิ้น</TableHead>
+                                            {/* MX */}
+                                            <TableHead className="text-center">วันที่</TableHead>
+                                            <TableHead className="text-center">ต้นทุน</TableHead>
+                                            <TableHead className="text-center">จำนวนเงิน</TableHead>
+                                            <TableHead className="text-center border-r">เสร็จสิ้น</TableHead>
+                                            {/* Actions */}
+                                            <TableHead className="text-center"></TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {transportRows.map((row, index) => (
+                                            <TransportEntryRow 
+                                                key={index}
+                                                index={index}
+                                                row={row} 
+                                                onRowChange={handleTransportRowChange}
+                                                onRowDelete={handleTransportRowDelete}
+                                            />
+                                        ))}
+                                    </TableBody>
+                                </Table>
                             </div>
-                        </div>
-                    </CardContent>
-                </Card>
+                           
+                        </CardContent>
+                    </Card>
+                </div>
+                <div className="md:col-span-1 mt-4 md:mt-0 flex flex-col gap-4">
+                     <Card>
+                        <CardHeader>
+                            <CardTitle>สรุปยอด</CardTitle>
+                        </CardHeader>
+                        <CardContent className="flex flex-col gap-4">
+                             <div className="flex justify-between items-center p-4 bg-muted rounded-md">
+                                <span className="font-semibold text-lg">สรุปรวม</span>
+                                <span className="font-bold text-lg text-blue-600">{formatCurrency(transportTotal)}</span>
+                            </div>
+                             <div className="flex justify-between items-center p-4 bg-muted rounded-md">
+                                <span className="font-semibold text-lg">คงเหลือ</span>
+                                <span className="font-bold text-lg text-red-600">{formatCurrency(transportRemaining)}</span>
+                            </div>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>การดำเนินการ</CardTitle>
+                        </CardHeader>
+                        <CardContent className="flex flex-col gap-2">
+                             <Button variant="outline" onClick={handleAddTransportRow}>เพิ่มแถว</Button>
+                            <Button onClick={handleSaveTransportData}>บันทึกข้อมูล</Button>
+                        </CardContent>
+                    </Card>
+                </div>
             </main>
         </div>
     );
