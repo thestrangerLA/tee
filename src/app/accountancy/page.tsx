@@ -13,7 +13,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
 import { Textarea } from "@/components/ui/textarea"
-import { format } from "date-fns"
+import { format, getMonth, getYear, setMonth, setYear } from "date-fns"
 import { th } from "date-fns/locale"
 import {
   Table,
@@ -24,6 +24,8 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+
 
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB', minimumFractionDigits: 0 }).format(value);
@@ -63,9 +65,21 @@ export default function AccountancyPage() {
         paymentMethod: 'cash' as 'cash' | 'transfer'
     });
     const [isTransactionFormVisible, setTransactionFormVisible] = useState(false);
-
+    const [selectedMonth, setSelectedMonth] = useState<string>(format(new Date(), 'yyyy-MM'));
 
     const totalMoney = useMemo(() => cash + transfer, [cash, transfer]);
+    
+    const availableMonths = useMemo(() => {
+        const months = new Set(transactions.map(tx => format(tx.date, 'yyyy-MM')));
+        if (!months.has(format(new Date(), 'yyyy-MM'))) {
+            months.add(format(new Date(), 'yyyy-MM'));
+        }
+        return Array.from(months).sort((a, b) => b.localeCompare(a));
+    }, [transactions]);
+    
+    const filteredTransactions = useMemo(() => {
+        return transactions.filter(tx => format(tx.date, 'yyyy-MM') === selectedMonth);
+    }, [transactions, selectedMonth]);
 
     const handleSave = () => {
         toast({
@@ -280,8 +294,30 @@ export default function AccountancyPage() {
                     </Card>
                     <Card className="lg:col-span-2">
                         <CardHeader>
-                            <CardTitle>ประวัติธุรกรรม</CardTitle>
-                            <CardDescription>รายการรายรับ-รายจ่ายล่าสุดของคุณ</CardDescription>
+                            <div className="flex justify-between items-center">
+                                <div>
+                                    <CardTitle>ประวัติธุรกรรม</CardTitle>
+                                    <CardDescription>รายการรายรับ-รายจ่ายล่าสุดของคุณ</CardDescription>
+                                </div>
+                                <div className="w-[200px]">
+                                     <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="เลือกเดือน" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {availableMonths.map(month => {
+                                                const [year, monthNum] = month.split('-').map(Number);
+                                                const dateObj = setYear(setMonth(new Date(), monthNum - 1), year);
+                                                return (
+                                                    <SelectItem key={month} value={month}>
+                                                        {format(dateObj, "LLLL yyyy", { locale: th })}
+                                                    </SelectItem>
+                                                )
+                                            })}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
                         </CardHeader>
                         <CardContent>
                             <Table>
@@ -294,8 +330,8 @@ export default function AccountancyPage() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {transactions.length > 0 ? (
-                                        transactions.map((tx) => (
+                                    {filteredTransactions.length > 0 ? (
+                                        filteredTransactions.map((tx) => (
                                             <TableRow key={tx.id}>
                                                 <TableCell>{format(tx.date, "dd MMM yyyy", { locale: th })}</TableCell>
                                                 <TableCell>
@@ -311,7 +347,7 @@ export default function AccountancyPage() {
                                         ))
                                     ) : (
                                         <TableRow>
-                                            <TableCell colSpan={4} className="text-center">ยังไม่มีธุรกรรม</TableCell>
+                                            <TableCell colSpan={4} className="text-center">ยังไม่มีธุรกรรมในเดือนนี้</TableCell>
                                         </TableRow>
                                     )}
                                 </TableBody>
