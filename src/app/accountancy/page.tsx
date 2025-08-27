@@ -28,15 +28,17 @@ const SummaryCard = ({ title, value, valueColor }: { title: string; value: strin
   </Card>
 );
 
-const CashSummaryCard = ({ title, value }: { title: string; value: string }) => (
-    <Card>
-      <CardContent className="p-4">
-        <p className="text-sm text-muted-foreground">{title}</p>
-        <p className="text-2xl font-bold">{value}</p>
-         <div className="h-2 mt-2 bg-gray-200 rounded-full dark:bg-gray-700 w-full"></div>
-      </CardContent>
-    </Card>
-);
+const CashSummaryCard = ({ title, value }: { title: string; value: string }) => {
+    return (
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-sm text-muted-foreground">{title}</p>
+            <p className="text-2xl font-bold">{value}</p>
+             <div className="h-2 mt-2 bg-gray-200 rounded-full dark:bg-gray-700 w-full"></div>
+          </CardContent>
+        </Card>
+    );
+};
 
 function TransactionFormContent() {
     const [date, setDate] = React.useState<Date>()
