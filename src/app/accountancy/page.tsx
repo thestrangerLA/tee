@@ -13,7 +13,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
 import { Textarea } from "@/components/ui/textarea"
-import { format, isSameDay, startOfMonth, endOfMonth, isWithinInterval, addMonths, subMonths, getMonth, getYear, setMonth, startOfDay } from "date-fns"
+import { format, isSameDay, startOfMonth, endOfMonth, isWithinInterval, addMonths, subMonths, getMonth, getYear, setMonth, startOfDay, eachDayOfInterval, getDate } from "date-fns"
 import { th } from "date-fns/locale"
 import {
   Table,
@@ -44,6 +44,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { listenToTransactions, addTransaction, listenToAccountSummary, updateAccountSummary, deleteTransaction, updateTransaction } from '@/services/accountancyService';
 import type { Transaction, AccountSummary } from '@/lib/types';
 
@@ -81,7 +82,6 @@ export default function AccountancyPage() {
     const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
     const [isTransactionFormVisible, setTransactionFormVisible] = useState(true);
     const [isHistoryVisible, setHistoryVisible] = useState(true);
-    const [selectedHistoryDate, setSelectedHistoryDate] = useState<Date | undefined>(new Date());
     
     const [historyDisplayMonth, setHistoryDisplayMonth] = useState<Date>(new Date());
     const [editingSummaryField, setEditingSummaryField] = useState<'cash' | 'transfer' | null>(null);
@@ -106,27 +106,6 @@ export default function AccountancyPage() {
     }, []);
 
     const totalMoney = useMemo(() => accountSummary.cash + accountSummary.transfer, [accountSummary]);
-    
-    const transactionDates = useMemo(() => {
-       return allTransactions.map(tx => tx.date);
-    }, [allTransactions]);
-    
-    const transactionsForSelectedDate = useMemo(() => {
-        if (!selectedHistoryDate) return [];
-        return allTransactions.filter(tx => isSameDay(tx.date, selectedHistoryDate));
-    }, [allTransactions, selectedHistoryDate]);
-
-    const dailySummary = useMemo(() => {
-        return transactionsForSelectedDate.reduce((acc, tx) => {
-            if (tx.type === 'income') {
-                acc.income += tx.amount;
-            } else {
-                acc.expense += tx.amount;
-            }
-            return acc;
-        }, { income: 0, expense: 0 });
-    }, [transactionsForSelectedDate]);
-
 
     const performanceData = useMemo(() => {
         const calculateMonthlySummary = (month: Date) => {
@@ -160,6 +139,27 @@ export default function AccountancyPage() {
             expense: currentMonthData.expense, 
             netProfit 
         };
+    }, [allTransactions, historyDisplayMonth]);
+
+    const dailySummariesForMonth = useMemo(() => {
+        const start = startOfMonth(historyDisplayMonth);
+        const end = endOfMonth(historyDisplayMonth);
+        const daysInMonth = eachDayOfInterval({ start, end });
+
+        const monthlyTransactions = allTransactions.filter(tx => isWithinInterval(tx.date, { start, end }));
+
+        return daysInMonth.map(day => {
+            const transactionsForDay = monthlyTransactions.filter(tx => isSameDay(tx.date, day));
+            const income = transactionsForDay.filter(tx => tx.type === 'income').reduce((sum, tx) => sum + tx.amount, 0);
+            const expense = transactionsForDay.filter(tx => tx.type === 'expense').reduce((sum, tx) => sum + tx.amount, 0);
+            return {
+                date: day,
+                income,
+                expense,
+                transactions: transactionsForDay
+            };
+        }).filter(summary => summary.transactions.length > 0); // Only show days with transactions
+
     }, [allTransactions, historyDisplayMonth]);
 
     const handleAddTransaction = async (e: React.FormEvent) => {
@@ -379,7 +379,7 @@ export default function AccountancyPage() {
                     <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                         <div>
                             <CardTitle>สรุปผลประกอบการ</CardTitle>
-                            <CardDescription>สำหรับเดือน {format(historyDisplayMonth, "LLLL yyyy", { locale: th })}</CardDescription>
+                            <CardDescription>สำหรับเดือนที่เลือก</CardDescription>
                         </div>
                         <MonthYearSelector />
                     </CardHeader>
@@ -492,12 +492,12 @@ export default function AccountancyPage() {
                     </div>
 
                     <Card className="lg:col-span-2">
-                        <CardHeader>
+                         <CardHeader>
                              <div className="flex justify-between items-center cursor-pointer" onClick={() => setHistoryVisible(!isHistoryVisible)}>
                                 <div>
                                     <CardTitle>ประวัติธุรกรรม</CardTitle>
                                     <CardDescription>
-                                        {selectedHistoryDate ? `ธุรกรรมวันที่ ${format(selectedHistoryDate, "dd MMMM yyyy", { locale: th })}` : 'เลือกวันที่จากปฏิทินเพื่อดูธุรกรรม'}
+                                       สรุปธุรกรรมรายวันสำหรับเดือน {format(historyDisplayMonth, "LLLL yyyy", { locale: th })}
                                     </CardDescription>
                                 </div>
                                  <Button variant="ghost" size="icon">
@@ -507,101 +507,75 @@ export default function AccountancyPage() {
                             </div>
                         </CardHeader>
                         {isHistoryVisible && (
-                        <CardContent className="flex flex-col md:flex-row gap-4">
-                            <div className="flex flex-col items-center gap-4">
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                        <Button
-                                            variant={"outline"}
-                                            className="w-full md:w-[280px] justify-start text-left font-normal"
-                                        >
-                                            <CalendarIcon className="mr-2 h-4 w-4" />
-                                            {selectedHistoryDate ? format(selectedHistoryDate, "PPP", { locale: th }) : <span>เลือกวันที่</span>}
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0">
-                                         <Calendar
-                                            mode="single"
-                                            selected={selectedHistoryDate}
-                                            onSelect={setSelectedHistoryDate}
-                                            month={historyDisplayMonth}
-                                            onMonthChange={setHistoryDisplayMonth}
-                                            locale={th}
-                                            modifiers={{ haveTransactions: transactionDates }}
-                                            modifiersClassNames={{
-                                                haveTransactions: 'bg-primary/20 rounded-full',
-                                            }}
-                                            className="rounded-md border"
-                                            initialFocus
-                                        />
-                                    </PopoverContent>
-                                </Popover>
-                            </div>
-                            <div className="flex-1">
-                                {transactionsForSelectedDate.length > 0 ? (
-                                    <>
-                                        <div className="flex justify-around p-2 mb-2 bg-muted rounded-md">
-                                            <div className="text-center">
-                                                <p className="text-sm text-muted-foreground">รวมรับ</p>
-                                                <p className="font-bold text-green-600">{formatCurrency(dailySummary.income)}</p>
-                                            </div>
-                                            <div className="text-center">
-                                                <p className="text-sm text-muted-foreground">รวมจ่าย</p>
-                                                <p className="font-bold text-red-600">{formatCurrency(dailySummary.expense)}</p>
-                                            </div>
-                                        </div>
-                                        <Table>
-                                            <TableHeader>
-                                                <TableRow>
-                                                    <TableHead>คำอธิบาย</TableHead>
-                                                    <TableHead>การชำระเงิน</TableHead>
-                                                    <TableHead className="text-right">จำนวนเงิน</TableHead>
-                                                    <TableHead><span className="sr-only">Actions</span></TableHead>
-                                                </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
-                                            {transactionsForSelectedDate.map((tx) => (
-                                                <TableRow key={tx.id} className={tx.type === 'income' ? 'bg-green-50/50' : 'bg-red-50/50'}>
-                                                    <TableCell>
-                                                        <div className="font-medium">{tx.description || "-"}</div>
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <Badge variant="outline">{tx.paymentMethod === 'cash' ? 'เงินสด' : 'เงินโอน'}</Badge>
-                                                    </TableCell>
-                                                    <TableCell className={`text-right font-semibold ${tx.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>{formatCurrency(tx.amount)}</TableCell>
-                                                    <TableCell className="text-right">
-                                                        <DropdownMenu>
-                                                            <DropdownMenuTrigger asChild>
-                                                                <Button variant="ghost" className="h-8 w-8 p-0">
-                                                                    <span className="sr-only">Open menu</span>
-                                                                    <MoreHorizontal className="h-4 w-4" />
-                                                                </Button>
-                                                            </DropdownMenuTrigger>
-                                                            <DropdownMenuContent align="end">
-                                                                <DropdownMenuLabel>การดำเนินการ</DropdownMenuLabel>
-                                                                <DropdownMenuItem onClick={() => openEditDialog(tx)}>
-                                                                    แก้ไข
-                                                                </DropdownMenuItem>
-                                                                <DropdownMenuItem
-                                                                    className="text-red-600"
-                                                                    onClick={() => handleDeleteTransaction(tx)}
-                                                                >
-                                                                    ลบ
-                                                                </DropdownMenuItem>
-                                                            </DropdownMenuContent>
-                                                        </DropdownMenu>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
-                                            </TableBody>
-                                        </Table>
-                                    </>
-                                ) : (
-                                    <div className="text-center text-muted-foreground py-8">
-                                        {selectedHistoryDate ? 'ไม่มีธุรกรรมในวันที่เลือก' : 'กรุณาเลือกวัน'}
-                                    </div>
-                                )}
-                            </div>
+                        <CardContent>
+                            {dailySummariesForMonth.length > 0 ? (
+                                <Accordion type="single" collapsible className="w-full">
+                                    {dailySummariesForMonth.map((summary, index) => (
+                                        <AccordionItem value={`item-${index}`} key={index}>
+                                            <AccordionTrigger>
+                                                <div className="flex justify-between w-full pr-4">
+                                                    <div className="font-semibold">{format(summary.date, "EEEEที่ do MMMM", { locale: th })}</div>
+                                                    <div className="flex gap-4">
+                                                        <span className="text-green-600">รับ: {formatCurrency(summary.income)}</span>
+                                                        <span className="text-red-600">จ่าย: {formatCurrency(summary.expense)}</span>
+                                                    </div>
+                                                </div>
+                                            </AccordionTrigger>
+                                            <AccordionContent>
+                                                <Table>
+                                                    <TableHeader>
+                                                        <TableRow>
+                                                            <TableHead>คำอธิบาย</TableHead>
+                                                            <TableHead>การชำระเงิน</TableHead>
+                                                            <TableHead className="text-right">จำนวนเงิน</TableHead>
+                                                            <TableHead><span className="sr-only">Actions</span></TableHead>
+                                                        </TableRow>
+                                                    </TableHeader>
+                                                    <TableBody>
+                                                    {summary.transactions.map((tx) => (
+                                                        <TableRow key={tx.id} className={tx.type === 'income' ? 'bg-green-50/50' : 'bg-red-50/50'}>
+                                                            <TableCell>
+                                                                <div className="font-medium">{tx.description || "-"}</div>
+                                                            </TableCell>
+                                                            <TableCell>
+                                                                <Badge variant="outline">{tx.paymentMethod === 'cash' ? 'เงินสด' : 'เงินโอน'}</Badge>
+                                                            </TableCell>
+                                                            <TableCell className={`text-right font-semibold ${tx.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>{formatCurrency(tx.amount)}</TableCell>
+                                                             <TableCell className="text-right">
+                                                                <DropdownMenu>
+                                                                    <DropdownMenuTrigger asChild>
+                                                                        <Button variant="ghost" className="h-8 w-8 p-0">
+                                                                            <span className="sr-only">Open menu</span>
+                                                                            <MoreHorizontal className="h-4 w-4" />
+                                                                        </Button>
+                                                                    </DropdownMenuTrigger>
+                                                                    <DropdownMenuContent align="end">
+                                                                        <DropdownMenuLabel>การดำเนินการ</DropdownMenuLabel>
+                                                                        <DropdownMenuItem onClick={() => openEditDialog(tx)}>
+                                                                            แก้ไข
+                                                                        </DropdownMenuItem>
+                                                                        <DropdownMenuItem
+                                                                            className="text-red-600"
+                                                                            onClick={() => handleDeleteTransaction(tx)}
+                                                                        >
+                                                                            ลบ
+                                                                        </DropdownMenuItem>
+                                                                    </DropdownMenuContent>
+                                                                </DropdownMenu>
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ))}
+                                                    </TableBody>
+                                                </Table>
+                                            </AccordionContent>
+                                        </AccordionItem>
+                                    ))}
+                                </Accordion>
+                            ) : (
+                                <div className="text-center text-muted-foreground py-8">
+                                    ไม่มีธุรกรรมในเดือนที่เลือก
+                                </div>
+                            )}
                         </CardContent>
                         )}
                     </Card>
@@ -719,5 +693,4 @@ export default function AccountancyPage() {
             )}
         </div>
     );
-
-    
+}
