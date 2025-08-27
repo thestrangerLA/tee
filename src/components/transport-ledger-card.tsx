@@ -6,8 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Trash2, ChevronUp, ChevronDown } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+import { Label } from '@/components/ui/label';
 
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB', minimumFractionDigits: 0 }).format(value);
@@ -19,19 +21,46 @@ const TransportEntryRow = ({ row, onRowChange, onRowDelete, index }: { row: any,
             <Input type="text" value={row.ans_date} onChange={(e) => onRowChange(index, 'ans_date', e.target.value)} placeholder="วันที่" className="h-8" />
         </TableCell>
         <TableCell className="p-1">
+            <Input type="number" value={row.ans_cost || ''} onChange={(e) => onRowChange(index, 'ans_cost', parseFloat(e.target.value) || 0)} placeholder="ต้นทุน" className="h-8" />
+        </TableCell>
+        <TableCell className="p-1">
+            <Input type="text" value={row.ans_page} onChange={(e) => onRowChange(index, 'ans_page', e.target.value)} placeholder="หน้า" className="h-8" />
+        </TableCell>
+        <TableCell className="p-1">
             <Input type="number" value={row.ans_amount || ''} onChange={(e) => onRowChange(index, 'ans_amount', parseFloat(e.target.value) || 0)} placeholder="จำนวนเงิน" className="h-8" />
+        </TableCell>
+        <TableCell className="p-1 text-center">
+             <Checkbox checked={row.ans_finished} onCheckedChange={(checked) => onRowChange(index, 'ans_finished', checked)} />
         </TableCell>
         <TableCell className="p-1">
             <Input type="text" value={row.hal_date} onChange={(e) => onRowChange(index, 'hal_date', e.target.value)} placeholder="วันที่" className="h-8" />
         </TableCell>
         <TableCell className="p-1">
+            <Input type="number" value={row.hal_cost || ''} onChange={(e) => onRowChange(index, 'hal_cost', parseFloat(e.target.value) || 0)} placeholder="ต้นทุน" className="h-8" />
+        </TableCell>
+        <TableCell className="p-1">
+            <Input type="text" value={row.hal_page} onChange={(e) => onRowChange(index, 'hal_page', e.target.value)} placeholder="หน้า" className="h-8" />
+        </TableCell>
+        <TableCell className="p-1">
             <Input type="number" value={row.hal_amount || ''} onChange={(e) => onRowChange(index, 'hal_amount', parseFloat(e.target.value) || 0)} placeholder="จำนวนเงิน" className="h-8" />
+        </TableCell>
+        <TableCell className="p-1 text-center">
+            <Checkbox checked={row.hal_finished} onCheckedChange={(checked) => onRowChange(index, 'hal_finished', checked)} />
         </TableCell>
         <TableCell className="p-1">
             <Input type="text" value={row.mx_date} onChange={(e) => onRowChange(index, 'mx_date', e.target.value)} placeholder="วันที่" className="h-8" />
         </TableCell>
+         <TableCell className="p-1">
+            <Input type="number" value={row.mx_cost || ''} onChange={(e) => onRowChange(index, 'mx_cost', parseFloat(e.target.value) || 0)} placeholder="ต้นทุน" className="h-8" />
+        </TableCell>
+        <TableCell className="p-1">
+            <Input type="text" value={row.mx_page} onChange={(e) => onRowChange(index, 'mx_page', e.target.value)} placeholder="หน้า" className="h-8" />
+        </TableCell>
         <TableCell className="p-1">
             <Input type="number" value={row.mx_amount || ''} onChange={(e) => onRowChange(index, 'mx_amount', parseFloat(e.target.value) || 0)} placeholder="จำนวนเงิน" className="h-8" />
+        </TableCell>
+        <TableCell className="p-1 text-center">
+             <Checkbox checked={row.mx_finished} onCheckedChange={(checked) => onRowChange(index, 'mx_finished', checked)} />
         </TableCell>
         <TableCell className="p-1 text-center">
             <Button variant="ghost" size="icon" onClick={() => onRowDelete(index)}>
@@ -45,9 +74,13 @@ const TransportEntryRow = ({ row, onRowChange, onRowDelete, index }: { row: any,
 export function TransportLedgerCard() {
     const { toast } = useToast();
     const [isTransportFormVisible, setTransportFormVisible] = useState(false);
-    const [transportRows, setTransportRows] = useState([
-        { ans_date: '', ans_amount: 0, hal_date: '', hal_amount: 0, mx_date: '', mx_amount: 0 }
-    ]);
+    
+    const initialRowState = {
+        ans_date: '', ans_cost: 0, ans_page: '', ans_amount: 0, ans_finished: false,
+        hal_date: '', hal_cost: 0, hal_page: '', hal_amount: 0, hal_finished: false,
+        mx_date: '', mx_cost: 0, mx_page: '', mx_amount: 0, mx_finished: false,
+    };
+    const [transportRows, setTransportRows] = useState([initialRowState]);
     
     const transportTotal = useMemo(() => {
         return transportRows.reduce((total, row) => {
@@ -56,7 +89,7 @@ export function TransportLedgerCard() {
     }, [transportRows]);
 
     const handleAddTransportRow = () => {
-        setTransportRows([...transportRows, { ans_date: '', ans_amount: 0, hal_date: '', hal_amount: 0, mx_date: '', mx_amount: 0 }]);
+        setTransportRows([...transportRows, initialRowState]);
     };
 
     const handleTransportRowChange = (index: number, field: string, value: any) => {
@@ -97,21 +130,34 @@ export function TransportLedgerCard() {
             {isTransportFormVisible && (
                 <CardContent>
                     <div className="overflow-x-auto">
-                        <Table className="min-w-full">
+                        <Table className="min-w-full whitespace-nowrap">
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead colSpan={2} className="text-center border-r">ANS</TableHead>
-                                    <TableHead colSpan={2} className="text-center border-r">HAL</TableHead>
-                                    <TableHead colSpan={2} className="text-center border-r">MX</TableHead>
+                                    <TableHead colSpan={5} className="text-center border-r">ANS</TableHead>
+                                    <TableHead colSpan={5} className="text-center border-r">HAL</TableHead>
+                                    <TableHead colSpan={5} className="text-center border-r">MX</TableHead>
                                     <TableHead className="text-center">ลบ</TableHead>
                                 </TableRow>
                                 <TableRow>
+                                    {/* ANS */}
                                     <TableHead className="text-center">วันที่</TableHead>
-                                    <TableHead className="text-center border-r">จำนวนเงิน</TableHead>
+                                    <TableHead className="text-center">ต้นทุน</TableHead>
+                                    <TableHead className="text-center">หน้า</TableHead>
+                                    <TableHead className="text-center">จำนวนเงิน</TableHead>
+                                    <TableHead className="text-center border-r">เสร็จสิ้น</TableHead>
+                                    {/* HAL */}
                                     <TableHead className="text-center">วันที่</TableHead>
-                                    <TableHead className="text-center border-r">จำนวนเงิน</TableHead>
+                                    <TableHead className="text-center">ต้นทุน</TableHead>
+                                    <TableHead className="text-center">หน้า</TableHead>
+                                    <TableHead className="text-center">จำนวนเงิน</TableHead>
+                                    <TableHead className="text-center border-r">เสร็จสิ้น</TableHead>
+                                    {/* MX */}
                                     <TableHead className="text-center">วันที่</TableHead>
-                                    <TableHead className="text-center border-r">จำนวนเงิน</TableHead>
+                                    <TableHead className="text-center">ต้นทุน</TableHead>
+                                    <TableHead className="text-center">หน้า</TableHead>
+                                    <TableHead className="text-center">จำนวนเงิน</TableHead>
+                                    <TableHead className="text-center border-r">เสร็จสิ้น</TableHead>
+                                    {/* Actions */}
                                     <TableHead className="text-center"></TableHead>
                                 </TableRow>
                             </TableHeader>
