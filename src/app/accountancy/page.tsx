@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Landmark, Wallet, PlusCircle, Calendar as CalendarIcon, ChevronDown, ChevronUp, TrendingUp, ArrowUpCircle, ArrowDownCircle, Minus, Equal, FileText, MoreHorizontal, Pencil, Banknote, Trash2 } from "lucide-react"
+import { ArrowLeft, Landmark, Wallet, PlusCircle, Calendar as CalendarIcon, ChevronDown, ChevronUp, TrendingUp, ArrowUpCircle, ArrowDownCircle, Minus, Equal, FileText, MoreHorizontal, Pencil, Banknote, Trash2, Users, Truck } from "lucide-react"
 import Link from 'next/link'
 import { useToast } from "@/hooks/use-toast"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
@@ -46,8 +46,10 @@ import {
 } from "@/components/ui/dialog"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { listenToTransactions, addTransaction, listenToAccountSummary, updateAccountSummary, deleteTransaction, updateTransaction } from '@/services/accountancyService';
-import type { Transaction, AccountSummary, CashCalculatorState } from '@/lib/types';
+import type { Transaction, AccountSummary, CashCalculatorState, DebtorCreditorEntry, TransportEntry } from '@/lib/types';
 import { listenToCalculatorState, updateCalculatorState } from '@/services/cashCalculatorService';
+import { listenToDebtorCreditorEntries } from '@/services/debtorCreditorService';
+import { listenToTransportEntries } from '@/services/transportService';
 
 
 const formatCurrency = (value: number) => {
@@ -169,6 +171,10 @@ export default function AccountancyPage() {
     const [editingSummaryField, setEditingSummaryField] = useState<'cash' | 'transfer' | null>(null);
     const [editingSummaryValue, setEditingSummaryValue] = useState(0);
 
+    const [debtorEntries, setDebtorEntries] = useState<DebtorCreditorEntry[]>([]);
+    const [transportEntries, setTransportEntries] = useState<TransportEntry[]>([]);
+
+
     useEffect(() => {
         const unsubscribeTransactions = listenToTransactions(setAllTransactions);
         const unsubscribeSummary = listenToAccountSummary((summary) => {
@@ -180,12 +186,32 @@ export default function AccountancyPage() {
                 updateAccountSummary(initialSummary);
             }
         });
+        const unsubscribeDebtors = listenToDebtorCreditorEntries(setDebtorEntries);
+        const unsubscribeTransport = listenToTransportEntries(setTransportEntries);
         
         return () => {
             unsubscribeTransactions();
             unsubscribeSummary();
+            unsubscribeDebtors();
+            unsubscribeTransport();
         };
     }, []);
+
+    const totalDebtors = useMemo(() => {
+        return debtorEntries
+            .filter(e => e.type === 'debtor' && !e.isPaid)
+            .reduce((sum, entry) => sum + entry.amount, 0);
+    }, [debtorEntries]);
+
+    const transportRemaining = useMemo(() => {
+        return transportEntries.reduce((total, row) => {
+            let remaining = 0;
+            if (!row.ans_finished) remaining += (row.ans_amount || 0);
+            if (!row.hal_finished) remaining += (row.hal_amount || 0);
+            if (!row.mx_finished) remaining += (row.mx_amount || 0);
+            return total + remaining;
+        }, 0);
+    }, [transportEntries]);
 
     const totalMoney = useMemo(() => accountSummary.cash + accountSummary.transfer, [accountSummary]);
 
@@ -445,10 +471,12 @@ export default function AccountancyPage() {
                 </div>
             </header>
             <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-                <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
+                <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-3 xl:grid-cols-6">
                      <SummaryCard title="เงินสด" value={formatCurrency(accountSummary.cash)} icon={<Wallet className="h-5 w-5 text-primary" />} onClick={() => openEditSummaryDialog('cash')} />
                      <SummaryCard title="เงินโอน" value={formatCurrency(accountSummary.transfer)} icon={<Landmark className="h-5 w-5 text-primary" />} onClick={() => openEditSummaryDialog('transfer')} />
                      <SummaryCard title="รวมเงินทั้งหมด" value={formatCurrency(totalMoney)} icon={<div className="font-bold text-2xl">💰</div>} />
+                     <SummaryCard title="ลูกหนี้ทั้งหมด" value={formatCurrency(totalDebtors)} icon={<Users className="h-5 w-5 text-yellow-600" />} />
+                     <SummaryCard title="ค่าขนส่งคงเหลือ" value={formatCurrency(transportRemaining)} icon={<Truck className="h-5 w-5 text-red-600" />} />
                      <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                            <CardTitle className="text-sm font-medium">กำไรสะสมเดือนนี้</CardTitle>
@@ -782,5 +810,3 @@ export default function AccountancyPage() {
         </div>
     );
 }
-
-    
