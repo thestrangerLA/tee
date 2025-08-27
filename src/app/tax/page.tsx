@@ -1,14 +1,23 @@
 
 "use client"
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Calculator } from "lucide-react";
+import { ArrowLeft, Calculator, ChevronDown } from "lucide-react";
+import { listenToTransactions } from '@/services/accountancyService';
+import type { Transaction } from '@/lib/types';
+import { getYear, startOfYear, endOfYear, isWithinInterval, subYears } from 'date-fns';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'LAK', currencyDisplay: 'code', minimumFractionDigits: 0 }).format(value).replace('LAK', 'KIP');
@@ -31,12 +40,44 @@ interface TaxCalculationResult {
 }
 
 export default function TaxCalculatorPage() {
+    const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
+    const [selectedYear, setSelectedYear] = useState(getYear(new Date()));
     const [annualIncome, setAnnualIncome] = useState(0);
     const [taxResults, setTaxResults] = useState<TaxCalculationResult[]>([]);
     const [totalTax, setTotalTax] = useState(0);
 
-    const calculateTax = () => {
-        let remainingIncome = annualIncome;
+    useEffect(() => {
+        const unsubscribe = listenToTransactions(setAllTransactions);
+        return () => unsubscribe();
+    }, []);
+
+    const calculateAnnualIncome = () => {
+        const yearDate = new Date(selectedYear, 0, 1);
+        const start = startOfYear(yearDate);
+        const end = endOfYear(yearDate);
+
+        const yearlyTransactions = allTransactions.filter(tx => isWithinInterval(tx.date, { start, end }));
+        
+        const income = yearlyTransactions
+            .filter(tx => tx.type === 'income')
+            .reduce((sum, tx) => sum + tx.amount, 0);
+            
+        const expense = yearlyTransactions
+            .filter(tx => tx.type === 'expense')
+            .reduce((sum, tx) => sum + tx.amount, 0);
+
+        const netIncome = income - expense;
+        setAnnualIncome(netIncome > 0 ? netIncome : 0);
+        return netIncome > 0 ? netIncome : 0;
+    };
+
+    const handleCalculateClick = () => {
+        const calculatedIncome = calculateAnnualIncome();
+        calculateTax(calculatedIncome);
+    };
+
+    const calculateTax = (incomeToCalculate: number) => {
+        let remainingIncome = incomeToCalculate;
         const results: TaxCalculationResult[] = [];
         let cumulativeTax = 0;
 
@@ -44,6 +85,18 @@ export default function TaxCalculatorPage() {
             if (remainingIncome <= 0) break;
 
             const taxableAtThisTier = Math.min(remainingIncome, bracket.to - bracket.from);
+            
+            // For the first tier (0%), ensure we don't calculate on income below the 'from' value
+            if (bracket.from > 0 && incomeToCalculate < bracket.from) {
+                 results.push({
+                    tier: bracket.range,
+                    taxableIncome: 0,
+                    rate: bracket.rate,
+                    taxAmount: 0,
+                });
+                continue;
+            }
+
             const taxAtThisTier = taxableAtThisTier * (bracket.rate / 100);
 
             results.push({
@@ -55,10 +108,34 @@ export default function TaxCalculatorPage() {
 
             cumulativeTax += taxAtThisTier;
             remainingIncome -= taxableAtThisTier;
+             if (remainingIncome + taxableAtThisTier < bracket.from) break;
         }
 
         setTaxResults(results);
         setTotalTax(cumulativeTax);
+    };
+    
+    const YearSelector = () => {
+        const currentYear = getYear(new Date());
+        const years = Array.from({ length: 5 }, (_, i) => currentYear - i);
+
+        return (
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="flex items-center gap-2">
+                        <span>ปี {selectedYear + 543}</span>
+                        <ChevronDown className="h-4 w-4" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    {years.map(year => (
+                        <DropdownMenuItem key={year} onClick={() => setSelectedYear(year)}>
+                            {year + 543}
+                        </DropdownMenuItem>
+                    ))}
+                </DropdownMenuContent>
+            </DropdownMenu>
+        );
     };
 
     return (
@@ -80,20 +157,25 @@ export default function TaxCalculatorPage() {
                     <Card className="lg:col-span-1">
                         <CardHeader>
                             <CardTitle>เครื่องมือคำนวณภาษี</CardTitle>
-                            <CardDescription>ป้อนรายได้สุทธิประจำปีของคุณเพื่อคำนวณภาษีที่ต้องชำระ</CardDescription>
+                            <CardDescription>เลือกปีที่ต้องการคำนวณ จากนั้นกดปุ่มเพื่อดึงข้อมูลและคำนวณภาษี</CardDescription>
                         </CardHeader>
                         <CardContent className="grid gap-6">
+                             <div className="grid gap-3">
+                                <Label>เลือกปีที่คำนวณ</Label>
+                                <YearSelector />
+                             </div>
                              <div className="grid gap-3">
                                 <Label htmlFor="annual-income">รายได้สุทธิประจำปี (KIP)</Label>
                                 <Input 
                                     id="annual-income" 
                                     type="number" 
-                                    placeholder="กรอกรายได้สุทธิ"
+                                    placeholder="กดปุ่มด้านล่างเพื่อคำนวณ"
                                     value={annualIncome || ''}
                                     onChange={(e) => setAnnualIncome(Number(e.target.value))}
                                 />
+                                <p className="text-xs text-muted-foreground">ระบบจะคำนวณจาก (รายรับ - รายจ่าย) ในปีที่เลือก หรือคุณสามารถกรอกเองได้</p>
                             </div>
-                            <Button onClick={calculateTax}>คำนวณภาษี</Button>
+                            <Button onClick={handleCalculateClick}>ดึงข้อมูล & คำนวณภาษี</Button>
                         </CardContent>
                     </Card>
 
