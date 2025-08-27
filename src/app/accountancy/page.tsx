@@ -63,7 +63,7 @@ export default function AccountancyPage() {
         description: '',
         paymentMethod: 'cash' as 'cash' | 'transfer'
     });
-    const [isTransactionFormVisible, setTransactionFormVisible] = useState(false);
+    const [isTransactionFormVisible, setTransactionFormVisible] = useState(true);
     const [isHistoryVisible, setHistoryVisible] = useState(true);
     const [selectedMonth, setSelectedMonth] = useState<string>(format(new Date(), 'yyyy-MM'));
 
@@ -294,6 +294,7 @@ export default function AccountancyPage() {
                                                     selected={date}
                                                     onSelect={setDate}
                                                     initialFocus
+                                                    locale={th}
                                                 />
                                             </PopoverContent>
                                         </Popover>
@@ -373,7 +374,7 @@ export default function AccountancyPage() {
                         <CardContent>
                              {Object.keys(groupedTransactionsByDate).length > 0 ? (
                                 <Accordion type="single" collapsible className="w-full">
-                                    {Object.entries(groupedTransactionsByDate).map(([dateKey, transactions]) => {
+                                    {Object.entries(groupedTransactionsByDate).sort(([a], [b]) => new Date(b).getTime() - new Date(a).getTime()).map(([dateKey, transactions]) => {
                                         const dateObject = new Date(dateKey);
                                         // Manually adjust for timezone offset to prevent date shifts
                                         const correctedDate = new Date(dateObject.valueOf() + dateObject.getTimezoneOffset() * 60 * 1000);
@@ -428,6 +429,3 @@ export default function AccountancyPage() {
         </div>
     );
 }
-
-
-    
