@@ -73,11 +73,21 @@ export default function TransportPage() {
         return () => unsubscribe();
     }, []);
 
-    const transportTotal = useMemo(() => {
+    const transportTotalAmount = useMemo(() => {
         return transportRows.reduce((total, row) => {
             return total + (row.ans_amount || 0) + (row.hal_amount || 0) + (row.mx_amount || 0);
         }, 0);
     }, [transportRows]);
+    
+    const transportTotalCost = useMemo(() => {
+        return transportRows.reduce((total, row) => {
+            return total + (row.ans_cost || 0) + (row.hal_cost || 0) + (row.mx_cost || 0);
+        }, 0);
+    }, [transportRows]);
+
+    const transportProfit = useMemo(() => {
+        return transportTotalAmount - transportTotalCost;
+    }, [transportTotalAmount, transportTotalCost]);
 
     const transportRemaining = useMemo(() => {
         return transportRows.reduce((total, row) => {
@@ -197,8 +207,16 @@ export default function TransportPage() {
                         </CardHeader>
                         <CardContent className="flex flex-col gap-4">
                              <div className="flex justify-between items-center p-4 bg-muted rounded-md">
-                                <span className="font-semibold text-lg">สรุปรวม</span>
-                                <span className="font-bold text-lg text-blue-600">{formatCurrency(transportTotal)}</span>
+                                <span className="font-semibold text-lg">รวมจำนวนเงิน</span>
+                                <span className="font-bold text-lg text-blue-600">{formatCurrency(transportTotalAmount)}</span>
+                            </div>
+                             <div className="flex justify-between items-center p-4 bg-muted rounded-md">
+                                <span className="font-semibold text-lg">รวมต้นทุน</span>
+                                <span className="font-bold text-lg text-orange-600">{formatCurrency(transportTotalCost)}</span>
+                            </div>
+                            <div className="flex justify-between items-center p-4 bg-muted rounded-md">
+                                <span className="font-semibold text-lg">กำไร</span>
+                                <span className={`font-bold text-lg ${transportProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>{formatCurrency(transportProfit)}</span>
                             </div>
                              <div className="flex justify-between items-center p-4 bg-muted rounded-md">
                                 <span className="font-semibold text-lg">คงเหลือ</span>
