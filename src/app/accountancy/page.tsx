@@ -15,6 +15,15 @@ import { Calendar } from "@/components/ui/calendar"
 import { Textarea } from "@/components/ui/textarea"
 import { format } from "date-fns"
 import { th } from "date-fns/locale"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { Badge } from "@/components/ui/badge"
 
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB', minimumFractionDigits: 0 }).format(value);
@@ -32,23 +41,33 @@ const SummaryCard = ({ title, value, icon }: { title: string, value: string, ico
     </Card>
 );
 
+interface Transaction {
+    id: string;
+    type: 'income' | 'expense';
+    date: Date;
+    amount: number;
+    category: string;
+    description: string;
+    paymentMethod: 'cash' | 'transfer';
+}
+
 export default function AccountancyPage() {
     const { toast } = useToast();
     const [cash, setCash] = useState<number>(0);
     const [transfer, setTransfer] = useState<number>(0);
     const [date, setDate] = useState<Date | undefined>(new Date());
+    const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [newTransaction, setNewTransaction] = useState({
-        type: 'expense',
+        type: 'expense' as 'income' | 'expense',
         amount: 0,
         category: '',
         description: '',
-        paymentMethod: 'cash'
+        paymentMethod: 'cash' as 'cash' | 'transfer'
     });
 
     const totalMoney = useMemo(() => cash + transfer, [cash, transfer]);
 
     const handleSave = () => {
-        // Here you would typically save the data to a backend or state management
         toast({
             title: "สำเร็จ!",
             description: `บันทึกยอดเงินสดและเงินโอนเรียบร้อยแล้ว`,
@@ -57,11 +76,28 @@ export default function AccountancyPage() {
 
     const handleAddTransaction = (e: React.FormEvent) => {
         e.preventDefault();
-        // Logic to add transaction
+        if (!date) {
+            toast({
+                title: "ข้อผิดพลาด",
+                description: "กรุณาเลือกวันที่",
+                variant: "destructive",
+            });
+            return;
+        }
+        
+        const newTx: Transaction = {
+            id: new Date().toISOString(),
+            date: date,
+            ...newTransaction
+        };
+
+        setTransactions(prev => [newTx, ...prev]);
+
         toast({
             title: "เพิ่มธุรกรรมใหม่สำเร็จ",
             description: `เพิ่มรายการ ${newTransaction.category} จำนวน ${formatCurrency(newTransaction.amount)}`,
         });
+
         // Reset form
         setNewTransaction({ type: 'expense', amount: 0, category: '', description: '', paymentMethod: 'cash' });
         setDate(new Date());
@@ -135,99 +171,141 @@ export default function AccountancyPage() {
                     </Card>
                 </div>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>เพิ่มธุรกรรม</CardTitle>
-                        <CardDescription>บันทึกรายรับ-รายจ่ายใหม่ของคุณ</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <form onSubmit={handleAddTransaction}>
-                            <div className="grid gap-6">
-                                <div className="grid gap-3">
-                                    <Label>ประเภทธุรกรรม</Label>
-                                    <RadioGroup
-                                        value={newTransaction.type}
-                                        onValueChange={(value) => setNewTransaction({ ...newTransaction, type: value })}
-                                        className="flex gap-4"
-                                    >
-                                        <div className="flex items-center space-x-2">
-                                            <RadioGroupItem value="income" id="r-income" />
-                                            <Label htmlFor="r-income">รายรับ</Label>
-                                        </div>
-                                        <div className="flex items-center space-x-2">
-                                            <RadioGroupItem value="expense" id="r-expense" />
-                                            <Label htmlFor="r-expense">รายจ่าย</Label>
-                                        </div>
-                                    </RadioGroup>
-                                </div>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    <Card className="lg:col-span-1">
+                        <CardHeader>
+                            <CardTitle>เพิ่มธุรกรรม</CardTitle>
+                            <CardDescription>บันทึกรายรับ-รายจ่ายใหม่ของคุณ</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <form onSubmit={handleAddTransaction}>
+                                <div className="grid gap-6">
+                                    <div className="grid gap-3">
+                                        <Label>ประเภทธุรกรรม</Label>
+                                        <RadioGroup
+                                            value={newTransaction.type}
+                                            onValueChange={(value) => setNewTransaction({ ...newTransaction, type: value as 'income' | 'expense' })}
+                                            className="flex gap-4"
+                                        >
+                                            <div className="flex items-center space-x-2">
+                                                <RadioGroupItem value="income" id="r-income" />
+                                                <Label htmlFor="r-income">รายรับ</Label>
+                                            </div>
+                                            <div className="flex items-center space-x-2">
+                                                <RadioGroupItem value="expense" id="r-expense" />
+                                                <Label htmlFor="r-expense">รายจ่าย</Label>
+                                            </div>
+                                        </RadioGroup>
+                                    </div>
 
-                                <div className="grid gap-3">
-                                    <Label htmlFor="date">วันที่</Label>
-                                    <Popover>
-                                        <PopoverTrigger asChild>
-                                            <Button
-                                                variant={"outline"}
-                                                className="w-[280px] justify-start text-left font-normal"
-                                            >
-                                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                                {date ? format(date, "PPP", { locale: th }) : <span>เลือกวันที่</span>}
-                                            </Button>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-auto p-0">
-                                            <Calendar
-                                                mode="single"
-                                                selected={date}
-                                                onSelect={setDate}
-                                                initialFocus
-                                            />
-                                        </PopoverContent>
-                                    </Popover>
-                                </div>
-                                
-                                <div className="grid gap-3">
-                                    <Label htmlFor="amount">จำนวนเงิน (KIP)</Label>
-                                    <Input id="amount" type="number" placeholder="0.00" value={newTransaction.amount || ''} onChange={(e) => setNewTransaction({ ...newTransaction, amount: Number(e.target.value)})} required />
-                                </div>
+                                    <div className="grid gap-3">
+                                        <Label htmlFor="date">วันที่</Label>
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <Button
+                                                    variant={"outline"}
+                                                    className="w-full justify-start text-left font-normal"
+                                                >
+                                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                                    {date ? format(date, "PPP", { locale: th }) : <span>เลือกวันที่</span>}
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-auto p-0">
+                                                <Calendar
+                                                    mode="single"
+                                                    selected={date}
+                                                    onSelect={setDate}
+                                                    initialFocus
+                                                />
+                                            </PopoverContent>
+                                        </Popover>
+                                    </div>
+                                    
+                                    <div className="grid gap-3">
+                                        <Label htmlFor="amount">จำนวนเงิน (KIP)</Label>
+                                        <Input id="amount" type="number" placeholder="0.00" value={newTransaction.amount || ''} onChange={(e) => setNewTransaction({ ...newTransaction, amount: Number(e.target.value)})} required />
+                                    </div>
 
-                                <div className="grid gap-3">
-                                    <Label htmlFor="category">หมวดหมู่</Label>
-                                    <Input id="category" placeholder="เช่น ค่าปุ๋ย, ขายข้าว" value={newTransaction.category} onChange={(e) => setNewTransaction({ ...newTransaction, category: e.target.value})} required />
-                                </div>
+                                    <div className="grid gap-3">
+                                        <Label htmlFor="category">หมวดหมู่</Label>
+                                        <Input id="category" placeholder="เช่น ค่าปุ๋ย, ขายข้าว" value={newTransaction.category} onChange={(e) => setNewTransaction({ ...newTransaction, category: e.target.value})} required />
+                                    </div>
 
-                                <div className="grid gap-3">
-                                    <Label htmlFor="description">คำอธิบาย</Label>
-                                    <Textarea id="description" placeholder="อธิบายรายการ (ถ้ามี)" value={newTransaction.description} onChange={(e) => setNewTransaction({ ...newTransaction, description: e.target.value})} />
-                                </div>
+                                    <div className="grid gap-3">
+                                        <Label htmlFor="description">คำอธิบาย</Label>
+                                        <Textarea id="description" placeholder="อธิบายรายการ (ถ้ามี)" value={newTransaction.description} onChange={(e) => setNewTransaction({ ...newTransaction, description: e.target.value})} />
+                                    </div>
 
-                                <div className="grid gap-3">
-                                    <Label>วิธีการชำระเงิน</Label>
-                                    <RadioGroup
-                                        value={newTransaction.paymentMethod}
-                                        onValueChange={(value) => setNewTransaction({ ...newTransaction, paymentMethod: value })}
-                                        className="flex gap-4"
-                                    >
-                                        <div className="flex items-center space-x-2">
-                                            <RadioGroupItem value="cash" id="r-cash" />
-                                            <Label htmlFor="r-cash">เงินสด</Label>
-                                        </div>
-                                        <div className="flex items-center space-x-2">
-                                            <RadioGroupItem value="transfer" id="r-transfer" />
-                                            <Label htmlFor="r-transfer">เงินโอน</Label>
-                                        </div>
-                                    </RadioGroup>
-                                </div>
+                                    <div className="grid gap-3">
+                                        <Label>วิธีการชำระเงิน</Label>
+                                        <RadioGroup
+                                            value={newTransaction.paymentMethod}
+                                            onValueChange={(value) => setNewTransaction({ ...newTransaction, paymentMethod: value as 'cash' | 'transfer' })}
+                                            className="flex gap-4"
+                                        >
+                                            <div className="flex items-center space-x-2">
+                                                <RadioGroupItem value="cash" id="r-cash" />
+                                                <Label htmlFor="r-cash">เงินสด</Label>
+                                            </div>
+                                            <div className="flex items-center space-x-2">
+                                                <RadioGroupItem value="transfer" id="r-transfer" />
+                                                <Label htmlFor="r-transfer">เงินโอน</Label>
+                                            </div>
+                                        </RadioGroup>
+                                    </div>
 
-                                <Button type="submit" className="w-full">
-                                    <PlusCircle className="mr-2 h-4 w-4" />
-                                    เพิ่มธุรกรรม
-                                </Button>
-                            </div>
-                        </form>
-                    </CardContent>
-                </Card>
+                                    <Button type="submit" className="w-full">
+                                        <PlusCircle className="mr-2 h-4 w-4" />
+                                        เพิ่มธุรกรรม
+                                    </Button>
+                                </div>
+                            </form>
+                        </CardContent>
+                    </Card>
+                    <Card className="lg:col-span-2">
+                        <CardHeader>
+                            <CardTitle>ประวัติธุรกรรม</CardTitle>
+                            <CardDescription>รายการรายรับ-รายจ่ายล่าสุดของคุณ</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>วันที่</TableHead>
+                                        <TableHead>หมวดหมู่</TableHead>
+                                        <TableHead>ประเภท</TableHead>
+                                        <TableHead className="text-right">จำนวนเงิน</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {transactions.length > 0 ? (
+                                        transactions.map((tx) => (
+                                            <TableRow key={tx.id}>
+                                                <TableCell>{format(tx.date, "dd MMM yyyy", { locale: th })}</TableCell>
+                                                <TableCell>
+                                                    <div className="font-medium">{tx.category}</div>
+                                                    <div className="text-sm text-muted-foreground">{tx.description}</div>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Badge variant={tx.type === 'income' ? 'secondary' : 'destructive'}>
+                                                        {tx.type === 'income' ? 'รายรับ' : 'รายจ่าย'}
+                                                    </Badge>
+                                                </TableCell>
+                                                <TableCell className="text-right">{formatCurrency(tx.amount)}</TableCell>
+                                            </TableRow>
+                                        ))
+                                    ) : (
+                                        <TableRow>
+                                            <TableCell colSpan={4} className="text-center">ยังไม่มีธุรกรรม</TableCell>
+                                        </TableRow>
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </CardContent>
+                    </Card>
+                </div>
             </main>
         </div>
     );
-}
 
     
