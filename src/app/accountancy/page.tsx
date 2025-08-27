@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Landmark, Wallet, PlusCircle, Calendar as CalendarIcon, ChevronDown, ChevronUp, TrendingUp, ArrowUpCircle, ArrowDownCircle, Minus, Equal, FileText, MoreHorizontal, Pencil, Banknote, Trash2, Users, Truck, PiggyBank } from "lucide-react"
+import { ArrowLeft, Landmark, Wallet, PlusCircle, Calendar as CalendarIcon, ChevronDown, ChevronUp, TrendingUp, ArrowUpCircle, ArrowDownCircle, Minus, Equal, FileText, MoreHorizontal, Pencil, Banknote, Trash2, Users, Truck, PiggyBank, Briefcase } from "lucide-react"
 import Link from 'next/link'
 import { useToast } from "@/hooks/use-toast"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
@@ -154,7 +154,7 @@ const CashCalculatorCard = () => {
 
 export default function AccountancyPage() {
     const { toast } = useToast();
-    const [accountSummary, setAccountSummary] = useState<AccountSummary>({ id: 'latest', cash: 0, transfer: 0});
+    const [accountSummary, setAccountSummary] = useState<AccountSummary>({ id: 'latest', cash: 0, transfer: 0, capital: 0});
     const [date, setDate] = useState<Date | undefined>(new Date());
     const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
     const [newTransaction, setNewTransaction] = useState({
@@ -168,7 +168,7 @@ export default function AccountancyPage() {
     const [isHistoryVisible, setHistoryVisible] = useState(true);
     
     const [historyDisplayMonth, setHistoryDisplayMonth] = useState<Date>(new Date());
-    const [editingSummaryField, setEditingSummaryField] = useState<'cash' | 'transfer' | null>(null);
+    const [editingSummaryField, setEditingSummaryField] = useState<'cash' | 'transfer' | 'capital' | null>(null);
     const [editingSummaryValue, setEditingSummaryValue] = useState(0);
 
     const [debtorEntries, setDebtorEntries] = useState<DebtorCreditorEntry[]>([]);
@@ -181,7 +181,7 @@ export default function AccountancyPage() {
             if (summary) {
                 setAccountSummary(summary);
             } else {
-                 const initialSummary = { id: 'latest', cash: 0, transfer: 0 };
+                 const initialSummary = { id: 'latest', cash: 0, transfer: 0, capital: 0 };
                 setAccountSummary(initialSummary);
                 updateAccountSummary(initialSummary);
             }
@@ -243,7 +243,7 @@ export default function AccountancyPage() {
         const previousTransactions = allTransactions.filter(tx => tx.date < broughtForwardStart);
         const broughtForward = previousTransactions.reduce((acc, tx) => {
             return tx.type === 'income' ? acc + tx.amount : acc - tx.amount;
-        }, 0);
+        }, 0) + (accountSummary.capital || 0);
         
         const totalIncome = broughtForward + currentMonthData.income;
         const netProfitMonthly = currentMonthData.income - currentMonthData.expense;
@@ -257,7 +257,7 @@ export default function AccountancyPage() {
             netProfitMonthly,
             netProfitCumulative,
         };
-    }, [allTransactions, historyDisplayMonth]);
+    }, [allTransactions, historyDisplayMonth, accountSummary.capital]);
 
     const dailySummariesForMonth = useMemo(() => {
         const start = startOfMonth(historyDisplayMonth);
@@ -396,7 +396,7 @@ export default function AccountancyPage() {
         setEditingTransaction({ ...tx });
     };
 
-     const openEditSummaryDialog = (field: 'cash' | 'transfer') => {
+     const openEditSummaryDialog = (field: 'cash' | 'transfer' | 'capital') => {
         setEditingSummaryField(field);
         setEditingSummaryValue(accountSummary[field]);
     };
@@ -460,6 +460,16 @@ export default function AccountancyPage() {
             </DropdownMenu>
         );
     };
+    
+    const getDialogTitle = () => {
+        switch(editingSummaryField) {
+            case 'cash': return 'แก้ไขยอดเงินสด';
+            case 'transfer': return 'แก้ไขยอดเงินโอน';
+            case 'capital': return 'แก้ไขยอดเงินทุน';
+            default: return 'แก้ไข';
+        }
+    }
+
 
     return (
         <div className="flex min-h-screen w-full flex-col bg-muted/40">
@@ -475,7 +485,8 @@ export default function AccountancyPage() {
                 </div>
             </header>
             <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-                <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-3 xl:grid-cols-6">
+                <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4 xl:grid-cols-7">
+                     <SummaryCard title="เงินทุน" value={formatCurrency(accountSummary.capital)} icon={<Briefcase className="h-5 w-5 text-primary" />} onClick={() => openEditSummaryDialog('capital')} />
                      <SummaryCard title="เงินสด" value={formatCurrency(accountSummary.cash)} icon={<Wallet className="h-5 w-5 text-primary" />} onClick={() => openEditSummaryDialog('cash')} />
                      <SummaryCard title="เงินโอน" value={formatCurrency(accountSummary.transfer)} icon={<Landmark className="h-5 w-5 text-primary" />} onClick={() => openEditSummaryDialog('transfer')} />
                      <SummaryCard title="รวมเงินทั้งหมด" value={formatCurrency(totalMoney)} icon={<div className="font-bold text-2xl">💰</div>} />
@@ -787,7 +798,7 @@ export default function AccountancyPage() {
                  <Dialog open={!!editingSummaryField} onOpenChange={(isOpen) => !isOpen && setEditingSummaryField(null)}>
                     <DialogContent>
                         <DialogHeader>
-                            <DialogTitle>แก้ไขยอด {editingSummaryField === 'cash' ? 'เงินสด' : 'เงินโอน'}</DialogTitle>
+                            <DialogTitle>{getDialogTitle()}</DialogTitle>
                              <DialogDescription>
                                 ป้อนยอดเงินปัจจุบัน
                             </DialogDescription>
@@ -814,6 +825,3 @@ export default function AccountancyPage() {
         </div>
     );
 }
-
-    
-

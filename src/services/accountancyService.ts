@@ -66,7 +66,14 @@ export const deleteTransaction = async (id: string) => {
 export const listenToAccountSummary = (callback: (summary: AccountSummary | null) => void) => {
     const unsubscribe = onSnapshot(accountSummaryDocRef, (docSnapshot) => {
         if (docSnapshot.exists()) {
-            callback({ id: docSnapshot.id, ...docSnapshot.data() } as AccountSummary);
+            // Provide default for capital if it doesn't exist
+            const data = docSnapshot.data();
+            callback({ 
+                id: docSnapshot.id, 
+                cash: data.cash || 0,
+                transfer: data.transfer || 0,
+                capital: data.capital || 0
+            } as AccountSummary);
         } else {
             callback(null);
         }
@@ -79,5 +86,3 @@ export const updateAccountSummary = async (summary: Partial<Omit<AccountSummary,
     // or update it if it does. This simplifies the logic.
     await setDoc(accountSummaryDocRef, summary, { merge: true });
 };
-
-    

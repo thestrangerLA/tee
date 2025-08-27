@@ -23,6 +23,7 @@ export interface AccountSummary {
     id:string;
     cash: number;
     transfer: number;
+    capital: number;
 }
 
 export interface TransportEntry {
