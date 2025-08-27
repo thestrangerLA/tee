@@ -40,6 +40,11 @@ export const addTransaction = async (transaction: Omit<Transaction, 'id'>) => {
     await addDoc(transactionsCollectionRef, transaction);
 };
 
+export const updateTransaction = async (id: string, updatedFields: Partial<Omit<Transaction, 'id'>>) => {
+    const transactionDoc = doc(db, 'transactions', id);
+    await updateDoc(transactionDoc, updatedFields);
+};
+
 export const deleteTransaction = async (id: string) => {
     const transactionDoc = doc(db, 'transactions', id);
     await deleteDoc(transactionDoc);

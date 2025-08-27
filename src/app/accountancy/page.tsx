@@ -6,14 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Landmark, Wallet, PlusCircle, Calendar as CalendarIcon, ChevronDown, ChevronUp, TrendingUp, ArrowUpCircle, ArrowDownCircle, Minus, Equal, FileText } from "lucide-react"
+import { ArrowLeft, Landmark, Wallet, PlusCircle, Calendar as CalendarIcon, ChevronDown, ChevronUp, TrendingUp, ArrowUpCircle, ArrowDownCircle, Minus, Equal, FileText, MoreHorizontal } from "lucide-react"
 import Link from 'next/link'
 import { useToast } from "@/hooks/use-toast"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
 import { Textarea } from "@/components/ui/textarea"
-import { format, getYear, setMonth, setYear, startOfDay, isSameDay, startOfMonth, endOfMonth, isWithinInterval } from "date-fns"
+import { format, isSameDay, startOfMonth, endOfMonth, isWithinInterval } from "date-fns"
 import { th } from "date-fns/locale"
 import {
   Table,
@@ -24,8 +24,23 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { listenToTransactions, addTransaction, listenToAccountSummary, updateAccountSummary } from '@/services/accountancyService';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { listenToTransactions, addTransaction, listenToAccountSummary, updateAccountSummary, deleteTransaction, updateTransaction } from '@/services/accountancyService';
 import type { Transaction, AccountSummary } from '@/lib/types';
 
 
@@ -45,17 +60,6 @@ const SummaryCard = ({ title, value, icon }: { title: string, value: string, ico
     </Card>
 );
 
-const PerformanceRow = ({ label, value, icon, className }: { label: string, value: string, icon?: React.ReactNode, className?: string }) => (
-    <div className={`flex items-center justify-between py-2 border-b last:border-b-0 ${className}`}>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            {icon}
-            <span>{label}</span>
-        </div>
-        <span className="font-semibold">{value}</span>
-    </div>
-);
-
-
 export default function AccountancyPage() {
     const { toast } = useToast();
     const [accountSummary, setAccountSummary] = useState<AccountSummary>({ id: 'latest', cash: 0, transfer: 0});
@@ -67,6 +71,7 @@ export default function AccountancyPage() {
         description: '',
         paymentMethod: 'cash' as 'cash' | 'transfer'
     });
+    const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
     const [isTransactionFormVisible, setTransactionFormVisible] = useState(true);
     const [isHistoryVisible, setHistoryVisible] = useState(true);
     const [selectedHistoryDate, setSelectedHistoryDate] = useState<Date | undefined>(new Date());
@@ -78,6 +83,11 @@ export default function AccountancyPage() {
         const unsubscribeSummary = listenToAccountSummary((summary) => {
             if (summary) {
                 setAccountSummary(summary);
+            } else {
+                 // Initialize summary if it doesn't exist
+                const initialSummary = { id: 'latest', cash: 0, transfer: 0 };
+                setAccountSummary(initialSummary);
+                updateAccountSummary(initialSummary);
             }
         });
         
@@ -90,7 +100,7 @@ export default function AccountancyPage() {
     const totalMoney = useMemo(() => accountSummary.cash + accountSummary.transfer, [accountSummary]);
     
     const transactionDates = useMemo(() => {
-       return allTransactions.map(tx => startOfDay(tx.date));
+       return allTransactions.map(tx => tx.date);
     }, [allTransactions]);
     
     const transactionsForSelectedDate = useMemo(() => {
@@ -161,6 +171,87 @@ export default function AccountancyPage() {
             });
         }
     }
+    
+    const handleDeleteTransaction = async (txToDelete: Transaction) => {
+        if (!window.confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบรายการ "${txToDelete.description || 'ไม่มีชื่อ'}"?`)) return;
+
+        try {
+            await deleteTransaction(txToDelete.id);
+            
+            // Revert account summary
+            const updatedSummary = { ...accountSummary };
+             if (txToDelete.type === 'income') {
+                updatedSummary[txToDelete.paymentMethod] -= txToDelete.amount;
+            } else {
+                updatedSummary[txToDelete.paymentMethod] += txToDelete.amount;
+            }
+            await updateAccountSummary(updatedSummary);
+
+            toast({
+                title: "ลบธุรกรรมสำเร็จ",
+            });
+        } catch (error) {
+            console.error("Error deleting transaction: ", error);
+            toast({
+                title: "เกิดข้อผิดพลาด",
+                description: "ไม่สามารถลบธุรกรรมได้",
+                variant: "destructive",
+            });
+        }
+    };
+    
+    const handleUpdateTransaction = async () => {
+        if (!editingTransaction) return;
+
+        const originalTx = allTransactions.find(tx => tx.id === editingTransaction.id);
+        if (!originalTx) return;
+
+        try {
+            await updateTransaction(editingTransaction.id, {
+                date: editingTransaction.date,
+                type: editingTransaction.type,
+                amount: editingTransaction.amount,
+                description: editingTransaction.description,
+                paymentMethod: editingTransaction.paymentMethod,
+            });
+
+            // Adjust account summary based on the difference
+            const updatedSummary = { ...accountSummary };
+            
+            // 1. Revert the original transaction
+            if (originalTx.type === 'income') {
+                updatedSummary[originalTx.paymentMethod] -= originalTx.amount;
+            } else {
+                updatedSummary[originalTx.paymentMethod] += originalTx.amount;
+            }
+
+            // 2. Apply the updated transaction
+            if (editingTransaction.type === 'income') {
+                updatedSummary[editingTransaction.paymentMethod] += editingTransaction.amount;
+            } else {
+                updatedSummary[editingTransaction.paymentMethod] -= editingTransaction.amount;
+            }
+
+            await updateAccountSummary(updatedSummary);
+            
+            toast({
+                title: "อัปเดตธุรกรรมสำเร็จ",
+            });
+            setEditingTransaction(null); // Close dialog
+        } catch (error) {
+            console.error("Error updating transaction: ", error);
+            toast({
+                title: "เกิดข้อผิดพลาด",
+                description: "ไม่สามารถอัปเดตธุรกรรมได้",
+                variant: "destructive",
+            });
+        }
+    };
+
+
+    const openEditDialog = (tx: Transaction) => {
+        setEditingTransaction({ ...tx });
+    };
 
     return (
         <div className="flex min-h-screen w-full flex-col bg-muted/40">
@@ -360,6 +451,7 @@ export default function AccountancyPage() {
                                                 <TableHead>ประเภท</TableHead>
                                                 <TableHead>การชำระเงิน</TableHead>
                                                 <TableHead className="text-right">จำนวนเงิน</TableHead>
+                                                <TableHead><span className="sr-only">Actions</span></TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
@@ -377,6 +469,28 @@ export default function AccountancyPage() {
                                                     <Badge variant="outline">{tx.paymentMethod === 'cash' ? 'เงินสด' : 'เงินโอน'}</Badge>
                                                 </TableCell>
                                                 <TableCell className="text-right">{formatCurrency(tx.amount)}</TableCell>
+                                                <TableCell className="text-right">
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button variant="ghost" className="h-8 w-8 p-0">
+                                                                <span className="sr-only">Open menu</span>
+                                                                <MoreHorizontal className="h-4 w-4" />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end">
+                                                            <DropdownMenuLabel>การดำเนินการ</DropdownMenuLabel>
+                                                            <DropdownMenuItem onClick={() => openEditDialog(tx)}>
+                                                                แก้ไข
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem
+                                                                className="text-red-600"
+                                                                onClick={() => handleDeleteTransaction(tx)}
+                                                            >
+                                                                ลบ
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                </TableCell>
                                             </TableRow>
                                         ))}
                                         </TableBody>
@@ -392,8 +506,87 @@ export default function AccountancyPage() {
                     </Card>
                 </div>
             </main>
+
+            {editingTransaction && (
+                 <Dialog open={!!editingTransaction} onOpenChange={(isOpen) => !isOpen && setEditingTransaction(null)}>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>แก้ไขธุรกรรม</DialogTitle>
+                            <DialogDescription>
+                                อัปเดตรายละเอียดธุรกรรมของคุณด้านล่าง
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="grid gap-6 py-4">
+                            <div className="grid gap-3">
+                                <Label>ประเภทธุรกรรม</Label>
+                                <RadioGroup
+                                    value={editingTransaction.type}
+                                    onValueChange={(value) => setEditingTransaction({ ...editingTransaction, type: value as 'income' | 'expense' })}
+                                    className="flex gap-4"
+                                >
+                                    <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value="income" id="edit-r-income" />
+                                        <Label htmlFor="edit-r-income">รายรับ</Label>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value="expense" id="edit-r-expense" />
+                                        <Label htmlFor="edit-r-expense">รายจ่าย</Label>
+                                    </div>
+                                </RadioGroup>
+                            </div>
+                            <div className="grid gap-3">
+                                <Label htmlFor="edit-date">วันที่</Label>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button variant={"outline"} className="w-full justify-start text-left font-normal">
+                                            <CalendarIcon className="mr-2 h-4 w-4" />
+                                            {editingTransaction.date ? format(editingTransaction.date, "PPP", { locale: th }) : <span>เลือกวันที่</span>}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0">
+                                        <Calendar
+                                            mode="single"
+                                            selected={editingTransaction.date}
+                                            onSelect={(d) => setEditingTransaction({ ...editingTransaction, date: d || new Date() })}
+                                            initialFocus
+                                            locale={th}
+                                        />
+                                    </PopoverContent>
+                                </Popover>
+                            </div>
+                            <div className="grid gap-3">
+                                <Label htmlFor="edit-amount">จำนวนเงิน (THB)</Label>
+                                <Input id="edit-amount" type="number" value={editingTransaction.amount} onChange={(e) => setEditingTransaction({ ...editingTransaction, amount: Number(e.target.value)})} required />
+                            </div>
+                            <div className="grid gap-3">
+                                <Label htmlFor="edit-description">คำอธิบาย</Label>
+                                <Textarea id="edit-description" value={editingTransaction.description} onChange={(e) => setEditingTransaction({ ...editingTransaction, description: e.target.value})} />
+                            </div>
+                             <div className="grid gap-3">
+                                <Label>วิธีการชำระเงิน</Label>
+                                <RadioGroup
+                                    value={editingTransaction.paymentMethod}
+                                    onValueChange={(value) => setEditingTransaction({ ...editingTransaction, paymentMethod: value as 'cash' | 'transfer' })}
+                                    className="flex gap-4"
+                                >
+                                    <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value="cash" id="edit-r-cash" />
+                                        <Label htmlFor="edit-r-cash">เงินสด</Label>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value="transfer" id="edit-r-transfer" />
+                                        <Label htmlFor="edit-r-transfer">เงินโอน</Label>
+                                    </div>
+                                </RadioGroup>
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => setEditingTransaction(null)}>ยกเลิก</Button>
+                            <Button onClick={handleUpdateTransaction}>บันทึกการเปลี่ยนแปลง</Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+            )}
         </div>
     );
 }
-
-    
