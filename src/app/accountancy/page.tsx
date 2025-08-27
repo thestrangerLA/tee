@@ -50,7 +50,7 @@ import type { Transaction, AccountSummary } from '@/lib/types';
 
 
 const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB', minimumFractionDigits: 0 }).format(value);
+    return new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'LAK', currencyDisplay: 'code', minimumFractionDigits: 0 }).format(value).replace('LAK', 'KIP');
 }
 
 const SummaryCard = ({ title, value, icon, onClick }: { title: string, value: string, icon: React.ReactNode, onClick?: () => void }) => (
@@ -67,6 +67,82 @@ const SummaryCard = ({ title, value, icon, onClick }: { title: string, value: st
         </CardContent>
     </Card>
 );
+
+const CashCalculatorCard = () => {
+    const denominations = [100000, 50000, 20000, 10000, 5000, 2000, 1000];
+    const initialCounts: Record<string, number> = { baht: 0, rate: 0 };
+    denominations.forEach(d => initialCounts[d] = 0);
+
+    const [counts, setCounts] = useState<Record<string, number>>(initialCounts);
+    const [isCalculatorVisible, setCalculatorVisible] = useState(true);
+
+    const handleCountChange = (key: string, value: string) => {
+        setCounts(prev => ({ ...prev, [key]: Number(value) || 0 }));
+    };
+
+    const handleReset = () => {
+        setCounts(initialCounts);
+    };
+
+    const totalKip = useMemo(() => {
+        const kipFromNotes = denominations.reduce((sum, d) => sum + (d * (counts[d] || 0)), 0);
+        const kipFromBaht = (counts.baht || 0) * (counts.rate || 0);
+        return kipFromNotes + kipFromBaht;
+    }, [counts, denominations]);
+
+    return (
+        <Card>
+            <CardHeader className="cursor-pointer" onClick={() => setCalculatorVisible(!isCalculatorVisible)}>
+                <div className="flex justify-between items-center">
+                    <CardTitle>เครื่องคำนวณเงินสด</CardTitle>
+                    <Button variant="ghost" size="icon">
+                        {isCalculatorVisible ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                        <span className="sr-only">Toggle Calculator</span>
+                    </Button>
+                </div>
+            </CardHeader>
+            {isCalculatorVisible && (
+                <CardContent>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>ธนบัตร (KIP)</TableHead>
+                                <TableHead>จำนวน (ใบ)</TableHead>
+                                <TableHead className="text-right">รวม (KIP)</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {denominations.map(d => (
+                                <TableRow key={d}>
+                                    <TableCell className="font-medium">{d.toLocaleString()}</TableCell>
+                                    <TableCell>
+                                        <Input type="number" value={counts[d] || ''} onChange={e => handleCountChange(String(d), e.target.value)} className="w-24 h-8" />
+                                    </TableCell>
+                                    <TableCell className="text-right">{(d * (counts[d] || 0)).toLocaleString()}</TableCell>
+                                </TableRow>
+                            ))}
+                             <TableRow>
+                                <TableCell className="font-medium">BAHT</TableCell>
+                                <TableCell><Input type="number" value={counts.baht || ''} onChange={e => handleCountChange('baht', e.target.value)} className="w-24 h-8" /></TableCell>
+                                <TableCell rowSpan={2} className="text-right align-bottom">{(counts.baht * counts.rate).toLocaleString()}</TableCell>
+                            </TableRow>
+                             <TableRow>
+                                <TableCell className="font-medium">Rate</TableCell>
+                                <TableCell><Input type="number" value={counts.rate || ''} onChange={e => handleCountChange('rate', e.target.value)} className="w-24 h-8" /></TableCell>
+                            </TableRow>
+                             <TableRow className="bg-muted/50 font-bold">
+                                <TableCell colSpan={2}>รวมทั้งหมด (KIP)</TableCell>
+                                <TableCell className="text-right text-lg">{totalKip.toLocaleString()}</TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
+                    <Button onClick={handleReset} variant="outline" className="mt-4 w-full">รีเซ็ต</Button>
+                </CardContent>
+            )}
+        </Card>
+    );
+};
+
 
 export default function AccountancyPage() {
     const { toast } = useToast();
@@ -458,8 +534,8 @@ export default function AccountancyPage() {
                                         </div>
                                         
                                         <div className="grid gap-3">
-                                            <Label htmlFor="amount">จำนวนเงิน (THB)</Label>
-                                            <Input id="amount" type="number" placeholder="0.00" value={newTransaction.amount || ''} onChange={(e) => setNewTransaction({ ...newTransaction, amount: Number(e.target.value)})} required />
+                                            <Label htmlFor="amount">จำนวนเงิน (KIP)</Label>
+                                            <Input id="amount" type="number" placeholder="0" value={newTransaction.amount || ''} onChange={(e) => setNewTransaction({ ...newTransaction, amount: Number(e.target.value)})} required />
                                         </div>
 
                                         <div className="grid gap-3">
@@ -494,6 +570,7 @@ export default function AccountancyPage() {
                             </CardContent>
                             )}
                         </Card>
+                        <CashCalculatorCard />
                     </div>
 
                     <Card className="lg:col-span-2">
@@ -635,7 +712,7 @@ export default function AccountancyPage() {
                                 </Popover>
                             </div>
                             <div className="grid gap-3">
-                                <Label htmlFor="edit-amount">จำนวนเงิน (THB)</Label>
+                                <Label htmlFor="edit-amount">จำนวนเงิน (KIP)</Label>
                                 <Input id="edit-amount" type="number" value={editingTransaction.amount} onChange={(e) => setEditingTransaction({ ...editingTransaction, amount: Number(e.target.value)})} required />
                             </div>
                             <div className="grid gap-3">
@@ -679,7 +756,7 @@ export default function AccountancyPage() {
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
                             <div className="grid gap-3">
-                                 <Label htmlFor="edit-summary-amount">จำนวนเงิน (THB)</Label>
+                                 <Label htmlFor="edit-summary-amount">จำนวนเงิน (KIP)</Label>
                                 <Input 
                                     id="edit-summary-amount" 
                                     type="number" 
@@ -699,3 +776,5 @@ export default function AccountancyPage() {
         </div>
     );
 }
+
+    

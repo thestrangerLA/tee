@@ -14,7 +14,7 @@ import { listenToTransportEntries, addTransportEntry, updateTransportEntry, dele
 import type { TransportEntry } from '@/lib/types';
 
 const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB', minimumFractionDigits: 0 }).format(value);
+    return new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'LAK', currencyDisplay: 'code', minimumFractionDigits: 0 }).format(value).replace('LAK', 'KIP');
 }
 
 const TransportEntryRow = ({ row, onRowChange, onRowDelete }: { row: TransportEntry, onRowChange: (id: string, field: keyof TransportEntry, value: any) => void, onRowDelete: (id: string) => void }) => (
@@ -237,3 +237,5 @@ export default function TransportPage() {
         </div>
     );
 }
+
+    
