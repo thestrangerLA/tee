@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Landmark, Wallet, PlusCircle, Calendar as CalendarIcon, ChevronDown, ChevronUp, TrendingUp, ArrowUpCircle, ArrowDownCircle, Minus, Equal, FileText, MoreHorizontal, Pencil, Banknote, Trash2, Users, Truck, PiggyBank, Briefcase } from "lucide-react"
+import { ArrowLeft, Landmark, Wallet, PlusCircle, Calendar as CalendarIcon, ChevronDown, ChevronUp, TrendingUp, ArrowUpCircle, ArrowDownCircle, Minus, Equal, FileText, MoreHorizontal, Pencil, Banknote, Trash2, Users, Truck, PiggyBank, Briefcase, Combine } from "lucide-react"
 import Link from 'next/link'
 import { useToast } from "@/hooks/use-toast"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
@@ -168,8 +168,9 @@ export default function AccountancyPage() {
     const [isHistoryVisible, setHistoryVisible] = useState(true);
     
     const [historyDisplayMonth, setHistoryDisplayMonth] = useState<Date>(new Date());
-    const [editingSummaryField, setEditingSummaryField] = useState<'cash' | 'transfer' | 'capital' | null>(null);
+    const [editingSummaryField, setEditingSummaryField] = useState<'cash' | 'transfer' | 'capital' | 'workingCapital' | null>(null);
     const [editingSummaryValue, setEditingSummaryValue] = useState(0);
+    const [workingCapital, setWorkingCapital] = useState(0);
 
     const [debtorEntries, setDebtorEntries] = useState<DebtorCreditorEntry[]>([]);
     const [transportEntries, setTransportEntries] = useState<TransportEntry[]>([]);
@@ -223,13 +224,11 @@ export default function AccountancyPage() {
         const startOfSelectedMonth = startOfMonth(historyDisplayMonth);
         const endOfSelectedMonth = endOfMonth(historyDisplayMonth);
     
-        // Calculate Brought Forward from all transactions *before* the selected month
         const previousTransactions = allTransactions.filter(tx => tx.date < startOfSelectedMonth);
         const broughtForward = previousTransactions.reduce((acc, tx) => {
             return tx.type === 'income' ? acc + tx.amount : acc - tx.amount;
         }, 0);
     
-        // Get transactions for the *current* selected month
         const monthlyTransactions = allTransactions.filter(tx => isWithinInterval(tx.date, { start: startOfSelectedMonth, end: endOfSelectedMonth }));
         
         const income = monthlyTransactions
@@ -242,6 +241,9 @@ export default function AccountancyPage() {
     
         const netProfitMonthly = income - expense;
         const endingBalance = broughtForward + netProfitMonthly;
+        
+        const totalWithWorkingCapital = workingCapital + income;
+        const remainingWithWorkingCapital = totalWithWorkingCapital - expense;
     
         return { 
             broughtForward, 
@@ -249,8 +251,10 @@ export default function AccountancyPage() {
             expense, 
             netProfitMonthly,
             endingBalance,
+            totalWithWorkingCapital,
+            remainingWithWorkingCapital,
         };
-    }, [allTransactions, historyDisplayMonth]);
+    }, [allTransactions, historyDisplayMonth, workingCapital]);
 
     const dailySummariesForMonth = useMemo(() => {
         const start = startOfMonth(historyDisplayMonth);
@@ -391,16 +395,24 @@ export default function AccountancyPage() {
         setEditingTransaction({ ...tx });
     };
 
-     const openEditSummaryDialog = (field: 'cash' | 'transfer' | 'capital') => {
+     const openEditSummaryDialog = (field: 'cash' | 'transfer' | 'capital' | 'workingCapital') => {
         setEditingSummaryField(field);
-        setEditingSummaryValue(accountSummary[field]);
+        if (field === 'workingCapital') {
+            setEditingSummaryValue(workingCapital);
+        } else {
+            setEditingSummaryValue(accountSummary[field]);
+        }
     };
 
     const handleUpdateSummaryField = async () => {
         if (!editingSummaryField) return;
 
         try {
-            await updateAccountSummary({ [editingSummaryField]: editingSummaryValue });
+            if (editingSummaryField === 'workingCapital') {
+                setWorkingCapital(editingSummaryValue);
+            } else {
+                await updateAccountSummary({ [editingSummaryField]: editingSummaryValue });
+            }
             toast({
                 title: "อัปเดตยอดเงินสำเร็จ",
             });
@@ -416,8 +428,7 @@ export default function AccountancyPage() {
     };
 
     const MonthYearSelector = () => {
-        const currentYear = getYear(new Date());
-        const years = Array.from({ length: 2 }, (_, i) => currentYear + i); // Display current year and next year
+        const years = [2025, 2026];
         const months = Array.from({ length: 12 }, (_, i) => setMonth(new Date(), i));
 
         return (
@@ -461,6 +472,7 @@ export default function AccountancyPage() {
             case 'cash': return 'แก้ไขยอดเงินสด';
             case 'transfer': return 'แก้ไขยอดเงินโอน';
             case 'capital': return 'แก้ไขยอดเงินทุน';
+            case 'workingCapital': return 'แก้ไขเงินหมุน';
             default: return 'แก้ไข';
         }
     }
@@ -507,7 +519,16 @@ export default function AccountancyPage() {
                         </div>
                         <MonthYearSelector />
                     </CardHeader>
-                    <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                    <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-4">
+                        {/* New Cards */}
+                        <SummaryCard title="เงินหมุน" value={formatCurrency(workingCapital)} icon={<Combine className="h-5 w-5 text-purple-500" />} onClick={() => openEditSummaryDialog('workingCapital')} />
+                        <SummaryCard title="รวม" value={formatCurrency(performanceData.totalWithWorkingCapital)} icon={<PlusCircle className="h-5 w-5 text-orange-500" />} />
+                        <SummaryCard title="เงินคงเหลือ" value={formatCurrency(performanceData.remainingWithWorkingCapital)} icon={<Wallet className="h-5 w-5 text-teal-500" />} />
+                        
+                        {/* Spacer to push old cards to a new visual line if needed, or adjust grid for better layout */}
+                        <div className="hidden xl:block"></div>
+
+                        {/* Existing Cards */}
                         <SummaryCard title="ยอดยกมา" value={formatCurrency(performanceData.broughtForward)} icon={<FileText className="h-5 w-5 text-primary" />} />
                         <SummaryCard title="รายรับ" value={formatCurrency(performanceData.income)} icon={<ArrowUpCircle className="h-5 w-5 text-green-500" />} />
                         <SummaryCard title="รายจ่าย" value={formatCurrency(performanceData.expense)} icon={<ArrowDownCircle className="h-5 w-5 text-red-500" />} />
