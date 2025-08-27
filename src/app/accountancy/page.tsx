@@ -13,7 +13,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
 import { Textarea } from "@/components/ui/textarea"
-import { format, isSameDay, startOfMonth, endOfMonth, isWithinInterval } from "date-fns"
+import { format, isSameDay, startOfMonth, endOfMonth, isWithinInterval, addMonths, getMonth, getYear, setMonth } from "date-fns"
 import { th } from "date-fns/locale"
 import {
   Table,
@@ -30,6 +30,10 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+  DropdownMenuPortal
 } from "@/components/ui/dropdown-menu"
 import {
   Dialog,
@@ -265,6 +269,47 @@ export default function AccountancyPage() {
         setEditingTransaction({ ...tx });
     };
 
+    const MonthYearSelector = () => {
+        const currentYear = getYear(new Date());
+        const years = [currentYear, currentYear - 1, currentYear - 2]; // Example: current year and previous two years
+        const months = Array.from({ length: 12 }, (_, i) => setMonth(new Date(), i));
+
+        return (
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="flex items-center gap-2">
+                        {format(historyDisplayMonth, "LLLL yyyy", { locale: th })}
+                        <ChevronDown className="h-4 w-4" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    {years.map(year => (
+                         <DropdownMenuSub key={year}>
+                            <DropdownMenuSubTrigger>
+                                <span>{year}</span>
+                            </DropdownMenuSubTrigger>
+                            <DropdownMenuPortal>
+                                <DropdownMenuSubContent>
+                                    {months.map(month => (
+                                        <DropdownMenuItem 
+                                            key={getMonth(month)} 
+                                            onClick={() => {
+                                                const newDate = new Date(year, getMonth(month), 1);
+                                                setHistoryDisplayMonth(newDate);
+                                            }}
+                                        >
+                                            {format(month, "LLLL", { locale: th })}
+                                        </DropdownMenuItem>
+                                    ))}
+                                </DropdownMenuSubContent>
+                             </DropdownMenuPortal>
+                        </DropdownMenuSub>
+                    ))}
+                </DropdownMenuContent>
+            </DropdownMenu>
+        );
+    };
+
     return (
         <div className="flex min-h-screen w-full flex-col bg-muted/40">
             <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
@@ -296,9 +341,12 @@ export default function AccountancyPage() {
                 </div>
 
                  <Card>
-                    <CardHeader>
-                        <CardTitle>สรุปผลประกอบการ</CardTitle>
-                        <CardDescription>สำหรับเดือน {format(historyDisplayMonth, "LLLL yyyy", { locale: th })}</CardDescription>
+                    <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                        <div>
+                            <CardTitle>สรุปผลประกอบการ</CardTitle>
+                            <CardDescription>สำหรับเดือน {format(historyDisplayMonth, "LLLL yyyy", { locale: th })}</CardDescription>
+                        </div>
+                        <MonthYearSelector />
                     </CardHeader>
                     <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         <SummaryCard title="ยอดยกมา" value={formatCurrency(performanceData.broughtForward)} icon={<FileText className="h-5 w-5 text-primary" />} />
@@ -608,5 +656,3 @@ export default function AccountancyPage() {
         </div>
     );
 }
-
-    
