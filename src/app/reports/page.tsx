@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { ArrowLeft, BarChart, ArrowUpCircle, ArrowDownCircle } from "lucide-react";
+import { ArrowLeft, BarChart, ArrowUpCircle, ArrowDownCircle, Scale, Minus } from "lucide-react";
 import { listenToTransactions } from '@/services/accountancyService';
 import type { Transaction } from '@/lib/types';
 import { getYear, getMonth, format } from 'date-fns';
@@ -63,6 +63,10 @@ export default function ReportsPage() {
             .filter(tx => tx.type === 'expense')
             .reduce((sum, tx) => sum + tx.amount, 0);
     }, [allTransactions]);
+
+    const grandTotalNet = useMemo(() => {
+        return grandTotalIncome - grandTotalExpense;
+    }, [grandTotalIncome, grandTotalExpense]);
 
     const reportsData: YearlySummary[] = useMemo(() => {
         const groupedByYear: Record<number, Record<number, { income: number, expense: number }>> = {};
@@ -129,9 +133,9 @@ export default function ReportsPage() {
                  <Card>
                     <CardHeader>
                         <CardTitle>ภาพรวมทั้งหมด</CardTitle>
-                        <CardDescription>สรุปรายรับและรายจ่ายทั้งหมดตั้งแต่เริ่มต้น</CardDescription>
+                        <CardDescription>สรุปรายรับ, รายจ่าย และกำไร/ขาดทุนทั้งหมดตั้งแต่เริ่มต้น</CardDescription>
                     </CardHeader>
-                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <SummaryCard 
                             title="รวมรายรับทั้งหมด" 
                             value={formatCurrency(grandTotalIncome)}
@@ -141,6 +145,12 @@ export default function ReportsPage() {
                             title="รวมรายจ่ายทั้งหมด" 
                             value={formatCurrency(grandTotalExpense)}
                             icon={<ArrowDownCircle className="h-5 w-5 text-red-500" />}
+                        />
+                        <SummaryCard 
+                            title="กำไร/ขาดทุนสะสม" 
+                            value={formatCurrency(grandTotalNet)}
+                            icon={grandTotalNet >= 0 ? <Scale className="h-5 w-5 text-blue-500" /> : <Minus className="h-5 w-5 text-red-500" />}
+                            className={grandTotalNet >= 0 ? 'text-blue-600' : 'text-red-600'}
                         />
                     </CardContent>
                 </Card>
