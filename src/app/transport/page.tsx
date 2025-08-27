@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
@@ -10,51 +10,53 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Trash2, ArrowLeft, Truck } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import Link from 'next/link';
+import { listenToTransportEntries, addTransportEntry, updateTransportEntry, deleteTransportEntry } from '@/services/transportService';
+import type { TransportEntry } from '@/lib/types';
 
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB', minimumFractionDigits: 0 }).format(value);
 }
 
-const TransportEntryRow = ({ row, onRowChange, onRowDelete, index }: { row: any, onRowChange: any, onRowDelete: any, index: number }) => (
+const TransportEntryRow = ({ row, onRowChange, onRowDelete }: { row: TransportEntry, onRowChange: (id: string, field: keyof TransportEntry, value: any) => void, onRowDelete: (id: string) => void }) => (
     <TableRow>
         <TableCell className="p-1">
-            <Input type="text" value={row.ans_date} onChange={(e) => onRowChange(index, 'ans_date', e.target.value)} placeholder="วันที่" className="h-8" />
+            <Input type="text" value={row.ans_date} onChange={(e) => onRowChange(row.id, 'ans_date', e.target.value)} placeholder="วันที่" className="h-8" />
         </TableCell>
         <TableCell className="p-1">
-            <Input type="number" value={row.ans_cost || ''} onChange={(e) => onRowChange(index, 'ans_cost', parseFloat(e.target.value) || 0)} placeholder="ต้นทุน" className="h-8" />
+            <Input type="number" value={row.ans_cost || ''} onChange={(e) => onRowChange(row.id, 'ans_cost', parseFloat(e.target.value) || 0)} placeholder="ต้นทุน" className="h-8" />
         </TableCell>
         <TableCell className="p-1">
-            <Input type="number" value={row.ans_amount || ''} onChange={(e) => onRowChange(index, 'ans_amount', parseFloat(e.target.value) || 0)} placeholder="จำนวนเงิน" className="h-8" />
+            <Input type="number" value={row.ans_amount || ''} onChange={(e) => onRowChange(row.id, 'ans_amount', parseFloat(e.target.value) || 0)} placeholder="จำนวนเงิน" className="h-8" />
         </TableCell>
         <TableCell className="p-1 text-center">
-             <Checkbox checked={row.ans_finished} onCheckedChange={(checked) => onRowChange(index, 'ans_finished', checked)} />
+             <Checkbox checked={row.ans_finished} onCheckedChange={(checked) => onRowChange(row.id, 'ans_finished', checked)} />
         </TableCell>
         <TableCell className="p-1">
-            <Input type="text" value={row.hal_date} onChange={(e) => onRowChange(index, 'hal_date', e.target.value)} placeholder="วันที่" className="h-8" />
+            <Input type="text" value={row.hal_date} onChange={(e) => onRowChange(row.id, 'hal_date', e.target.value)} placeholder="วันที่" className="h-8" />
         </TableCell>
         <TableCell className="p-1">
-            <Input type="number" value={row.hal_cost || ''} onChange={(e) => onRowChange(index, 'hal_cost', parseFloat(e.target.value) || 0)} placeholder="ต้นทุน" className="h-8" />
+            <Input type="number" value={row.hal_cost || ''} onChange={(e) => onRowChange(row.id, 'hal_cost', parseFloat(e.target.value) || 0)} placeholder="ต้นทุน" className="h-8" />
         </TableCell>
         <TableCell className="p-1">
-            <Input type="number" value={row.hal_amount || ''} onChange={(e) => onRowChange(index, 'hal_amount', parseFloat(e.target.value) || 0)} placeholder="จำนวนเงิน" className="h-8" />
+            <Input type="number" value={row.hal_amount || ''} onChange={(e) => onRowChange(row.id, 'hal_amount', parseFloat(e.target.value) || 0)} placeholder="จำนวนเงิน" className="h-8" />
         </TableCell>
         <TableCell className="p-1 text-center">
-            <Checkbox checked={row.hal_finished} onCheckedChange={(checked) => onRowChange(index, 'hal_finished', checked)} />
+            <Checkbox checked={row.hal_finished} onCheckedChange={(checked) => onRowChange(row.id, 'hal_finished', checked)} />
         </TableCell>
         <TableCell className="p-1">
-            <Input type="text" value={row.mx_date} onChange={(e) => onRowChange(index, 'mx_date', e.target.value)} placeholder="วันที่" className="h-8" />
+            <Input type="text" value={row.mx_date} onChange={(e) => onRowChange(row.id, 'mx_date', e.target.value)} placeholder="วันที่" className="h-8" />
         </TableCell>
          <TableCell className="p-1">
-            <Input type="number" value={row.mx_cost || ''} onChange={(e) => onRowChange(index, 'mx_cost', parseFloat(e.target.value) || 0)} placeholder="ต้นทุน" className="h-8" />
+            <Input type="number" value={row.mx_cost || ''} onChange={(e) => onRowChange(row.id, 'mx_cost', parseFloat(e.target.value) || 0)} placeholder="ต้นทุน" className="h-8" />
         </TableCell>
         <TableCell className="p-1">
-            <Input type="number" value={row.mx_amount || ''} onChange={(e) => onRowChange(index, 'mx_amount', parseFloat(e.target.value) || 0)} placeholder="จำนวนเงิน" className="h-8" />
+            <Input type="number" value={row.mx_amount || ''} onChange={(e) => onRowChange(row.id, 'mx_amount', parseFloat(e.target.value) || 0)} placeholder="จำนวนเงิน" className="h-8" />
         </TableCell>
         <TableCell className="p-1 text-center">
-             <Checkbox checked={row.mx_finished} onCheckedChange={(checked) => onRowChange(index, 'mx_finished', checked)} />
+             <Checkbox checked={row.mx_finished} onCheckedChange={(checked) => onRowChange(row.id, 'mx_finished', checked)} />
         </TableCell>
         <TableCell className="p-1 text-center">
-            <Button variant="ghost" size="icon" onClick={() => onRowDelete(index)}>
+            <Button variant="ghost" size="icon" onClick={() => onRowDelete(row.id)}>
                 <Trash2 className="h-4 w-4 text-red-500" />
             </Button>
         </TableCell>
@@ -64,14 +66,13 @@ const TransportEntryRow = ({ row, onRowChange, onRowDelete, index }: { row: any,
 
 export default function TransportPage() {
     const { toast } = useToast();
+    const [transportRows, setTransportRows] = useState<TransportEntry[]>([]);
     
-    const initialRowState = {
-        ans_date: '', ans_cost: 0, ans_amount: 0, ans_finished: false,
-        hal_date: '', hal_cost: 0, hal_amount: 0, hal_finished: false,
-        mx_date: '', mx_cost: 0, mx_amount: 0, mx_finished: false,
-    };
-    const [transportRows, setTransportRows] = useState([initialRowState]);
-    
+    useEffect(() => {
+        const unsubscribe = listenToTransportEntries(setTransportRows);
+        return () => unsubscribe();
+    }, []);
+
     const transportTotal = useMemo(() => {
         return transportRows.reduce((total, row) => {
             return total + (row.ans_amount || 0) + (row.hal_amount || 0) + (row.mx_amount || 0);
@@ -88,33 +89,39 @@ export default function TransportPage() {
         }, 0);
     }, [transportRows]);
 
-    const handleAddTransportRow = () => {
-        setTransportRows([...transportRows, initialRowState]);
+    const handleAddTransportRow = async () => {
+        try {
+            await addTransportEntry();
+            toast({ title: "เพิ่มแถวใหม่สำเร็จ" });
+        } catch (error) {
+            console.error("Error adding row: ", error);
+            toast({ title: "เกิดข้อผิดพลาด", description: "ไม่สามารถเพิ่มแถวได้", variant: "destructive" });
+        }
     };
 
-    const handleTransportRowChange = (index: number, field: string, value: any) => {
-        const updatedRows = [...transportRows];
-        updatedRows[index] = { ...updatedRows[index], [field]: value };
-        setTransportRows(updatedRows);
+    const handleTransportRowChange = async (id: string, field: keyof TransportEntry, value: any) => {
+        try {
+            await updateTransportEntry(id, { [field]: value });
+        } catch (error) {
+            console.error("Error updating row: ", error);
+            toast({ title: "เกิดข้อผิดพลาด", description: "ไม่สามารถอัปเดตข้อมูลได้", variant: "destructive" });
+        }
     };
 
-    const handleTransportRowDelete = (index: number) => {
+    const handleTransportRowDelete = async (id: string) => {
         if (transportRows.length <= 1) {
             toast({ title: "ไม่สามารถลบได้", description: "ต้องมีอย่างน้อย 1 แถว", variant: "destructive" });
             return;
         }
-        const updatedRows = transportRows.filter((_, i) => i !== index);
-        setTransportRows(updatedRows);
+        try {
+            await deleteTransportEntry(id);
+            toast({ title: "ลบแถวสำเร็จ" });
+        } catch (error) {
+            console.error("Error deleting row: ", error);
+            toast({ title: "เกิดข้อผิดพลาด", description: "ไม่สามารถลบแถวได้", variant: "destructive" });
+        }
     };
 
-    const handleSaveTransportData = () => {
-        console.log("Transport Data:", transportRows);
-        // Here you would typically save the data to your backend/database
-        toast({
-            title: "บันทึกข้อมูลสำเร็จ (จำลอง)",
-            description: `ยอดรวมค่าขนส่ง ${formatCurrency(transportTotal)} ได้ถูกบันทึก`,
-        });
-    };
 
     return (
         <div className="flex min-h-screen w-full flex-col bg-muted/40">
@@ -135,7 +142,7 @@ export default function TransportPage() {
                     <Card>
                         <CardHeader>
                             <CardTitle>บันทึกค่าขนส่ง</CardTitle>
-                            <CardDescription>กรอกข้อมูลค่าใช้จ่ายในการขนส่งแต่ละประเภท</CardDescription>
+                            <CardDescription>กรอกข้อมูลค่าใช้จ่ายในการขนส่งแต่ละประเภท (ข้อมูลจะบันทึกอัตโนมัติ)</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <div className="overflow-x-auto">
@@ -168,10 +175,9 @@ export default function TransportPage() {
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {transportRows.map((row, index) => (
+                                        {transportRows.map((row) => (
                                             <TransportEntryRow 
-                                                key={index}
-                                                index={index}
+                                                key={row.id}
                                                 row={row} 
                                                 onRowChange={handleTransportRowChange}
                                                 onRowDelete={handleTransportRowDelete}
@@ -206,7 +212,6 @@ export default function TransportPage() {
                         </CardHeader>
                         <CardContent className="flex flex-col gap-2">
                              <Button variant="outline" onClick={handleAddTransportRow}>เพิ่มแถว</Button>
-                            <Button onClick={handleSaveTransportData}>บันทึกข้อมูล</Button>
                         </CardContent>
                     </Card>
                 </div>
