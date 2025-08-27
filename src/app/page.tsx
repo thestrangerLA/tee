@@ -1,6 +1,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Leaf, Package, Calculator, Truck, Users } from "lucide-react"
+import { Leaf, Package, Calculator, Truck, Users, Landmark } from "lucide-react"
 import Link from 'next/link'
 
 export default function Home() {
@@ -31,7 +31,7 @@ export default function Home() {
             <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-2xl font-bold font-headline">จัดการบัญชี</CardTitle>
-                <Calculator className="h-8 w-8 text-primary" />
+                <Landmark className="h-8 w-8 text-primary" />
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
@@ -62,6 +62,19 @@ export default function Home() {
               <CardContent>
                 <p className="text-muted-foreground">
                   จัดการและติดตามรายการลูกหนี้และเจ้าหนี้ทั้งหมด
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+          <Link href="/tax">
+            <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-2xl font-bold font-headline">คำนวณภาษี</CardTitle>
+                <Calculator className="h-8 w-8 text-primary" />
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  คำนวณภาษีเงินได้บุคคลธรรมดาตามอัตราก้าวหน้า
                 </p>
               </CardContent>
             </Card>
