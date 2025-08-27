@@ -38,33 +38,9 @@ const CashSummaryCard = ({ title, value }: { title: string; value: string }) => 
     </Card>
 );
 
-function AddTransactionForm() {
+function TransactionFormContent() {
     const [date, setDate] = React.useState<Date>()
 
-    return (
-        <Card>
-            <CardHeader>
-                <CardTitle>เพิ่มธุรกรรม</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <Tabs defaultValue="income">
-                    <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="income">รายรับ</TabsTrigger>
-                        <TabsTrigger value="expense">รายจ่าย</TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="income">
-                        <TransactionFormContent date={date} setDate={setDate} />
-                    </TabsContent>
-                     <TabsContent value="expense">
-                        <TransactionFormContent date={date} setDate={setDate} />
-                    </TabsContent>
-                </Tabs>
-            </CardContent>
-        </Card>
-    )
-}
-
-function TransactionFormContent({date, setDate}: {date?: Date, setDate: (date?: Date) => void}) {
      return (
         <div className="space-y-4 pt-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -127,6 +103,29 @@ function TransactionFormContent({date, setDate}: {date?: Date, setDate: (date?: 
      )
 }
 
+function AddTransactionForm() {
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>เพิ่มธุรกรรม</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <Tabs defaultValue="income">
+                    <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="income">รายรับ</TabsTrigger>
+                        <TabsTrigger value="expense">รายจ่าย</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="income">
+                        <TransactionFormContent />
+                    </TabsContent>
+                     <TabsContent value="expense">
+                        <TransactionFormContent />
+                    </TabsContent>
+                </Tabs>
+            </CardContent>
+        </Card>
+    )
+}
 
 export default function AccountancyPage() {
   return (
