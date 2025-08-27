@@ -3,9 +3,19 @@
 
 import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Briefcase, ArrowLeft, TrendingUp, TrendingDown, DollarSign, PlusCircle } from "lucide-react"
+import { Briefcase, ArrowLeft, TrendingUp, TrendingDown, DollarSign, PlusCircle, Calendar as CalendarIcon, Wand2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Calendar } from "@/components/ui/calendar"
+import { format } from "date-fns"
+import { th } from "date-fns/locale"
+import * as React from "react"
 
 const SummaryCard = ({ title, value, valueColor }: { title: string; value: string; valueColor?: string }) => (
   <Card>
@@ -27,6 +37,96 @@ const CashSummaryCard = ({ title, value }: { title: string; value: string }) => 
       </CardContent>
     </Card>
 );
+
+function AddTransactionForm() {
+    const [date, setDate] = React.useState<Date>()
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>เพิ่มธุรกรรม</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <Tabs defaultValue="income">
+                    <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="income">รายรับ</TabsTrigger>
+                        <TabsTrigger value="expense">รายจ่าย</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="income">
+                        <TransactionFormContent date={date} setDate={setDate} />
+                    </TabsContent>
+                     <TabsContent value="expense">
+                        <TransactionFormContent date={date} setDate={setDate} />
+                    </TabsContent>
+                </Tabs>
+            </CardContent>
+        </Card>
+    )
+}
+
+function TransactionFormContent({date, setDate}: {date?: Date, setDate: (date?: Date) => void}) {
+     return (
+        <div className="space-y-4 pt-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                 <div className="space-y-2">
+                    <Label htmlFor="date">วันที่</Label>
+                    <Popover>
+                        <PopoverTrigger asChild>
+                        <Button
+                            variant={"outline"}
+                            className="w-full justify-start text-left font-normal"
+                        >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {date ? format(date, "PPP", { locale: th }) : <span>เลือกวันที่</span>}
+                        </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                        <Calendar
+                            mode="single"
+                            selected={date}
+                            onSelect={setDate}
+                            initialFocus
+                        />
+                        </PopoverContent>
+                    </Popover>
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="amount">จำนวนเงิน</Label>
+                    <Input id="amount" placeholder="KIP 0.00" />
+                </div>
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="category">หมวดหมู่</Label>
+                <Input id="category" placeholder="เช่น ซอฟต์แวร์, อาหาร, ฟรีแลนซ์" />
+            </div>
+             <div className="space-y-2">
+                <Label htmlFor="description">คำอธิบาย</Label>
+                <Textarea id="description" placeholder="อธิบายรายการ" />
+            </div>
+             <div className="space-y-2">
+                <Label>วิธีการชำระเงิน</Label>
+                 <RadioGroup defaultValue="cash" className="flex items-center gap-4">
+                    <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="cash" id="cash" />
+                        <Label htmlFor="cash">เงินสด</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="transfer" id="transfer" />
+                        <Label htmlFor="transfer">เงินโอน</Label>
+                    </div>
+                </RadioGroup>
+            </div>
+            <Button variant="outline" className="w-full">
+                <Wand2 className="mr-2 h-4 w-4" />
+                แนะนำประเภทและหมวดหมู่
+            </Button>
+            <Button className="w-full bg-yellow-500 hover:bg-yellow-600 text-black">
+                เพิ่มธุรกรรม
+            </Button>
+        </div>
+     )
+}
+
 
 export default function AccountancyPage() {
   return (
@@ -80,30 +180,16 @@ export default function AccountancyPage() {
             <SummaryCard title="กำไรสุทธิ" value="0" valueColor="text-green-600" />
           </CardContent>
         </Card>
+        
+        <AddTransactionForm />
 
-        <Card>
-            <CardHeader>
-                <CardTitle>ธุรกรรมด่วน</CardTitle>
-                <CardDescription>บันทึกรายรับและรายจ่ายอย่างรวดเร็ว</CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col sm:flex-row gap-4">
-                <Button size="lg" className="w-full sm:w-auto">
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    บันทึกการขาย
-                </Button>
-                <Button size="lg" variant="outline" className="w-full sm:w-auto">
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    บันทึกค่าใช้จ่าย
-                </Button>
-            </CardContent>
-        </Card>
          <Card className="w-full">
           <CardHeader>
             <CardTitle>รายงานสรุป</CardTitle>
              <CardDescription>
               ฟังก์ชันการทำงานสำหรับส่วนรายงานกำลังอยู่ในระหว่างการพัฒนา
             </CardDescription>
-          </CardHeader>
+          </Header>
           <CardContent>
             <p className="text-muted-foreground">
               เร็วๆ นี้คุณจะสามารถดูรายงานรายรับ-รายจ่าย, รายงานสินค้าคงคลัง, และรายงานภาษีได้ที่นี่
