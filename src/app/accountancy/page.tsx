@@ -220,43 +220,35 @@ export default function AccountancyPage() {
     }, [totalMoney, totalDebtors, transportRemaining]);
 
     const performanceData = useMemo(() => {
-        const calculateMonthlySummary = (month: Date) => {
-            const start = startOfMonth(month);
-            const end = endOfMonth(month);
-
-            const monthlyTransactions = allTransactions.filter(tx => isWithinInterval(tx.date, { start, end }));
-            
-            const income = monthlyTransactions
-                .filter(tx => tx.type === 'income')
-                .reduce((sum, tx) => sum + tx.amount, 0);
-                
-            const expense = monthlyTransactions
-                .filter(tx => tx.type === 'expense')
-                .reduce((sum, tx) => sum + tx.amount, 0);
-
-            return { income, expense };
-        };
-
-        const currentMonthData = calculateMonthlySummary(historyDisplayMonth);
-        
-        // Calculate Brought Forward from all previous transactions, excluding capital
-        const broughtForwardStart = startOfMonth(historyDisplayMonth);
-        const previousTransactions = allTransactions.filter(tx => tx.date < broughtForwardStart);
+        const startOfSelectedMonth = startOfMonth(historyDisplayMonth);
+        const endOfSelectedMonth = endOfMonth(historyDisplayMonth);
+    
+        // Calculate Brought Forward from all transactions *before* the selected month
+        const previousTransactions = allTransactions.filter(tx => tx.date < startOfSelectedMonth);
         const broughtForward = previousTransactions.reduce((acc, tx) => {
             return tx.type === 'income' ? acc + tx.amount : acc - tx.amount;
         }, 0);
+    
+        // Get transactions for the *current* selected month
+        const monthlyTransactions = allTransactions.filter(tx => isWithinInterval(tx.date, { start: startOfSelectedMonth, end: endOfSelectedMonth }));
         
-        const totalIncomeForMonth = broughtForward + currentMonthData.income;
-        const netProfitMonthly = currentMonthData.income - currentMonthData.expense;
-        const netProfitCumulative = broughtForward + netProfitMonthly;
-
+        const income = monthlyTransactions
+            .filter(tx => tx.type === 'income')
+            .reduce((sum, tx) => sum + tx.amount, 0);
+            
+        const expense = monthlyTransactions
+            .filter(tx => tx.type === 'expense')
+            .reduce((sum, tx) => sum + tx.amount, 0);
+    
+        const netProfitMonthly = income - expense;
+        const endingBalance = broughtForward + netProfitMonthly;
+    
         return { 
             broughtForward, 
-            income: currentMonthData.income, 
-            totalIncome: totalIncomeForMonth, 
-            expense: currentMonthData.expense, 
+            income, 
+            expense, 
             netProfitMonthly,
-            netProfitCumulative,
+            endingBalance,
         };
     }, [allTransactions, historyDisplayMonth]);
 
@@ -364,12 +356,14 @@ export default function AccountancyPage() {
 
             const updatedSummary = { ...accountSummary };
             
+            // Revert original transaction amount
             if (originalTx.type === 'income') {
                 updatedSummary[originalTx.paymentMethod] -= originalTx.amount;
             } else {
                 updatedSummary[originalTx.paymentMethod] += originalTx.amount;
             }
 
+            // Apply new transaction amount
             if (editingTransaction.type === 'income') {
                 updatedSummary[editingTransaction.paymentMethod] += editingTransaction.amount;
             } else {
@@ -422,7 +416,8 @@ export default function AccountancyPage() {
     };
 
     const MonthYearSelector = () => {
-        const years = [2025, 2026];
+        const currentYear = getYear(new Date());
+        const years = Array.from({ length: 2 }, (_, i) => currentYear + i); // Display current year and next year
         const months = Array.from({ length: 12 }, (_, i) => setMonth(new Date(), i));
 
         return (
@@ -517,7 +512,7 @@ export default function AccountancyPage() {
                         <SummaryCard title="รายรับ" value={formatCurrency(performanceData.income)} icon={<ArrowUpCircle className="h-5 w-5 text-green-500" />} />
                         <SummaryCard title="รายจ่าย" value={formatCurrency(performanceData.expense)} icon={<ArrowDownCircle className="h-5 w-5 text-red-500" />} />
                         <SummaryCard title="กำไรสุทธิ (เดือน)" value={formatCurrency(performanceData.netProfitMonthly)} icon={performanceData.netProfitMonthly >= 0 ? <Equal className="h-5 w-5 text-indigo-500" /> : <Minus className="h-5 w-5 text-red-500" />} />
-                        <SummaryCard title="ยอดคงเหลือสิ้นเดือน" value={formatCurrency(performanceData.netProfitCumulative)} icon={<Banknote className="h-5 w-5 text-blue-500" />} />
+                        <SummaryCard title="ยอดคงเหลือสิ้นเดือน" value={formatCurrency(performanceData.endingBalance)} icon={<Banknote className="h-5 w-5 text-blue-500" />} />
                     </CardContent>
                 </Card>
 
@@ -825,3 +820,5 @@ export default function AccountancyPage() {
         </div>
     );
 }
+
+    
