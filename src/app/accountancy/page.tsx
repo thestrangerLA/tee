@@ -17,18 +17,20 @@ import { format } from "date-fns"
 import { th } from "date-fns/locale"
 import * as React from "react"
 
-const SummaryCard = ({ title, value, valueColor }: { title: string; value: string; valueColor?: string }) => (
-  <Card>
-    <CardHeader className="pb-2">
-      <CardTitle className="text-base font-medium">{title}</CardTitle>
-    </CardHeader>
-    <CardContent>
-      <div className={`text-2xl font-bold ${valueColor}`}>{value}</div>
-    </CardContent>
-  </Card>
-);
+function SummaryCard({ title, value, valueColor }: { title: string; value: string; valueColor?: string }) {
+    return (
+        <Card>
+            <CardHeader className="pb-2">
+            <CardTitle className="text-base font-medium">{title}</CardTitle>
+            </CardHeader>
+            <CardContent>
+            <div className={`text-2xl font-bold ${valueColor}`}>{value}</div>
+            </CardContent>
+        </Card>
+    );
+}
 
-const CashSummaryCard = ({ title, value }: { title: string; value: string }) => {
+function CashSummaryCard({ title, value }: { title: string; value: string }) {
     return (
         <Card>
           <CardContent className="p-4">
@@ -38,7 +40,7 @@ const CashSummaryCard = ({ title, value }: { title: string; value: string }) => 
           </CardContent>
         </Card>
     );
-};
+}
 
 function TransactionFormContent() {
     const [date, setDate] = React.useState<Date>()
