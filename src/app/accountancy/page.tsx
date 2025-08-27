@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Landmark, Wallet, PlusCircle, Calendar as CalendarIcon, ChevronDown, ChevronUp, TrendingUp, ArrowUpCircle, ArrowDownCircle, Minus, Equal, FileText, MoreHorizontal, Pencil } from "lucide-react"
+import { ArrowLeft, Landmark, Wallet, PlusCircle, Calendar as CalendarIcon, ChevronDown, ChevronUp, TrendingUp, ArrowUpCircle, ArrowDownCircle, Minus, Equal, FileText, MoreHorizontal, Pencil, Banknote } from "lucide-react"
 import Link from 'next/link'
 import { useToast } from "@/hooks/use-toast"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
@@ -365,7 +365,7 @@ export default function AccountancyPage() {
                      <SummaryCard title="รวมเงินทั้งหมด" value={formatCurrency(totalMoney)} icon={<div className="font-bold text-2xl">💰</div>} />
                      <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                           <CardTitle className="text-sm font-medium">กำไรสุทธิ</CardTitle>
+                           <CardTitle className="text-sm font-medium">กำไรสุทธิเดือนนี้</CardTitle>
                            <TrendingUp className="h-5 w-5 text-primary" />
                         </CardHeader>
                         <CardContent>
@@ -383,11 +383,12 @@ export default function AccountancyPage() {
                         </div>
                         <MonthYearSelector />
                     </CardHeader>
-                    <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                         <SummaryCard title="ยอดยกมา" value={formatCurrency(performanceData.broughtForward)} icon={<FileText className="h-5 w-5 text-primary" />} />
                         <SummaryCard title="รายรับ" value={formatCurrency(performanceData.income)} icon={<ArrowUpCircle className="h-5 w-5 text-green-500" />} />
+                        <SummaryCard title="รวมรายรับ" value={formatCurrency(performanceData.totalIncome)} icon={<Banknote className="h-5 w-5 text-blue-500" />} />
                         <SummaryCard title="รายจ่าย" value={formatCurrency(performanceData.expense)} icon={<ArrowDownCircle className="h-5 w-5 text-red-500" />} />
-                        <SummaryCard title="กำไรสุทธิ" value={formatCurrency(performanceData.netProfit)} icon={performanceData.netProfit >= 0 ? <Equal className="h-5 w-5 text-blue-500" /> : <Minus className="h-5 w-5 text-red-500" />} />
+                        <SummaryCard title="กำไรสุทธิ" value={formatCurrency(performanceData.netProfit)} icon={performanceData.netProfit >= 0 ? <Equal className="h-5 w-5 text-indigo-500" /> : <Minus className="h-5 w-5 text-red-500" />} />
                     </CardContent>
                 </Card>
 
@@ -694,3 +695,4 @@ export default function AccountancyPage() {
         </div>
     );
 }
+
