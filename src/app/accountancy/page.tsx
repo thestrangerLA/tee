@@ -253,20 +253,34 @@ export default function AccountancyPage() {
                         </CardHeader>
                         {isHistoryVisible && (
                         <CardContent className="flex flex-col md:flex-row gap-4">
-                            <div className="flex justify-center">
-                                 <Calendar
-                                    mode="single"
-                                    selected={selectedHistoryDate}
-                                    onSelect={setSelectedHistoryDate}
-                                    month={historyDisplayMonth}
-                                    onMonthChange={setHistoryDisplayMonth}
-                                    locale={th}
-                                    modifiers={{ haveTransactions: transactionDates }}
-                                    modifiersClassNames={{
-                                        haveTransactions: 'bg-primary/20 rounded-full',
-                                    }}
-                                    className="rounded-md border"
-                                />
+                            <div className="flex flex-col items-center gap-4">
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant={"outline"}
+                                            className="w-[280px] justify-start text-left font-normal"
+                                        >
+                                            <CalendarIcon className="mr-2 h-4 w-4" />
+                                            {selectedHistoryDate ? format(selectedHistoryDate, "PPP", { locale: th }) : <span>เลือกวันที่</span>}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0">
+                                         <Calendar
+                                            mode="single"
+                                            selected={selectedHistoryDate}
+                                            onSelect={setSelectedHistoryDate}
+                                            month={historyDisplayMonth}
+                                            onMonthChange={setHistoryDisplayMonth}
+                                            locale={th}
+                                            modifiers={{ haveTransactions: transactionDates }}
+                                            modifiersClassNames={{
+                                                haveTransactions: 'bg-primary/20 rounded-full',
+                                            }}
+                                            className="rounded-md border"
+                                            initialFocus
+                                        />
+                                    </PopoverContent>
+                                </Popover>
                             </div>
                             <div className="flex-1">
                                 {transactionsForSelectedDate.length > 0 ? (
@@ -312,5 +326,3 @@ export default function AccountancyPage() {
         </div>
     );
 }
-
-    
