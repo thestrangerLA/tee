@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { ArrowLeft, BarChart } from "lucide-react";
+import { ArrowLeft, BarChart, ArrowUpCircle, ArrowDownCircle } from "lucide-react";
 import { listenToTransactions } from '@/services/accountancyService';
 import type { Transaction } from '@/lib/types';
 import { getYear, getMonth, format } from 'date-fns';
@@ -16,6 +16,18 @@ import { th } from "date-fns/locale";
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'LAK', currencyDisplay: 'code', minimumFractionDigits: 0 }).format(value).replace('LAK', 'KIP');
 };
+
+const SummaryCard = ({ title, value, icon, className }: { title: string, value: string, icon: React.ReactNode, className?: string }) => (
+    <Card className={className}>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">{title}</CardTitle>
+            {icon}
+        </CardHeader>
+        <CardContent>
+            <div className="text-2xl font-bold">{value}</div>
+        </CardContent>
+    </Card>
+);
 
 type MonthlySummary = {
     month: number;
@@ -39,6 +51,18 @@ export default function ReportsPage() {
         const unsubscribe = listenToTransactions(setAllTransactions);
         return () => unsubscribe();
     }, []);
+
+    const grandTotalIncome = useMemo(() => {
+        return allTransactions
+            .filter(tx => tx.type === 'income')
+            .reduce((sum, tx) => sum + tx.amount, 0);
+    }, [allTransactions]);
+
+    const grandTotalExpense = useMemo(() => {
+        return allTransactions
+            .filter(tx => tx.type === 'expense')
+            .reduce((sum, tx) => sum + tx.amount, 0);
+    }, [allTransactions]);
 
     const reportsData: YearlySummary[] = useMemo(() => {
         const groupedByYear: Record<number, Record<number, { income: number, expense: number }>> = {};
@@ -104,7 +128,26 @@ export default function ReportsPage() {
             <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
                  <Card>
                     <CardHeader>
-                        <CardTitle>สรุปผลประกอบการ</CardTitle>
+                        <CardTitle>ภาพรวมทั้งหมด</CardTitle>
+                        <CardDescription>สรุปรายรับและรายจ่ายทั้งหมดตั้งแต่เริ่มต้น</CardDescription>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <SummaryCard 
+                            title="รวมรายรับทั้งหมด" 
+                            value={formatCurrency(grandTotalIncome)}
+                            icon={<ArrowUpCircle className="h-5 w-5 text-green-500" />}
+                        />
+                        <SummaryCard 
+                            title="รวมรายจ่ายทั้งหมด" 
+                            value={formatCurrency(grandTotalExpense)}
+                            icon={<ArrowDownCircle className="h-5 w-5 text-red-500" />}
+                        />
+                    </CardContent>
+                </Card>
+
+                 <Card>
+                    <CardHeader>
+                        <CardTitle>สรุปผลประกอบการรายปี</CardTitle>
                         <CardDescription>แสดงรายรับ, รายจ่าย และกำไรสุทธิ แยกตามปีและเดือน</CardDescription>
                     </CardHeader>
                     <CardContent>
