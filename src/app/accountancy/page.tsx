@@ -46,7 +46,6 @@ interface Transaction {
     type: 'income' | 'expense';
     date: Date;
     amount: number;
-    category: string;
     description: string;
     paymentMethod: 'cash' | 'transfer';
 }
@@ -60,7 +59,6 @@ export default function AccountancyPage() {
     const [newTransaction, setNewTransaction] = useState({
         type: 'expense' as 'income' | 'expense',
         amount: 0,
-        category: '',
         description: '',
         paymentMethod: 'cash' as 'cash' | 'transfer'
     });
@@ -108,11 +106,11 @@ export default function AccountancyPage() {
 
         toast({
             title: "เพิ่มธุรกรรมใหม่สำเร็จ",
-            description: `เพิ่มรายการ ${newTransaction.category} จำนวน ${formatCurrency(newTransaction.amount)}`,
+            description: `เพิ่มรายการใหม่จำนวน ${formatCurrency(newTransaction.amount)}`,
         });
 
         // Reset form
-        setNewTransaction({ type: 'expense', amount: 0, category: '', description: '', paymentMethod: 'cash' });
+        setNewTransaction({ type: 'expense', amount: 0, description: '', paymentMethod: 'cash' });
         setDate(new Date());
     }
 
@@ -249,11 +247,6 @@ export default function AccountancyPage() {
                                     </div>
 
                                     <div className="grid gap-3">
-                                        <Label htmlFor="category">หมวดหมู่</Label>
-                                        <Input id="category" value={newTransaction.category} onChange={(e) => setNewTransaction({ ...newTransaction, category: e.target.value})} required />
-                                    </div>
-
-                                    <div className="grid gap-3">
                                         <Label htmlFor="description">คำอธิบาย</Label>
                                         <Textarea id="description" placeholder="อธิบายรายการ (ถ้ามี)" value={newTransaction.description} onChange={(e) => setNewTransaction({ ...newTransaction, description: e.target.value})} />
                                     </div>
@@ -295,7 +288,7 @@ export default function AccountancyPage() {
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead>วันที่</TableHead>
-                                        <TableHead>หมวดหมู่</TableHead>
+                                        <TableHead>คำอธิบาย</TableHead>
                                         <TableHead>ประเภท</TableHead>
                                         <TableHead className="text-right">จำนวนเงิน</TableHead>
                                     </TableRow>
@@ -306,8 +299,7 @@ export default function AccountancyPage() {
                                             <TableRow key={tx.id}>
                                                 <TableCell>{format(tx.date, "dd MMM yyyy", { locale: th })}</TableCell>
                                                 <TableCell>
-                                                    <div className="font-medium">{tx.category}</div>
-                                                    <div className="text-sm text-muted-foreground">{tx.description}</div>
+                                                    <div className="font-medium">{tx.description || "-"}</div>
                                                 </TableCell>
                                                 <TableCell>
                                                     <Badge variant={tx.type === 'income' ? 'secondary' : 'destructive'}>
@@ -330,5 +322,4 @@ export default function AccountancyPage() {
             </main>
         </div>
     );
-
-    
+}
