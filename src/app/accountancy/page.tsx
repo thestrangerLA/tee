@@ -6,14 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Landmark, Wallet, PlusCircle, Calendar as CalendarIcon, ChevronDown, ChevronUp, TrendingUp, ArrowUpCircle, ArrowDownCircle, Minus, Equal, FileText, MoreHorizontal } from "lucide-react"
+import { ArrowLeft, Landmark, Wallet, PlusCircle, Calendar as CalendarIcon, ChevronDown, ChevronUp, TrendingUp, ArrowUpCircle, ArrowDownCircle, Minus, Equal, FileText, MoreHorizontal, Pencil } from "lucide-react"
 import Link from 'next/link'
 import { useToast } from "@/hooks/use-toast"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
 import { Textarea } from "@/components/ui/textarea"
-import { format, isSameDay, startOfMonth, endOfMonth, isWithinInterval, addMonths, getMonth, getYear, setMonth } from "date-fns"
+import { format, isSameDay, startOfMonth, endOfMonth, isWithinInterval, addMonths, subMonths, getMonth, getYear, setMonth, startOfDay } from "date-fns"
 import { th } from "date-fns/locale"
 import {
   Table,
@@ -52,10 +52,13 @@ const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB', minimumFractionDigits: 0 }).format(value);
 }
 
-const SummaryCard = ({ title, value, icon }: { title: string, value: string, icon: React.ReactNode }) => (
-    <Card>
+const SummaryCard = ({ title, value, icon, onClick }: { title: string, value: string, icon: React.ReactNode, onClick?: () => void }) => (
+    <Card className={onClick ? 'cursor-pointer hover:bg-muted/80' : ''} onClick={onClick}>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{title}</CardTitle>
+            <div className="flex items-center gap-2">
+               <CardTitle className="text-sm font-medium">{title}</CardTitle>
+               {onClick && <Pencil className="h-3 w-3 text-muted-foreground" />}
+            </div>
             {icon}
         </CardHeader>
         <CardContent>
@@ -81,6 +84,8 @@ export default function AccountancyPage() {
     const [selectedHistoryDate, setSelectedHistoryDate] = useState<Date | undefined>(new Date());
     
     const [historyDisplayMonth, setHistoryDisplayMonth] = useState<Date>(new Date());
+    const [editingSummaryField, setEditingSummaryField] = useState<'cash' | 'transfer' | null>(null);
+    const [editingSummaryValue, setEditingSummaryValue] = useState(0);
 
     useEffect(() => {
         const unsubscribeTransactions = listenToTransactions(setAllTransactions);
@@ -88,8 +93,7 @@ export default function AccountancyPage() {
             if (summary) {
                 setAccountSummary(summary);
             } else {
-                 // Initialize summary if it doesn't exist
-                const initialSummary = { id: 'latest', cash: 0, transfer: 0 };
+                 const initialSummary = { id: 'latest', cash: 0, transfer: 0 };
                 setAccountSummary(initialSummary);
                 updateAccountSummary(initialSummary);
             }
@@ -125,24 +129,37 @@ export default function AccountancyPage() {
 
 
     const performanceData = useMemo(() => {
-        const start = startOfMonth(historyDisplayMonth);
-        const end = endOfMonth(historyDisplayMonth);
+        const calculateMonthlySummary = (month: Date) => {
+            const start = startOfMonth(month);
+            const end = endOfMonth(month);
 
-        const monthlyTransactions = allTransactions.filter(tx => isWithinInterval(tx.date, { start, end }));
-        
-        const income = monthlyTransactions
-            .filter(tx => tx.type === 'income')
-            .reduce((sum, tx) => sum + tx.amount, 0);
+            const monthlyTransactions = allTransactions.filter(tx => isWithinInterval(tx.date, { start, end }));
             
-        const expense = monthlyTransactions
-            .filter(tx => tx.type === 'expense')
-            .reduce((sum, tx) => sum + tx.amount, 0);
+            const income = monthlyTransactions
+                .filter(tx => tx.type === 'income')
+                .reduce((sum, tx) => sum + tx.amount, 0);
+                
+            const expense = monthlyTransactions
+                .filter(tx => tx.type === 'expense')
+                .reduce((sum, tx) => sum + tx.amount, 0);
 
-        const broughtForward = 0; // Placeholder for now
-        const totalIncome = broughtForward + income;
-        const netProfit = totalIncome - expense;
+            return { income, expense, netProfit: income - expense };
+        };
 
-        return { broughtForward, income, totalIncome, expense, netProfit };
+        const currentMonthData = calculateMonthlySummary(historyDisplayMonth);
+        const previousMonthData = calculateMonthlySummary(subMonths(historyDisplayMonth, 1));
+        
+        const broughtForward = previousMonthData.netProfit;
+        const totalIncome = broughtForward + currentMonthData.income;
+        const netProfit = totalIncome - currentMonthData.expense;
+
+        return { 
+            broughtForward, 
+            income: currentMonthData.income, 
+            totalIncome, 
+            expense: currentMonthData.expense, 
+            netProfit 
+        };
     }, [allTransactions, historyDisplayMonth]);
 
     const handleAddTransaction = async (e: React.FormEvent) => {
@@ -156,12 +173,11 @@ export default function AccountancyPage() {
             return;
         }
         
-        const newTxData = { date, ...newTransaction };
+        const newTxData = { date: startOfDay(date), ...newTransaction };
 
         try {
             await addTransaction(newTxData);
 
-            // Update account summary
             const updatedSummary = { ...accountSummary };
             if (newTransaction.type === 'income') {
                 updatedSummary[newTransaction.paymentMethod] += newTransaction.amount;
@@ -194,7 +210,6 @@ export default function AccountancyPage() {
         try {
             await deleteTransaction(txToDelete.id);
             
-            // Revert account summary
             const updatedSummary = { ...accountSummary };
              if (txToDelete.type === 'income') {
                 updatedSummary[txToDelete.paymentMethod] -= txToDelete.amount;
@@ -224,14 +239,10 @@ export default function AccountancyPage() {
 
         try {
             await updateTransaction(editingTransaction.id, {
-                date: editingTransaction.date,
-                type: editingTransaction.type,
-                amount: editingTransaction.amount,
-                description: editingTransaction.description,
-                paymentMethod: editingTransaction.paymentMethod,
+                ...editingTransaction,
+                date: startOfDay(editingTransaction.date),
             });
 
-            // Adjust account summary based on the difference
             const updatedSummary = { ...accountSummary };
             
             // 1. Revert the original transaction
@@ -269,9 +280,33 @@ export default function AccountancyPage() {
         setEditingTransaction({ ...tx });
     };
 
+     const openEditSummaryDialog = (field: 'cash' | 'transfer') => {
+        setEditingSummaryField(field);
+        setEditingSummaryValue(accountSummary[field]);
+    };
+
+    const handleUpdateSummaryField = async () => {
+        if (!editingSummaryField) return;
+
+        try {
+            await updateAccountSummary({ [editingSummaryField]: editingSummaryValue });
+            toast({
+                title: "อัปเดตยอดเงินสำเร็จ",
+            });
+            setEditingSummaryField(null);
+        } catch (error) {
+            console.error("Error updating summary: ", error);
+            toast({
+                title: "เกิดข้อผิดพลาด",
+                description: "ไม่สามารถอัปเดตยอดเงินได้",
+                variant: "destructive",
+            });
+        }
+    };
+
     const MonthYearSelector = () => {
         const currentYear = getYear(new Date());
-        const years = [currentYear, currentYear - 1, currentYear - 2]; // Example: current year and previous two years
+        const years = Array.from({ length: 5 }, (_, i) => currentYear - i); // Current year and previous four years
         const months = Array.from({ length: 12 }, (_, i) => setMonth(new Date(), i));
 
         return (
@@ -286,7 +321,7 @@ export default function AccountancyPage() {
                     {years.map(year => (
                          <DropdownMenuSub key={year}>
                             <DropdownMenuSubTrigger>
-                                <span>{year}</span>
+                                <span>{year + 543}</span>
                             </DropdownMenuSubTrigger>
                             <DropdownMenuPortal>
                                 <DropdownMenuSubContent>
@@ -325,8 +360,8 @@ export default function AccountancyPage() {
             </header>
             <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
                 <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
-                     <SummaryCard title="เงินสด" value={formatCurrency(accountSummary.cash)} icon={<Wallet className="h-5 w-5 text-primary" />} />
-                     <SummaryCard title="เงินโอน" value={formatCurrency(accountSummary.transfer)} icon={<Landmark className="h-5 w-5 text-primary" />} />
+                     <SummaryCard title="เงินสด" value={formatCurrency(accountSummary.cash)} icon={<Wallet className="h-5 w-5 text-primary" />} onClick={() => openEditSummaryDialog('cash')} />
+                     <SummaryCard title="เงินโอน" value={formatCurrency(accountSummary.transfer)} icon={<Landmark className="h-5 w-5 text-primary" />} onClick={() => openEditSummaryDialog('transfer')} />
                      <SummaryCard title="รวมเงินทั้งหมด" value={formatCurrency(totalMoney)} icon={<div className="font-bold text-2xl">💰</div>} />
                      <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -478,7 +513,7 @@ export default function AccountancyPage() {
                                     <PopoverTrigger asChild>
                                         <Button
                                             variant={"outline"}
-                                            className="w-[280px] justify-start text-left font-normal"
+                                            className="w-full md:w-[280px] justify-start text-left font-normal"
                                         >
                                             <CalendarIcon className="mr-2 h-4 w-4" />
                                             {selectedHistoryDate ? format(selectedHistoryDate, "PPP", { locale: th }) : <span>เลือกวันที่</span>}
@@ -653,6 +688,36 @@ export default function AccountancyPage() {
                     </DialogContent>
                 </Dialog>
             )}
+
+            {editingSummaryField && (
+                 <Dialog open={!!editingSummaryField} onOpenChange={(isOpen) => !isOpen && setEditingSummaryField(null)}>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>แก้ไขยอด {editingSummaryField === 'cash' ? 'เงินสด' : 'เงินโอน'}</DialogTitle>
+                             <DialogDescription>
+                                ป้อนยอดเงินปัจจุบัน
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="grid gap-4 py-4">
+                            <div className="grid gap-3">
+                                 <Label htmlFor="edit-summary-amount">จำนวนเงิน (THB)</Label>
+                                <Input 
+                                    id="edit-summary-amount" 
+                                    type="number" 
+                                    value={editingSummaryValue} 
+                                    onChange={(e) => setEditingSummaryValue(Number(e.target.value))} 
+                                    required 
+                                />
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => setEditingSummaryField(null)}>ยกเลิก</Button>
+                            <Button onClick={handleUpdateSummaryField}>บันทึก</Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+            )}
         </div>
     );
-}
+
+    
