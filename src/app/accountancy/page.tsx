@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Landmark, Wallet, PlusCircle, Calendar as CalendarIcon, ChevronDown, ChevronUp, TrendingUp, ArrowUpCircle, ArrowDownCircle, Minus, Equal, FileText, MoreHorizontal, Pencil, Banknote, Trash2, Users, Truck } from "lucide-react"
+import { ArrowLeft, Landmark, Wallet, PlusCircle, Calendar as CalendarIcon, ChevronDown, ChevronUp, TrendingUp, ArrowUpCircle, ArrowDownCircle, Minus, Equal, FileText, MoreHorizontal, Pencil, Banknote, Trash2, Users, Truck, PiggyBank } from "lucide-react"
 import Link from 'next/link'
 import { useToast } from "@/hooks/use-toast"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
@@ -214,6 +214,10 @@ export default function AccountancyPage() {
     }, [transportEntries]);
 
     const totalMoney = useMemo(() => accountSummary.cash + accountSummary.transfer, [accountSummary]);
+    
+    const grandTotalMoney = useMemo(() => {
+        return totalMoney + totalDebtors + transportRemaining;
+    }, [totalMoney, totalDebtors, transportRemaining]);
 
     const performanceData = useMemo(() => {
         const calculateMonthlySummary = (month: Date) => {
@@ -479,12 +483,12 @@ export default function AccountancyPage() {
                      <SummaryCard title="ค่าขนส่งคงเหลือ" value={formatCurrency(transportRemaining)} icon={<Truck className="h-5 w-5 text-red-600" />} />
                      <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                           <CardTitle className="text-sm font-medium">กำไรสะสมเดือนนี้</CardTitle>
-                           <TrendingUp className="h-5 w-5 text-primary" />
+                           <CardTitle className="text-sm font-medium">รวมเงิน</CardTitle>
+                           <PiggyBank className="h-5 w-5 text-primary" />
                         </CardHeader>
                         <CardContent>
-                           <div className="text-2xl font-bold">{formatCurrency(performanceData.netProfitCumulative)}</div>
-                           <p className="text-xs text-muted-foreground">สำหรับเดือน {format(historyDisplayMonth, "LLLL yyyy", { locale: th })}</p>
+                           <div className="text-2xl font-bold">{formatCurrency(grandTotalMoney)}</div>
+                           <p className="text-xs text-muted-foreground">ยอดรวมทุกสินทรัพย์ที่มี</p>
                         </CardContent>
                      </Card>
                 </div>
@@ -810,3 +814,5 @@ export default function AccountancyPage() {
         </div>
     );
 }
+
+    
