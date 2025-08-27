@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Landmark, Wallet, PlusCircle, Calendar as CalendarIcon, ChevronDown, ChevronUp, TrendingUp, ArrowUpCircle, ArrowDownCircle, Minus, Equal, FileText, MoreHorizontal, Pencil, Banknote, Trash2, Users, Truck, PiggyBank, Briefcase, Combine } from "lucide-react"
+import { ArrowLeft, Landmark, Wallet, PlusCircle, Calendar as CalendarIcon, ChevronDown, ChevronUp, TrendingUp, ArrowUpCircle, ArrowDownCircle, Minus, Equal, FileText, MoreHorizontal, Pencil, Banknote, Trash2, Users, Truck, PiggyBank, Briefcase, Combine, MinusCircle } from "lucide-react"
 import Link from 'next/link'
 import { useToast } from "@/hooks/use-toast"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
@@ -256,6 +256,10 @@ export default function AccountancyPage() {
         };
     }, [allTransactions, historyDisplayMonth, workingCapital]);
 
+    const differenceAmount = useMemo(() => {
+        return grandTotalMoney - performanceData.remainingWithWorkingCapital;
+    }, [grandTotalMoney, performanceData.remainingWithWorkingCapital]);
+
     const dailySummariesForMonth = useMemo(() => {
         const start = startOfMonth(historyDisplayMonth);
         const end = endOfMonth(historyDisplayMonth);
@@ -492,7 +496,7 @@ export default function AccountancyPage() {
                 </div>
             </header>
             <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-                <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4 xl:grid-cols-7">
+                <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4 xl:grid-cols-8">
                      <SummaryCard title="เงินทุน" value={formatCurrency(accountSummary.capital)} icon={<Briefcase className="h-5 w-5 text-primary" />} onClick={() => openEditSummaryDialog('capital')} />
                      <SummaryCard title="เงินสด" value={formatCurrency(accountSummary.cash)} icon={<Wallet className="h-5 w-5 text-primary" />} onClick={() => openEditSummaryDialog('cash')} />
                      <SummaryCard title="เงินโอน" value={formatCurrency(accountSummary.transfer)} icon={<Landmark className="h-5 w-5 text-primary" />} onClick={() => openEditSummaryDialog('transfer')} />
@@ -509,6 +513,8 @@ export default function AccountancyPage() {
                            <p className="text-xs text-muted-foreground">ยอดรวมทุกสินทรัพย์ที่มี</p>
                         </CardContent>
                      </Card>
+                     <SummaryCard title="ส่วนต่าง" value={formatCurrency(differenceAmount)} icon={<MinusCircle className="h-5 w-5 text-indigo-500" />} />
+
                 </div>
 
                  <Card>
