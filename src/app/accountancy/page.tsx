@@ -56,8 +56,8 @@ const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'LAK', currencyDisplay: 'code', minimumFractionDigits: 0 }).format(value).replace('LAK', 'KIP');
 }
 
-const SummaryCard = ({ title, value, icon, onClick }: { title: string, value: string, icon: React.ReactNode, onClick?: () => void }) => (
-    <Card className={onClick ? 'cursor-pointer hover:bg-muted/80' : ''} onClick={onClick}>
+const SummaryCard = ({ title, value, icon, onClick, className }: { title: string, value: string, icon: React.ReactNode, onClick?: () => void, className?: string }) => (
+    <Card className={`${onClick ? 'cursor-pointer hover:bg-muted/80' : ''} ${className || ''}`} onClick={onClick}>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <div className="flex items-center gap-2">
                <CardTitle className="text-sm font-medium">{title}</CardTitle>
@@ -497,16 +497,16 @@ export default function AccountancyPage() {
                      <SummaryCard title="เงินทุน" value={formatCurrency(accountSummary.capital)} icon={<Briefcase className="h-5 w-5 text-primary" />} onClick={() => openEditSummaryDialog('capital')} />
                      <SummaryCard title="เงินสด" value={formatCurrency(accountSummary.cash)} icon={<Wallet className="h-5 w-5 text-primary" />} onClick={() => openEditSummaryDialog('cash')} />
                      <SummaryCard title="เงินโอน" value={formatCurrency(accountSummary.transfer)} icon={<Landmark className="h-5 w-5 text-primary" />} onClick={() => openEditSummaryDialog('transfer')} />
-                     <SummaryCard title="รวมเงินทั้งหมด" value={formatCurrency(totalMoney)} icon={<Combine className="h-5 w-5 text-green-600" />} />
+                     <SummaryCard title="รวมเงิน" value={formatCurrency(totalMoney)} icon={<Combine className="h-5 w-5 text-green-600" />} />
                      <SummaryCard title="ลูกหนี้ทั้งหมด" value={formatCurrency(totalDebtors)} icon={<Users className="h-5 w-5 text-yellow-600" />} />
                      <SummaryCard title="ค่าขนส่งคงเหลือ" value={formatCurrency(transportRemaining)} icon={<Truck className="h-5 w-5 text-red-600" />} />
-                     <Card className="bg-blue-50">
+                     <Card className="bg-blue-50 dark:bg-blue-900/50">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                           <CardTitle className="text-sm font-medium">รวมเงิน</CardTitle>
-                           <PiggyBank className="h-5 w-5 text-blue-600" />
+                           <CardTitle className="text-sm font-medium">รวมเงินทั้งหมด</CardTitle>
+                           <PiggyBank className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                         </CardHeader>
                         <CardContent>
-                           <div className="text-2xl font-bold text-blue-700">{formatCurrency(grandTotalMoney)}</div>
+                           <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">{formatCurrency(grandTotalMoney)}</div>
                            <p className="text-xs text-muted-foreground">ยอดรวมทุกสินทรัพย์ที่มี</p>
                         </CardContent>
                      </Card>
@@ -525,8 +525,8 @@ export default function AccountancyPage() {
                     <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-4">
                         {/* New Cards */}
                         <SummaryCard title="เงินหมุน" value={formatCurrency(workingCapital)} icon={<Combine className="h-5 w-5 text-purple-500" />} onClick={() => openEditSummaryDialog('workingCapital')} />
-                        <SummaryCard title="รวมทั้งหมด" value={formatCurrency(performanceData.totalWithWorkingCapital)} icon={<PlusCircle className="h-5 w-5 text-orange-500" />} />
-                        <SummaryCard title="เงินคงเหลือ" value={formatCurrency(performanceData.remainingWithWorkingCapital)} icon={<Wallet className="h-5 w-5 text-teal-500" />} />
+                        <SummaryCard title="รวมทั้งหมด" value={formatCurrency(performanceData.totalWithWorkingCapital)} icon={<PlusCircle className="h-5 w-5 text-orange-500" />} className="bg-orange-50 dark:bg-orange-900/50" />
+                        <SummaryCard title="เงินคงเหลือ" value={formatCurrency(performanceData.remainingWithWorkingCapital)} icon={<Wallet className="h-5 w-5 text-teal-500" />} className="bg-teal-50 dark:bg-teal-900/50" />
                         
                         {/* Spacer to push old cards to a new visual line if needed, or adjust grid for better layout */}
                         <div className="hidden xl:block"></div>
@@ -844,3 +844,5 @@ export default function AccountancyPage() {
         </div>
     );
 }
+
+    
