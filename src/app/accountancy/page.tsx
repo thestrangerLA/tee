@@ -93,15 +93,13 @@ const CashCalculatorCard = ({ onTotalChange }: { onTotalChange: (total: number) 
         onTotalChange(totalKip);
     }, [totalKip, onTotalChange]);
 
-    const handleCountChange = (key: string, value: string) => {
+    const handleCountChange = async (key: string, value: string) => {
         const newCounts = { ...calculatorState.counts, [key]: Number(value) || 0 };
-        // The component now only updates the calculator state, not the account summary directly.
-        // The parent component is responsible for updating the account summary via onTotalChange.
-        updateCalculatorState({ counts: newCounts }); 
+        await updateCalculatorState({ counts: newCounts }); 
     };
 
-    const handleReset = () => {
-        updateCalculatorState({ counts: initialCounts });
+    const handleReset = async () => {
+        await updateCalculatorState({ counts: initialCounts });
     };
 
     return (
@@ -189,8 +187,7 @@ export default function AccountancyPage() {
                 setAccountSummary(summary);
             } else {
                  const initialSummary: AccountSummary = { id: 'latest', cash: 0, transfer: 0, capital: 0, workingCapital: 0 };
-                setAccountSummary(initialSummary);
-                updateAccountSummary(initialSummary);
+                updateAccountSummary(initialSummary).then(() => setAccountSummary(initialSummary));
             }
         });
         const unsubscribeDebtors = listenToDebtorCreditorEntries(setDebtorEntries);
@@ -205,7 +202,6 @@ export default function AccountancyPage() {
     }, []);
     
     const handleCalculatorTotalChange = async (totalKip: number) => {
-        // Only update if the value has actually changed to prevent infinite loops
         if (totalKip !== accountSummary.cash) {
             await updateAccountSummary({ cash: totalKip });
         }
@@ -308,15 +304,8 @@ export default function AccountancyPage() {
         const newTxData = { date: startOfDay(date), ...newTransaction };
 
         try {
+            // No need to manually update summary here, the listener will do it.
             await addTransaction(newTxData);
-
-            const updatedSummary = { ...accountSummary };
-            if (newTransaction.type === 'income') {
-                updatedSummary[newTransaction.paymentMethod] += newTransaction.amount;
-            } else {
-                updatedSummary[newTransaction.paymentMethod] -= newTransaction.amount;
-            }
-            await updateAccountSummary(updatedSummary);
             
             toast({
                 title: "เพิ่มธุรกรรมใหม่สำเร็จ",
@@ -341,15 +330,6 @@ export default function AccountancyPage() {
 
         try {
             await deleteTransaction(txToDelete.id);
-            
-            const updatedSummary = { ...accountSummary };
-             if (txToDelete.type === 'income') {
-                updatedSummary[txToDelete.paymentMethod] -= txToDelete.amount;
-            } else {
-                updatedSummary[txToDelete.paymentMethod] += txToDelete.amount;
-            }
-            await updateAccountSummary(updatedSummary);
-
             toast({
                 title: "ลบธุรกรรมสำเร็จ",
             });
@@ -366,33 +346,12 @@ export default function AccountancyPage() {
     const handleUpdateTransaction = async () => {
         if (!editingTransaction) return;
 
-        const originalTx = allTransactions.find(tx => tx.id === editingTransaction.id);
-        if (!originalTx) return;
-
         try {
             await updateTransaction(editingTransaction.id, {
                 ...editingTransaction,
                 date: startOfDay(editingTransaction.date),
             });
 
-            const updatedSummary = { ...accountSummary };
-            
-            // Revert original transaction amount
-            if (originalTx.type === 'income') {
-                updatedSummary[originalTx.paymentMethod] -= originalTx.amount;
-            } else {
-                updatedSummary[originalTx.paymentMethod] += originalTx.amount;
-            }
-
-            // Apply new transaction amount
-            if (editingTransaction.type === 'income') {
-                updatedSummary[editingTransaction.paymentMethod] += editingTransaction.amount;
-            } else {
-                updatedSummary[editingTransaction.paymentMethod] -= editingTransaction.amount;
-            }
-
-            await updateAccountSummary(updatedSummary);
-            
             toast({
                 title: "อัปเดตธุรกรรมสำเร็จ",
             });
@@ -513,8 +472,7 @@ export default function AccountancyPage() {
                      <SummaryCard title="ลูกหนี้ทั้งหมด" value={formatCurrency(totalDebtors)} icon={<Users className="h-5 w-5 text-yellow-600" />} />
                      <SummaryCard title="ค่าขนส่งคงเหลือ" value={formatCurrency(transportRemaining)} icon={<Truck className="h-5 w-5 text-red-600" />} />
                      <SummaryCard title="รวมเงินทั้งหมด" value={formatCurrency(grandTotalMoney)} icon={<PiggyBank className="h-5 w-5 text-blue-600" />} />
-                     <SummaryCard title="ส่วนต่าง" value={formatCurrency(totalMoney - performanceData.remainingWithWorkingCapital)} icon={<MinusCircle className="h-5 w-5 text-indigo-500" />} />
-
+                     <SummaryCard title="ส่วนต่าง" value={formatCurrency(differenceAmount)} icon={<MinusCircle className="h-5 w-5 text-indigo-500" />} />
                 </div>
 
                  <Card>

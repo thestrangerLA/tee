@@ -13,7 +13,8 @@ import {
     limit,
     getDoc,
     setDoc,
-    Timestamp
+    Timestamp,
+    runTransaction
 } from 'firebase/firestore';
 
 const transactionsCollectionRef = collection(db, 'transactions');
@@ -38,28 +39,106 @@ export const listenToTransactions = (callback: (items: Transaction[]) => void) =
 };
 
 export const addTransaction = async (transaction: Omit<Transaction, 'id'>) => {
-    // Convert JS Date to Firestore Timestamp before saving
-    const transactionWithTimestamp = {
-        ...transaction,
-        date: Timestamp.fromDate(transaction.date)
-    };
-    await addDoc(transactionsCollectionRef, transactionWithTimestamp);
+    const transactionWithTimestamp = { ...transaction, date: Timestamp.fromDate(transaction.date) };
+
+    await runTransaction(db, async (t) => {
+        // 1. Add the new transaction
+        const newTransactionRef = doc(collection(db, "transactions"));
+        t.set(newTransactionRef, transactionWithTimestamp);
+
+        // 2. Update the account summary
+        const summarySnap = await t.get(accountSummaryDocRef);
+        if (summarySnap.exists()) {
+            const summaryData = summarySnap.data();
+            const currentAmount = summaryData[transaction.paymentMethod] || 0;
+            const newAmount = transaction.type === 'income' 
+                ? currentAmount + transaction.amount 
+                : currentAmount - transaction.amount;
+            t.update(accountSummaryDocRef, { [transaction.paymentMethod]: newAmount });
+        } else {
+            // If summary doesn't exist, create it.
+            const initialSummary = {
+                cash: 0,
+                transfer: 0,
+                capital: 0,
+                workingCapital: 0,
+                [transaction.paymentMethod]: transaction.type === 'income' ? transaction.amount : -transaction.amount,
+            };
+            t.set(accountSummaryDocRef, initialSummary);
+        }
+    });
 };
 
 export const updateTransaction = async (id: string, updatedFields: Partial<Omit<Transaction, 'id'>>) => {
-    const transactionDoc = doc(db, 'transactions', id);
-    // If date is being updated, convert it to a Timestamp
-    if (updatedFields.date) {
-        const { date, ...rest } = updatedFields;
-        await updateDoc(transactionDoc, { ...rest, date: Timestamp.fromDate(date) });
-    } else {
-        await updateDoc(transactionDoc, updatedFields);
-    }
+    const transactionDocRef = doc(db, 'transactions', id);
+
+    await runTransaction(db, async (t) => {
+        const txSnap = await t.get(transactionDocRef);
+        if (!txSnap.exists()) {
+            throw new Error("Transaction not found!");
+        }
+        const originalTx = { ...txSnap.data(), date: (txSnap.data().date as Timestamp).toDate() } as Omit<Transaction, 'id'>;
+
+        const summarySnap = await t.get(accountSummaryDocRef);
+        if (!summarySnap.exists()) {
+             throw new Error("Account summary not found!");
+        }
+        const summaryData = summarySnap.data();
+        let newSummary = { ...summaryData };
+
+        // Revert original transaction
+        if (originalTx.type === 'income') {
+            newSummary[originalTx.paymentMethod] -= originalTx.amount;
+        } else {
+            newSummary[originalTx.paymentMethod] += originalTx.amount;
+        }
+
+        // Apply new transaction
+        const finalUpdatedFields = updatedFields.date 
+            ? { ...updatedFields, date: Timestamp.fromDate(updatedFields.date) }
+            : updatedFields;
+        
+        const newType = updatedFields.type || originalTx.type;
+        const newAmount = updatedFields.amount ?? originalTx.amount;
+        const newPaymentMethod = updatedFields.paymentMethod || originalTx.paymentMethod;
+
+        if (newType === 'income') {
+            newSummary[newPaymentMethod] += newAmount;
+        } else {
+            newSummary[newPaymentMethod] -= newAmount;
+        }
+        
+        // Update documents
+        t.update(transactionDocRef, finalUpdatedFields);
+        t.update(accountSummaryDocRef, newSummary);
+    });
 };
 
+
 export const deleteTransaction = async (id: string) => {
-    const transactionDoc = doc(db, 'transactions', id);
-    await deleteDoc(transactionDoc);
+    const transactionDocRef = doc(db, 'transactions', id);
+
+     await runTransaction(db, async (t) => {
+        const txSnap = await t.get(transactionDocRef);
+        if (!txSnap.exists()) {
+            throw new Error("Transaction not found!");
+        }
+        const txToDelete = txSnap.data() as Omit<Transaction, 'id' | 'date'> & { date: Timestamp };
+
+        // Update summary
+        const summarySnap = await t.get(accountSummaryDocRef);
+        if (summarySnap.exists()) {
+            const summaryData = summarySnap.data();
+            const currentAmount = summaryData[txToDelete.paymentMethod] || 0;
+            const newAmount = txToDelete.type === 'income'
+                ? currentAmount - txToDelete.amount
+                : currentAmount + txToDelete.amount;
+            t.update(accountSummaryDocRef, { [txToDelete.paymentMethod]: newAmount });
+        }
+
+        // Delete transaction
+        t.delete(transactionDocRef);
+    });
 };
 
 // Account Summary Functions
@@ -69,10 +148,10 @@ export const listenToAccountSummary = (callback: (summary: AccountSummary | null
             const data = docSnapshot.data();
             callback({ 
                 id: docSnapshot.id, 
-                cash: data.cash || 0,
-                transfer: data.transfer || 0,
-                capital: data.capital || 0,
-                workingCapital: data.workingCapital || 0
+                cash: data.cash ?? 0,
+                transfer: data.transfer ?? 0,
+                capital: data.capital ?? 0,
+                workingCapital: data.workingCapital ?? 0
             } as AccountSummary);
         } else {
             callback(null);
@@ -82,7 +161,5 @@ export const listenToAccountSummary = (callback: (summary: AccountSummary | null
 };
 
 export const updateAccountSummary = async (summary: Partial<Omit<AccountSummary, 'id'>>) => {
-    // Using setDoc with merge:true will create the document if it doesn't exist,
-    // or update it if it does. This simplifies the logic.
     await setDoc(accountSummaryDocRef, summary, { merge: true });
 };

@@ -28,18 +28,20 @@ const ensureInitialState = async () => {
 };
 
 export const listenToCalculatorState = (callback: (state: CashCalculatorState) => void) => {
-    ensureInitialState();
+    // Call this once at the start to make sure the doc exists if it's the first run.
+    ensureInitialState(); 
     
     const unsubscribe = onSnapshot(calculatorStateDocRef, (docSnapshot) => {
         if (docSnapshot.exists()) {
             callback({ id: docSnapshot.id, ...docSnapshot.data() } as CashCalculatorState);
         } else {
+             // This case should ideally not happen after calling ensureInitialState, but it's good practice for resilience.
              callback({ id: 'latest', ...initialCalculatorState });
         }
     });
     return unsubscribe;
 };
 
-export const updateCalculatorState = async (newState: Partial<CashCalculatorState>) => {
+export const updateCalculatorState = async (newState: Partial<Omit<CashCalculatorState, 'id'>>) => {
     await setDoc(calculatorStateDocRef, newState, { merge: true });
 };
