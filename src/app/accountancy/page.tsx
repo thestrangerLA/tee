@@ -182,11 +182,12 @@ export default function AccountancyPage() {
                      <SummaryCard title="รวมเงินทั้งหมด" value={formatCurrency(totalMoney)} icon={<div className="font-bold text-2xl">💰</div>} />
                      <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                           <CardTitle className="text-sm font-medium">ผลประกอบการ</CardTitle>
+                           <CardTitle className="text-sm font-medium">กำไรสุทธิ</CardTitle>
                            <TrendingUp className="h-5 w-5 text-primary" />
                         </CardHeader>
-                        <CardContent className="text-sm">
-                           สำหรับเดือน {format(historyDisplayMonth, "LLLL yyyy", { locale: th })}
+                        <CardContent>
+                           <div className="text-2xl font-bold">{formatCurrency(performanceData.netProfit)}</div>
+                           <p className="text-xs text-muted-foreground">สำหรับเดือน {format(historyDisplayMonth, "LLLL yyyy", { locale: th })}</p>
                         </CardContent>
                      </Card>
                 </div>
@@ -294,12 +295,11 @@ export default function AccountancyPage() {
                                 <CardTitle>สรุปผลประกอบการ</CardTitle>
                                 <CardDescription>สำหรับเดือน {format(historyDisplayMonth, "LLLL yyyy", { locale: th })}</CardDescription>
                             </CardHeader>
-                            <CardContent>
-                                <PerformanceRow label="ยอดยกมา" value={formatCurrency(performanceData.broughtForward)} icon={<FileText className="h-4 w-4" />} />
-                                <PerformanceRow label="รายรับ" value={formatCurrency(performanceData.income)} icon={<ArrowUpCircle className="h-4 w-4 text-green-500" />} />
-                                <PerformanceRow label="รวม" value={formatCurrency(performanceData.totalIncome)} icon={<PlusCircle className="h-4 w-4" />} />
-                                <PerformanceRow label="รายจ่าย" value={formatCurrency(performanceData.expense)} icon={<ArrowDownCircle className="h-4 w-4 text-red-500" />} />
-                                <PerformanceRow label="กำไรสุทธิ" value={formatCurrency(performanceData.netProfit)} icon={performanceData.netProfit >= 0 ? <Equal className="h-4 w-4 text-blue-500" /> : <Minus className="h-4 w-4 text-red-500" />} className="bg-muted/50 rounded-md px-2" />
+                            <CardContent className="grid grid-cols-2 gap-4">
+                                <SummaryCard title="ยอดยกมา" value={formatCurrency(performanceData.broughtForward)} icon={<FileText className="h-5 w-5 text-primary" />} />
+                                <SummaryCard title="รายรับ" value={formatCurrency(performanceData.income)} icon={<ArrowUpCircle className="h-5 w-5 text-green-500" />} />
+                                <SummaryCard title="รายจ่าย" value={formatCurrency(performanceData.expense)} icon={<ArrowDownCircle className="h-5 w-5 text-red-500" />} />
+                                <SummaryCard title="กำไรสุทธิ" value={formatCurrency(performanceData.netProfit)} icon={performanceData.netProfit >= 0 ? <Equal className="h-5 w-5 text-blue-500" /> : <Minus className="h-5 w-5 text-red-500" />} />
                             </CardContent>
                         </Card>
                     </div>
@@ -393,4 +393,7 @@ export default function AccountancyPage() {
             </main>
         </div>
     );
-}
+
+    
+
+    
