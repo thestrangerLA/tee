@@ -7,9 +7,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Trash2, ChevronUp, ChevronDown } from 'lucide-react';
+import { Trash2, ArrowLeft, Truck } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
-import { Label } from '@/components/ui/label';
+import Link from 'next/link';
 
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB', minimumFractionDigits: 0 }).format(value);
@@ -71,9 +71,8 @@ const TransportEntryRow = ({ row, onRowChange, onRowDelete, index }: { row: any,
 );
 
 
-export function TransportLedgerCard() {
+export default function TransportPage() {
     const { toast } = useToast();
-    const [isTransportFormVisible, setTransportFormVisible] = useState(false);
     
     const initialRowState = {
         ans_date: '', ans_cost: 0, ans_page: '', ans_amount: 0, ans_finished: false,
@@ -117,73 +116,81 @@ export function TransportLedgerCard() {
     };
 
     return (
-        <Card>
-            <CardHeader>
-                <div className="flex justify-between items-center cursor-pointer" onClick={() => setTransportFormVisible(!isTransportFormVisible)}>
-                    <CardTitle>บัญชีขนส่ง</CardTitle>
-                    <Button variant="ghost" size="icon">
-                        {isTransportFormVisible ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
-                        <span className="sr-only">Toggle Transport Form</span>
-                    </Button>
+        <div className="flex min-h-screen w-full flex-col bg-muted/40">
+            <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
+                <Button variant="outline" size="icon" className="h-8 w-8" asChild>
+                    <Link href="/">
+                        <ArrowLeft className="h-4 w-4" />
+                        <span className="sr-only">กลับไปหน้าหลัก</span>
+                    </Link>
+                </Button>
+                <div className="flex items-center gap-2">
+                    <Truck className="h-6 w-6 text-primary" />
+                    <h1 className="text-xl font-bold tracking-tight">บัญชีขนส่ง</h1>
                 </div>
-            </CardHeader>
-            {isTransportFormVisible && (
-                <CardContent>
-                    <div className="overflow-x-auto">
-                        <Table className="min-w-full whitespace-nowrap">
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead colSpan={5} className="text-center border-r">ANS</TableHead>
-                                    <TableHead colSpan={5} className="text-center border-r">HAL</TableHead>
-                                    <TableHead colSpan={5} className="text-center border-r">MX</TableHead>
-                                    <TableHead className="text-center">ลบ</TableHead>
-                                </TableRow>
-                                <TableRow>
-                                    {/* ANS */}
-                                    <TableHead className="text-center">วันที่</TableHead>
-                                    <TableHead className="text-center">ต้นทุน</TableHead>
-                                    <TableHead className="text-center">หน้า</TableHead>
-                                    <TableHead className="text-center">จำนวนเงิน</TableHead>
-                                    <TableHead className="text-center border-r">เสร็จสิ้น</TableHead>
-                                    {/* HAL */}
-                                    <TableHead className="text-center">วันที่</TableHead>
-                                    <TableHead className="text-center">ต้นทุน</TableHead>
-                                    <TableHead className="text-center">หน้า</TableHead>
-                                    <TableHead className="text-center">จำนวนเงิน</TableHead>
-                                    <TableHead className="text-center border-r">เสร็จสิ้น</TableHead>
-                                    {/* MX */}
-                                    <TableHead className="text-center">วันที่</TableHead>
-                                    <TableHead className="text-center">ต้นทุน</TableHead>
-                                    <TableHead className="text-center">หน้า</TableHead>
-                                    <TableHead className="text-center">จำนวนเงิน</TableHead>
-                                    <TableHead className="text-center border-r">เสร็จสิ้น</TableHead>
-                                    {/* Actions */}
-                                    <TableHead className="text-center"></TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {transportRows.map((row, index) => (
-                                    <TransportEntryRow 
-                                        key={index}
-                                        index={index}
-                                        row={row} 
-                                        onRowChange={handleTransportRowChange}
-                                        onRowDelete={handleTransportRowDelete}
-                                    />
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </div>
-                    <div className="mt-4 flex flex-col gap-2">
-                        <Button variant="outline" onClick={handleAddTransportRow}>เพิ่มแถว</Button>
-                        <Button onClick={handleSaveTransportData}>บันทึกข้อมูล</Button>
-                        <div className="flex justify-between items-center p-2 bg-muted rounded-md">
-                            <span className="font-semibold">สรุปรวม</span>
-                            <span className="font-bold">{formatCurrency(transportTotal)}</span>
+            </header>
+            <main className="flex-1 p-4 sm:px-6 sm:py-0">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>บันทึกค่าขนส่ง</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="overflow-x-auto">
+                            <Table className="min-w-full whitespace-nowrap">
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead colSpan={5} className="text-center border-r">ANS</TableHead>
+                                        <TableHead colSpan={5} className="text-center border-r">HAL</TableHead>
+                                        <TableHead colSpan={5} className="text-center border-r">MX</TableHead>
+                                        <TableHead className="text-center">ลบ</TableHead>
+                                    </TableRow>
+                                    <TableRow>
+                                        {/* ANS */}
+                                        <TableHead className="text-center">วันที่</TableHead>
+                                        <TableHead className="text-center">ต้นทุน</TableHead>
+                                        <TableHead className="text-center">หน้า</TableHead>
+                                        <TableHead className="text-center">จำนวนเงิน</TableHead>
+                                        <TableHead className="text-center border-r">เสร็จสิ้น</TableHead>
+                                        {/* HAL */}
+                                        <TableHead className="text-center">วันที่</TableHead>
+                                        <TableHead className="text-center">ต้นทุน</TableHead>
+                                        <TableHead className="text-center">หน้า</TableHead>
+                                        <TableHead className="text-center">จำนวนเงิน</TableHead>
+                                        <TableHead className="text-center border-r">เสร็จสิ้น</TableHead>
+                                        {/* MX */}
+                                        <TableHead className="text-center">วันที่</TableHead>
+                                        <TableHead className="text-center">ต้นทุน</TableHead>
+                                        <TableHead className="text-center">หน้า</TableHead>
+                                        <TableHead className="text-center">จำนวนเงิน</TableHead>
+                                        <TableHead className="text-center border-r">เสร็จสิ้น</TableHead>
+                                        {/* Actions */}
+                                        <TableHead className="text-center"></TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {transportRows.map((row, index) => (
+                                        <TransportEntryRow 
+                                            key={index}
+                                            index={index}
+                                            row={row} 
+                                            onRowChange={handleTransportRowChange}
+                                            onRowDelete={handleTransportRowDelete}
+                                        />
+                                    ))}
+                                </TableBody>
+                            </Table>
                         </div>
-                    </div>
-                </CardContent>
-            )}
-        </Card>
+                        <div className="mt-4 flex flex-col gap-2">
+                            <Button variant="outline" onClick={handleAddTransportRow}>เพิ่มแถว</Button>
+                            <Button onClick={handleSaveTransportData}>บันทึกข้อมูล</Button>
+                            <div className="flex justify-between items-center p-2 bg-muted rounded-md">
+                                <span className="font-semibold">สรุปรวม</span>
+                                <span className="font-bold">{formatCurrency(transportTotal)}</span>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            </main>
+        </div>
     );
 }
