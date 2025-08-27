@@ -2,6 +2,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Leaf, Package, Calculator } from "lucide-react"
 import Link from 'next/link'
+import { TransportLedgerCard } from "@/components/transport-ledger-card"
 
 export default function Home() {
   return (
@@ -40,6 +41,9 @@ export default function Home() {
               </CardContent>
             </Card>
           </Link>
+        </div>
+        <div className="w-full max-w-4xl">
+          <TransportLedgerCard />
         </div>
       </main>
     </div>
