@@ -422,7 +422,7 @@ export default function AccountancyPage() {
 
     const MonthYearSelector = () => {
         const currentYear = getYear(new Date());
-        const years = Array.from({ length: 5 }, (_, i) => currentYear - i); 
+        const years = Array.from({ length: 5 }, (_, i) => currentYear - (i + 4));
         const months = Array.from({ length: 12 }, (_, i) => setMonth(new Date(), i));
 
         return (
@@ -825,3 +825,5 @@ export default function AccountancyPage() {
         </div>
     );
 }
+
+    
