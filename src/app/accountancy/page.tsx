@@ -154,7 +154,7 @@ const CashCalculatorCard = () => {
 
 export default function AccountancyPage() {
     const { toast } = useToast();
-    const [accountSummary, setAccountSummary] = useState<AccountSummary>({ id: 'latest', cash: 0, transfer: 0, capital: 0});
+    const [accountSummary, setAccountSummary] = useState<AccountSummary>({ id: 'latest', cash: 0, transfer: 0, capital: 0, workingCapital: 0 });
     const [date, setDate] = useState<Date | undefined>(new Date());
     const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
     const [newTransaction, setNewTransaction] = useState({
@@ -170,11 +170,11 @@ export default function AccountancyPage() {
     const [historyDisplayMonth, setHistoryDisplayMonth] = useState<Date>(new Date());
     const [editingSummaryField, setEditingSummaryField] = useState<'cash' | 'transfer' | 'capital' | 'workingCapital' | null>(null);
     const [editingSummaryValue, setEditingSummaryValue] = useState(0);
-    const [workingCapital, setWorkingCapital] = useState(0);
 
     const [debtorEntries, setDebtorEntries] = useState<DebtorCreditorEntry[]>([]);
     const [transportEntries, setTransportEntries] = useState<TransportEntry[]>([]);
 
+    const workingCapital = useMemo(() => accountSummary.workingCapital || 0, [accountSummary]);
 
     useEffect(() => {
         const unsubscribeTransactions = listenToTransactions(setAllTransactions);
@@ -182,7 +182,7 @@ export default function AccountancyPage() {
             if (summary) {
                 setAccountSummary(summary);
             } else {
-                 const initialSummary = { id: 'latest', cash: 0, transfer: 0, capital: 0 };
+                 const initialSummary: AccountSummary = { id: 'latest', cash: 0, transfer: 0, capital: 0, workingCapital: 0 };
                 setAccountSummary(initialSummary);
                 updateAccountSummary(initialSummary);
             }
@@ -412,11 +412,8 @@ export default function AccountancyPage() {
         if (!editingSummaryField) return;
 
         try {
-            if (editingSummaryField === 'workingCapital') {
-                setWorkingCapital(editingSummaryValue);
-            } else {
-                await updateAccountSummary({ [editingSummaryField]: editingSummaryValue });
-            }
+            await updateAccountSummary({ [editingSummaryField]: editingSummaryValue });
+
             toast({
                 title: "อัปเดตยอดเงินสำเร็จ",
             });
@@ -528,7 +525,7 @@ export default function AccountancyPage() {
                     <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-4">
                         {/* New Cards */}
                         <SummaryCard title="เงินหมุน" value={formatCurrency(workingCapital)} icon={<Combine className="h-5 w-5 text-purple-500" />} onClick={() => openEditSummaryDialog('workingCapital')} />
-                        <SummaryCard title="รวม" value={formatCurrency(performanceData.totalWithWorkingCapital)} icon={<PlusCircle className="h-5 w-5 text-orange-500" />} />
+                        <SummaryCard title="รวมทั้งหมด" value={formatCurrency(performanceData.totalWithWorkingCapital)} icon={<PlusCircle className="h-5 w-5 text-orange-500" />} />
                         <SummaryCard title="เงินคงเหลือ" value={formatCurrency(performanceData.remainingWithWorkingCapital)} icon={<Wallet className="h-5 w-5 text-teal-500" />} />
                         
                         {/* Spacer to push old cards to a new visual line if needed, or adjust grid for better layout */}

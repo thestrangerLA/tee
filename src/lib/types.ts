@@ -24,6 +24,7 @@ export interface AccountSummary {
     cash: number;
     transfer: number;
     capital: number;
+    workingCapital?: number;
 }
 
 export interface TransportEntry {
