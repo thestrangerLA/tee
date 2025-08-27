@@ -500,16 +500,16 @@ export default function AccountancyPage() {
                      <SummaryCard title="เงินทุน" value={formatCurrency(accountSummary.capital)} icon={<Briefcase className="h-5 w-5 text-primary" />} onClick={() => openEditSummaryDialog('capital')} />
                      <SummaryCard title="เงินสด" value={formatCurrency(accountSummary.cash)} icon={<Wallet className="h-5 w-5 text-primary" />} onClick={() => openEditSummaryDialog('cash')} />
                      <SummaryCard title="เงินโอน" value={formatCurrency(accountSummary.transfer)} icon={<Landmark className="h-5 w-5 text-primary" />} onClick={() => openEditSummaryDialog('transfer')} />
-                     <SummaryCard title="รวมเงินทั้งหมด" value={formatCurrency(totalMoney)} icon={<div className="font-bold text-2xl">💰</div>} />
+                     <SummaryCard title="รวมเงินทั้งหมด" value={formatCurrency(totalMoney)} icon={<Combine className="h-5 w-5 text-green-600" />} />
                      <SummaryCard title="ลูกหนี้ทั้งหมด" value={formatCurrency(totalDebtors)} icon={<Users className="h-5 w-5 text-yellow-600" />} />
                      <SummaryCard title="ค่าขนส่งคงเหลือ" value={formatCurrency(transportRemaining)} icon={<Truck className="h-5 w-5 text-red-600" />} />
-                     <Card>
+                     <Card className="bg-blue-50">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                            <CardTitle className="text-sm font-medium">รวมเงิน</CardTitle>
-                           <PiggyBank className="h-5 w-5 text-primary" />
+                           <PiggyBank className="h-5 w-5 text-blue-600" />
                         </CardHeader>
                         <CardContent>
-                           <div className="text-2xl font-bold">{formatCurrency(grandTotalMoney)}</div>
+                           <div className="text-2xl font-bold text-blue-700">{formatCurrency(grandTotalMoney)}</div>
                            <p className="text-xs text-muted-foreground">ยอดรวมทุกสินทรัพย์ที่มี</p>
                         </CardContent>
                      </Card>
@@ -847,5 +847,3 @@ export default function AccountancyPage() {
         </div>
     );
 }
-
-    
