@@ -20,7 +20,7 @@ export interface Transaction {
 }
 
 export interface AccountSummary {
-    id: string;
+    id:string;
     cash: number;
     transfer: number;
 }
@@ -40,4 +40,9 @@ export interface TransportEntry {
     mx_amount: number;
     mx_finished: boolean;
     createdAt: Date; 
+}
+
+export interface CashCalculatorState {
+    id: string;
+    counts: Record<string, number>;
 }

@@ -46,7 +46,8 @@ import {
 } from "@/components/ui/dialog"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { listenToTransactions, addTransaction, listenToAccountSummary, updateAccountSummary, deleteTransaction, updateTransaction } from '@/services/accountancyService';
-import type { Transaction, AccountSummary } from '@/lib/types';
+import type { Transaction, AccountSummary, CashCalculatorState } from '@/lib/types';
+import { listenToCalculatorState, updateCalculatorState } from '@/services/cashCalculatorService';
 
 
 const formatCurrency = (value: number) => {
@@ -70,25 +71,30 @@ const SummaryCard = ({ title, value, icon, onClick }: { title: string, value: st
 
 const CashCalculatorCard = () => {
     const denominations = [100000, 50000, 20000, 10000, 5000, 2000, 1000];
-    const initialCounts: Record<string, number> = { baht: 0, rate: 0 };
-    denominations.forEach(d => initialCounts[d] = 0);
-
-    const [counts, setCounts] = useState<Record<string, number>>(initialCounts);
+    const initialCounts: Record<string, number> = { baht: 0, rate: 0, ...denominations.reduce((acc, d) => ({...acc, [d]: 0}), {}) };
+    
+    const [calculatorState, setCalculatorState] = useState<CashCalculatorState>({ id: 'latest', counts: initialCounts });
     const [isCalculatorVisible, setCalculatorVisible] = useState(true);
 
+    useEffect(() => {
+        const unsubscribe = listenToCalculatorState(setCalculatorState);
+        return () => unsubscribe();
+    }, []);
+
     const handleCountChange = (key: string, value: string) => {
-        setCounts(prev => ({ ...prev, [key]: Number(value) || 0 }));
+        const newCounts = { ...calculatorState.counts, [key]: Number(value) || 0 };
+        updateCalculatorState({ counts: newCounts });
     };
 
     const handleReset = () => {
-        setCounts(initialCounts);
+        updateCalculatorState({ counts: initialCounts });
     };
 
     const totalKip = useMemo(() => {
-        const kipFromNotes = denominations.reduce((sum, d) => sum + (d * (counts[d] || 0)), 0);
-        const kipFromBaht = (counts.baht || 0) * (counts.rate || 0);
+        const kipFromNotes = denominations.reduce((sum, d) => sum + (d * (calculatorState.counts[d] || 0)), 0);
+        const kipFromBaht = (calculatorState.counts.baht || 0) * (calculatorState.counts.rate || 0);
         return kipFromNotes + kipFromBaht;
-    }, [counts, denominations]);
+    }, [calculatorState.counts, denominations]);
 
     return (
         <Card>
@@ -116,19 +122,19 @@ const CashCalculatorCard = () => {
                                 <TableRow key={d}>
                                     <TableCell className="font-medium">{d.toLocaleString()}</TableCell>
                                     <TableCell>
-                                        <Input type="number" value={counts[d] || ''} onChange={e => handleCountChange(String(d), e.target.value)} className="w-24 h-8" />
+                                        <Input type="number" value={calculatorState.counts[d] || ''} onChange={e => handleCountChange(String(d), e.target.value)} className="w-24 h-8" />
                                     </TableCell>
-                                    <TableCell className="text-right">{(d * (counts[d] || 0)).toLocaleString()}</TableCell>
+                                    <TableCell className="text-right">{(d * (calculatorState.counts[d] || 0)).toLocaleString()}</TableCell>
                                 </TableRow>
                             ))}
                              <TableRow>
                                 <TableCell className="font-medium">BAHT</TableCell>
-                                <TableCell><Input type="number" value={counts.baht || ''} onChange={e => handleCountChange('baht', e.target.value)} className="w-24 h-8" /></TableCell>
-                                <TableCell rowSpan={2} className="text-right align-bottom">{(counts.baht * counts.rate).toLocaleString()}</TableCell>
+                                <TableCell><Input type="number" value={calculatorState.counts.baht || ''} onChange={e => handleCountChange('baht', e.target.value)} className="w-24 h-8" /></TableCell>
+                                <TableCell rowSpan={2} className="text-right align-bottom">{(calculatorState.counts.baht * calculatorState.counts.rate).toLocaleString()}</TableCell>
                             </TableRow>
                              <TableRow>
                                 <TableCell className="font-medium">Rate</TableCell>
-                                <TableCell><Input type="number" value={counts.rate || ''} onChange={e => handleCountChange('rate', e.target.value)} className="w-24 h-8" /></TableCell>
+                                <TableCell><Input type="number" value={calculatorState.counts.rate || ''} onChange={e => handleCountChange('rate', e.target.value)} className="w-24 h-8" /></TableCell>
                             </TableRow>
                              <TableRow className="bg-muted/50 font-bold">
                                 <TableCell colSpan={2}>รวมทั้งหมด (KIP)</TableCell>
