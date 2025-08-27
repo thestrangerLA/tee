@@ -100,7 +100,7 @@ function TransactionFormContent() {
                 เพิ่มธุรกรรม
             </Button>
         </div>
-     )
+     );
 }
 
 function AddTransactionForm() {
@@ -124,7 +124,7 @@ function AddTransactionForm() {
                 </Tabs>
             </CardContent>
         </Card>
-    )
+    );
 }
 
 export default function AccountancyPage() {
@@ -197,7 +197,5 @@ export default function AccountancyPage() {
         </Card>
       </main>
     </div>
-  )
+  );
 }
-
-    
