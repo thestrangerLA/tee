@@ -192,6 +192,19 @@ export default function AccountancyPage() {
                      </Card>
                 </div>
 
+                 <Card>
+                    <CardHeader>
+                        <CardTitle>สรุปผลประกอบการ</CardTitle>
+                        <CardDescription>สำหรับเดือน {format(historyDisplayMonth, "LLLL yyyy", { locale: th })}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <SummaryCard title="ยอดยกมา" value={formatCurrency(performanceData.broughtForward)} icon={<FileText className="h-5 w-5 text-primary" />} />
+                        <SummaryCard title="รายรับ" value={formatCurrency(performanceData.income)} icon={<ArrowUpCircle className="h-5 w-5 text-green-500" />} />
+                        <SummaryCard title="รายจ่าย" value={formatCurrency(performanceData.expense)} icon={<ArrowDownCircle className="h-5 w-5 text-red-500" />} />
+                        <SummaryCard title="กำไรสุทธิ" value={formatCurrency(performanceData.netProfit)} icon={performanceData.netProfit >= 0 ? <Equal className="h-5 w-5 text-blue-500" /> : <Minus className="h-5 w-5 text-red-500" />} />
+                    </CardContent>
+                </Card>
+
                 <div className="grid gap-4 md:gap-8 lg:grid-cols-3">
                     <div className="lg:col-span-1 flex flex-col gap-4">
                         <Card>
@@ -290,18 +303,6 @@ export default function AccountancyPage() {
                             </CardContent>
                             )}
                         </Card>
-                         <Card>
-                            <CardHeader>
-                                <CardTitle>สรุปผลประกอบการ</CardTitle>
-                                <CardDescription>สำหรับเดือน {format(historyDisplayMonth, "LLLL yyyy", { locale: th })}</CardDescription>
-                            </CardHeader>
-                            <CardContent className="grid grid-cols-2 gap-4">
-                                <SummaryCard title="ยอดยกมา" value={formatCurrency(performanceData.broughtForward)} icon={<FileText className="h-5 w-5 text-primary" />} />
-                                <SummaryCard title="รายรับ" value={formatCurrency(performanceData.income)} icon={<ArrowUpCircle className="h-5 w-5 text-green-500" />} />
-                                <SummaryCard title="รายจ่าย" value={formatCurrency(performanceData.expense)} icon={<ArrowDownCircle className="h-5 w-5 text-red-500" />} />
-                                <SummaryCard title="กำไรสุทธิ" value={formatCurrency(performanceData.netProfit)} icon={performanceData.netProfit >= 0 ? <Equal className="h-5 w-5 text-blue-500" /> : <Minus className="h-5 w-5 text-red-500" />} />
-                            </CardContent>
-                        </Card>
                     </div>
 
                     <Card className="lg:col-span-2">
@@ -393,7 +394,6 @@ export default function AccountancyPage() {
             </main>
         </div>
     );
-
-    
+}
 
     
