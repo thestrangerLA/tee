@@ -191,7 +191,7 @@ export default function AccountancyPage() {
             if (newTransaction.type === 'income') {
                 updatedSummary[newTransaction.paymentMethod] += newTransaction.amount;
             } else {
-                updatedSummary[new-transaction.paymentMethod] -= newTransaction.amount;
+                updatedSummary[newTransaction.paymentMethod] -= newTransaction.amount;
             }
             await updateAccountSummary(updatedSummary);
             
