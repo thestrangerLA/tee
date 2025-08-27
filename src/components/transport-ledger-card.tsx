@@ -44,7 +44,7 @@ const TransportEntryRow = ({ row, onRowChange, onRowDelete, index }: { row: any,
 
 export function TransportLedgerCard() {
     const { toast } = useToast();
-    const [isTransportFormVisible, setTransportFormVisible] = useState(true);
+    const [isTransportFormVisible, setTransportFormVisible] = useState(false);
     const [transportRows, setTransportRows] = useState([
         { ans_date: '', ans_amount: 0, hal_date: '', hal_amount: 0, mx_date: '', mx_amount: 0 }
     ]);
@@ -87,7 +87,7 @@ export function TransportLedgerCard() {
         <Card>
             <CardHeader>
                 <div className="flex justify-between items-center cursor-pointer" onClick={() => setTransportFormVisible(!isTransportFormVisible)}>
-                    <CardTitle>บัญชีแยกประเภทขนส่ง</CardTitle>
+                    <CardTitle>บัญชีขนส่ง</CardTitle>
                     <Button variant="ghost" size="icon">
                         {isTransportFormVisible ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
                         <span className="sr-only">Toggle Transport Form</span>
