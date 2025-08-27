@@ -1,9 +1,32 @@
 
+"use client"
+
 import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Briefcase, ArrowLeft, TrendingUp, TrendingDown, DollarSign, PlusCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { StatCard } from "@/components/stat-card"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+
+const SummaryCard = ({ title, value, valueColor }: { title: string; value: string; valueColor?: string }) => (
+  <Card>
+    <CardHeader className="pb-2">
+      <CardTitle className="text-base font-medium">{title}</CardTitle>
+    </CardHeader>
+    <CardContent>
+      <div className={`text-2xl font-bold ${valueColor}`}>{value}</div>
+    </CardContent>
+  </Card>
+);
+
+const CashSummaryCard = ({ title, value }: { title: string; value: string }) => (
+    <Card>
+      <CardContent className="p-4">
+        <p className="text-sm text-muted-foreground">{title}</p>
+        <p className="text-2xl font-bold">{value}</p>
+         <div className="h-2 mt-2 bg-gray-200 rounded-full dark:bg-gray-700 w-full"></div>
+      </CardContent>
+    </Card>
+);
 
 export default function AccountancyPage() {
   return (
@@ -21,32 +44,43 @@ export default function AccountancyPage() {
         </div>
       </header>
       <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-        <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
-            <StatCard 
-                title="ยอดขาย (เดือนนี้)"
-                value="0 กีบ"
-                icon={<TrendingUp className="h-4 w-4 text-muted-foreground" />}
-                description="ยอดขายรวมในเดือนปัจจุบัน"
-            />
-            <StatCard
-                title="ค่าใช้จ่าย (เดือนนี้)"
-                value="0 กีบ"
-                icon={<TrendingDown className="h-4 w-4 text-muted-foreground" />}
-                description="ค่าใช้จ่ายรวมในเดือนปัจจุบัน"
-            />
-             <StatCard 
-                title="กำไรสุทธิ (เดือนนี้)"
-                value="0 กีบ"
-                icon={<DollarSign className="h-4 w-4 text-muted-foreground" />}
-                description="กำไรหลังหักค่าใช้จ่าย"
-            />
-             <StatCard 
-                title="ภาษีคาดการณ์ (เดือนนี้)"
-                value="0 กีบ"
-                icon={<DollarSign className="h-4 w-4 text-muted-foreground" />}
-                description="ภาษีที่คาดว่าจะต้องชำระ"
-            />
+        <div className="flex justify-end">
+            <Select>
+                <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="สิงหาคม 2025" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="aug-2025">สิงหาคม 2025</SelectItem>
+                    <SelectItem value="jul-2025">กรกฎาคม 2025</SelectItem>
+                    <SelectItem value="jun-2025">มิถุนายน 2025</SelectItem>
+                </SelectContent>
+            </Select>
         </div>
+
+        <div className="grid gap-4 md:grid-cols-3">
+            <CashSummaryCard title="เงินสด" value="0" />
+            <CashSummaryCard title="เงินโอน" value="0" />
+            <Card>
+                <CardContent className="p-4">
+                    <p className="text-sm text-muted-foreground">รวมเงิน</p>
+                    <p className="text-2xl font-bold">0</p>
+                </CardContent>
+            </Card>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>ผลประกอบการ (สิงหาคม 2025)</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-4 sm:grid-cols-2 md:grid-cols-5">
+            <SummaryCard title="ยอดยกมา" value="0" />
+            <SummaryCard title="รายรับ" value="0" valueColor="text-green-600" />
+            <SummaryCard title="รวม" value="0" />
+            <SummaryCard title="รายจ่าย" value="0" valueColor="text-red-600" />
+            <SummaryCard title="กำไรสุทธิ" value="0" valueColor="text-green-600" />
+          </CardContent>
+        </Card>
+
         <Card>
             <CardHeader>
                 <CardTitle>ธุรกรรมด่วน</CardTitle>
