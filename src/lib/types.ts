@@ -46,3 +46,13 @@ export interface CashCalculatorState {
     id: string;
     counts: Record<string, number>;
 }
+
+export interface DebtorCreditorEntry {
+  id: string;
+  type: 'debtor' | 'creditor';
+  date: Date;
+  amount: number;
+  description: string;
+  isPaid: boolean;
+  createdAt: Date;
+}
