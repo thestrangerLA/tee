@@ -13,7 +13,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
 import { Textarea } from "@/components/ui/textarea"
-import { format, getMonth, getYear, setMonth, setYear } from "date-fns"
+import { format, getYear, setMonth, setYear } from "date-fns"
 import { th } from "date-fns/locale"
 import {
   Table,
@@ -71,8 +71,11 @@ export default function AccountancyPage() {
     
     const availableMonths = useMemo(() => {
         const months = new Set(transactions.map(tx => format(tx.date, 'yyyy-MM')));
-        if (!months.has(format(new Date(), 'yyyy-MM'))) {
-            months.add(format(new Date(), 'yyyy-MM'));
+        const currentYear = getYear(new Date());
+        for (let i = 0; i < 12; i++) {
+            const monthDate = setMonth(new Date(), i);
+            const yearMonth = format(setYear(monthDate, currentYear), 'yyyy-MM');
+            months.add(yearMonth);
         }
         return Array.from(months).sort((a, b) => b.localeCompare(a));
     }, [transactions]);
