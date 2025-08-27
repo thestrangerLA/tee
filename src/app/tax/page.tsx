@@ -116,7 +116,7 @@ export default function TaxCalculatorPage() {
     };
     
     const YearSelector = () => {
-        const years = [2025, 2026];
+        const years = [2024, 2025, 2026];
 
         return (
             <DropdownMenu>
@@ -248,5 +248,7 @@ export default function TaxCalculatorPage() {
         </div>
     );
 }
+
+    
 
     

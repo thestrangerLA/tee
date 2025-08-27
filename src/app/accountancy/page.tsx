@@ -71,7 +71,7 @@ const SummaryCard = ({ title, value, icon, onClick, className }: { title: string
     </Card>
 );
 
-const CashCalculatorCard = () => {
+const CashCalculatorCard = ({ onTotalChange }: { onTotalChange: (total: number) => void }) => {
     const denominations = [100000, 50000, 20000, 10000, 5000, 2000, 1000];
     const initialCounts: Record<string, number> = { baht: 0, rate: 0, ...denominations.reduce((acc, d) => ({...acc, [d]: 0}), {}) };
     
@@ -83,20 +83,26 @@ const CashCalculatorCard = () => {
         return () => unsubscribe();
     }, []);
 
-    const handleCountChange = (key: string, value: string) => {
-        const newCounts = { ...calculatorState.counts, [key]: Number(value) || 0 };
-        updateCalculatorState({ counts: newCounts });
-    };
-
-    const handleReset = () => {
-        updateCalculatorState({ counts: initialCounts });
-    };
-
     const totalKip = useMemo(() => {
         const kipFromNotes = denominations.reduce((sum, d) => sum + (d * (calculatorState.counts[d] || 0)), 0);
         const kipFromBaht = (calculatorState.counts.baht || 0) * (calculatorState.counts.rate || 0);
         return kipFromNotes + kipFromBaht;
     }, [calculatorState.counts, denominations]);
+
+    useEffect(() => {
+        onTotalChange(totalKip);
+    }, [totalKip, onTotalChange]);
+
+    const handleCountChange = (key: string, value: string) => {
+        const newCounts = { ...calculatorState.counts, [key]: Number(value) || 0 };
+        // The component now only updates the calculator state, not the account summary directly.
+        // The parent component is responsible for updating the account summary via onTotalChange.
+        updateCalculatorState({ counts: newCounts }); 
+    };
+
+    const handleReset = () => {
+        updateCalculatorState({ counts: initialCounts });
+    };
 
     return (
         <Card>
@@ -168,7 +174,7 @@ export default function AccountancyPage() {
     const [isHistoryVisible, setHistoryVisible] = useState(true);
     
     const [historyDisplayMonth, setHistoryDisplayMonth] = useState<Date>(new Date());
-    const [editingSummaryField, setEditingSummaryField] = useState<'cash' | 'transfer' | 'capital' | 'workingCapital' | null>(null);
+    const [editingSummaryField, setEditingSummaryField] = useState<'transfer' | 'capital' | 'workingCapital' | null>(null);
     const [editingSummaryValue, setEditingSummaryValue] = useState(0);
 
     const [debtorEntries, setDebtorEntries] = useState<DebtorCreditorEntry[]>([]);
@@ -197,6 +203,13 @@ export default function AccountancyPage() {
             unsubscribeTransport();
         };
     }, []);
+    
+    const handleCalculatorTotalChange = async (totalKip: number) => {
+        // Only update if the value has actually changed to prevent infinite loops
+        if (totalKip !== accountSummary.cash) {
+            await updateAccountSummary({ cash: totalKip });
+        }
+    };
 
     const totalDebtors = useMemo(() => {
         return debtorEntries
@@ -399,7 +412,7 @@ export default function AccountancyPage() {
         setEditingTransaction({ ...tx });
     };
 
-     const openEditSummaryDialog = (field: 'cash' | 'transfer' | 'capital' | 'workingCapital') => {
+     const openEditSummaryDialog = (field: 'transfer' | 'capital' | 'workingCapital') => {
         setEditingSummaryField(field);
         if (field === 'workingCapital') {
             setEditingSummaryValue(workingCapital);
@@ -429,7 +442,7 @@ export default function AccountancyPage() {
     };
 
     const MonthYearSelector = () => {
-        const years = [2025, 2026];
+        const years = [2024, 2025, 2026];
         const months = Array.from({ length: 12 }, (_, i) => setMonth(new Date(), i));
 
         return (
@@ -470,7 +483,6 @@ export default function AccountancyPage() {
     
     const getDialogTitle = () => {
         switch(editingSummaryField) {
-            case 'cash': return 'แก้ไขยอดเงินสด';
             case 'transfer': return 'แก้ไขยอดเงินโอน';
             case 'capital': return 'แก้ไขยอดเงินทุน';
             case 'workingCapital': return 'แก้ไขเงินหมุน';
@@ -495,7 +507,7 @@ export default function AccountancyPage() {
             <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
                 <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4 xl:grid-cols-8">
                      <SummaryCard title="เงินทุน" value={formatCurrency(accountSummary.capital)} icon={<Briefcase className="h-5 w-5 text-primary" />} onClick={() => openEditSummaryDialog('capital')} />
-                     <SummaryCard title="เงินสด" value={formatCurrency(accountSummary.cash)} icon={<Wallet className="h-5 w-5 text-primary" />} onClick={() => openEditSummaryDialog('cash')} />
+                     <SummaryCard title="เงินสด" value={formatCurrency(accountSummary.cash)} icon={<Wallet className="h-5 w-5 text-primary" />} />
                      <SummaryCard title="เงินโอน" value={formatCurrency(accountSummary.transfer)} icon={<Landmark className="h-5 w-5 text-primary" />} onClick={() => openEditSummaryDialog('transfer')} />
                      <SummaryCard title="รวมเงิน" value={formatCurrency(totalMoney)} icon={<Combine className="h-5 w-5 text-green-600" />} />
                      <SummaryCard title="ลูกหนี้ทั้งหมด" value={formatCurrency(totalDebtors)} icon={<Users className="h-5 w-5 text-yellow-600" />} />
@@ -629,7 +641,7 @@ export default function AccountancyPage() {
                             </CardContent>
                             )}
                         </Card>
-                        <CashCalculatorCard />
+                        <CashCalculatorCard onTotalChange={handleCalculatorTotalChange} />
                     </div>
 
                     <Card className="lg:col-span-2">
@@ -835,3 +847,5 @@ export default function AccountancyPage() {
         </div>
     );
 }
+
+    
