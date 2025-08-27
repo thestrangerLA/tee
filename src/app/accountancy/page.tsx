@@ -13,7 +13,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
 import { Textarea } from "@/components/ui/textarea"
-import { format, getYear, setMonth, setYear } from "date-fns"
+import { format, getYear, setMonth, setYear, startOfDay } from "date-fns"
 import { th } from "date-fns/locale"
 import {
   Table,
@@ -23,6 +23,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { listenToTransactions, addTransaction, listenToAccountSummary, updateAccountSummary } from '@/services/accountancyService';
@@ -58,6 +64,7 @@ export default function AccountancyPage() {
         paymentMethod: 'cash' as 'cash' | 'transfer'
     });
     const [isTransactionFormVisible, setTransactionFormVisible] = useState(false);
+    const [isHistoryVisible, setHistoryVisible] = useState(true);
     const [selectedMonth, setSelectedMonth] = useState<string>(format(new Date(), 'yyyy-MM'));
 
     useEffect(() => {
@@ -88,9 +95,20 @@ export default function AccountancyPage() {
         return Array.from(months).sort((a, b) => b.localeCompare(a));
     }, [allTransactions]);
     
-    const filteredTransactions = useMemo(() => {
+    const filteredTransactionsByMonth = useMemo(() => {
         return allTransactions.filter(tx => format(tx.date, 'yyyy-MM') === selectedMonth);
     }, [allTransactions, selectedMonth]);
+
+    const groupedTransactionsByDate = useMemo(() => {
+        return filteredTransactionsByMonth.reduce((acc, tx) => {
+            const dateKey = format(startOfDay(tx.date), 'yyyy-MM-dd');
+            if (!acc[dateKey]) {
+                acc[dateKey] = [];
+            }
+            acc[dateKey].push(tx);
+            return acc;
+        }, {} as Record<string, Transaction[]>);
+    }, [filteredTransactionsByMonth]);
 
     const handleSave = async () => {
         try {
@@ -125,8 +143,6 @@ export default function AccountancyPage() {
         try {
             await addTransaction(newTxData);
             
-            // Update cash/transfer balance locally for immediate feedback
-            // This will be overwritten by the listener, but provides a better UX
             const balanceToUpdate = newTransaction.paymentMethod === 'cash' ? cash : transfer;
             const updatedBalance = newTransaction.type === 'income' 
                 ? balanceToUpdate + newTransaction.amount 
@@ -143,7 +159,6 @@ export default function AccountancyPage() {
                 description: `เพิ่มรายการใหม่จำนวน ${formatCurrency(newTransaction.amount)}`,
             });
     
-            // Reset form
             setNewTransaction({ type: 'expense', amount: 0, description: '', paymentMethod: 'cash' });
             setDate(new Date());
 
@@ -225,7 +240,7 @@ export default function AccountancyPage() {
                     </Card>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-4 md:gap-8 lg:grid-cols-3">
                     <Card className="lg:col-span-1">
                         <CardHeader>
                             <div className="flex justify-between items-center">
@@ -328,63 +343,91 @@ export default function AccountancyPage() {
                                     <CardTitle>ประวัติธุรกรรม</CardTitle>
                                     <CardDescription>รายการรายรับ-รายจ่ายล่าสุดของคุณ</CardDescription>
                                 </div>
-                                <div className="w-[200px]">
-                                     <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="เลือกเดือน" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {availableMonths.map(month => {
-                                                const [year, monthNum] = month.split('-').map(Number);
-                                                const dateObj = setYear(setMonth(new Date(), monthNum - 1), year);
-                                                return (
-                                                    <SelectItem key={month} value={month}>
-                                                        {format(dateObj, "LLLL yyyy", { locale: th })}
-                                                    </SelectItem>
-                                                )
-                                            })}
-                                        </SelectContent>
-                                    </Select>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-[200px]">
+                                        <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="เลือกเดือน" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {availableMonths.map(month => {
+                                                    const [year, monthNum] = month.split('-').map(Number);
+                                                    const dateObj = setYear(setMonth(new Date(), monthNum - 1), year);
+                                                    return (
+                                                        <SelectItem key={month} value={month}>
+                                                            {format(dateObj, "LLLL yyyy", { locale: th })}
+                                                        </SelectItem>
+                                                    )
+                                                })}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <Button variant="ghost" size="icon" onClick={() => setHistoryVisible(!isHistoryVisible)}>
+                                        {isHistoryVisible ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                                        <span className="sr-only">Toggle History</span>
+                                    </Button>
                                 </div>
                             </div>
                         </CardHeader>
+                        {isHistoryVisible && (
                         <CardContent>
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>วันที่</TableHead>
-                                        <TableHead>คำอธิบาย</TableHead>
-                                        <TableHead>ประเภท</TableHead>
-                                        <TableHead className="text-right">จำนวนเงิน</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {filteredTransactions.length > 0 ? (
-                                        filteredTransactions.map((tx) => (
-                                            <TableRow key={tx.id}>
-                                                <TableCell>{format(tx.date, "dd MMM yyyy", { locale: th })}</TableCell>
-                                                <TableCell>
-                                                    <div className="font-medium">{tx.description || "-"}</div>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Badge variant={tx.type === 'income' ? 'secondary' : 'destructive'}>
-                                                        {tx.type === 'income' ? 'รายรับ' : 'รายจ่าย'}
-                                                    </Badge>
-                                                </TableCell>
-                                                <TableCell className="text-right">{formatCurrency(tx.amount)}</TableCell>
-                                            </TableRow>
-                                        ))
-                                    ) : (
-                                        <TableRow>
-                                            <TableCell colSpan={4} className="text-center">ยังไม่มีธุรกรรมในเดือนนี้</TableCell>
-                                        </TableRow>
+                             {Object.keys(groupedTransactionsByDate).length > 0 ? (
+                                <Accordion type="single" collapsible className="w-full">
+                                    {Object.entries(groupedTransactionsByDate).map(([dateKey, transactions]) => {
+                                        const dateObject = new Date(dateKey);
+                                        // Manually adjust for timezone offset to prevent date shifts
+                                        const correctedDate = new Date(dateObject.valueOf() + dateObject.getTimezoneOffset() * 60 * 1000);
+
+                                        return (
+                                        <AccordionItem value={dateKey} key={dateKey}>
+                                            <AccordionTrigger>{format(correctedDate, "EEEE, dd MMMM yyyy", { locale: th })}</AccordionTrigger>
+                                            <AccordionContent>
+                                                 <Table>
+                                                    <TableHeader>
+                                                        <TableRow>
+                                                            <TableHead>คำอธิบาย</TableHead>
+                                                            <TableHead>ประเภท</TableHead>
+                                                            <TableHead>การชำระเงิน</TableHead>
+                                                            <TableHead className="text-right">จำนวนเงิน</TableHead>
+                                                        </TableRow>
+                                                    </TableHeader>
+                                                    <TableBody>
+                                                    {transactions.map((tx) => (
+                                                        <TableRow key={tx.id}>
+                                                            <TableCell>
+                                                                <div className="font-medium">{tx.description || "-"}</div>
+                                                            </TableCell>
+                                                            <TableCell>
+                                                                <Badge variant={tx.type === 'income' ? 'secondary' : 'destructive'}>
+                                                                    {tx.type === 'income' ? 'รายรับ' : 'รายจ่าย'}
+                                                                </Badge>
+                                                            </TableCell>
+                                                            <TableCell>
+                                                                <Badge variant="outline">{tx.paymentMethod === 'cash' ? 'เงินสด' : 'เงินโอน'}</Badge>
+                                                            </TableCell>
+                                                            <TableCell className="text-right">{formatCurrency(tx.amount)}</TableCell>
+                                                        </TableRow>
+                                                    ))}
+                                                    </TableBody>
+                                                </Table>
+                                            </AccordionContent>
+                                        </AccordionItem>
+                                        )}
                                     )}
-                                </TableBody>
-                            </Table>
+                                </Accordion>
+                             ) : (
+                                <div className="text-center text-muted-foreground py-8">
+                                    ยังไม่มีธุรกรรมในเดือนนี้
+                                </div>
+                             )}
                         </CardContent>
+                        )}
                     </Card>
                 </div>
             </main>
         </div>
     );
 }
+
+
+    
