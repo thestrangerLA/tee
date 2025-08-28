@@ -42,16 +42,18 @@ export const addTransaction = async (transaction: Omit<Transaction, 'id'>) => {
     const transactionWithTimestamp = { ...transaction, date: Timestamp.fromDate(transaction.date) };
 
     await runTransaction(db, async (t) => {
+        // --- READS FIRST ---
+        const summarySnap = await t.get(accountSummaryDocRef);
+        
+        // --- WRITES SECOND ---
         // 1. Add the new transaction
         const newTransactionRef = doc(collection(db, "transactions"));
         t.set(newTransactionRef, transactionWithTimestamp);
 
         // 2. Update the account summary
-        const summarySnap = await t.get(accountSummaryDocRef);
         if (summarySnap.exists()) {
             const summaryData = summarySnap.data() as Omit<AccountSummary, 'id'>;
             
-            // Ensure we only update valid summary fields
             if (transaction.paymentMethod === 'cash' || transaction.paymentMethod === 'transfer') {
                 const currentAmount = summaryData[transaction.paymentMethod] || 0;
                 const newAmount = transaction.type === 'income' 
@@ -60,11 +62,12 @@ export const addTransaction = async (transaction: Omit<Transaction, 'id'>) => {
                 t.update(accountSummaryDocRef, { [transaction.paymentMethod]: newAmount });
             }
         } else {
-            // If summary doesn't exist, create it. This part should be robust.
-            const initialSummary: Omit<AccountSummary, 'id'| 'workingCapital'> = {
+            // If summary doesn't exist, create it.
+            const initialSummary: Partial<Omit<AccountSummary, 'id'>> = {
                 cash: 0,
                 transfer: 0,
                 capital: 0,
+                workingCapital: 0,
             };
              if (transaction.paymentMethod === 'cash' || transaction.paymentMethod === 'transfer') {
                 initialSummary[transaction.paymentMethod] = transaction.type === 'income' ? transaction.amount : -transaction.amount;
@@ -78,48 +81,52 @@ export const updateTransaction = async (id: string, updatedFields: Partial<Omit<
     const transactionDocRef = doc(db, 'transactions', id);
 
     await runTransaction(db, async (t) => {
+        // --- READS FIRST ---
         const txSnap = await t.get(transactionDocRef);
+        const summarySnap = await t.get(accountSummaryDocRef);
+
         if (!txSnap.exists()) {
             throw new Error("Transaction not found!");
         }
-        const originalTx = { ...txSnap.data(), date: (txSnap.data().date as Timestamp).toDate() } as Omit<Transaction, 'id'>;
-
-        const summarySnap = await t.get(accountSummaryDocRef);
         if (!summarySnap.exists()) {
              throw new Error("Account summary not found!");
         }
-        const summaryData = summarySnap.data() as Omit<AccountSummary, 'id'>;
-        let newSummary = { ...summaryData };
 
-        // Revert original transaction
+        const originalTx = { ...txSnap.data(), date: (txSnap.data().date as Timestamp).toDate() } as Omit<Transaction, 'id'>;
+        let newSummary = { ...(summarySnap.data() as Omit<AccountSummary, 'id'>) };
+
+        // Revert original transaction from summary
         if (originalTx.paymentMethod === 'cash' || originalTx.paymentMethod === 'transfer') {
+            const field = originalTx.paymentMethod;
             if (originalTx.type === 'income') {
-                newSummary[originalTx.paymentMethod] -= originalTx.amount;
+                newSummary[field] = (newSummary[field] || 0) - originalTx.amount;
             } else {
-                newSummary[originalTx.paymentMethod] += originalTx.amount;
+                newSummary[field] = (newSummary[field] || 0) + originalTx.amount;
             }
         }
 
-
-        // Apply new transaction
-        const finalUpdatedFields = updatedFields.date 
-            ? { ...updatedFields, date: Timestamp.fromDate(updatedFields.date) }
-            : updatedFields;
-        
+        // Apply new transaction to summary
         const newType = updatedFields.type || originalTx.type;
         const newAmount = updatedFields.amount ?? originalTx.amount;
         const newPaymentMethod = updatedFields.paymentMethod || originalTx.paymentMethod;
 
         if (newPaymentMethod === 'cash' || newPaymentMethod === 'transfer') {
+             const field = newPaymentMethod;
             if (newType === 'income') {
-                newSummary[newPaymentMethod] += newAmount;
+                newSummary[field] = (newSummary[field] || 0) + newAmount;
             } else {
-                newSummary[newPaymentMethod] -= newAmount;
+                newSummary[field] = (newSummary[field] || 0) - newAmount;
             }
         }
         
-        // Update documents
+        // --- WRITES SECOND ---
+        // 1. Update the transaction document
+        const finalUpdatedFields = updatedFields.date 
+            ? { ...updatedFields, date: Timestamp.fromDate(updatedFields.date) }
+            : updatedFields;
         t.update(transactionDocRef, finalUpdatedFields);
+
+        // 2. Update the summary document
         t.update(accountSummaryDocRef, newSummary);
     });
 };
@@ -129,26 +136,30 @@ export const deleteTransaction = async (id: string) => {
     const transactionDocRef = doc(db, 'transactions', id);
 
      await runTransaction(db, async (t) => {
+        // --- READS FIRST ---
         const txSnap = await t.get(transactionDocRef);
+        const summarySnap = await t.get(accountSummaryDocRef);
+
         if (!txSnap.exists()) {
             throw new Error("Transaction not found!");
         }
         const txToDelete = txSnap.data() as Omit<Transaction, 'id' | 'date'> & { date: Timestamp };
 
-        // Update summary
-        const summarySnap = await t.get(accountSummaryDocRef);
+        // --- WRITES SECOND ---
+        // 1. Update summary
         if (summarySnap.exists()) {
             const summaryData = summarySnap.data();
              if (txToDelete.paymentMethod === 'cash' || txToDelete.paymentMethod === 'transfer') {
-                const currentAmount = summaryData[txToDelete.paymentMethod] || 0;
+                const field = txToDelete.paymentMethod;
+                const currentAmount = summaryData[field] || 0;
                 const newAmount = txToDelete.type === 'income'
                     ? currentAmount - txToDelete.amount
                     : currentAmount + txToDelete.amount;
-                t.update(accountSummaryDocRef, { [txToDelete.paymentMethod]: newAmount });
+                t.update(accountSummaryDocRef, { [field]: newAmount });
             }
         }
 
-        // Delete transaction
+        // 2. Delete transaction
         t.delete(transactionDocRef);
     });
 };
