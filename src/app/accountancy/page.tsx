@@ -266,8 +266,8 @@ export default function AccountancyPage() {
     }, [allTransactions, historyDisplayMonth, workingCapital]);
 
     const differenceAmount = useMemo(() => {
-        return grandTotalMoney - performanceData.remainingWithWorkingCapital;
-    }, [grandTotalMoney, performanceData.remainingWithWorkingCapital]);
+        return totalMoney - performanceData.remainingWithWorkingCapital;
+    }, [totalMoney, performanceData.remainingWithWorkingCapital]);
 
     const dailySummariesForMonth = useMemo(() => {
         const start = startOfMonth(historyDisplayMonth);
@@ -304,7 +304,6 @@ export default function AccountancyPage() {
         const newTxData = { date: startOfDay(date), ...newTransaction };
 
         try {
-            // No need to manually update summary here, the listener will do it.
             await addTransaction(newTxData);
             
             toast({
