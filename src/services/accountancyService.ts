@@ -44,39 +44,41 @@ export const addTransaction = async (transaction: Omit<Transaction, 'id'>) => {
     await runTransaction(db, async (t) => {
         // --- READS FIRST ---
         const summarySnap = await t.get(accountSummaryDocRef);
-        
+
+        // --- PREPARE WRITES ---
+        const summaryExists = summarySnap.exists();
+        const summaryData = summaryExists ? (summarySnap.data() as Omit<AccountSummary, 'id'>) : {};
+
+        const updates: Partial<Omit<AccountSummary, 'id'>> = {};
+
+        if (transaction.paymentMethod === 'cash' || transaction.paymentMethod === 'transfer') {
+            const field = transaction.paymentMethod;
+            const currentAmount = summaryData[field as keyof typeof summaryData] as number || 0;
+            const newAmount = transaction.type === 'income' 
+                ? currentAmount + transaction.amount 
+                : currentAmount - transaction.amount;
+            updates[field] = newAmount;
+        }
+
         // --- WRITES SECOND ---
         // 1. Add the new transaction document
         const newTransactionRef = doc(collection(db, "transactions"));
         t.set(newTransactionRef, transactionWithTimestamp);
 
         // 2. Update the account summary
-        if (summarySnap.exists()) {
-            const summaryData = summarySnap.data() as Omit<AccountSummary, 'id'>;
-            const updates: Partial<Omit<AccountSummary, 'id'>> = {};
-
-            if (transaction.paymentMethod === 'cash' || transaction.paymentMethod === 'transfer') {
-                const field = transaction.paymentMethod;
-                const currentAmount = summaryData[field] || 0;
-                const newAmount = transaction.type === 'income' 
-                    ? currentAmount + transaction.amount 
-                    : currentAmount - transaction.amount;
-                updates[field] = newAmount;
-            }
+        if (summaryExists) {
             if (Object.keys(updates).length > 0) {
                  t.update(accountSummaryDocRef, updates);
             }
         } else {
             // If summary doesn't exist, create it.
-            const initialSummary: Partial<Omit<AccountSummary, 'id'>> = {
+            const initialSummary: Omit<AccountSummary, 'id'> = {
                 cash: 0,
                 transfer: 0,
                 capital: 0,
                 workingCapital: 0,
+                ...updates // Apply the initial change
             };
-             if (transaction.paymentMethod === 'cash' || transaction.paymentMethod === 'transfer') {
-                initialSummary[transaction.paymentMethod] = transaction.type === 'income' ? transaction.amount : -transaction.amount;
-            }
             t.set(accountSummaryDocRef, initialSummary);
         }
     });
@@ -155,7 +157,6 @@ export const deleteTransaction = async (id: string) => {
             throw new Error("Transaction to delete not found!");
         }
         
-        // --- Step 2: CALCULATE the changes ---
         const txToDelete = txSnap.data() as Omit<Transaction, 'id' | 'date'> & { date: Timestamp };
         const summaryUpdates: Partial<AccountSummary> = {};
 
@@ -172,9 +173,9 @@ export const deleteTransaction = async (id: string) => {
             }
         }
 
-        // --- Step 3: WRITE all changes ---
+        // --- Step 2: WRITE all changes ---
         // 1. Update summary
-        if (Object.keys(summaryUpdates).length > 0) {
+        if (Object.keys(summaryUpdates).length > 0 && summarySnap.exists()) {
             t.update(accountSummaryDocRef, summaryUpdates);
         }
         // 2. Delete transaction
