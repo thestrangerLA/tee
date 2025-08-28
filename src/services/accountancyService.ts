@@ -46,20 +46,25 @@ export const addTransaction = async (transaction: Omit<Transaction, 'id'>) => {
         const summarySnap = await t.get(accountSummaryDocRef);
         
         // --- WRITES SECOND ---
-        // 1. Add the new transaction
+        // 1. Add the new transaction document
         const newTransactionRef = doc(collection(db, "transactions"));
         t.set(newTransactionRef, transactionWithTimestamp);
 
         // 2. Update the account summary
         if (summarySnap.exists()) {
             const summaryData = summarySnap.data() as Omit<AccountSummary, 'id'>;
-            
+            const updates: Partial<Omit<AccountSummary, 'id'>> = {};
+
             if (transaction.paymentMethod === 'cash' || transaction.paymentMethod === 'transfer') {
-                const currentAmount = summaryData[transaction.paymentMethod] || 0;
+                const field = transaction.paymentMethod;
+                const currentAmount = summaryData[field] || 0;
                 const newAmount = transaction.type === 'income' 
                     ? currentAmount + transaction.amount 
                     : currentAmount - transaction.amount;
-                t.update(accountSummaryDocRef, { [transaction.paymentMethod]: newAmount });
+                updates[field] = newAmount;
+            }
+            if (Object.keys(updates).length > 0) {
+                 t.update(accountSummaryDocRef, updates);
             }
         } else {
             // If summary doesn't exist, create it.
@@ -81,58 +86,56 @@ export const updateTransaction = async (id: string, updatedFields: Partial<Omit<
     const transactionDocRef = doc(db, 'transactions', id);
 
     await runTransaction(db, async (t) => {
-        // --- READS FIRST ---
+        // --- Step 1: READ all necessary documents ---
         const txSnap = await t.get(transactionDocRef);
         const summarySnap = await t.get(accountSummaryDocRef);
 
         if (!txSnap.exists()) {
-            throw new Error("Transaction not found!");
+            throw new Error("Transaction to update not found!");
         }
         if (!summarySnap.exists()) {
-             throw new Error("Account summary not found!");
+             throw new Error("Account summary not found! Cannot update transaction.");
         }
 
-        const originalTx = { ...txSnap.data(), date: (txSnap.data().date as Timestamp).toDate() } as Transaction;
-        const newSummary = { ...(summarySnap.data() as Omit<AccountSummary, 'id'>) };
-
-        // Calculate the difference caused by the transaction
-        let cashDiff = 0;
-        let transferDiff = 0;
-
-        // Revert the original transaction's effect
-        if (originalTx.paymentMethod === 'cash') {
-            cashDiff += originalTx.type === 'income' ? -originalTx.amount : +originalTx.amount;
-        } else if (originalTx.paymentMethod === 'transfer') {
-            transferDiff += originalTx.type === 'income' ? -originalTx.amount : +originalTx.amount;
-        }
-
-        // Apply the new transaction's effect
-        const newPaymentMethod = updatedFields.paymentMethod || originalTx.paymentMethod;
-        const newType = updatedFields.type || originalTx.type;
-        const newAmount = updatedFields.amount ?? originalTx.amount;
-
-        if (newPaymentMethod === 'cash') {
-            cashDiff += newType === 'income' ? +newAmount : -newAmount;
-        } else if (newPaymentMethod === 'transfer') {
-            transferDiff += newType === 'income' ? +newAmount : -newAmount;
-        }
+        const originalTxData = txSnap.data() as Omit<Transaction, 'id' | 'date'> & { date: Timestamp };
+        const summaryData = summarySnap.data() as Omit<AccountSummary, 'id'>;
         
+        const finalUpdatedTx = { ...originalTxData, ...updatedFields };
+
+        // --- Step 2: CALCULATE the changes ---
+        let cashChange = 0;
+        let transferChange = 0;
+
+        // Revert the effect of the original transaction
+        if (originalTxData.paymentMethod === 'cash') {
+            cashChange += originalTxData.type === 'income' ? -originalTxData.amount : originalTxData.amount;
+        } else if (originalTxData.paymentMethod === 'transfer') {
+            transferChange += originalTxData.type === 'income' ? -originalTxData.amount : originalTxData.amount;
+        }
+
+        // Apply the effect of the new (updated) transaction
+        if (finalUpdatedTx.paymentMethod === 'cash') {
+            cashChange += finalUpdatedTx.type === 'income' ? finalUpdatedTx.amount : -finalUpdatedTx.amount;
+        } else if (finalUpdatedTx.paymentMethod === 'transfer') {
+            transferChange += finalUpdatedTx.type === 'income' ? finalUpdatedTx.amount : -finalUpdatedTx.amount;
+        }
+
         const summaryUpdate: Partial<AccountSummary> = {};
-        if (cashDiff !== 0) {
-            summaryUpdate.cash = (newSummary.cash || 0) + cashDiff;
+        if (cashChange !== 0) {
+            summaryUpdate.cash = (summaryData.cash || 0) + cashChange;
         }
-        if (transferDiff !== 0) {
-            summaryUpdate.transfer = (newSummary.transfer || 0) + transferDiff;
+        if (transferChange !== 0) {
+            summaryUpdate.transfer = (summaryData.transfer || 0) + transferChange;
         }
         
-        // --- WRITES SECOND ---
-        // 1. Update the transaction document
-        const finalUpdatedFields = updatedFields.date 
+        // --- Step 3: WRITE all changes to documents ---
+        // 1. Update the transaction document itself
+        const updateDataForFirestore = updatedFields.date 
             ? { ...updatedFields, date: Timestamp.fromDate(updatedFields.date) }
             : updatedFields;
-        t.update(transactionDocRef, finalUpdatedFields);
+        t.update(transactionDocRef, updateDataForFirestore);
 
-        // 2. Update the summary document if there are changes
+        // 2. Update the summary document if anything changed
         if (Object.keys(summaryUpdate).length > 0) {
             t.update(accountSummaryDocRef, summaryUpdate);
         }
@@ -144,29 +147,36 @@ export const deleteTransaction = async (id: string) => {
     const transactionDocRef = doc(db, 'transactions', id);
 
      await runTransaction(db, async (t) => {
-        // --- READS FIRST ---
+        // --- Step 1: READ all necessary documents ---
         const txSnap = await t.get(transactionDocRef);
         const summarySnap = await t.get(accountSummaryDocRef);
 
         if (!txSnap.exists()) {
-            throw new Error("Transaction not found!");
+            throw new Error("Transaction to delete not found!");
         }
+        
+        // --- Step 2: CALCULATE the changes ---
         const txToDelete = txSnap.data() as Omit<Transaction, 'id' | 'date'> & { date: Timestamp };
+        const summaryUpdates: Partial<AccountSummary> = {};
 
-        // --- WRITES SECOND ---
-        // 1. Update summary
         if (summarySnap.exists()) {
-            const summaryData = summarySnap.data();
-             if (txToDelete.paymentMethod === 'cash' || txToDelete.paymentMethod === 'transfer') {
+            const summaryData = summarySnap.data() as Omit<AccountSummary, 'id'>;
+            if (txToDelete.paymentMethod === 'cash' || txToDelete.paymentMethod === 'transfer') {
                 const field = txToDelete.paymentMethod;
                 const currentAmount = summaryData[field] || 0;
+                // To revert the transaction: add back expenses, subtract incomes.
                 const newAmount = txToDelete.type === 'income'
                     ? currentAmount - txToDelete.amount
                     : currentAmount + txToDelete.amount;
-                t.update(accountSummaryDocRef, { [field]: newAmount });
+                summaryUpdates[field] = newAmount;
             }
         }
 
+        // --- Step 3: WRITE all changes ---
+        // 1. Update summary
+        if (Object.keys(summaryUpdates).length > 0) {
+            t.update(accountSummaryDocRef, summaryUpdates);
+        }
         // 2. Delete transaction
         t.delete(transactionDocRef);
     });
