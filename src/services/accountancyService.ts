@@ -92,31 +92,37 @@ export const updateTransaction = async (id: string, updatedFields: Partial<Omit<
              throw new Error("Account summary not found!");
         }
 
-        const originalTx = { ...txSnap.data(), date: (txSnap.data().date as Timestamp).toDate() } as Omit<Transaction, 'id'>;
-        let newSummary = { ...(summarySnap.data() as Omit<AccountSummary, 'id'>) };
+        const originalTx = { ...txSnap.data(), date: (txSnap.data().date as Timestamp).toDate() } as Transaction;
+        const newSummary = { ...(summarySnap.data() as Omit<AccountSummary, 'id'>) };
 
-        // Revert original transaction from summary
-        if (originalTx.paymentMethod === 'cash' || originalTx.paymentMethod === 'transfer') {
-            const field = originalTx.paymentMethod;
-            if (originalTx.type === 'income') {
-                newSummary[field] = (newSummary[field] || 0) - originalTx.amount;
-            } else {
-                newSummary[field] = (newSummary[field] || 0) + originalTx.amount;
-            }
+        // Calculate the difference caused by the transaction
+        let cashDiff = 0;
+        let transferDiff = 0;
+
+        // Revert the original transaction's effect
+        if (originalTx.paymentMethod === 'cash') {
+            cashDiff += originalTx.type === 'income' ? -originalTx.amount : +originalTx.amount;
+        } else if (originalTx.paymentMethod === 'transfer') {
+            transferDiff += originalTx.type === 'income' ? -originalTx.amount : +originalTx.amount;
         }
 
-        // Apply new transaction to summary
+        // Apply the new transaction's effect
+        const newPaymentMethod = updatedFields.paymentMethod || originalTx.paymentMethod;
         const newType = updatedFields.type || originalTx.type;
         const newAmount = updatedFields.amount ?? originalTx.amount;
-        const newPaymentMethod = updatedFields.paymentMethod || originalTx.paymentMethod;
 
-        if (newPaymentMethod === 'cash' || newPaymentMethod === 'transfer') {
-             const field = newPaymentMethod;
-            if (newType === 'income') {
-                newSummary[field] = (newSummary[field] || 0) + newAmount;
-            } else {
-                newSummary[field] = (newSummary[field] || 0) - newAmount;
-            }
+        if (newPaymentMethod === 'cash') {
+            cashDiff += newType === 'income' ? +newAmount : -newAmount;
+        } else if (newPaymentMethod === 'transfer') {
+            transferDiff += newType === 'income' ? +newAmount : -newAmount;
+        }
+        
+        const summaryUpdate: Partial<AccountSummary> = {};
+        if (cashDiff !== 0) {
+            summaryUpdate.cash = (newSummary.cash || 0) + cashDiff;
+        }
+        if (transferDiff !== 0) {
+            summaryUpdate.transfer = (newSummary.transfer || 0) + transferDiff;
         }
         
         // --- WRITES SECOND ---
@@ -126,8 +132,10 @@ export const updateTransaction = async (id: string, updatedFields: Partial<Omit<
             : updatedFields;
         t.update(transactionDocRef, finalUpdatedFields);
 
-        // 2. Update the summary document
-        t.update(accountSummaryDocRef, newSummary);
+        // 2. Update the summary document if there are changes
+        if (Object.keys(summaryUpdate).length > 0) {
+            t.update(accountSummaryDocRef, summaryUpdate);
+        }
     });
 };
 
