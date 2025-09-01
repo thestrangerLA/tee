@@ -14,7 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { format, startOfDay, isWithinInterval, startOfMonth, endOfMonth, getYear, getMonth, setMonth } from "date-fns";
+import { format, startOfDay, isWithinInterval, startOfMonth, endOfMonth, getYear, getMonth, setMonth, isSameDay } from "date-fns";
 import { th } from "date-fns/locale";
 import { ArrowLeft, Users, Calendar as CalendarIcon, Trash2, PlusCircle, ChevronDown } from "lucide-react";
 import { DebtorCreditorEntry } from '@/lib/types';
@@ -30,10 +30,11 @@ import {
   DropdownMenuSubContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Badge } from '@/components/ui/badge';
 
 
 const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'LAK', currencyDisplay: 'code', minimumFractionDigits: 0 }).format(value).replace('LAK', 'KIP');
+    return new Intl.NumberFormat('th-TH', { minimumFractionDigits: 0 }).format(value);
 };
 
 const AddEntryForm = ({ onAddEntry, defaultDate }: { onAddEntry: (entry: Omit<DebtorCreditorEntry, 'id' | 'createdAt'>) => Promise<void>, defaultDate: Date }) => {
@@ -93,11 +94,11 @@ const AddEntryForm = ({ onAddEntry, defaultDate }: { onAddEntry: (entry: Omit<De
                         <RadioGroup value={type} onValueChange={(v) => setType(v as 'debtor' | 'creditor')} className="flex gap-4">
                             <div className="flex items-center space-x-2">
                                 <RadioGroupItem value="debtor" id="r-debtor" />
-                                <Label htmlFor="r-debtor">ลูกหนี้ (เราต้องรับเงิน)</Label>
+                                <Label htmlFor="r-debtor">ลูกหนี้ (ต้องรับเงิน)</Label>
                             </div>
                             <div className="flex items-center space-x-2">
                                 <RadioGroupItem value="creditor" id="r-creditor" />
-                                <Label htmlFor="r-creditor">เจ้าหนี้ (เราต้องจ่ายเงิน)</Label>
+                                <Label htmlFor="r-creditor">เจ้าหนี้ (ต้องจ่ายเงิน)</Label>
                             </div>
                         </RadioGroup>
                     </div>
@@ -116,7 +117,7 @@ const AddEntryForm = ({ onAddEntry, defaultDate }: { onAddEntry: (entry: Omit<De
                         </Popover>
                     </div>
                     <div className="grid gap-3">
-                        <Label htmlFor="amount">จำนวนเงิน (KIP)</Label>
+                        <Label htmlFor="amount">จำนวนเงิน</Label>
                         <Input id="amount" type="number" placeholder="0" value={amount || ''} onChange={(e) => setAmount(Number(e.target.value))} required />
                     </div>
                     <div className="grid gap-3">
@@ -133,103 +134,6 @@ const AddEntryForm = ({ onAddEntry, defaultDate }: { onAddEntry: (entry: Omit<De
     );
 };
 
-const EntriesTable = ({ entries, onUpdate, onDelete }: { entries: DebtorCreditorEntry[], onUpdate: (id: string, fields: Partial<DebtorCreditorEntry>) => void, onDelete: (id: string) => void }) => {
-    return (
-        <>
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>วันที่</TableHead>
-                        <TableHead>รายละเอียด</TableHead>
-                        <TableHead className="text-right">จำนวนเงิน</TableHead>
-                        <TableHead className="text-center">ชำระแล้ว</TableHead>
-                        <TableHead><span className="sr-only">ลบ</span></TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {entries.map((entry) => (
-                        <TableRow key={entry.id} className={entry.isPaid ? 'bg-green-50/50 text-muted-foreground' : ''}>
-                           <TableCell className="p-2">
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                        <Button
-                                            variant={"outline"}
-                                            className="h-8 w-[120px] justify-start text-left font-normal"
-                                        >
-                                            <CalendarIcon className="mr-2 h-3 w-3" />
-                                            {format(entry.date, "dd/MM/yy")}
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0">
-                                        <Calendar
-                                            mode="single"
-                                            selected={entry.date}
-                                            onSelect={(d) => d && onUpdate(entry.id, { date: d })}
-                                            initialFocus
-                                            locale={th}
-                                        />
-                                    </PopoverContent>
-                                </Popover>
-                            </TableCell>
-                            <TableCell className="font-medium p-2">
-                                <Input 
-                                    defaultValue={entry.description}
-                                    onBlur={(e) => onUpdate(entry.id, { description: e.target.value })}
-                                    className="h-8"
-                                />
-                            </TableCell>
-                            <TableCell className="p-2">
-                                <Input 
-                                    type="number"
-                                    defaultValue={entry.amount}
-                                    onBlur={(e) => onUpdate(entry.id, { amount: Number(e.target.value) || 0 })}
-                                    className="h-8 text-right"
-                                />
-                            </TableCell>
-                            <TableCell className="text-center">
-                                <Checkbox checked={entry.isPaid} onCheckedChange={(checked) => onUpdate(entry.id, { isPaid: !!checked })} />
-                            </TableCell>
-                            <TableCell>
-                                <Button variant="ghost" size="icon" onClick={() => onDelete(entry.id)}>
-                                    <Trash2 className="h-4 w-4 text-red-500" />
-                                </Button>
-                            </TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-            {entries.length === 0 && <div className="text-center text-muted-foreground py-4">ไม่มีรายการ</div>}
-        </>
-    );
-};
-
-const SectionAccordionItem = ({ title, entries, onUpdate, onDelete, value, defaultOpen = false }: {
-    title: string;
-    entries: DebtorCreditorEntry[];
-    onUpdate: (id: string, fields: Partial<DebtorCreditorEntry>) => void;
-    onDelete: (id: string) => void;
-    value: string;
-    defaultOpen?: boolean;
-}) => {
-    const totalAmount = useMemo(() => entries.reduce((sum, entry) => sum + entry.amount, 0), [entries]);
-
-    if (entries.length === 0 && !defaultOpen) return null;
-
-    return (
-        <AccordionItem value={value}>
-            <AccordionTrigger className="text-lg font-bold bg-muted/50 hover:bg-muted px-4 rounded-md">
-                <div className="flex justify-between w-full pr-4">
-                    <span>{title}</span>
-                    <span className="text-base font-semibold text-primary">{formatCurrency(totalAmount)}</span>
-                </div>
-            </AccordionTrigger>
-            <AccordionContent className="p-1">
-                <EntriesTable entries={entries} onUpdate={onUpdate} onDelete={onDelete} />
-            </AccordionContent>
-        </AccordionItem>
-    );
-};
-
 
 export default function DebtorsPage() {
     const { toast } = useToast();
@@ -242,15 +146,44 @@ export default function DebtorsPage() {
         return () => unsubscribe();
     }, []);
 
-    const filteredEntries = useMemo(() => {
+    const dailySummaries = useMemo(() => {
         const start = startOfMonth(displayMonth);
         const end = endOfMonth(displayMonth);
-        return allEntries.filter(entry => isWithinInterval(entry.date, { start, end }));
+        const monthlyEntries = allEntries.filter(entry => isWithinInterval(entry.date, { start, end }));
+
+        const groupedByDay: Record<string, { date: Date; entries: DebtorCreditorEntry[] }> = {};
+
+        monthlyEntries.forEach(entry => {
+            const dayKey = format(entry.date, 'yyyy-MM-dd');
+            if (!groupedByDay[dayKey]) {
+                groupedByDay[dayKey] = {
+                    date: entry.date,
+                    entries: []
+                };
+            }
+            groupedByDay[dayKey].entries.push(entry);
+        });
+
+        return Object.values(groupedByDay).sort((a, b) => b.date.getTime() - a.date.getTime());
+
+    }, [allEntries, displayMonth]);
+    
+    const summaryTotals = useMemo(() => {
+        const start = startOfMonth(displayMonth);
+        const end = endOfMonth(displayMonth);
+        const monthlyEntries = allEntries.filter(entry => isWithinInterval(entry.date, { start, end }));
+        
+        const totalDebtors = monthlyEntries
+            .filter(e => e.type === 'debtor' && !e.isPaid)
+            .reduce((sum, entry) => sum + entry.amount, 0);
+            
+        const totalCreditors = monthlyEntries
+            .filter(e => e.type === 'creditor' && !e.isPaid)
+            .reduce((sum, entry) => sum + entry.amount, 0);
+
+        return { totalDebtors, totalCreditors };
     }, [allEntries, displayMonth]);
 
-    const debtors = useMemo(() => filteredEntries.filter(e => e.type === 'debtor' && !e.isPaid), [filteredEntries]);
-    const creditors = useMemo(() => filteredEntries.filter(e => e.type === 'creditor' && !e.isPaid), [filteredEntries]);
-    const history = useMemo(() => filteredEntries.filter(e => e.isPaid), [filteredEntries]);
 
     const handleAddEntry = async (entry: Omit<DebtorCreditorEntry, 'id' | 'createdAt'>) => {
         await addDebtorCreditorEntry(entry);
@@ -336,34 +269,97 @@ export default function DebtorsPage() {
             </header>
             <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
                 <div className="grid gap-4 md:gap-8 lg:grid-cols-3">
-                    <div className="lg:col-span-1">
+                    <div className="lg:col-span-1 flex flex-col gap-4">
                         <AddEntryForm onAddEntry={handleAddEntry} defaultDate={displayMonth} />
+                         <Card>
+                            <CardHeader>
+                                <CardTitle>สรุปยอด (เดือนที่เลือก)</CardTitle>
+                            </CardHeader>
+                            <CardContent className="grid gap-4">
+                                <div className="flex items-center justify-between rounded-lg border p-4">
+                                    <h3 className="text-lg font-semibold">ลูกหนี้คงค้าง</h3>
+                                    <p className="text-xl font-bold text-red-600">{formatCurrency(summaryTotals.totalDebtors)}</p>
+                                </div>
+                                <div className="flex items-center justify-between rounded-lg border p-4">
+                                    <h3 className="text-lg font-semibold">เจ้าหนี้คงค้าง</h3>
+                                    <p className="text-xl font-bold text-yellow-600">{formatCurrency(summaryTotals.totalCreditors)}</p>
+                                </div>
+                            </CardContent>
+                        </Card>
                     </div>
-                    <div className="lg:col-span-2 flex flex-col gap-2">
-                         <Accordion type="multiple" defaultValue={["item-debtors"]} className="w-full">
-                            <SectionAccordionItem
-                                value="item-debtors"
-                                title="ลูกหนี้ (ยังไม่ได้ชำระ)"
-                                entries={debtors}
-                                onUpdate={handleUpdateEntry}
-                                onDelete={handleDeleteEntry}
-                                defaultOpen={true}
-                            />
-                            <SectionAccordionItem
-                                value="item-creditors"
-                                title="เจ้าหนี้ (ยังไม่ได้ชำระ)"
-                                entries={creditors}
-                                onUpdate={handleUpdateEntry}
-                                onDelete={handleDeleteEntry}
-                            />
-                             <SectionAccordionItem
-                                value="item-history"
-                                title="ประวัติการชำระ"
-                                entries={history}
-                                onUpdate={handleUpdateEntry}
-                                onDelete={handleDeleteEntry}
-                            />
-                        </Accordion>
+                    <div className="lg:col-span-2">
+                         <Card>
+                            <CardHeader>
+                                <CardTitle>รายการประจำเดือน</CardTitle>
+                                <CardDescription>แสดงรายการทั้งหมดในเดือน {format(displayMonth, "LLLL yyyy", { locale: th })}</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                {dailySummaries.length > 0 ? (
+                                    <Accordion type="single" collapsible className="w-full">
+                                        {dailySummaries.map((summary, index) => (
+                                            <AccordionItem value={`item-${index}`} key={index}>
+                                                <AccordionTrigger>
+                                                    <div className="flex justify-between w-full pr-4">
+                                                        <div className="font-semibold">{`วันที่ ${format(summary.date, "d")}`}</div>
+                                                    </div>
+                                                </AccordionTrigger>
+                                                <AccordionContent>
+                                                    <Table>
+                                                        <TableHeader>
+                                                            <TableRow>
+                                                                <TableHead>ประเภท</TableHead>
+                                                                <TableHead>รายละเอียด</TableHead>
+                                                                <TableHead className="text-right">จำนวนเงิน</TableHead>
+                                                                <TableHead className="text-center">ชำระแล้ว</TableHead>
+                                                                <TableHead><span className="sr-only">ลบ</span></TableHead>
+                                                            </TableRow>
+                                                        </TableHeader>
+                                                        <TableBody>
+                                                        {summary.entries.map((entry) => (
+                                                            <TableRow key={entry.id} className={entry.isPaid ? 'bg-green-50/50 text-muted-foreground' : (entry.type === 'debtor' ? 'bg-red-50/50' : 'bg-yellow-50/50')}>
+                                                                <TableCell className="p-2">
+                                                                     <Badge variant={entry.type === 'debtor' ? 'destructive' : 'secondary'} className="w-[60px] justify-center">
+                                                                        {entry.type === 'debtor' ? 'ลูกหนี้' : 'เจ้าหนี้'}
+                                                                    </Badge>
+                                                                </TableCell>
+                                                                <TableCell className="font-medium p-2">
+                                                                    <Input 
+                                                                        defaultValue={entry.description}
+                                                                        onBlur={(e) => handleUpdateEntry(entry.id, { description: e.target.value })}
+                                                                        className="h-8"
+                                                                    />
+                                                                </TableCell>
+                                                                <TableCell className="p-2">
+                                                                    <Input 
+                                                                        type="number"
+                                                                        defaultValue={entry.amount}
+                                                                        onBlur={(e) => handleUpdateEntry(entry.id, { amount: Number(e.target.value) || 0 })}
+                                                                        className="h-8 text-right"
+                                                                    />
+                                                                </TableCell>
+                                                                <TableCell className="text-center p-2">
+                                                                    <Checkbox checked={entry.isPaid} onCheckedChange={(checked) => handleUpdateEntry(entry.id, { isPaid: !!checked })} />
+                                                                </TableCell>
+                                                                <TableCell className="p-2">
+                                                                    <Button variant="ghost" size="icon" onClick={() => handleDeleteEntry(entry.id)}>
+                                                                        <Trash2 className="h-4 w-4 text-red-500" />
+                                                                    </Button>
+                                                                </TableCell>
+                                                            </TableRow>
+                                                        ))}
+                                                        </TableBody>
+                                                    </Table>
+                                                </AccordionContent>
+                                            </AccordionItem>
+                                        ))}
+                                    </Accordion>
+                                ) : (
+                                    <div className="text-center text-muted-foreground py-8">
+                                        ไม่มีรายการในเดือนที่เลือก
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
                     </div>
                 </div>
             </main>
