@@ -1,4 +1,4 @@
-# Firebase Studio
+git config pull.rebase false# Firebase Studio
 
 This is a NextJS starter in Firebase Studio.
 

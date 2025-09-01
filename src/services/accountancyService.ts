@@ -47,17 +47,19 @@ export const addTransaction = async (transaction: Omit<Transaction, 'id'>) => {
 
         // --- PREPARE WRITES ---
         const summaryExists = summarySnap.exists();
-        const summaryData = summaryExists ? (summarySnap.data() as Omit<AccountSummary, 'id'>) : {};
-
+        let summaryData = summaryExists ? (summarySnap.data() as Omit<AccountSummary, 'id'>) : { cash: 0, transfer: 0, capital: 0, workingCapital: 0 };
+        
         const updates: Partial<Omit<AccountSummary, 'id'>> = {};
 
         if (transaction.paymentMethod === 'cash' || transaction.paymentMethod === 'transfer') {
-            const field = transaction.paymentMethod;
-            const currentAmount = summaryData[field as keyof typeof summaryData] as number || 0;
-            const newAmount = transaction.type === 'income' 
-                ? currentAmount + transaction.amount 
-                : currentAmount - transaction.amount;
-            updates[field] = newAmount;
+            const field = transaction.paymentMethod; // 'cash' or 'transfer'
+            const currentAmount = summaryData[field] || 0;
+            
+            if (transaction.type === 'income') {
+                updates[field] = currentAmount + transaction.amount;
+            } else { // 'expense'
+                updates[field] = currentAmount - transaction.amount;
+            }
         }
 
         // --- WRITES SECOND ---
@@ -71,13 +73,12 @@ export const addTransaction = async (transaction: Omit<Transaction, 'id'>) => {
                  t.update(accountSummaryDocRef, updates);
             }
         } else {
-            // If summary doesn't exist, create it.
+            // If summary doesn't exist, create it with the calculated changes.
             const initialSummary: Omit<AccountSummary, 'id'> = {
-                cash: 0,
-                transfer: 0,
+                cash: updates.cash ?? 0,
+                transfer: updates.transfer ?? 0,
                 capital: 0,
                 workingCapital: 0,
-                ...updates // Apply the initial change
             };
             t.set(accountSummaryDocRef, initialSummary);
         }
