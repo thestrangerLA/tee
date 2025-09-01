@@ -51,15 +51,11 @@ export const addTransaction = async (transaction: Omit<Transaction, 'id'>) => {
         
         const updates: Partial<Omit<AccountSummary, 'id'>> = {};
 
-        if (transaction.paymentMethod === 'cash' || transaction.paymentMethod === 'transfer') {
-            const field = transaction.paymentMethod; // 'cash' or 'transfer'
-            const currentAmount = summaryData[field] || 0;
-            
-            if (transaction.type === 'income') {
-                updates[field] = currentAmount + transaction.amount;
-            } else { // 'expense'
-                updates[field] = currentAmount - transaction.amount;
-            }
+        const currentCash = summaryData.cash || 0;
+        if (transaction.type === 'income') {
+            updates.cash = currentCash + transaction.amount;
+        } else { // 'expense'
+            updates.cash = currentCash - transaction.amount;
         }
 
         // --- WRITES SECOND ---
@@ -76,7 +72,7 @@ export const addTransaction = async (transaction: Omit<Transaction, 'id'>) => {
             // If summary doesn't exist, create it with the calculated changes.
             const initialSummary: Omit<AccountSummary, 'id'> = {
                 cash: updates.cash ?? 0,
-                transfer: updates.transfer ?? 0,
+                transfer: 0,
                 capital: 0,
                 workingCapital: 0,
             };
@@ -107,28 +103,16 @@ export const updateTransaction = async (id: string, updatedFields: Partial<Omit<
 
         // --- Step 2: CALCULATE the changes ---
         let cashChange = 0;
-        let transferChange = 0;
 
-        // Revert the effect of the original transaction
-        if (originalTxData.paymentMethod === 'cash') {
-            cashChange += originalTxData.type === 'income' ? -originalTxData.amount : originalTxData.amount;
-        } else if (originalTxData.paymentMethod === 'transfer') {
-            transferChange += originalTxData.type === 'income' ? -originalTxData.amount : originalTxData.amount;
-        }
-
-        // Apply the effect of the new (updated) transaction
-        if (finalUpdatedTx.paymentMethod === 'cash') {
-            cashChange += finalUpdatedTx.type === 'income' ? finalUpdatedTx.amount : -finalUpdatedTx.amount;
-        } else if (finalUpdatedTx.paymentMethod === 'transfer') {
-            transferChange += finalUpdatedTx.type === 'income' ? finalUpdatedTx.amount : -finalUpdatedTx.amount;
-        }
+        // Revert the effect of the original transaction amount
+        cashChange += originalTxData.type === 'income' ? -originalTxData.amount : originalTxData.amount;
+        
+        // Apply the effect of the new (updated) transaction amount
+        cashChange += finalUpdatedTx.type === 'income' ? finalUpdatedTx.amount : -finalUpdatedTx.amount;
 
         const summaryUpdate: Partial<AccountSummary> = {};
         if (cashChange !== 0) {
             summaryUpdate.cash = (summaryData.cash || 0) + cashChange;
-        }
-        if (transferChange !== 0) {
-            summaryUpdate.transfer = (summaryData.transfer || 0) + transferChange;
         }
         
         // --- Step 3: WRITE all changes to documents ---
@@ -163,15 +147,12 @@ export const deleteTransaction = async (id: string) => {
 
         if (summarySnap.exists()) {
             const summaryData = summarySnap.data() as Omit<AccountSummary, 'id'>;
-            if (txToDelete.paymentMethod === 'cash' || txToDelete.paymentMethod === 'transfer') {
-                const field = txToDelete.paymentMethod;
-                const currentAmount = summaryData[field] || 0;
-                // To revert the transaction: add back expenses, subtract incomes.
-                const newAmount = txToDelete.type === 'income'
-                    ? currentAmount - txToDelete.amount
-                    : currentAmount + txToDelete.amount;
-                summaryUpdates[field] = newAmount;
-            }
+            const currentCash = summaryData.cash || 0;
+            // To revert the transaction: add back expenses, subtract incomes.
+            const newCashAmount = txToDelete.type === 'income'
+                ? currentCash - txToDelete.amount
+                : currentCash + txToDelete.amount;
+            summaryUpdates.cash = newCashAmount;
         }
 
         // --- Step 2: WRITE all changes ---

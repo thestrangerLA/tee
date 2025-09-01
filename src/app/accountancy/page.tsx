@@ -161,11 +161,10 @@ export default function AccountancyPage() {
     const [accountSummary, setAccountSummary] = useState<AccountSummary>({ id: 'latest', cash: 0, transfer: 0, capital: 0, workingCapital: 0 });
     const [date, setDate] = useState<Date | undefined>(new Date());
     const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
-    const [newTransaction, setNewTransaction] = useState({
-        type: 'expense' as 'income' | 'expense',
+    const [newTransaction, setNewTransaction] = useState<Omit<Transaction, 'id' | 'date'>>({
+        type: 'expense',
         amount: 0,
         description: '',
-        paymentMethod: 'cash' as 'cash' | 'transfer'
     });
     const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
     const [isTransactionFormVisible, setTransactionFormVisible] = useState(true);
@@ -309,7 +308,7 @@ export default function AccountancyPage() {
                 description: `เพิ่มรายการใหม่จำนวน ${formatCurrency(newTransaction.amount)}`,
             });
     
-            setNewTransaction({ type: 'expense', amount: 0, description: '', paymentMethod: 'cash' });
+            setNewTransaction({ type: 'expense', amount: 0, description: '' });
             setDate(new Date());
 
         } catch (error) {
@@ -569,24 +568,6 @@ export default function AccountancyPage() {
                                             <Textarea id="description" placeholder="อธิบายรายการ" value={newTransaction.description} onChange={(e) => setNewTransaction({ ...newTransaction, description: e.target.value})} />
                                         </div>
 
-                                        <div className="grid gap-3">
-                                            <Label>วิธีการชำระเงิน</Label>
-                                            <RadioGroup
-                                                value={newTransaction.paymentMethod}
-                                                onValueChange={(value) => setNewTransaction({ ...newTransaction, paymentMethod: value as 'cash' | 'transfer' })}
-                                                className="flex gap-4"
-                                            >
-                                                <div className="flex items-center space-x-2">
-                                                    <RadioGroupItem value="cash" id="r-cash" />
-                                                    <Label htmlFor="r-cash">เงินสด</Label>
-                                                </div>
-                                                <div className="flex items-center space-x-2">
-                                                    <RadioGroupItem value="transfer" id="r-transfer" />
-                                                    <Label htmlFor="r-transfer">เงินโอน</Label>
-                                                </div>
-                                            </RadioGroup>
-                                        </div>
-
                                         <Button type="submit" className="w-full">
                                             <PlusCircle className="mr-2 h-4 w-4" />
                                             เพิ่มธุรกรรม
@@ -634,7 +615,6 @@ export default function AccountancyPage() {
                                                     <TableHeader>
                                                         <TableRow>
                                                             <TableHead>คำอธิบาย</TableHead>
-                                                            <TableHead>การชำระเงิน</TableHead>
                                                             <TableHead className="text-right">จำนวนเงิน</TableHead>
                                                             <TableHead><span className="sr-only">Actions</span></TableHead>
                                                         </TableRow>
@@ -644,9 +624,6 @@ export default function AccountancyPage() {
                                                         <TableRow key={tx.id} className={tx.type === 'income' ? 'bg-green-50/50' : 'bg-red-50/50'}>
                                                             <TableCell>
                                                                 <div className="font-medium">{tx.description || "-"}</div>
-                                                            </TableCell>
-                                                            <TableCell>
-                                                                <Badge variant="outline">{tx.paymentMethod === 'cash' ? 'เงินสด' : 'เงินโอน'}</Badge>
                                                             </TableCell>
                                                             <TableCell className={`text-right font-semibold ${tx.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>{formatCurrency(tx.amount)}</TableCell>
                                                              <TableCell className="text-right">
@@ -745,23 +722,6 @@ export default function AccountancyPage() {
                                 <Label htmlFor="edit-description">คำอธิบาย</Label>
                                 <Textarea id="edit-description" value={editingTransaction.description} onChange={(e) => setEditingTransaction({ ...editingTransaction, description: e.target.value})} />
                             </div>
-                             <div className="grid gap-3">
-                                <Label>วิธีการชำระเงิน</Label>
-                                <RadioGroup
-                                    value={editingTransaction.paymentMethod}
-                                    onValueChange={(value) => setEditingTransaction({ ...editingTransaction, paymentMethod: value as 'cash' | 'transfer' })}
-                                    className="flex gap-4"
-                                >
-                                    <div className="flex items-center space-x-2">
-                                        <RadioGroupItem value="cash" id="edit-r-cash" />
-                                        <Label htmlFor="edit-r-cash">เงินสด</Label>
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                        <RadioGroupItem value="transfer" id="edit-r-transfer" />
-                                        <Label htmlFor="edit-r-transfer">เงินโอน</Label>
-                                    </div>
-                                </RadioGroup>
-                            </div>
                         </div>
                         <DialogFooter>
                             <Button variant="outline" onClick={() => setEditingTransaction(null)}>ยกเลิก</Button>
@@ -802,5 +762,3 @@ export default function AccountancyPage() {
         </div>
     );
 }
-
-    

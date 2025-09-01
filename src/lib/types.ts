@@ -16,7 +16,6 @@ export interface Transaction {
     date: Date; // Stored as Timestamp in Firestore, converted to Date on client
     amount: number;
     description: string;
-    paymentMethod: 'cash' | 'transfer';
 }
 
 export interface AccountSummary {
