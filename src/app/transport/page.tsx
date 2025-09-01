@@ -37,7 +37,7 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
     const totalRemaining = useMemo(() => entries.filter(e => !e.finished).reduce((sum, entry) => sum + (entry.amount || 0), 0), [entries]);
     
     const dailySummaries = useMemo(() => {
-        const groupedByDay: Record<string, { date: Date, profit: number, entries: TransportEntry[] }> = {};
+        const groupedByDay: Record<string, { date: Date, profit: number, entries: TransportEntry[], orderCount: number }> = {};
 
         entries.forEach(entry => {
             const dayKey = format(entry.date, 'yyyy-MM-dd');
@@ -45,11 +45,13 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
                 groupedByDay[dayKey] = {
                     date: entry.date,
                     profit: 0,
-                    entries: []
+                    entries: [],
+                    orderCount: 0
                 };
             }
             groupedByDay[dayKey].entries.push(entry);
             groupedByDay[dayKey].profit += (entry.amount || 0) - (entry.cost || 0);
+            groupedByDay[dayKey].orderCount += 1;
         });
 
         return Object.values(groupedByDay).sort((a, b) => b.date.getTime() - a.date.getTime());
@@ -79,7 +81,8 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
                                     <AccordionTrigger>
                                         <div className="flex justify-between w-full pr-4">
                                             <div className="font-semibold">{`วันที่ ${format(summary.date, "d")}`}</div>
-                                            <div className="flex gap-4">
+                                            <div className="flex gap-4 items-center">
+                                                <span className="text-sm text-muted-foreground">{summary.orderCount} รายการ</span>
                                                 <span className={summary.profit >= 0 ? 'text-green-600' : 'text-red-600'}>
                                                     กำไร: {formatCurrency(summary.profit)}
                                                 </span>
@@ -90,11 +93,10 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
                                         <Table>
                                             <TableHeader>
                                                 <TableRow>
-                                                    <TableHead className="w-[60px]">วันที่</TableHead>
-                                                    <TableHead className="w-[40%]">รายละเอียด</TableHead>
-                                                    <TableHead className="w-[150px] text-right">ต้นทุน</TableHead>
-                                                    <TableHead className="w-[150px] text-right">จำนวนเงิน</TableHead>
-                                                    <TableHead className="w-[150px] text-right">กำไร</TableHead>
+                                                    <TableHead className="w-[45%]">รายละเอียด</TableHead>
+                                                    <TableHead className="w-[120px] text-right">ต้นทุน</TableHead>
+                                                    <TableHead className="w-[120px] text-right">จำนวนเงิน</TableHead>
+                                                    <TableHead className="w-[120px] text-right">กำไร</TableHead>
                                                     <TableHead className="w-[80px] text-center">เสร็จสิ้น</TableHead>
                                                     <TableHead className="w-[50px] text-center">ลบ</TableHead>
                                                 </TableRow>
@@ -104,27 +106,6 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
                                                     const profit = (row.amount || 0) - (row.cost || 0);
                                                     return (
                                                     <TableRow key={row.id}>
-                                                        <TableCell className="p-2">
-                                                            <Popover>
-                                                                <PopoverTrigger asChild>
-                                                                    <Button
-                                                                        variant={"outline"}
-                                                                        className="w-full justify-center text-center font-normal h-8 text-xs p-1"
-                                                                    >
-                                                                        {row.date ? format(row.date, "d") : <CalendarIcon className="h-4 w-4" />}
-                                                                    </Button>
-                                                                </PopoverTrigger>
-                                                                <PopoverContent className="w-auto p-0">
-                                                                    <Calendar
-                                                                        mode="single"
-                                                                        selected={row.date}
-                                                                        onSelect={(d) => onRowChange(row.id, 'date', d ? startOfDay(d) : new Date())}
-                                                                        initialFocus
-                                                                        locale={th}
-                                                                    />
-                                                                </PopoverContent>
-                                                            </Popover>
-                                                        </TableCell>
                                                         <TableCell className="p-2">
                                                             <Input value={row.detail || ''} onChange={(e) => onRowChange(row.id, 'detail', e.target.value)} placeholder="รายละเอียด" className="h-8" />
                                                         </TableCell>
