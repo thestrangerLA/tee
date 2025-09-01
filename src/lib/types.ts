@@ -31,6 +31,7 @@ export interface TransportEntry {
     id: string;
     type: 'ANS' | 'HAL' | 'MX';
     date: Date;
+    detail: string;
     cost: number;
     amount: number;
     finished: boolean;

@@ -57,6 +57,7 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
                         <TableHeader>
                             <TableRow>
                                 <TableHead className="w-[180px]">วันที่</TableHead>
+                                <TableHead>รายละเอียด</TableHead>
                                 <TableHead className="text-right">ต้นทุน</TableHead>
                                 <TableHead className="text-right">จำนวนเงิน</TableHead>
                                 <TableHead className="text-center">เสร็จสิ้น</TableHead>
@@ -88,6 +89,9 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
                                             </PopoverContent>
                                         </Popover>
                                     </TableCell>
+                                    <TableCell>
+                                        <Input value={row.detail || ''} onChange={(e) => onRowChange(row.id, 'detail', e.target.value)} placeholder="รายละเอียด" className="h-8" />
+                                    </TableCell>
                                      <TableCell>
                                         <Input type="number" value={row.cost || ''} onChange={(e) => onRowChange(row.id, 'cost', parseFloat(e.target.value) || 0)} placeholder="ต้นทุน" className="h-8 text-right" />
                                     </TableCell>
@@ -104,7 +108,7 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
                                     </TableCell>
                                 </TableRow>
                             ))}
-                             {entries.length === 0 && <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-4">ไม่มีรายการในเดือนที่เลือก</TableCell></TableRow>}
+                             {entries.length === 0 && <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-4">ไม่มีรายการในเดือนที่เลือก</TableCell></TableRow>}
                         </TableBody>
                     </Table>
                 </div>
