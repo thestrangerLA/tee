@@ -67,7 +67,7 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
                         <TableBody>
                             {entries.map((row) => (
                                 <TableRow key={row.id}>
-                                    <TableCell>
+                                    <TableCell className="w-[150px]">
                                         <Popover>
                                             <PopoverTrigger asChild>
                                                 <Button
