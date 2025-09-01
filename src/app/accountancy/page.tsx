@@ -397,7 +397,7 @@ export default function AccountancyPage() {
     };
 
     const MonthYearSelector = () => {
-        const years = [2024, 2025, 2026];
+        const years = Array.from({ length: 3 }, (_, i) => getYear(new Date()) - 1 + i);
         const months = Array.from({ length: 12 }, (_, i) => setMonth(new Date(), i));
 
         return (
@@ -603,7 +603,7 @@ export default function AccountancyPage() {
                                         <AccordionItem value={`item-${index}`} key={index}>
                                             <AccordionTrigger>
                                                 <div className="flex justify-between w-full pr-4">
-                                                    <div className="font-semibold">{format(summary.date, "EEEEที่ do MMMM", { locale: th })}</div>
+                                                    <div className="font-semibold">{`วันที่ ${format(summary.date, "d")}`}</div>
                                                     <div className="flex gap-4">
                                                         <span className="text-green-600">รับ: {formatCurrency(summary.income)}</span>
                                                         <span className="text-red-600">จ่าย: {formatCurrency(summary.expense)}</span>
