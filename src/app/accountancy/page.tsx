@@ -53,7 +53,7 @@ import { listenToTransportEntries } from '@/services/transportService';
 
 
 const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'LAK', currencyDisplay: 'code', minimumFractionDigits: 0 }).format(value).replace('LAK', 'KIP');
+    return new Intl.NumberFormat('th-TH', { minimumFractionDigits: 0 }).format(value);
 }
 
 const SummaryCard = ({ title, value, icon, onClick, className }: { title: string, value: string, icon: React.ReactNode, onClick?: () => void, className?: string }) => (
@@ -559,7 +559,7 @@ export default function AccountancyPage() {
                                         </div>
                                         
                                         <div className="grid gap-3">
-                                            <Label htmlFor="amount">จำนวนเงิน (KIP)</Label>
+                                            <Label htmlFor="amount">จำนวนเงิน</Label>
                                             <Input id="amount" type="number" placeholder="0" value={newTransaction.amount || ''} onChange={(e) => setNewTransaction({ ...newTransaction, amount: Number(e.target.value)})} required />
                                         </div>
 
@@ -715,7 +715,7 @@ export default function AccountancyPage() {
                                 </Popover>
                             </div>
                             <div className="grid gap-3">
-                                <Label htmlFor="edit-amount">จำนวนเงิน (KIP)</Label>
+                                <Label htmlFor="edit-amount">จำนวนเงิน</Label>
                                 <Input id="edit-amount" type="number" value={editingTransaction.amount} onChange={(e) => setEditingTransaction({ ...editingTransaction, amount: Number(e.target.value)})} required />
                             </div>
                             <div className="grid gap-3">
@@ -742,7 +742,7 @@ export default function AccountancyPage() {
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
                             <div className="grid gap-3">
-                                 <Label htmlFor="edit-summary-amount">จำนวนเงิน (KIP)</Label>
+                                 <Label htmlFor="edit-summary-amount">จำนวนเงิน</Label>
                                 <Input 
                                     id="edit-summary-amount" 
                                     type="number" 
