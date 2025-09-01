@@ -116,7 +116,8 @@ export default function TaxCalculatorPage() {
     };
     
     const YearSelector = () => {
-        const years = [2024, 2025, 2026];
+        const currentYear = getYear(new Date());
+        const years = Array.from({ length: 12 }, (_, i) => currentYear - 5 + i);
 
         return (
             <DropdownMenu>
