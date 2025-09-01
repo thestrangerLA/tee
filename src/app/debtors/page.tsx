@@ -135,9 +135,43 @@ const EntriesTable = ({ entries, onUpdate, onDelete }: { entries: DebtorCreditor
                 <TableBody>
                     {entries.map((entry) => (
                         <TableRow key={entry.id} className={entry.isPaid ? 'bg-green-50/50 text-muted-foreground' : ''}>
-                            <TableCell>{format(entry.date, "dd/MM/yyyy")}</TableCell>
-                            <TableCell className="font-medium">{entry.description}</TableCell>
-                            <TableCell className="text-right">{formatCurrency(entry.amount)}</TableCell>
+                           <TableCell className="p-2">
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant={"outline"}
+                                            className="h-8 w-[120px] justify-start text-left font-normal"
+                                        >
+                                            <CalendarIcon className="mr-2 h-3 w-3" />
+                                            {format(entry.date, "dd/MM/yy")}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0">
+                                        <Calendar
+                                            mode="single"
+                                            selected={entry.date}
+                                            onSelect={(d) => d && onUpdate(entry.id, { date: d })}
+                                            initialFocus
+                                            locale={th}
+                                        />
+                                    </PopoverContent>
+                                </Popover>
+                            </TableCell>
+                            <TableCell className="font-medium p-2">
+                                <Input 
+                                    defaultValue={entry.description}
+                                    onBlur={(e) => onUpdate(entry.id, { description: e.target.value })}
+                                    className="h-8"
+                                />
+                            </TableCell>
+                            <TableCell className="p-2">
+                                <Input 
+                                    type="number"
+                                    defaultValue={entry.amount}
+                                    onBlur={(e) => onUpdate(entry.id, { amount: Number(e.target.value) || 0 })}
+                                    className="h-8 text-right"
+                                />
+                            </TableCell>
                             <TableCell className="text-center">
                                 <Checkbox checked={entry.isPaid} onCheckedChange={(checked) => onUpdate(entry.id, { isPaid: !!checked })} />
                             </TableCell>
@@ -200,7 +234,7 @@ export default function DebtorsPage() {
     const handleUpdateEntry = async (id: string, fields: Partial<DebtorCreditorEntry>) => {
         try {
             await updateDebtorCreditorEntry(id, fields);
-            toast({ title: "อัปเดตสถานะสำเร็จ" });
+            // No toast for inline edits to avoid being noisy
         } catch (error) {
             console.error("Error updating entry: ", error);
             toast({ title: "เกิดข้อผิดพลาด", variant: "destructive" });

@@ -17,7 +17,7 @@ import {
 const collectionRef = collection(db, 'debtorCreditorEntries');
 
 export const listenToDebtorCreditorEntries = (callback: (items: DebtorCreditorEntry[]) => void) => {
-    const q = query(collectionRef, orderBy('createdAt', 'desc'));
+    const q = query(collectionRef, orderBy('date', 'desc'));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
         const entries: DebtorCreditorEntry[] = [];
         querySnapshot.forEach((doc) => {
@@ -45,9 +45,10 @@ export const addDebtorCreditorEntry = async (entry: Omit<DebtorCreditorEntry, 'i
 
 export const updateDebtorCreditorEntry = async (id: string, updatedFields: Partial<Omit<DebtorCreditorEntry, 'id' | 'createdAt'>>) => {
     const entryDoc = doc(db, 'debtorCreditorEntries', id);
-     if (updatedFields.date) {
+     if (updatedFields.date && updatedFields.date instanceof Date) {
         const { date, ...rest } = updatedFields;
-        await updateDoc(entryDoc, { ...rest, date: Timestamp.fromDate(date as Date) });
+        const newDate = startOfDay(date as Date);
+        await updateDoc(entryDoc, { ...rest, date: Timestamp.fromDate(newDate) });
     } else {
         await updateDoc(entryDoc, updatedFields);
     }
