@@ -14,24 +14,38 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { format, startOfDay } from "date-fns";
+import { format, startOfDay, isWithinInterval, startOfMonth, endOfMonth, getYear, getMonth, setMonth } from "date-fns";
 import { th } from "date-fns/locale";
-import { ArrowLeft, Users, Calendar as CalendarIcon, Trash2, PlusCircle } from "lucide-react";
+import { ArrowLeft, Users, Calendar as CalendarIcon, Trash2, PlusCircle, ChevronDown } from "lucide-react";
 import { DebtorCreditorEntry } from '@/lib/types';
 import { listenToDebtorCreditorEntries, addDebtorCreditorEntry, updateDebtorCreditorEntry, deleteDebtorCreditorEntry } from '@/services/debtorCreditorService';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuPortal,
+  DropdownMenuSubContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'LAK', currencyDisplay: 'code', minimumFractionDigits: 0 }).format(value).replace('LAK', 'KIP');
 };
 
-const AddEntryForm = ({ onAddEntry }: { onAddEntry: (entry: Omit<DebtorCreditorEntry, 'id' | 'createdAt'>) => Promise<void> }) => {
+const AddEntryForm = ({ onAddEntry, defaultDate }: { onAddEntry: (entry: Omit<DebtorCreditorEntry, 'id' | 'createdAt'>) => Promise<void>, defaultDate: Date }) => {
     const { toast } = useToast();
     const [type, setType] = useState<'debtor' | 'creditor'>('debtor');
-    const [date, setDate] = useState<Date | undefined>(new Date());
+    const [date, setDate] = useState<Date | undefined>(defaultDate);
     const [amount, setAmount] = useState(0);
     const [description, setDescription] = useState('');
+    
+    useEffect(() => {
+        setDate(defaultDate);
+    }, [defaultDate]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -55,7 +69,7 @@ const AddEntryForm = ({ onAddEntry }: { onAddEntry: (entry: Omit<DebtorCreditorE
             toast({ title: "เพิ่มรายการสำเร็จ" });
             // Reset form
             setType('debtor');
-            setDate(new Date());
+            setDate(defaultDate);
             setAmount(0);
             setDescription('');
         } catch (error) {
@@ -189,14 +203,17 @@ const EntriesTable = ({ entries, onUpdate, onDelete }: { entries: DebtorCreditor
     );
 };
 
-const SectionAccordionItem = ({ title, entries, onUpdate, onDelete, value }: {
+const SectionAccordionItem = ({ title, entries, onUpdate, onDelete, value, defaultOpen = false }: {
     title: string;
     entries: DebtorCreditorEntry[];
     onUpdate: (id: string, fields: Partial<DebtorCreditorEntry>) => void;
     onDelete: (id: string) => void;
     value: string;
+    defaultOpen?: boolean;
 }) => {
     const totalAmount = useMemo(() => entries.reduce((sum, entry) => sum + entry.amount, 0), [entries]);
+
+    if (entries.length === 0 && !defaultOpen) return null;
 
     return (
         <AccordionItem value={value}>
@@ -217,15 +234,23 @@ const SectionAccordionItem = ({ title, entries, onUpdate, onDelete, value }: {
 export default function DebtorsPage() {
     const { toast } = useToast();
     const [allEntries, setAllEntries] = useState<DebtorCreditorEntry[]>([]);
+    const [displayMonth, setDisplayMonth] = useState<Date>(new Date());
+
 
     useEffect(() => {
         const unsubscribe = listenToDebtorCreditorEntries(setAllEntries);
         return () => unsubscribe();
     }, []);
 
-    const debtors = useMemo(() => allEntries.filter(e => e.type === 'debtor' && !e.isPaid), [allEntries]);
-    const creditors = useMemo(() => allEntries.filter(e => e.type === 'creditor' && !e.isPaid), [allEntries]);
-    const history = useMemo(() => allEntries.filter(e => e.isPaid), [allEntries]);
+    const filteredEntries = useMemo(() => {
+        const start = startOfMonth(displayMonth);
+        const end = endOfMonth(displayMonth);
+        return allEntries.filter(entry => isWithinInterval(entry.date, { start, end }));
+    }, [allEntries, displayMonth]);
+
+    const debtors = useMemo(() => filteredEntries.filter(e => e.type === 'debtor' && !e.isPaid), [filteredEntries]);
+    const creditors = useMemo(() => filteredEntries.filter(e => e.type === 'creditor' && !e.isPaid), [filteredEntries]);
+    const history = useMemo(() => filteredEntries.filter(e => e.isPaid), [filteredEntries]);
 
     const handleAddEntry = async (entry: Omit<DebtorCreditorEntry, 'id' | 'createdAt'>) => {
         await addDebtorCreditorEntry(entry);
@@ -252,6 +277,46 @@ export default function DebtorsPage() {
         }
     };
 
+    const MonthYearSelector = () => {
+        const years = Array.from({ length: 3 }, (_, i) => getYear(new Date()) - 1 + i);
+        const months = Array.from({ length: 12 }, (_, i) => setMonth(new Date(), i));
+
+        return (
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="flex items-center gap-2">
+                        {format(displayMonth, "LLLL yyyy", { locale: th })}
+                        <ChevronDown className="h-4 w-4" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    {years.map(year => (
+                         <DropdownMenuSub key={year}>
+                            <DropdownMenuSubTrigger>
+                                <span>{year + 543}</span>
+                            </DropdownMenuSubTrigger>
+                            <DropdownMenuPortal>
+                                <DropdownMenuSubContent>
+                                    {months.map(month => (
+                                        <DropdownMenuItem 
+                                            key={getMonth(month)} 
+                                            onClick={() => {
+                                                const newDate = new Date(year, getMonth(month), 1);
+                                                setDisplayMonth(newDate);
+                                            }}
+                                        >
+                                            {format(month, "LLLL", { locale: th })}
+                                        </DropdownMenuItem>
+                                    ))}
+                                </DropdownMenuSubContent>
+                             </DropdownMenuPortal>
+                        </DropdownMenuSub>
+                    ))}
+                </DropdownMenuContent>
+            </DropdownMenu>
+        );
+    };
+
     return (
         <div className="flex min-h-screen w-full flex-col bg-muted/40">
             <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
@@ -265,20 +330,24 @@ export default function DebtorsPage() {
                     <Users className="h-6 w-6 text-primary" />
                     <h1 className="text-xl font-bold tracking-tight">ลูกหนี้/เจ้าหนี้</h1>
                 </div>
+                <div className="ml-auto">
+                    <MonthYearSelector />
+                </div>
             </header>
             <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
                 <div className="grid gap-4 md:gap-8 lg:grid-cols-3">
                     <div className="lg:col-span-1">
-                        <AddEntryForm onAddEntry={handleAddEntry} />
+                        <AddEntryForm onAddEntry={handleAddEntry} defaultDate={displayMonth} />
                     </div>
                     <div className="lg:col-span-2 flex flex-col gap-2">
-                         <Accordion type="single" collapsible defaultValue="item-debtors" className="w-full">
+                         <Accordion type="multiple" defaultValue={["item-debtors"]} className="w-full">
                             <SectionAccordionItem
                                 value="item-debtors"
                                 title="ลูกหนี้ (ยังไม่ได้ชำระ)"
                                 entries={debtors}
                                 onUpdate={handleUpdateEntry}
                                 onDelete={handleDeleteEntry}
+                                defaultOpen={true}
                             />
                             <SectionAccordionItem
                                 value="item-creditors"
@@ -301,3 +370,5 @@ export default function DebtorsPage() {
         </div>
     );
 }
+
+    
