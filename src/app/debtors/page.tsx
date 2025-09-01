@@ -19,6 +19,8 @@ import { th } from "date-fns/locale";
 import { ArrowLeft, Users, Calendar as CalendarIcon, Trash2, PlusCircle } from "lucide-react";
 import { DebtorCreditorEntry } from '@/lib/types';
 import { listenToDebtorCreditorEntries, addDebtorCreditorEntry, updateDebtorCreditorEntry, deleteDebtorCreditorEntry } from '@/services/debtorCreditorService';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+
 
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'LAK', currencyDisplay: 'code', minimumFractionDigits: 0 }).format(value).replace('LAK', 'KIP');
@@ -117,49 +119,66 @@ const AddEntryForm = ({ onAddEntry }: { onAddEntry: (entry: Omit<DebtorCreditorE
     );
 };
 
-const EntriesTable = ({ title, entries, onUpdate, onDelete }: { title: string, entries: DebtorCreditorEntry[], onUpdate: (id: string, fields: Partial<DebtorCreditorEntry>) => void, onDelete: (id: string) => void }) => {
+const EntriesTable = ({ entries, onUpdate, onDelete }: { entries: DebtorCreditorEntry[], onUpdate: (id: string, fields: Partial<DebtorCreditorEntry>) => void, onDelete: (id: string) => void }) => {
+    return (
+        <>
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>วันที่</TableHead>
+                        <TableHead>รายละเอียด</TableHead>
+                        <TableHead className="text-right">จำนวนเงิน</TableHead>
+                        <TableHead className="text-center">ชำระแล้ว</TableHead>
+                        <TableHead><span className="sr-only">ลบ</span></TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {entries.map((entry) => (
+                        <TableRow key={entry.id} className={entry.isPaid ? 'bg-green-50/50 text-muted-foreground' : ''}>
+                            <TableCell>{format(entry.date, "dd/MM/yyyy")}</TableCell>
+                            <TableCell className="font-medium">{entry.description}</TableCell>
+                            <TableCell className="text-right">{formatCurrency(entry.amount)}</TableCell>
+                            <TableCell className="text-center">
+                                <Checkbox checked={entry.isPaid} onCheckedChange={(checked) => onUpdate(entry.id, { isPaid: !!checked })} />
+                            </TableCell>
+                            <TableCell>
+                                <Button variant="ghost" size="icon" onClick={() => onDelete(entry.id)}>
+                                    <Trash2 className="h-4 w-4 text-red-500" />
+                                </Button>
+                            </TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+            {entries.length === 0 && <div className="text-center text-muted-foreground py-4">ไม่มีรายการ</div>}
+        </>
+    );
+};
+
+const SectionAccordionItem = ({ title, entries, onUpdate, onDelete, value }: {
+    title: string;
+    entries: DebtorCreditorEntry[];
+    onUpdate: (id: string, fields: Partial<DebtorCreditorEntry>) => void;
+    onDelete: (id: string) => void;
+    value: string;
+}) => {
     const totalAmount = useMemo(() => entries.reduce((sum, entry) => sum + entry.amount, 0), [entries]);
 
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>{title}</CardTitle>
-                <CardDescription>รวมทั้งหมด: {formatCurrency(totalAmount)}</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>วันที่</TableHead>
-                            <TableHead>รายละเอียด</TableHead>
-                            <TableHead className="text-right">จำนวนเงิน</TableHead>
-                            <TableHead className="text-center">ชำระแล้ว</TableHead>
-                            <TableHead><span className="sr-only">ลบ</span></TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {entries.map((entry) => (
-                            <TableRow key={entry.id} className={entry.isPaid ? 'bg-green-50/50 text-muted-foreground' : ''}>
-                                <TableCell>{format(entry.date, "dd/MM/yyyy")}</TableCell>
-                                <TableCell className="font-medium">{entry.description}</TableCell>
-                                <TableCell className="text-right">{formatCurrency(entry.amount)}</TableCell>
-                                <TableCell className="text-center">
-                                    <Checkbox checked={entry.isPaid} onCheckedChange={(checked) => onUpdate(entry.id, { isPaid: !!checked })} />
-                                </TableCell>
-                                <TableCell>
-                                    <Button variant="ghost" size="icon" onClick={() => onDelete(entry.id)}>
-                                        <Trash2 className="h-4 w-4 text-red-500" />
-                                    </Button>
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-                {entries.length === 0 && <div className="text-center text-muted-foreground py-4">ไม่มีรายการ</div>}
-            </CardContent>
-        </Card>
+        <AccordionItem value={value}>
+            <AccordionTrigger className="text-lg font-bold bg-muted/50 hover:bg-muted px-4 rounded-md">
+                <div className="flex justify-between w-full pr-4">
+                    <span>{title}</span>
+                    <span className="text-base font-semibold text-primary">{formatCurrency(totalAmount)}</span>
+                </div>
+            </AccordionTrigger>
+            <AccordionContent className="p-1">
+                <EntriesTable entries={entries} onUpdate={onUpdate} onDelete={onDelete} />
+            </AccordionContent>
+        </AccordionItem>
     );
 };
+
 
 export default function DebtorsPage() {
     const { toast } = useToast();
@@ -218,10 +237,30 @@ export default function DebtorsPage() {
                     <div className="lg:col-span-1">
                         <AddEntryForm onAddEntry={handleAddEntry} />
                     </div>
-                    <div className="lg:col-span-2 grid gap-4">
-                        <EntriesTable title="ลูกหนี้ (ยังไม่ได้ชำระ)" entries={debtors} onUpdate={handleUpdateEntry} onDelete={handleDeleteEntry} />
-                        <EntriesTable title="เจ้าหนี้ (ยังไม่ได้ชำระ)" entries={creditors} onUpdate={handleUpdateEntry} onDelete={handleDeleteEntry} />
-                        <EntriesTable title="ประวัติการชำระ" entries={history} onUpdate={handleUpdateEntry} onDelete={handleDeleteEntry} />
+                    <div className="lg:col-span-2 flex flex-col gap-2">
+                         <Accordion type="single" collapsible defaultValue="item-debtors" className="w-full">
+                            <SectionAccordionItem
+                                value="item-debtors"
+                                title="ลูกหนี้ (ยังไม่ได้ชำระ)"
+                                entries={debtors}
+                                onUpdate={handleUpdateEntry}
+                                onDelete={handleDeleteEntry}
+                            />
+                            <SectionAccordionItem
+                                value="item-creditors"
+                                title="เจ้าหนี้ (ยังไม่ได้ชำระ)"
+                                entries={creditors}
+                                onUpdate={handleUpdateEntry}
+                                onDelete={handleDeleteEntry}
+                            />
+                             <SectionAccordionItem
+                                value="item-history"
+                                title="ประวัติการชำระ"
+                                entries={history}
+                                onUpdate={handleUpdateEntry}
+                                onDelete={handleDeleteEntry}
+                            />
+                        </Accordion>
                     </div>
                 </div>
             </main>
