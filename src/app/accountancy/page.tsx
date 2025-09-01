@@ -216,9 +216,7 @@ export default function AccountancyPage() {
     const transportRemaining = useMemo(() => {
         return transportEntries.reduce((total, row) => {
             let remaining = 0;
-            if (!row.ans_finished) remaining += (row.ans_amount || 0);
-            if (!row.hal_finished) remaining += (row.hal_amount || 0);
-            if (!row.mx_finished) remaining += (row.mx_amount || 0);
+            if (!row.finished) remaining += (row.amount || 0);
             return total + remaining;
         }, 0);
     }, [transportEntries]);

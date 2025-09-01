@@ -143,7 +143,7 @@ export default function TransportPage() {
 
     const handleAddTransportRow = async (type: 'ANS' | 'HAL' | 'MX') => {
         try {
-            await addTransportEntry(type);
+            await addTransportEntry(type, displayMonth);
             toast({ title: "เพิ่มแถวใหม่สำเร็จ" });
         } catch (error) {
             console.error("Error adding row: ", error);
@@ -162,6 +162,7 @@ export default function TransportPage() {
     };
 
     const handleTransportRowDelete = async (id: string) => {
+        if (!window.confirm("คุณแน่ใจหรือไม่ว่าต้องการลบแถวนี้?")) return;
         try {
             await deleteTransportEntry(id);
             toast({ title: "ลบแถวสำเร็จ" });
@@ -172,8 +173,7 @@ export default function TransportPage() {
     };
 
     const MonthYearSelector = () => {
-        const currentYear = getYear(new Date());
-        const years = Array.from({ length: 12 }, (_, i) => currentYear - 5 + i);
+        const years = [2024, 2025, 2026];
         const months = Array.from({ length: 12 }, (_, i) => setMonth(new Date(), i));
 
         return (

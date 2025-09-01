@@ -12,15 +12,16 @@ import {
     orderBy,
     serverTimestamp,
     Timestamp,
+    where,
     getDocs
 } from 'firebase/firestore';
 import { startOfDay } from 'date-fns';
 
 const transportCollectionRef = collection(db, 'transportEntries');
 
-const createInitialRowState = (type: 'ANS' | 'HAL' | 'MX'): Omit<TransportEntry, 'id' | 'createdAt'> => ({
+const createInitialRowState = (type: 'ANS' | 'HAL' | 'MX', date: Date): Omit<TransportEntry, 'id' | 'createdAt'> => ({
     type: type,
-    date: startOfDay(new Date()),
+    date: startOfDay(date),
     cost: 0,
     amount: 0,
     finished: false,
@@ -45,8 +46,8 @@ export const listenToTransportEntries = (callback: (items: TransportEntry[]) => 
     return unsubscribe;
 };
 
-export const addTransportEntry = async (type: 'ANS' | 'HAL' | 'MX') => {
-    const newEntry = createInitialRowState(type);
+export const addTransportEntry = async (type: 'ANS' | 'HAL' | 'MX', month: Date) => {
+    const newEntry = createInitialRowState(type, month);
     await addDoc(transportCollectionRef, {
         ...newEntry,
         date: Timestamp.fromDate(newEntry.date),
