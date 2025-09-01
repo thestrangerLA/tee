@@ -56,7 +56,7 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead className="w-[120px]">วันที่</TableHead>
+                                <TableHead className="w-[80px]">วันที่</TableHead>
                                 <TableHead>รายละเอียด</TableHead>
                                 <TableHead className="text-right">ต้นทุน</TableHead>
                                 <TableHead className="text-right">จำนวนเงิน</TableHead>
@@ -67,15 +67,14 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
                         <TableBody>
                             {entries.map((row) => (
                                 <TableRow key={row.id}>
-                                    <TableCell className="w-[150px]">
+                                    <TableCell className="w-[80px] p-2">
                                         <Popover>
                                             <PopoverTrigger asChild>
                                                 <Button
                                                     variant={"outline"}
-                                                    className="w-full justify-start text-left font-normal h-8 text-xs"
+                                                    className="w-full justify-center text-center font-normal h-8 text-sm p-0"
                                                 >
-                                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                                    {row.date ? format(row.date, "dd/MM/yyyy") : <span>เลือกวันที่</span>}
+                                                    {row.date ? format(row.date, "d") : <CalendarIcon className="h-4 w-4" />}
                                                 </Button>
                                             </PopoverTrigger>
                                             <PopoverContent className="w-auto p-0">
