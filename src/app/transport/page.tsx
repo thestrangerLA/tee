@@ -56,7 +56,7 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead className="w-[180px]">วันที่</TableHead>
+                                <TableHead className="w-[120px]">วันที่</TableHead>
                                 <TableHead>รายละเอียด</TableHead>
                                 <TableHead className="text-right">ต้นทุน</TableHead>
                                 <TableHead className="text-right">จำนวนเงิน</TableHead>
@@ -72,10 +72,10 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
                                             <PopoverTrigger asChild>
                                                 <Button
                                                     variant={"outline"}
-                                                    className="w-full justify-start text-left font-normal h-8"
+                                                    className="w-full justify-start text-left font-normal h-8 text-xs"
                                                 >
                                                     <CalendarIcon className="mr-2 h-4 w-4" />
-                                                    {row.date ? format(row.date, "PPP", { locale: th }) : <span>เลือกวันที่</span>}
+                                                    {row.date ? format(row.date, "dd/MM/yyyy") : <span>เลือกวันที่</span>}
                                                 </Button>
                                             </PopoverTrigger>
                                             <PopoverContent className="w-auto p-0">
