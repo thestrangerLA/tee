@@ -56,18 +56,18 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead className="w-[80px]">วันที่</TableHead>
-                                <TableHead>รายละเอียด</TableHead>
-                                <TableHead className="text-right">ต้นทุน</TableHead>
-                                <TableHead className="text-right">จำนวนเงิน</TableHead>
-                                <TableHead className="text-center">เสร็จสิ้น</TableHead>
-                                <TableHead className="text-center">ลบ</TableHead>
+                                <TableHead className="w-[60px]">วันที่</TableHead>
+                                <TableHead className="w-[40%]">รายละเอียด</TableHead>
+                                <TableHead className="w-[150px] text-right">ต้นทุน</TableHead>
+                                <TableHead className="w-[150px] text-right">จำนวนเงิน</TableHead>
+                                <TableHead className="w-[80px] text-center">เสร็จสิ้น</TableHead>
+                                <TableHead className="w-[50px] text-center">ลบ</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {entries.map((row) => (
                                 <TableRow key={row.id}>
-                                    <TableCell className="w-[80px] p-2">
+                                    <TableCell className="p-2">
                                         <Popover>
                                             <PopoverTrigger asChild>
                                                 <Button
@@ -88,19 +88,19 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
                                             </PopoverContent>
                                         </Popover>
                                     </TableCell>
-                                    <TableCell>
+                                    <TableCell className="p-2">
                                         <Input value={row.detail || ''} onChange={(e) => onRowChange(row.id, 'detail', e.target.value)} placeholder="รายละเอียด" className="h-8" />
                                     </TableCell>
-                                     <TableCell>
+                                     <TableCell className="p-2">
                                         <Input type="number" value={row.cost || ''} onChange={(e) => onRowChange(row.id, 'cost', parseFloat(e.target.value) || 0)} placeholder="ต้นทุน" className="h-8 text-right" />
                                     </TableCell>
-                                    <TableCell>
+                                    <TableCell className="p-2">
                                         <Input type="number" value={row.amount || ''} onChange={(e) => onRowChange(row.id, 'amount', parseFloat(e.target.value) || 0)} placeholder="จำนวนเงิน" className="h-8 text-right" />
                                     </TableCell>
-                                     <TableCell className="text-center">
+                                     <TableCell className="text-center p-2">
                                         <Checkbox checked={row.finished} onCheckedChange={(checked) => onRowChange(row.id, 'finished', checked)} />
                                     </TableCell>
-                                    <TableCell className="text-center">
+                                    <TableCell className="text-center p-2">
                                         <Button variant="ghost" size="icon" onClick={() => onRowDelete(row.id)}>
                                             <Trash2 className="h-4 w-4 text-red-500" />
                                         </Button>
@@ -306,3 +306,5 @@ export default function TransportPage() {
         </div>
     );
 }
+
+    
