@@ -7,12 +7,17 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Trash2, ArrowLeft, Truck, PlusCircle } from 'lucide-react';
+import { Trash2, ArrowLeft, Truck, PlusCircle, Calendar as CalendarIcon, ChevronDown } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import Link from 'next/link';
 import { listenToTransportEntries, addTransportEntry, updateTransportEntry, deleteTransportEntry } from '@/services/transportService';
 import type { TransportEntry } from '@/lib/types';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format, startOfDay, isWithinInterval, startOfMonth, endOfMonth, getMonth, setMonth, getYear } from 'date-fns';
+import { th } from 'date-fns/locale';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuPortal, DropdownMenuSubTrigger, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 
 const formatCurrency = (value: number) => {
@@ -30,6 +35,7 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
     
     const totalCost = useMemo(() => entries.reduce((sum, entry) => sum + (entry.cost || 0), 0), [entries]);
     const totalAmount = useMemo(() => entries.reduce((sum, entry) => sum + (entry.amount || 0), 0), [entries]);
+    const totalRemaining = useMemo(() => entries.filter(e => !e.finished).reduce((sum, entry) => sum + (entry.amount || 0), 0), [entries]);
 
     return (
         <Card>
@@ -37,7 +43,7 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
                 <div>
                     <CardTitle>{title}</CardTitle>
                     <CardDescription>
-                        ต้นทุนรวม: {formatCurrency(totalCost)} | จำนวนเงินรวม: {formatCurrency(totalAmount)}
+                        จำนวนเงินรวม: {formatCurrency(totalAmount)} | คงเหลือ: {formatCurrency(totalRemaining)}
                     </CardDescription>
                 </div>
                 <Button size="sm" onClick={() => onAddRow(type)}>
@@ -50,7 +56,7 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead className="w-1/4">วันที่</TableHead>
+                                <TableHead className="w-[180px]">วันที่</TableHead>
                                 <TableHead className="text-right">ต้นทุน</TableHead>
                                 <TableHead className="text-right">จำนวนเงิน</TableHead>
                                 <TableHead className="text-center">เสร็จสิ้น</TableHead>
@@ -61,7 +67,26 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
                             {entries.map((row) => (
                                 <TableRow key={row.id}>
                                     <TableCell>
-                                        <Input type="text" value={row.date} onChange={(e) => onRowChange(row.id, 'date', e.target.value)} placeholder="วันที่" className="h-8" />
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <Button
+                                                    variant={"outline"}
+                                                    className="w-full justify-start text-left font-normal h-8"
+                                                >
+                                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                                    {row.date ? format(row.date, "PPP", { locale: th }) : <span>เลือกวันที่</span>}
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-auto p-0">
+                                                <Calendar
+                                                    mode="single"
+                                                    selected={row.date}
+                                                    onSelect={(d) => onRowChange(row.id, 'date', d ? startOfDay(d) : new Date())}
+                                                    initialFocus
+                                                    locale={th}
+                                                />
+                                            </PopoverContent>
+                                        </Popover>
                                     </TableCell>
                                      <TableCell>
                                         <Input type="number" value={row.cost || ''} onChange={(e) => onRowChange(row.id, 'cost', parseFloat(e.target.value) || 0)} placeholder="ต้นทุน" className="h-8 text-right" />
@@ -79,7 +104,7 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
                                     </TableCell>
                                 </TableRow>
                             ))}
-                             {entries.length === 0 && <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">ไม่มีรายการ</TableCell></TableRow>}
+                             {entries.length === 0 && <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-4">ไม่มีรายการในเดือนที่เลือก</TableCell></TableRow>}
                         </TableBody>
                     </Table>
                 </div>
@@ -92,21 +117,29 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
 export default function TransportPage() {
     const { toast } = useToast();
     const [allEntries, setAllEntries] = useState<TransportEntry[]>([]);
+    const [displayMonth, setDisplayMonth] = useState<Date>(new Date());
     
     useEffect(() => {
         const unsubscribe = listenToTransportEntries(setAllEntries);
         return () => unsubscribe();
     }, []);
 
-    const ansEntries = useMemo(() => allEntries.filter(e => e.type === 'ANS'), [allEntries]);
-    const halEntries = useMemo(() => allEntries.filter(e => e.type === 'HAL'), [allEntries]);
-    const mxEntries = useMemo(() => allEntries.filter(e => e.type === 'MX'), [allEntries]);
+    const filteredEntries = useMemo(() => {
+        const start = startOfMonth(displayMonth);
+        const end = endOfMonth(displayMonth);
+        return allEntries.filter(entry => isWithinInterval(entry.date, { start, end }));
+    }, [allEntries, displayMonth]);
 
 
-    const transportTotalAmount = useMemo(() => allEntries.reduce((total, row) => total + (row.amount || 0), 0), [allEntries]);
-    const transportTotalCost = useMemo(() => allEntries.reduce((total, row) => total + (row.cost || 0), 0), [allEntries]);
+    const ansEntries = useMemo(() => filteredEntries.filter(e => e.type === 'ANS'), [filteredEntries]);
+    const halEntries = useMemo(() => filteredEntries.filter(e => e.type === 'HAL'), [filteredEntries]);
+    const mxEntries = useMemo(() => filteredEntries.filter(e => e.type === 'MX'), [filteredEntries]);
+
+
+    const transportTotalAmount = useMemo(() => filteredEntries.reduce((total, row) => total + (row.amount || 0), 0), [filteredEntries]);
+    const transportTotalCost = useMemo(() => filteredEntries.reduce((total, row) => total + (row.cost || 0), 0), [filteredEntries]);
     const transportProfit = useMemo(() => transportTotalAmount - transportTotalCost, [transportTotalAmount, transportTotalCost]);
-    const transportRemaining = useMemo(() => allEntries.filter(e => !e.finished).reduce((total, row) => total + (row.amount || 0), 0), [allEntries]);
+    const transportRemaining = useMemo(() => filteredEntries.filter(e => !e.finished).reduce((total, row) => total + (row.amount || 0), 0), [filteredEntries]);
 
     const handleAddTransportRow = async (type: 'ANS' | 'HAL' | 'MX') => {
         try {
@@ -138,6 +171,47 @@ export default function TransportPage() {
         }
     };
 
+    const MonthYearSelector = () => {
+        const currentYear = getYear(new Date());
+        const years = Array.from({ length: 12 }, (_, i) => currentYear - 5 + i);
+        const months = Array.from({ length: 12 }, (_, i) => setMonth(new Date(), i));
+
+        return (
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="flex items-center gap-2">
+                        {format(displayMonth, "LLLL yyyy", { locale: th })}
+                        <ChevronDown className="h-4 w-4" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    {years.map(year => (
+                         <DropdownMenuSub key={year}>
+                            <DropdownMenuSubTrigger>
+                                <span>{year + 543}</span>
+                            </DropdownMenuSubTrigger>
+                            <DropdownMenuPortal>
+                                <DropdownMenuSubContent>
+                                    {months.map(month => (
+                                        <DropdownMenuItem 
+                                            key={getMonth(month)} 
+                                            onClick={() => {
+                                                const newDate = new Date(year, getMonth(month), 1);
+                                                setDisplayMonth(newDate);
+                                            }}
+                                        >
+                                            {format(month, "LLLL", { locale: th })}
+                                        </DropdownMenuItem>
+                                    ))}
+                                </DropdownMenuSubContent>
+                             </DropdownMenuPortal>
+                        </DropdownMenuSub>
+                    ))}
+                </DropdownMenuContent>
+            </DropdownMenu>
+        );
+    };
+
 
     return (
         <div className="flex min-h-screen w-full flex-col bg-muted/40">
@@ -151,6 +225,9 @@ export default function TransportPage() {
                 <div className="flex items-center gap-2">
                     <Truck className="h-6 w-6 text-primary" />
                     <h1 className="text-xl font-bold tracking-tight">บัญชีขนส่ง</h1>
+                </div>
+                 <div className="ml-auto">
+                    <MonthYearSelector />
                 </div>
             </header>
             <main className="flex-1 p-4 sm:px-6 sm:py-0 md:grid md:grid-cols-3 md:gap-8">
@@ -200,7 +277,7 @@ export default function TransportPage() {
                 <div className="md:col-span-1 mt-4 md:mt-0 flex flex-col gap-4">
                      <Card>
                         <CardHeader>
-                            <CardTitle>สรุปยอดรวมทั้งหมด</CardTitle>
+                            <CardTitle>สรุปยอดรวม (เดือนที่เลือก)</CardTitle>
                         </CardHeader>
                         <CardContent className="flex flex-col gap-4">
                              <div className="flex justify-between items-center p-4 bg-muted rounded-md">

@@ -14,12 +14,13 @@ import {
     Timestamp,
     getDocs
 } from 'firebase/firestore';
+import { startOfDay } from 'date-fns';
 
 const transportCollectionRef = collection(db, 'transportEntries');
 
 const createInitialRowState = (type: 'ANS' | 'HAL' | 'MX'): Omit<TransportEntry, 'id' | 'createdAt'> => ({
     type: type,
-    date: '',
+    date: startOfDay(new Date()),
     cost: 0,
     amount: 0,
     finished: false,
@@ -27,7 +28,7 @@ const createInitialRowState = (type: 'ANS' | 'HAL' | 'MX'): Omit<TransportEntry,
 
 
 export const listenToTransportEntries = (callback: (items: TransportEntry[]) => void) => {
-    const q = query(transportCollectionRef, orderBy('createdAt', 'asc'));
+    const q = query(transportCollectionRef, orderBy('date', 'desc'));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
         const entries: TransportEntry[] = [];
         querySnapshot.forEach((doc) => {
@@ -35,6 +36,7 @@ export const listenToTransportEntries = (callback: (items: TransportEntry[]) => 
             entries.push({ 
                 id: doc.id, 
                 ...data,
+                date: (data.date as Timestamp).toDate(),
                 createdAt: (data.createdAt as Timestamp)?.toDate() 
             } as TransportEntry);
         });
@@ -44,15 +46,23 @@ export const listenToTransportEntries = (callback: (items: TransportEntry[]) => 
 };
 
 export const addTransportEntry = async (type: 'ANS' | 'HAL' | 'MX') => {
+    const newEntry = createInitialRowState(type);
     await addDoc(transportCollectionRef, {
-        ...createInitialRowState(type),
+        ...newEntry,
+        date: Timestamp.fromDate(newEntry.date),
         createdAt: serverTimestamp()
     });
 };
 
 export const updateTransportEntry = async (id: string, updatedFields: Partial<Omit<TransportEntry, 'id' | 'createdAt'>>) => {
     const transportDoc = doc(db, 'transportEntries', id);
-    await updateDoc(transportDoc, updatedFields);
+    
+    if (updatedFields.date && updatedFields.date instanceof Date) {
+        const { date, ...rest } = updatedFields;
+        await updateDoc(transportDoc, { ...rest, date: Timestamp.fromDate(date) });
+    } else {
+        await updateDoc(transportDoc, updatedFields);
+    }
 };
 
 export const deleteTransportEntry = async (id: string) => {

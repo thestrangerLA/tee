@@ -30,7 +30,7 @@ export interface AccountSummary {
 export interface TransportEntry {
     id: string;
     type: 'ANS' | 'HAL' | 'MX';
-    date: string;
+    date: Date;
     cost: number;
     amount: number;
     finished: boolean;
