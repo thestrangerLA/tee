@@ -19,9 +19,9 @@ import { startOfDay } from 'date-fns';
 
 const transportCollectionRef = collection(db, 'transportEntries');
 
-const createInitialRowState = (type: 'ANS' | 'HAL' | 'MX', date: Date): Omit<TransportEntry, 'id' | 'createdAt'> => ({
+const createInitialRowState = (type: 'ANS' | 'HAL' | 'MX'): Omit<TransportEntry, 'id' | 'createdAt'> => ({
     type: type,
-    date: startOfDay(date),
+    date: startOfDay(new Date()), // Default to today
     detail: '',
     cost: 0,
     amount: 0,
@@ -47,9 +47,8 @@ export const listenToTransportEntries = (callback: (items: TransportEntry[]) => 
     return unsubscribe;
 };
 
-export const addTransportEntry = async (type: 'ANS' | 'HAL' | 'MX', month: Date) => {
-    // Create the new entry with a date from the selected month, not necessarily the current date
-    const newEntry = createInitialRowState(type, month);
+export const addTransportEntry = async (type: 'ANS' | 'HAL' | 'MX') => {
+    const newEntry = createInitialRowState(type);
     await addDoc(transportCollectionRef, {
         ...newEntry,
         date: Timestamp.fromDate(newEntry.date),
@@ -72,5 +71,3 @@ export const deleteTransportEntry = async (id: string) => {
     const transportDoc = doc(db, 'transportEntries', id);
     await deleteDoc(transportDoc);
 };
-
-    

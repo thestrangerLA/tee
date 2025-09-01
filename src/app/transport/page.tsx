@@ -15,13 +15,13 @@ import type { TransportEntry } from '@/lib/types';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { format, startOfDay, isWithinInterval, startOfMonth, endOfMonth, getMonth, setMonth, getYear } from 'date-fns';
+import { format, startOfDay, isWithinInterval, startOfMonth, endOfMonth, getMonth, setMonth, getYear, isSameDay } from 'date-fns';
 import { th } from 'date-fns/locale';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuPortal, DropdownMenuSubTrigger, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 
 const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'LAK', currencyDisplay: 'code', minimumFractionDigits: 0 }).format(value).replace('LAK', 'KIP');
+    return new Intl.NumberFormat('th-TH', { minimumFractionDigits: 0 }).format(value);
 }
 
 const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddRow }: { 
@@ -33,9 +33,28 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
     onAddRow: (type: 'ANS' | 'HAL' | 'MX') => void
 }) => {
     
-    const totalCost = useMemo(() => entries.reduce((sum, entry) => sum + (entry.cost || 0), 0), [entries]);
     const totalAmount = useMemo(() => entries.reduce((sum, entry) => sum + (entry.amount || 0), 0), [entries]);
     const totalRemaining = useMemo(() => entries.filter(e => !e.finished).reduce((sum, entry) => sum + (entry.amount || 0), 0), [entries]);
+    
+    const dailySummaries = useMemo(() => {
+        const groupedByDay: Record<string, { date: Date, profit: number, entries: TransportEntry[] }> = {};
+
+        entries.forEach(entry => {
+            const dayKey = format(entry.date, 'yyyy-MM-dd');
+            if (!groupedByDay[dayKey]) {
+                groupedByDay[dayKey] = {
+                    date: entry.date,
+                    profit: 0,
+                    entries: []
+                };
+            }
+            groupedByDay[dayKey].entries.push(entry);
+            groupedByDay[dayKey].profit += (entry.amount || 0) - (entry.cost || 0);
+        });
+
+        return Object.values(groupedByDay).sort((a, b) => b.date.getTime() - a.date.getTime());
+    }, [entries]);
+
 
     return (
         <Card>
@@ -53,69 +72,90 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
             </CardHeader>
             <CardContent>
                  <div className="overflow-x-auto">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead className="w-[60px]">วันที่</TableHead>
-                                <TableHead className="w-[40%]">รายละเอียด</TableHead>
-                                <TableHead className="w-[150px] text-right">ต้นทุน</TableHead>
-                                <TableHead className="w-[150px] text-right">จำนวนเงิน</TableHead>
-                                <TableHead className="w-[150px] text-right">กำไร</TableHead>
-                                <TableHead className="w-[80px] text-center">เสร็จสิ้น</TableHead>
-                                <TableHead className="w-[50px] text-center">ลบ</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {entries.map((row) => {
-                                const profit = (row.amount || 0) - (row.cost || 0);
-                                return (
-                                <TableRow key={row.id}>
-                                    <TableCell className="p-2">
-                                        <Popover>
-                                            <PopoverTrigger asChild>
-                                                <Button
-                                                    variant={"outline"}
-                                                    className="w-full justify-center text-center font-normal h-8 text-sm p-0"
-                                                >
-                                                    {row.date ? format(row.date, "d") : <CalendarIcon className="h-4 w-4" />}
-                                                </Button>
-                                            </PopoverTrigger>
-                                            <PopoverContent className="w-auto p-0">
-                                                <Calendar
-                                                    mode="single"
-                                                    selected={row.date}
-                                                    onSelect={(d) => onRowChange(row.id, 'date', d ? startOfDay(d) : new Date())}
-                                                    initialFocus
-                                                    locale={th}
-                                                />
-                                            </PopoverContent>
-                                        </Popover>
-                                    </TableCell>
-                                    <TableCell className="p-2">
-                                        <Input value={row.detail || ''} onChange={(e) => onRowChange(row.id, 'detail', e.target.value)} placeholder="รายละเอียด" className="h-8" />
-                                    </TableCell>
-                                     <TableCell className="p-2">
-                                        <Input type="number" value={row.cost || ''} onChange={(e) => onRowChange(row.id, 'cost', parseFloat(e.target.value) || 0)} placeholder="ต้นทุน" className="h-8 text-right" />
-                                    </TableCell>
-                                    <TableCell className="p-2">
-                                        <Input type="number" value={row.amount || ''} onChange={(e) => onRowChange(row.id, 'amount', parseFloat(e.target.value) || 0)} placeholder="จำนวนเงิน" className="h-8 text-right" />
-                                    </TableCell>
-                                    <TableCell className="p-2 text-right font-medium">
-                                        {formatCurrency(profit)}
-                                    </TableCell>
-                                     <TableCell className="text-center p-2">
-                                        <Checkbox checked={row.finished} onCheckedChange={(checked) => onRowChange(row.id, 'finished', checked)} />
-                                    </TableCell>
-                                    <TableCell className="text-center p-2">
-                                        <Button variant="ghost" size="icon" onClick={() => onRowDelete(row.id)}>
-                                            <Trash2 className="h-4 w-4 text-red-500" />
-                                        </Button>
-                                    </TableCell>
-                                </TableRow>
-                            )})}
-                             {entries.length === 0 && <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-4">ไม่มีรายการในเดือนที่เลือก</TableCell></TableRow>}
-                        </TableBody>
-                    </Table>
+                    {dailySummaries.length > 0 ? (
+                         <Accordion type="single" collapsible className="w-full">
+                            {dailySummaries.map((summary, index) => (
+                                <AccordionItem value={`item-${index}`} key={index}>
+                                    <AccordionTrigger>
+                                        <div className="flex justify-between w-full pr-4">
+                                            <div className="font-semibold">{format(summary.date, "EEEEที่ do MMMM", { locale: th })}</div>
+                                            <div className="flex gap-4">
+                                                <span className={summary.profit >= 0 ? 'text-green-600' : 'text-red-600'}>
+                                                    กำไร: {formatCurrency(summary.profit)}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </AccordionTrigger>
+                                    <AccordionContent>
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead className="w-[60px]">วันที่</TableHead>
+                                                    <TableHead className="w-[40%]">รายละเอียด</TableHead>
+                                                    <TableHead className="w-[150px] text-right">ต้นทุน</TableHead>
+                                                    <TableHead className="w-[150px] text-right">จำนวนเงิน</TableHead>
+                                                    <TableHead className="w-[150px] text-right">กำไร</TableHead>
+                                                    <TableHead className="w-[80px] text-center">เสร็จสิ้น</TableHead>
+                                                    <TableHead className="w-[50px] text-center">ลบ</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {summary.entries.map((row) => {
+                                                    const profit = (row.amount || 0) - (row.cost || 0);
+                                                    return (
+                                                    <TableRow key={row.id}>
+                                                        <TableCell className="p-2">
+                                                            <Popover>
+                                                                <PopoverTrigger asChild>
+                                                                    <Button
+                                                                        variant={"outline"}
+                                                                        className="w-full justify-center text-center font-normal h-8 text-xs p-1"
+                                                                    >
+                                                                        {row.date ? format(row.date, "d") : <CalendarIcon className="h-4 w-4" />}
+                                                                    </Button>
+                                                                </PopoverTrigger>
+                                                                <PopoverContent className="w-auto p-0">
+                                                                    <Calendar
+                                                                        mode="single"
+                                                                        selected={row.date}
+                                                                        onSelect={(d) => onRowChange(row.id, 'date', d ? startOfDay(d) : new Date())}
+                                                                        initialFocus
+                                                                        locale={th}
+                                                                    />
+                                                                </PopoverContent>
+                                                            </Popover>
+                                                        </TableCell>
+                                                        <TableCell className="p-2">
+                                                            <Input value={row.detail || ''} onChange={(e) => onRowChange(row.id, 'detail', e.target.value)} placeholder="รายละเอียด" className="h-8" />
+                                                        </TableCell>
+                                                        <TableCell className="p-2">
+                                                            <Input type="number" value={row.cost || ''} onChange={(e) => onRowChange(row.id, 'cost', parseFloat(e.target.value) || 0)} placeholder="ต้นทุน" className="h-8 text-right" />
+                                                        </TableCell>
+                                                        <TableCell className="p-2">
+                                                            <Input type="number" value={row.amount || ''} onChange={(e) => onRowChange(row.id, 'amount', parseFloat(e.target.value) || 0)} placeholder="จำนวนเงิน" className="h-8 text-right" />
+                                                        </TableCell>
+                                                        <TableCell className={`p-2 text-right font-medium ${profit >= 0 ? '' : 'text-red-600'}`}>
+                                                            {formatCurrency(profit)}
+                                                        </TableCell>
+                                                        <TableCell className="text-center p-2">
+                                                            <Checkbox checked={row.finished} onCheckedChange={(checked) => onRowChange(row.id, 'finished', checked)} />
+                                                        </TableCell>
+                                                        <TableCell className="text-center p-2">
+                                                            <Button variant="ghost" size="icon" onClick={() => onRowDelete(row.id)}>
+                                                                <Trash2 className="h-4 w-4 text-red-500" />
+                                                            </Button>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                )})}
+                                            </TableBody>
+                                        </Table>
+                                    </AccordionContent>
+                                </AccordionItem>
+                            ))}
+                         </Accordion>
+                    ) : (
+                         <div className="text-center text-muted-foreground py-4">ไม่มีรายการในเดือนที่เลือก</div>
+                    )}
                 </div>
             </CardContent>
         </Card>
@@ -152,7 +192,7 @@ export default function TransportPage() {
 
     const handleAddTransportRow = async (type: 'ANS' | 'HAL' | 'MX') => {
         try {
-            await addTransportEntry(type, displayMonth);
+            await addTransportEntry(type);
             toast({ title: "เพิ่มแถวใหม่สำเร็จ" });
         } catch (error) {
             console.error("Error adding row: ", error);
@@ -312,7 +352,3 @@ export default function TransportPage() {
         </div>
     );
 }
-
-    
-
-    
