@@ -17,27 +17,16 @@ import {
 
 const transportCollectionRef = collection(db, 'transportEntries');
 
-const initialRowState: Omit<TransportEntry, 'id' | 'createdAt'> = {
-    ans_date: '', ans_cost: 0, ans_amount: 0, ans_finished: false,
-    hal_date: '', hal_cost: 0, hal_amount: 0, hal_finished: false,
-    mx_date: '', mx_cost: 0, mx_amount: 0, mx_finished: false,
-};
+const createInitialRowState = (type: 'ANS' | 'HAL' | 'MX'): Omit<TransportEntry, 'id' | 'createdAt'> => ({
+    type: type,
+    date: '',
+    cost: 0,
+    amount: 0,
+    finished: false,
+});
 
-// Function to ensure at least one entry exists
-const ensureInitialEntry = async () => {
-    const snapshot = await getDocs(query(transportCollectionRef));
-    if (snapshot.empty) {
-        await addDoc(transportCollectionRef, {
-            ...initialRowState,
-            createdAt: serverTimestamp()
-        });
-    }
-};
 
 export const listenToTransportEntries = (callback: (items: TransportEntry[]) => void) => {
-    // Ensure there's an initial entry before listening
-    ensureInitialEntry();
-
     const q = query(transportCollectionRef, orderBy('createdAt', 'asc'));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
         const entries: TransportEntry[] = [];
@@ -46,7 +35,7 @@ export const listenToTransportEntries = (callback: (items: TransportEntry[]) => 
             entries.push({ 
                 id: doc.id, 
                 ...data,
-                createdAt: (data.createdAt as Timestamp)?.toDate() // Convert Firestore Timestamp to JS Date
+                createdAt: (data.createdAt as Timestamp)?.toDate() 
             } as TransportEntry);
         });
         callback(entries);
@@ -54,9 +43,9 @@ export const listenToTransportEntries = (callback: (items: TransportEntry[]) => 
     return unsubscribe;
 };
 
-export const addTransportEntry = async () => {
+export const addTransportEntry = async (type: 'ANS' | 'HAL' | 'MX') => {
     await addDoc(transportCollectionRef, {
-        ...initialRowState,
+        ...createInitialRowState(type),
         createdAt: serverTimestamp()
     });
 };

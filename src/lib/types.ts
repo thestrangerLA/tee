@@ -29,18 +29,11 @@ export interface AccountSummary {
 
 export interface TransportEntry {
     id: string;
-    ans_date: string;
-    ans_cost: number;
-    ans_amount: number;
-    ans_finished: boolean;
-    hal_date: string;
-    hal_cost: number;
-    hal_amount: number;
-    hal_finished: boolean;
-    mx_date: string;
-    mx_cost: number;
-    mx_amount: number;
-    mx_finished: boolean;
+    type: 'ANS' | 'HAL' | 'MX';
+    date: string;
+    cost: number;
+    amount: number;
+    finished: boolean;
     createdAt: Date; 
 }
 

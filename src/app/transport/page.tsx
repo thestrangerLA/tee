@@ -7,101 +7,110 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Trash2, ArrowLeft, Truck } from 'lucide-react';
+import { Trash2, ArrowLeft, Truck, PlusCircle } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import Link from 'next/link';
 import { listenToTransportEntries, addTransportEntry, updateTransportEntry, deleteTransportEntry } from '@/services/transportService';
 import type { TransportEntry } from '@/lib/types';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+
 
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'LAK', currencyDisplay: 'code', minimumFractionDigits: 0 }).format(value).replace('LAK', 'KIP');
 }
 
-const TransportEntryRow = ({ row, onRowChange, onRowDelete }: { row: TransportEntry, onRowChange: (id: string, field: keyof TransportEntry, value: any) => void, onRowDelete: (id: string) => void }) => (
-    <TableRow>
-        <TableCell className="p-1">
-            <Input type="text" value={row.ans_date} onChange={(e) => onRowChange(row.id, 'ans_date', e.target.value)} placeholder="วันที่" className="h-8" />
-        </TableCell>
-        <TableCell className="p-1">
-            <Input type="number" value={row.ans_cost || ''} onChange={(e) => onRowChange(row.id, 'ans_cost', parseFloat(e.target.value) || 0)} placeholder="ต้นทุน" className="h-8" />
-        </TableCell>
-        <TableCell className="p-1">
-            <Input type="number" value={row.ans_amount || ''} onChange={(e) => onRowChange(row.id, 'ans_amount', parseFloat(e.target.value) || 0)} placeholder="จำนวนเงิน" className="h-8" />
-        </TableCell>
-        <TableCell className="p-1 text-center">
-             <Checkbox checked={row.ans_finished} onCheckedChange={(checked) => onRowChange(row.id, 'ans_finished', checked)} />
-        </TableCell>
-        <TableCell className="p-1">
-            <Input type="text" value={row.hal_date} onChange={(e) => onRowChange(row.id, 'hal_date', e.target.value)} placeholder="วันที่" className="h-8" />
-        </TableCell>
-        <TableCell className="p-1">
-            <Input type="number" value={row.hal_cost || ''} onChange={(e) => onRowChange(row.id, 'hal_cost', parseFloat(e.target.value) || 0)} placeholder="ต้นทุน" className="h-8" />
-        </TableCell>
-        <TableCell className="p-1">
-            <Input type="number" value={row.hal_amount || ''} onChange={(e) => onRowChange(row.id, 'hal_amount', parseFloat(e.target.value) || 0)} placeholder="จำนวนเงิน" className="h-8" />
-        </TableCell>
-        <TableCell className="p-1 text-center">
-            <Checkbox checked={row.hal_finished} onCheckedChange={(checked) => onRowChange(row.id, 'hal_finished', checked)} />
-        </TableCell>
-        <TableCell className="p-1">
-            <Input type="text" value={row.mx_date} onChange={(e) => onRowChange(row.id, 'mx_date', e.target.value)} placeholder="วันที่" className="h-8" />
-        </TableCell>
-         <TableCell className="p-1">
-            <Input type="number" value={row.mx_cost || ''} onChange={(e) => onRowChange(row.id, 'mx_cost', parseFloat(e.target.value) || 0)} placeholder="ต้นทุน" className="h-8" />
-        </TableCell>
-        <TableCell className="p-1">
-            <Input type="number" value={row.mx_amount || ''} onChange={(e) => onRowChange(row.id, 'mx_amount', parseFloat(e.target.value) || 0)} placeholder="จำนวนเงิน" className="h-8" />
-        </TableCell>
-        <TableCell className="p-1 text-center">
-             <Checkbox checked={row.mx_finished} onCheckedChange={(checked) => onRowChange(row.id, 'mx_finished', checked)} />
-        </TableCell>
-        <TableCell className="p-1 text-center">
-            <Button variant="ghost" size="icon" onClick={() => onRowDelete(row.id)}>
-                <Trash2 className="h-4 w-4 text-red-500" />
-            </Button>
-        </TableCell>
-    </TableRow>
-);
+const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddRow }: { 
+    type: 'ANS' | 'HAL' | 'MX',
+    title: string, 
+    entries: TransportEntry[],
+    onRowChange: (id: string, field: keyof TransportEntry, value: any) => void,
+    onRowDelete: (id: string) => void,
+    onAddRow: (type: 'ANS' | 'HAL' | 'MX') => void
+}) => {
+    
+    const totalCost = useMemo(() => entries.reduce((sum, entry) => sum + (entry.cost || 0), 0), [entries]);
+    const totalAmount = useMemo(() => entries.reduce((sum, entry) => sum + (entry.amount || 0), 0), [entries]);
+
+    return (
+        <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                    <CardTitle>{title}</CardTitle>
+                    <CardDescription>
+                        ต้นทุนรวม: {formatCurrency(totalCost)} | จำนวนเงินรวม: {formatCurrency(totalAmount)}
+                    </CardDescription>
+                </div>
+                <Button size="sm" onClick={() => onAddRow(type)}>
+                    <PlusCircle className="mr-2 h-4 w-4"/>
+                    เพิ่มแถว
+                </Button>
+            </CardHeader>
+            <CardContent>
+                 <div className="overflow-x-auto">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="w-1/4">วันที่</TableHead>
+                                <TableHead className="text-right">ต้นทุน</TableHead>
+                                <TableHead className="text-right">จำนวนเงิน</TableHead>
+                                <TableHead className="text-center">เสร็จสิ้น</TableHead>
+                                <TableHead className="text-center">ลบ</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {entries.map((row) => (
+                                <TableRow key={row.id}>
+                                    <TableCell>
+                                        <Input type="text" value={row.date} onChange={(e) => onRowChange(row.id, 'date', e.target.value)} placeholder="วันที่" className="h-8" />
+                                    </TableCell>
+                                     <TableCell>
+                                        <Input type="number" value={row.cost || ''} onChange={(e) => onRowChange(row.id, 'cost', parseFloat(e.target.value) || 0)} placeholder="ต้นทุน" className="h-8 text-right" />
+                                    </TableCell>
+                                    <TableCell>
+                                        <Input type="number" value={row.amount || ''} onChange={(e) => onRowChange(row.id, 'amount', parseFloat(e.target.value) || 0)} placeholder="จำนวนเงิน" className="h-8 text-right" />
+                                    </TableCell>
+                                     <TableCell className="text-center">
+                                        <Checkbox checked={row.finished} onCheckedChange={(checked) => onRowChange(row.id, 'finished', checked)} />
+                                    </TableCell>
+                                    <TableCell className="text-center">
+                                        <Button variant="ghost" size="icon" onClick={() => onRowDelete(row.id)}>
+                                            <Trash2 className="h-4 w-4 text-red-500" />
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                             {entries.length === 0 && <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">ไม่มีรายการ</TableCell></TableRow>}
+                        </TableBody>
+                    </Table>
+                </div>
+            </CardContent>
+        </Card>
+    );
+};
 
 
 export default function TransportPage() {
     const { toast } = useToast();
-    const [transportRows, setTransportRows] = useState<TransportEntry[]>([]);
+    const [allEntries, setAllEntries] = useState<TransportEntry[]>([]);
     
     useEffect(() => {
-        const unsubscribe = listenToTransportEntries(setTransportRows);
+        const unsubscribe = listenToTransportEntries(setAllEntries);
         return () => unsubscribe();
     }, []);
 
-    const transportTotalAmount = useMemo(() => {
-        return transportRows.reduce((total, row) => {
-            return total + (row.ans_amount || 0) + (row.hal_amount || 0) + (row.mx_amount || 0);
-        }, 0);
-    }, [transportRows]);
-    
-    const transportTotalCost = useMemo(() => {
-        return transportRows.reduce((total, row) => {
-            return total + (row.ans_cost || 0) + (row.hal_cost || 0) + (row.mx_cost || 0);
-        }, 0);
-    }, [transportRows]);
+    const ansEntries = useMemo(() => allEntries.filter(e => e.type === 'ANS'), [allEntries]);
+    const halEntries = useMemo(() => allEntries.filter(e => e.type === 'HAL'), [allEntries]);
+    const mxEntries = useMemo(() => allEntries.filter(e => e.type === 'MX'), [allEntries]);
 
-    const transportProfit = useMemo(() => {
-        return transportTotalAmount - transportTotalCost;
-    }, [transportTotalAmount, transportTotalCost]);
 
-    const transportRemaining = useMemo(() => {
-        return transportRows.reduce((total, row) => {
-            let remaining = 0;
-            if (!row.ans_finished) remaining += (row.ans_amount || 0);
-            if (!row.hal_finished) remaining += (row.hal_amount || 0);
-            if (!row.mx_finished) remaining += (row.mx_amount || 0);
-            return total + remaining;
-        }, 0);
-    }, [transportRows]);
+    const transportTotalAmount = useMemo(() => allEntries.reduce((total, row) => total + (row.amount || 0), 0), [allEntries]);
+    const transportTotalCost = useMemo(() => allEntries.reduce((total, row) => total + (row.cost || 0), 0), [allEntries]);
+    const transportProfit = useMemo(() => transportTotalAmount - transportTotalCost, [transportTotalAmount, transportTotalCost]);
+    const transportRemaining = useMemo(() => allEntries.filter(e => !e.finished).reduce((total, row) => total + (row.amount || 0), 0), [allEntries]);
 
-    const handleAddTransportRow = async () => {
+    const handleAddTransportRow = async (type: 'ANS' | 'HAL' | 'MX') => {
         try {
-            await addTransportEntry();
+            await addTransportEntry(type);
             toast({ title: "เพิ่มแถวใหม่สำเร็จ" });
         } catch (error) {
             console.error("Error adding row: ", error);
@@ -112,6 +121,7 @@ export default function TransportPage() {
     const handleTransportRowChange = async (id: string, field: keyof TransportEntry, value: any) => {
         try {
             await updateTransportEntry(id, { [field]: value });
+            // No toast needed for real-time updates to avoid being noisy
         } catch (error) {
             console.error("Error updating row: ", error);
             toast({ title: "เกิดข้อผิดพลาด", description: "ไม่สามารถอัปเดตข้อมูลได้", variant: "destructive" });
@@ -119,10 +129,6 @@ export default function TransportPage() {
     };
 
     const handleTransportRowDelete = async (id: string) => {
-        if (transportRows.length <= 1) {
-            toast({ title: "ไม่สามารถลบได้", description: "ต้องมีอย่างน้อย 1 แถว", variant: "destructive" });
-            return;
-        }
         try {
             await deleteTransportEntry(id);
             toast({ title: "ลบแถวสำเร็จ" });
@@ -148,62 +154,53 @@ export default function TransportPage() {
                 </div>
             </header>
             <main className="flex-1 p-4 sm:px-6 sm:py-0 md:grid md:grid-cols-3 md:gap-8">
-                <div className="md:col-span-2">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>บันทึกค่าขนส่ง</CardTitle>
-                            <CardDescription>กรอกข้อมูลค่าใช้จ่ายในการขนส่งแต่ละประเภท (ข้อมูลจะบันทึกอัตโนมัติ)</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="overflow-x-auto">
-                                <Table className="min-w-full whitespace-nowrap">
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead colSpan={4} className="text-center border-r bg-blue-50">ANS</TableHead>
-                                            <TableHead colSpan={4} className="text-center border-r bg-green-50">HAL</TableHead>
-                                            <TableHead colSpan={4} className="text-center border-r bg-orange-50">MX</TableHead>
-                                            <TableHead className="text-center bg-gray-50">ลบ</TableHead>
-                                        </TableRow>
-                                        <TableRow>
-                                            {/* ANS */}
-                                            <TableHead className="text-center">วันที่</TableHead>
-                                            <TableHead className="text-center">ต้นทุน</TableHead>
-                                            <TableHead className="text-center">จำนวนเงิน</TableHead>
-                                            <TableHead className="text-center border-r">เสร็จสิ้น</TableHead>
-                                            {/* HAL */}
-                                            <TableHead className="text-center">วันที่</TableHead>
-                                            <TableHead className="text-center">ต้นทุน</TableHead>
-                                            <TableHead className="text-center">จำนวนเงิน</TableHead>
-                                            <TableHead className="text-center border-r">เสร็จสิ้น</TableHead>
-                                            {/* MX */}
-                                            <TableHead className="text-center">วันที่</TableHead>
-                                            <TableHead className="text-center">ต้นทุน</TableHead>
-                                            <TableHead className="text-center">จำนวนเงิน</TableHead>
-                                            <TableHead className="text-center border-r">เสร็จสิ้น</TableHead>
-                                            {/* Actions */}
-                                            <TableHead className="text-center"></TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {transportRows.map((row) => (
-                                            <TransportEntryRow 
-                                                key={row.id}
-                                                row={row} 
-                                                onRowChange={handleTransportRowChange}
-                                                onRowDelete={handleTransportRowDelete}
-                                            />
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </div>
-                           
-                        </CardContent>
-                    </Card>
+                <div className="md:col-span-2 flex flex-col gap-4">
+                     <Accordion type="single" collapsible defaultValue="item-ans" className="w-full">
+                        <AccordionItem value="item-ans">
+                            <AccordionTrigger className="text-lg font-bold bg-blue-50 hover:bg-blue-100 px-4 rounded-md">ANS</AccordionTrigger>
+                            <AccordionContent className="p-1">
+                                 <TransportTable 
+                                    type="ANS"
+                                    title="รายการ ANS"
+                                    entries={ansEntries}
+                                    onAddRow={handleAddTransportRow}
+                                    onRowChange={handleTransportRowChange}
+                                    onRowDelete={handleTransportRowDelete}
+                                />
+                            </AccordionContent>
+                        </AccordionItem>
+                        <AccordionItem value="item-hal">
+                             <AccordionTrigger className="text-lg font-bold bg-green-50 hover:bg-green-100 px-4 rounded-md">HAL</AccordionTrigger>
+                            <AccordionContent className="p-1">
+                                <TransportTable 
+                                    type="HAL"
+                                    title="รายการ HAL"
+                                    entries={halEntries}
+                                    onAddRow={handleAddTransportRow}
+                                    onRowChange={handleTransportRowChange}
+                                    onRowDelete={handleTransportRowDelete}
+                                />
+                            </AccordionContent>
+                        </AccordionItem>
+                        <AccordionItem value="item-mx">
+                             <AccordionTrigger className="text-lg font-bold bg-orange-50 hover:bg-orange-100 px-4 rounded-md">MX</AccordionTrigger>
+                            <AccordionContent className="p-1">
+                                <TransportTable 
+                                    type="MX"
+                                    title="รายการ MX"
+                                    entries={mxEntries}
+                                    onAddRow={handleAddTransportRow}
+                                    onRowChange={handleTransportRowChange}
+                                    onRowDelete={handleTransportRowDelete}
+                                />
+                            </AccordionContent>
+                        </AccordionItem>
+                    </Accordion>
                 </div>
                 <div className="md:col-span-1 mt-4 md:mt-0 flex flex-col gap-4">
                      <Card>
                         <CardHeader>
-                            <CardTitle>สรุปยอด</CardTitle>
+                            <CardTitle>สรุปยอดรวมทั้งหมด</CardTitle>
                         </CardHeader>
                         <CardContent className="flex flex-col gap-4">
                              <div className="flex justify-between items-center p-4 bg-muted rounded-md">
@@ -224,18 +221,8 @@ export default function TransportPage() {
                             </div>
                         </CardContent>
                     </Card>
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>การดำเนินการ</CardTitle>
-                        </CardHeader>
-                        <CardContent className="flex flex-col gap-2">
-                             <Button variant="outline" onClick={handleAddTransportRow}>เพิ่มแถว</Button>
-                        </CardContent>
-                    </Card>
                 </div>
             </main>
         </div>
     );
 }
-
-    
