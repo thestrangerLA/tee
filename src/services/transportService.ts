@@ -15,7 +15,7 @@ import {
     where,
     getDocs
 } from 'firebase/firestore';
-import { startOfDay, startOfMonth } from 'date-fns';
+import { startOfDay } from 'date-fns';
 
 const transportCollectionRef = collection(db, 'transportEntries');
 
@@ -48,7 +48,8 @@ export const listenToTransportEntries = (callback: (items: TransportEntry[]) => 
 };
 
 export const addTransportEntry = async (type: 'ANS' | 'HAL' | 'MX', month: Date) => {
-    const newEntry = createInitialRowState(type, new Date()); // Use current date for new entries
+    // Create the new entry with a date from the selected month, not necessarily the current date
+    const newEntry = createInitialRowState(type, month);
     await addDoc(transportCollectionRef, {
         ...newEntry,
         date: Timestamp.fromDate(newEntry.date),
@@ -71,3 +72,5 @@ export const deleteTransportEntry = async (id: string) => {
     const transportDoc = doc(db, 'transportEntries', id);
     await deleteDoc(transportDoc);
 };
+
+    

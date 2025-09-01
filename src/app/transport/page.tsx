@@ -60,12 +60,15 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
                                 <TableHead className="w-[40%]">รายละเอียด</TableHead>
                                 <TableHead className="w-[150px] text-right">ต้นทุน</TableHead>
                                 <TableHead className="w-[150px] text-right">จำนวนเงิน</TableHead>
+                                <TableHead className="w-[150px] text-right">กำไร</TableHead>
                                 <TableHead className="w-[80px] text-center">เสร็จสิ้น</TableHead>
                                 <TableHead className="w-[50px] text-center">ลบ</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {entries.map((row) => (
+                            {entries.map((row) => {
+                                const profit = (row.amount || 0) - (row.cost || 0);
+                                return (
                                 <TableRow key={row.id}>
                                     <TableCell className="p-2">
                                         <Popover>
@@ -97,6 +100,9 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
                                     <TableCell className="p-2">
                                         <Input type="number" value={row.amount || ''} onChange={(e) => onRowChange(row.id, 'amount', parseFloat(e.target.value) || 0)} placeholder="จำนวนเงิน" className="h-8 text-right" />
                                     </TableCell>
+                                    <TableCell className="p-2 text-right font-medium">
+                                        {formatCurrency(profit)}
+                                    </TableCell>
                                      <TableCell className="text-center p-2">
                                         <Checkbox checked={row.finished} onCheckedChange={(checked) => onRowChange(row.id, 'finished', checked)} />
                                     </TableCell>
@@ -106,8 +112,8 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
                                         </Button>
                                     </TableCell>
                                 </TableRow>
-                            ))}
-                             {entries.length === 0 && <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-4">ไม่มีรายการในเดือนที่เลือก</TableCell></TableRow>}
+                            )})}
+                             {entries.length === 0 && <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-4">ไม่มีรายการในเดือนที่เลือก</TableCell></TableRow>}
                         </TableBody>
                     </Table>
                 </div>
@@ -306,5 +312,7 @@ export default function TransportPage() {
         </div>
     );
 }
+
+    
 
     
