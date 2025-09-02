@@ -21,7 +21,7 @@ const transportCollectionRef = collection(db, 'transportEntries');
 
 const createInitialRowState = (type: 'ANS' | 'HAL' | 'MX', date: Date): Omit<TransportEntry, 'id' | 'createdAt'> => ({
     type: type,
-    date: startOfDay(date), // Default to today
+    date: startOfDay(date),
     detail: '',
     cost: 0,
     amount: 0,
