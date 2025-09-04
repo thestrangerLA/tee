@@ -9,8 +9,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
 import { useToast } from "@/hooks/use-toast";
 import { format, startOfDay, isWithinInterval, startOfMonth, endOfMonth, getYear, setMonth, getMonth } from "date-fns";
 import { th } from "date-fns/locale";
@@ -27,7 +25,7 @@ const formatCurrency = (value: number) => {
 };
 
 
-const AddEntryForm = ({ onAddEntry, defaultDate }: { onAddEntry: (entry: Omit<DrugCreditorEntry, 'id' | 'createdAt' | 'date' | 'isPaid'>) => Promise<void>, defaultDate: Date }) => {
+const AddEntryForm = ({ onAddEntry }: { onAddEntry: (entry: Omit<DrugCreditorEntry, 'id' | 'createdAt' | 'date' | 'isPaid'>) => Promise<void> }) => {
     const { toast } = useToast();
     const [order, setOrder] = useState(0);
     const [description, setDescription] = useState('');
@@ -111,9 +109,9 @@ export default function DrugCreditorsPage() {
     const [displayMonth, setDisplayMonth] = useState<Date>(new Date());
 
     useEffect(() => {
-        const unsubscribe = listenToDrugCreditorEntries(setAllEntries);
+        const unsubscribe = listenToDrugCreditorEntries(setAllEntries, displayMonth);
         return () => unsubscribe();
-    }, []);
+    }, [displayMonth]);
 
     const filteredEntries = useMemo(() => {
         const start = startOfMonth(displayMonth);
@@ -237,7 +235,7 @@ export default function DrugCreditorsPage() {
             </header>
             <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid lg:grid-cols-3">
                 <div className="lg:col-span-1 flex flex-col gap-4">
-                    <AddEntryForm onAddEntry={handleAddEntry} defaultDate={displayMonth} />
+                    <AddEntryForm onAddEntry={handleAddEntry} />
                     <Card>
                         <CardHeader>
                             <CardTitle>สรุปยอดรวม (เดือนที่เลือก)</CardTitle>
@@ -274,18 +272,17 @@ export default function DrugCreditorsPage() {
                                     {groupedByOrder.map(([order, entries]) => {
                                         const orderTotals = entries.reduce((acc, entry) => {
                                             const profit = (entry.sellingPrice || 0) - (entry.cost || 0);
-                                            const share40 = profit * 0.4;
-                                            const creditorPayable = (entry.cost || 0) + share40;
-
-                                            acc.cost += entry.cost || 0;
+                                            
                                             acc.profit += profit;
                                             
                                             if (!entry.isPaid) {
+                                                const share40 = profit * 0.4;
+                                                const creditorPayable = (entry.cost || 0) + share40;
                                                 acc.payable += creditorPayable;
                                             }
                                             
                                             return acc;
-                                        }, { cost: 0, payable: 0, profit: 0 });
+                                        }, { payable: 0, profit: 0 });
 
                                         return (
                                         <AccordionItem value={`order-${order}`} key={order}>

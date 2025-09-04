@@ -12,14 +12,24 @@ import {
     orderBy,
     serverTimestamp,
     Timestamp,
-    where
+    where,
+    startAt,
+    endAt
 } from 'firebase/firestore';
-import { startOfDay } from 'date-fns';
+import { startOfDay, startOfMonth, endOfMonth } from 'date-fns';
 
 const collectionRef = collection(db, 'drugCreditorEntries');
 
-export const listenToDrugCreditorEntries = (callback: (items: DrugCreditorEntry[]) => void) => {
-    const q = query(collectionRef, orderBy('date', 'desc'));
+export const listenToDrugCreditorEntries = (callback: (items: DrugCreditorEntry[]) => void, month: Date) => {
+    const startDate = startOfMonth(month);
+    const endDate = endOfMonth(month);
+
+    const q = query(
+        collectionRef, 
+        orderBy("date"),
+        startAt(Timestamp.fromDate(startDate)),
+        endAt(Timestamp.fromDate(endDate))
+    );
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
         const entries: DrugCreditorEntry[] = [];
         querySnapshot.forEach((doc) => {
@@ -36,10 +46,10 @@ export const listenToDrugCreditorEntries = (callback: (items: DrugCreditorEntry[
     return unsubscribe;
 };
 
-export const addDrugCreditorEntry = async (entry: Omit<DrugCreditorEntry, 'id' | 'createdAt' | 'date' | 'isPaid'>, date: Date) => {
+export const addDrugCreditorEntry = async (entry: Omit<DrugCreditorEntry, 'id' | 'createdAt' | 'date' | 'isPaid'>) => {
     const entryWithTimestamp = {
         ...entry,
-        date: Timestamp.fromDate(startOfDay(date)),
+        date: Timestamp.fromDate(startOfDay(new Date())),
         isPaid: false,
         createdAt: serverTimestamp()
     };
