@@ -480,7 +480,7 @@ export default function AccountancyPage() {
                      <SummaryCard title="เงินสด" value={formatCurrency(accountSummary.cash)} icon={<Wallet className="h-5 w-5 text-primary" />} />
                      <SummaryCard title="เงินโอน" value={formatCurrency(accountSummary.transfer)} icon={<Landmark className="h-5 w-5 text-primary" />} onClick={() => openEditSummaryDialog('transfer')} />
                      <SummaryCard title="รวมเงิน" value={formatCurrency(totalMoney)} icon={<Combine className="h-5 w-5 text-green-600" />} />
-                     <SummaryCard title="ลูกหนี้ทั้งหมด" value={formatCurrency(totalDebtors)} icon={<Users className="h-5 w-5 text-yellow-600" />} />
+                     <SummaryCard title="ลูกหนี้ทั่วไป" value={formatCurrency(totalDebtors)} icon={<Users className="h-5 w-5 text-yellow-600" />} />
                      <SummaryCard title="ค่าขนส่งคงเหลือ" value={formatCurrency(transportRemaining)} icon={<Truck className="h-5 w-5 text-red-600" />} />
                      <SummaryCard title="ลูกหนี้ค่ายา" value={formatCurrency(drugCreditorsPayable)} icon={<UserMinus className="h-5 w-5 text-rose-500" />} />
                      <SummaryCard title="รวมเงินทั้งหมด" value={formatCurrency(grandTotalMoney)} icon={<PiggyBank className="h-5 w-5 text-blue-600" />} />
