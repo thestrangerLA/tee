@@ -6,11 +6,12 @@ import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { useToast } from "@/hooks/use-toast";
-import { format, startOfDay, isSameDay } from "date-fns";
+import { format, startOfDay } from "date-fns";
 import { th } from "date-fns/locale";
 import { ArrowLeft, Users, Calendar as CalendarIcon, Trash2, PlusCircle } from "lucide-react";
 import { DrugCreditorEntry } from '@/lib/types';
@@ -20,6 +21,85 @@ const formatCurrency = (value: number) => {
     if (isNaN(value)) return '0';
     return new Intl.NumberFormat('th-TH', { minimumFractionDigits: 0 }).format(value);
 };
+
+
+const AddEntryForm = ({ onAddEntry, defaultDate }: { onAddEntry: (entry: Omit<DrugCreditorEntry, 'id' | 'createdAt' | 'date'>) => Promise<void>, defaultDate: Date }) => {
+    const { toast } = useToast();
+    const [order, setOrder] = useState(0);
+    const [description, setDescription] = useState('');
+    const [cost, setCost] = useState(0);
+    const [sellingPrice, setSellingPrice] = useState(0);
+    
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!order || !description) {
+            toast({
+                title: "ข้อผิดพลาด",
+                description: "กรุณากรอกลำดับและรายละเอียด",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        try {
+            await onAddEntry({
+                order,
+                description,
+                cost,
+                sellingPrice,
+            });
+            toast({ title: "เพิ่มรายการสำเร็จ" });
+            // Reset form
+            setOrder(0);
+            setDescription('');
+            setCost(0);
+            setSellingPrice(0);
+        } catch (error) {
+            console.error("Error adding entry: ", error);
+            toast({
+                title: "เกิดข้อผิดพลาด",
+                description: "ไม่สามารถเพิ่มรายการได้",
+                variant: "destructive",
+            });
+        }
+    };
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>เพิ่มรายการยาใหม่</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <form onSubmit={handleSubmit} className="grid gap-4">
+                     <div className="grid grid-cols-2 gap-4">
+                        <div className="grid gap-2">
+                             <Label htmlFor="order">Order</Label>
+                             <Input id="order" type="number" placeholder="1" value={order || ''} onChange={(e) => setOrder(Number(e.target.value))} required />
+                        </div>
+                        <div className="grid gap-2">
+                             <Label htmlFor="description">รายการ</Label>
+                             <Input id="description" placeholder="ชื่อยา" value={description} onChange={(e) => setDescription(e.target.value)} required />
+                        </div>
+                         <div className="grid gap-2">
+                             <Label htmlFor="cost">ต้นทุน</Label>
+                             <Input id="cost" type="number" placeholder="0" value={cost || ''} onChange={(e) => setCost(Number(e.target.value))} />
+                        </div>
+                         <div className="grid gap-2">
+                             <Label htmlFor="sellingPrice">ราคาขาย</Label>
+                             <Input id="sellingPrice" type="number" placeholder="0" value={sellingPrice || ''} onChange={(e) => setSellingPrice(Number(e.target.value))} />
+                        </div>
+                    </div>
+                    <Button type="submit" className="w-full">
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        เพิ่มรายการ
+                    </Button>
+                </form>
+            </CardContent>
+        </Card>
+    );
+};
+
 
 export default function DrugCreditorsPage() {
     const { toast } = useToast();
@@ -31,16 +111,9 @@ export default function DrugCreditorsPage() {
         return () => unsubscribe();
     }, [displayDate]);
 
-    const handleAddEntry = async () => {
+    const handleAddEntry = async (newEntry: Omit<DrugCreditorEntry, 'id' | 'createdAt' | 'date'>) => {
         try {
-            const nextOrder = entries.length > 0 ? Math.max(...entries.map(e => e.order)) + 1 : 1;
-            await addDrugCreditorEntry({
-                order: nextOrder,
-                description: '',
-                cost: 0,
-                sellingPrice: 0,
-            }, displayDate);
-            toast({ title: 'เพิ่มรายการใหม่สำเร็จ' });
+            await addDrugCreditorEntry(newEntry, displayDate);
         } catch (error) {
             console.error('Error adding entry:', error);
             toast({ title: 'เกิดข้อผิดพลาด', variant: 'destructive' });
@@ -90,103 +163,103 @@ export default function DrugCreditorsPage() {
                     <Users className="h-6 w-6 text-rose-500" />
                     <h1 className="text-xl font-bold tracking-tight">เจ้าหนี้ค่ายา</h1>
                 </div>
-            </header>
-            <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-                <Card>
-                    <CardHeader>
-                        <div className="flex items-center gap-4">
-                             <CardTitle>ตารางคำนวณส่วนแบ่ง</CardTitle>
-                             <Popover>
-                                <PopoverTrigger asChild>
-                                    <Button variant={"outline"} className="w-[280px] justify-start text-left font-normal">
-                                        <CalendarIcon className="mr-2 h-4 w-4" />
-                                        {displayDate ? format(displayDate, "PPP", { locale: th }) : <span>เลือกวันที่</span>}
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0">
-                                    <Calendar mode="single" selected={displayDate} onSelect={(date) => date && setDisplayDate(date)} initialFocus locale={th} />
-                                </PopoverContent>
-                            </Popover>
-                        </div>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="overflow-x-auto">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead className="w-[80px]">order</TableHead>
-                                        <TableHead>รายการ</TableHead>
-                                        <TableHead className="w-[150px] text-right">ต้นทุน</TableHead>
-                                        <TableHead className="w-[150px] text-right">ราคาขาย</TableHead>
-                                        <TableHead className="w-[150px] text-right">กำไร</TableHead>
-                                        <TableHead className="w-[150px] text-right">40%</TableHead>
-                                        <TableHead className="w-[150px] text-right">60%</TableHead>
-                                        <TableHead className="w-[50px]"><span className="sr-only">Delete</span></TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {entries.map((entry) => {
-                                        const profit = (entry.sellingPrice || 0) - (entry.cost || 0);
-                                        const share40 = profit * 0.4;
-                                        const share60 = profit * 0.6;
-                                        return (
-                                            <TableRow key={entry.id}>
-                                                <TableCell className="p-1 text-center">{entry.order}</TableCell>
-                                                <TableCell className="p-1">
-                                                     <Input
-                                                        defaultValue={entry.description}
-                                                        onBlur={(e) => handleUpdateEntry(entry.id, 'description', e.target.value)}
-                                                        className="h-8"
-                                                    />
-                                                </TableCell>
-                                                <TableCell className="p-1">
-                                                     <Input
-                                                        type="number"
-                                                        defaultValue={entry.cost}
-                                                        onBlur={(e) => handleUpdateEntry(entry.id, 'cost', Number(e.target.value) || 0)}
-                                                        className="h-8 text-right"
-                                                    />
-                                                </TableCell>
-                                                <TableCell className="p-1">
-                                                    <Input
-                                                        type="number"
-                                                        defaultValue={entry.sellingPrice}
-                                                        onBlur={(e) => handleUpdateEntry(entry.id, 'sellingPrice', Number(e.target.value) || 0)}
-                                                        className="h-8 text-right"
-                                                    />
-                                                </TableCell>
-                                                <TableCell className="p-1 text-right font-medium">{formatCurrency(profit)}</TableCell>
-                                                <TableCell className="p-1 text-right">{formatCurrency(share40)}</TableCell>
-                                                <TableCell className="p-1 text-right">{formatCurrency(share60)}</TableCell>
-                                                <TableCell className="p-1 text-center">
-                                                    <Button variant="ghost" size="icon" onClick={() => handleDeleteEntry(entry.id)}>
-                                                        <Trash2 className="h-4 w-4 text-red-500" />
-                                                    </Button>
-                                                </TableCell>
-                                            </TableRow>
-                                        );
-                                    })}
-                                    <TableRow className="bg-muted/50 font-bold">
-                                        <TableCell colSpan={2} className="text-right p-2">รวม</TableCell>
-                                        <TableCell className="text-right p-2">{formatCurrency(totals.cost)}</TableCell>
-                                        <TableCell className="text-right p-2">{formatCurrency(totals.sellingPrice)}</TableCell>
-                                        <TableCell className="text-right p-2">{formatCurrency(totals.profit)}</TableCell>
-                                        <TableCell className="text-right p-2">{formatCurrency(totals.share40)}</TableCell>
-                                        <TableCell className="text-right p-2">{formatCurrency(totals.share60)}</TableCell>
-                                        <TableCell className="p-2"></TableCell>
-                                    </TableRow>
-                                </TableBody>
-                            </Table>
-                        </div>
-                         <div className="flex justify-end mt-4">
-                            <Button onClick={handleAddEntry}>
-                                <PlusCircle className="mr-2 h-4 w-4" />
-                                เพิ่มรายการ
+                 <div className="ml-auto flex items-center gap-4">
+                     <Popover>
+                        <PopoverTrigger asChild>
+                            <Button variant={"outline"} className="w-[280px] justify-start text-left font-normal">
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {displayDate ? format(displayDate, "PPP", { locale: th }) : <span>เลือกวันที่</span>}
                             </Button>
-                        </div>
-                    </CardContent>
-                </Card>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                            <Calendar mode="single" selected={displayDate} onSelect={(date) => date && setDisplayDate(date)} initialFocus locale={th} />
+                        </PopoverContent>
+                    </Popover>
+                </div>
+            </header>
+            <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid lg:grid-cols-3">
+                <div className="lg:col-span-1">
+                    <AddEntryForm onAddEntry={handleAddEntry} defaultDate={displayDate}/>
+                </div>
+                <div className="lg:col-span-2">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>ตารางคำนวณส่วนแบ่ง</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="overflow-x-auto">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead className="w-[80px]">order</TableHead>
+                                            <TableHead>รายการ</TableHead>
+                                            <TableHead className="w-[150px] text-right">ต้นทุน</TableHead>
+                                            <TableHead className="w-[150px] text-right">ราคาขาย</TableHead>
+                                            <TableHead className="w-[150px] text-right">กำไร</TableHead>
+                                            <TableHead className="w-[150px] text-right">40%</TableHead>
+                                            <TableHead className="w-[150px] text-right">60%</TableHead>
+                                            <TableHead className="w-[50px]"><span className="sr-only">Delete</span></TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {entries.map((entry) => {
+                                            const profit = (entry.sellingPrice || 0) - (entry.cost || 0);
+                                            const share40 = profit * 0.4;
+                                            const share60 = profit * 0.6;
+                                            return (
+                                                <TableRow key={entry.id}>
+                                                    <TableCell className="p-1 text-center">{entry.order}</TableCell>
+                                                    <TableCell className="p-1">
+                                                        <Input
+                                                            defaultValue={entry.description}
+                                                            onBlur={(e) => handleUpdateEntry(entry.id, 'description', e.target.value)}
+                                                            className="h-8"
+                                                        />
+                                                    </TableCell>
+                                                    <TableCell className="p-1">
+                                                        <Input
+                                                            type="number"
+                                                            defaultValue={entry.cost}
+                                                            onBlur={(e) => handleUpdateEntry(entry.id, 'cost', Number(e.target.value) || 0)}
+                                                            className="h-8 text-right"
+                                                        />
+                                                    </TableCell>
+                                                    <TableCell className="p-1">
+                                                        <Input
+                                                            type="number"
+                                                            defaultValue={entry.sellingPrice}
+                                                            onBlur={(e) => handleUpdateEntry(entry.id, 'sellingPrice', Number(e.target.value) || 0)}
+                                                            className="h-8 text-right"
+                                                        />
+                                                    </TableCell>
+                                                    <TableCell className="p-1 text-right font-medium">{formatCurrency(profit)}</TableCell>
+                                                    <TableCell className="p-1 text-right">{formatCurrency(share40)}</TableCell>
+                                                    <TableCell className="p-1 text-right">{formatCurrency(share60)}</TableCell>
+                                                    <TableCell className="p-1 text-center">
+                                                        <Button variant="ghost" size="icon" onClick={() => handleDeleteEntry(entry.id)}>
+                                                            <Trash2 className="h-4 w-4 text-red-500" />
+                                                        </Button>
+                                                    </TableCell>
+                                                </TableRow>
+                                            );
+                                        })}
+                                        <TableRow className="bg-muted/50 font-bold">
+                                            <TableCell colSpan={2} className="text-right p-2">รวม</TableCell>
+                                            <TableCell className="text-right p-2">{formatCurrency(totals.cost)}</TableCell>
+                                            <TableCell className="text-right p-2">{formatCurrency(totals.sellingPrice)}</TableCell>
+                                            <TableCell className="text-right p-2">{formatCurrency(totals.profit)}</TableCell>
+                                            <TableCell className="text-right p-2">{formatCurrency(totals.share40)}</TableCell>
+                                            <TableCell className="text-right p-2">{formatCurrency(totals.share60)}</TableCell>
+                                            <TableCell className="p-2"></TableCell>
+                                        </TableRow>
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
             </main>
         </div>
     );
 }
+
