@@ -311,13 +311,18 @@ export default function DrugCreditorsPage() {
                                                     {Object.entries(ordersInDay).map(([order, entries]) => {
                                                         const orderTotals = entries.reduce((acc, entry) => {
                                                             const profit = (entry.sellingPrice || 0) - (entry.cost || 0);
+                                                            acc.cost += entry.cost || 0;
+                                                            acc.sellingPrice += entry.sellingPrice || 0;
+                                                            acc.profit += profit;
                                                             const share40 = profit * 0.4;
-                                                            acc.profit += share40;
+                                                            const share60 = profit * 0.6;
+                                                            acc.share40 += share40;
+                                                            acc.share60 += share60;
                                                             if (!entry.isPaid) {
                                                                 acc.payable += (entry.cost || 0) + share40;
                                                             }
                                                             return acc;
-                                                        }, { payable: 0, profit: 0 });
+                                                        }, { payable: 0, profit: 0, cost: 0, sellingPrice: 0, share40: 0, share60: 0 });
 
                                                         const isOrderPaid = entries.every(e => e.isPaid);
 
@@ -329,7 +334,7 @@ export default function DrugCreditorsPage() {
                                                                         <div className="font-semibold">Order: {order}</div>
                                                                         <div className="flex gap-4 items-center">
                                                                             <span className="text-sm text-blue-600">จ่าย (คงเหลือ): {formatCurrency(orderTotals.payable)}</span>
-                                                                            <span className="text-sm text-green-600">กำไร (40%): {formatCurrency(orderTotals.profit)}</span>
+                                                                            <span className="text-sm text-green-600">กำไร (40%): {formatCurrency(orderTotals.share40)}</span>
                                                                         </div>
                                                                     </div>
                                                                 </AccordionTrigger>
@@ -347,9 +352,11 @@ export default function DrugCreditorsPage() {
                                                                     <TableHeader>
                                                                         <TableRow>
                                                                             <TableHead>รายการ</TableHead>
-                                                                            <TableHead className="w-[120px] text-right">ต้นทุน</TableHead>
-                                                                            <TableHead className="w-[120px] text-right">ราคาขาย</TableHead>
-                                                                            <TableHead className="w-[120px] text-right">เจ้าหนี้</TableHead>
+                                                                            <TableHead className="w-[100px] text-right">ต้นทุน</TableHead>
+                                                                            <TableHead className="w-[100px] text-right">ราคาขาย</TableHead>
+                                                                            <TableHead className="w-[100px] text-right">กำไร</TableHead>
+                                                                            <TableHead className="w-[100px] text-right">40%</TableHead>
+                                                                            <TableHead className="w-[100px] text-right">60%</TableHead>
                                                                             <TableHead className="w-[50px]"><span className="sr-only">Delete</span></TableHead>
                                                                         </TableRow>
                                                                     </TableHeader>
@@ -357,7 +364,7 @@ export default function DrugCreditorsPage() {
                                                                         {entries.map((entry) => {
                                                                             const profit = (entry.sellingPrice || 0) - (entry.cost || 0);
                                                                             const share40 = profit * 0.4;
-                                                                            const creditorPayable = (entry.cost || 0) + share40;
+                                                                            const share60 = profit * 0.6;
                                                                             return (
                                                                                 <TableRow key={entry.id} className={entry.isPaid ? "bg-green-50/50 text-muted-foreground" : ""}>
                                                                                     <TableCell className="p-1">
@@ -369,7 +376,9 @@ export default function DrugCreditorsPage() {
                                                                                     <TableCell className="p-1">
                                                                                         <Input type="number" defaultValue={entry.sellingPrice} onBlur={(e) => handleUpdateEntry(entry.id, 'sellingPrice', Number(e.target.value) || 0)} className="h-8 text-right" disabled={entry.isPaid} />
                                                                                     </TableCell>
-                                                                                    <TableCell className="p-1 text-right font-bold text-blue-600">{formatCurrency(creditorPayable)}</TableCell>
+                                                                                    <TableCell className="p-1 text-right">{formatCurrency(profit)}</TableCell>
+                                                                                    <TableCell className="p-1 text-right text-green-600 font-medium">{formatCurrency(share40)}</TableCell>
+                                                                                    <TableCell className="p-1 text-right text-yellow-600 font-medium">{formatCurrency(share60)}</TableCell>
                                                                                     <TableCell className="p-1 text-center">
                                                                                         <Button variant="ghost" size="icon" onClick={() => handleDeleteEntry(entry.id)}><Trash2 className="h-4 w-4 text-red-500" /></Button>
                                                                                     </TableCell>
@@ -377,6 +386,17 @@ export default function DrugCreditorsPage() {
                                                                             );
                                                                         })}
                                                                     </TableBody>
+                                                                    <tfoot className="bg-muted/50 font-medium">
+                                                                        <TableRow>
+                                                                            <TableCell className="p-2 text-right">รวม</TableCell>
+                                                                            <TableCell className="p-2 text-right">{formatCurrency(orderTotals.cost)}</TableCell>
+                                                                            <TableCell className="p-2 text-right">{formatCurrency(orderTotals.sellingPrice)}</TableCell>
+                                                                            <TableCell className="p-2 text-right">{formatCurrency(orderTotals.profit)}</TableCell>
+                                                                            <TableCell className="p-2 text-right text-green-600">{formatCurrency(orderTotals.share40)}</TableCell>
+                                                                            <TableCell className="p-2 text-right text-yellow-600">{formatCurrency(orderTotals.share60)}</TableCell>
+                                                                            <TableCell className="p-2"></TableCell>
+                                                                        </TableRow>
+                                                                    </tfoot>
                                                                 </Table>
                                                             </AccordionContent>
                                                         </AccordionItem>
