@@ -482,7 +482,7 @@ export default function AccountancyPage() {
                      <SummaryCard title="รวมเงิน" value={formatCurrency(totalMoney)} icon={<Combine className="h-5 w-5 text-green-600" />} />
                      <SummaryCard title="ลูกหนี้ทั้งหมด" value={formatCurrency(totalDebtors)} icon={<Users className="h-5 w-5 text-yellow-600" />} />
                      <SummaryCard title="ค่าขนส่งคงเหลือ" value={formatCurrency(transportRemaining)} icon={<Truck className="h-5 w-5 text-red-600" />} />
-                     <SummaryCard title="เจ้าหนี้ค่ายาค้างจ่าย" value={formatCurrency(drugCreditorsPayable)} icon={<UserMinus className="h-5 w-5 text-rose-500" />} />
+                     <SummaryCard title="ลูกหนี้ค่ายา" value={formatCurrency(drugCreditorsPayable)} icon={<UserMinus className="h-5 w-5 text-rose-500" />} />
                      <SummaryCard title="รวมเงินทั้งหมด" value={formatCurrency(grandTotalMoney)} icon={<PiggyBank className="h-5 w-5 text-blue-600" />} />
                      <SummaryCard title="ส่วนต่าง" value={formatCurrency(differenceAmount)} icon={<MinusCircle className="h-5 w-5 text-indigo-500" />} />
                 </div>
@@ -778,5 +778,7 @@ export default function AccountancyPage() {
         </div>
     );
 }
+
+    
 
     
