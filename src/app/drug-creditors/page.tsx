@@ -27,11 +27,7 @@ export default function DrugCreditorsPage() {
     const [displayDate, setDisplayDate] = useState<Date>(new Date());
 
     useEffect(() => {
-        const unsubscribe = listenToDrugCreditorEntries((allEntries) => {
-            const filtered = allEntries.filter(e => isSameDay(e.date, startOfDay(displayDate)));
-            const sorted = filtered.sort((a, b) => a.order - b.order);
-            setEntries(sorted);
-        }, startOfDay(displayDate));
+        const unsubscribe = listenToDrugCreditorEntries(setEntries, startOfDay(displayDate));
         return () => unsubscribe();
     }, [displayDate]);
 
@@ -39,12 +35,11 @@ export default function DrugCreditorsPage() {
         try {
             const nextOrder = entries.length > 0 ? Math.max(...entries.map(e => e.order)) + 1 : 1;
             await addDrugCreditorEntry({
-                date: startOfDay(displayDate),
                 order: nextOrder,
                 description: '',
                 cost: 0,
                 sellingPrice: 0,
-            });
+            }, displayDate);
             toast({ title: 'เพิ่มรายการใหม่สำเร็จ' });
         } catch (error) {
             console.error('Error adding entry:', error);
@@ -52,7 +47,7 @@ export default function DrugCreditorsPage() {
         }
     };
 
-    const handleUpdateEntry = async (id: string, field: keyof DrugCreditorEntry, value: any) => {
+    const handleUpdateEntry = async (id: string, field: keyof Omit<DrugCreditorEntry, 'id' | 'createdAt' | 'date'>, value: any) => {
         try {
             // No toast for inline edits to avoid being noisy
             await updateDrugCreditorEntry(id, { [field]: value });

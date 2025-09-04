@@ -21,8 +21,7 @@ const collectionRef = collection(db, 'drugCreditorEntries');
 export const listenToDrugCreditorEntries = (callback: (items: DrugCreditorEntry[]) => void, date: Date) => {
     const q = query(
         collectionRef, 
-        where("date", "==", Timestamp.fromDate(startOfDay(date))),
-        orderBy('order', 'asc')
+        where("date", "==", Timestamp.fromDate(startOfDay(date)))
     );
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
         const entries: DrugCreditorEntry[] = [];
@@ -35,15 +34,17 @@ export const listenToDrugCreditorEntries = (callback: (items: DrugCreditorEntry[
                 createdAt: (data.createdAt as Timestamp)?.toDate()
             } as DrugCreditorEntry);
         });
-        callback(entries);
+        // Sort on the client-side to avoid needing a composite index
+        const sortedEntries = entries.sort((a, b) => a.order - b.order);
+        callback(sortedEntries);
     });
     return unsubscribe;
 };
 
-export const addDrugCreditorEntry = async (entry: Omit<DrugCreditorEntry, 'id' | 'createdAt'>) => {
+export const addDrugCreditorEntry = async (entry: Omit<DrugCreditorEntry, 'id' | 'createdAt' | 'date'>, date: Date) => {
     const entryWithTimestamp = {
         ...entry,
-        date: Timestamp.fromDate(entry.date),
+        date: Timestamp.fromDate(startOfDay(date)),
         createdAt: serverTimestamp()
     };
     await addDoc(collectionRef, entryWithTimestamp);
@@ -64,5 +65,3 @@ export const deleteDrugCreditorEntry = async (id: string) => {
     const entryDoc = doc(db, 'drugCreditorEntries', id);
     await deleteDoc(entryDoc);
 };
-
-    

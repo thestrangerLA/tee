@@ -61,5 +61,3 @@ export interface DrugCreditorEntry {
   sellingPrice: number;
   createdAt: Date;
 }
-
-    
