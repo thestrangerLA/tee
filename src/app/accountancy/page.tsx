@@ -238,7 +238,7 @@ export default function AccountancyPage() {
     const totalMoney = useMemo(() => accountSummary.cash + accountSummary.transfer, [accountSummary]);
     
     const grandTotalMoney = useMemo(() => {
-        return totalMoney + totalDebtors + transportRemaining - drugCreditorsPayable;
+        return totalMoney + totalDebtors + transportRemaining + drugCreditorsPayable;
     }, [totalMoney, totalDebtors, transportRemaining, drugCreditorsPayable]);
 
     const performanceData = useMemo(() => {
@@ -778,6 +778,8 @@ export default function AccountancyPage() {
         </div>
     );
 }
+
+    
 
     
 
