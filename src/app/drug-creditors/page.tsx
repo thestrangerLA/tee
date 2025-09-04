@@ -25,7 +25,7 @@ const formatCurrency = (value: number) => {
 };
 
 
-const AddEntryForm = ({ onAddEntry }: { onAddEntry: (entry: Omit<DrugCreditorEntry, 'id' | 'createdAt' | 'date' | 'isPaid'>) => Promise<void> }) => {
+const AddEntryForm = ({ onAddEntry, defaultDate }: { onAddEntry: (entry: Omit<DrugCreditorEntry, 'id' | 'createdAt' | 'date' | 'isPaid'>) => Promise<void>, defaultDate: Date }) => {
     const { toast } = useToast();
     const [order, setOrder] = useState(0);
     const [description, setDescription] = useState('');
@@ -239,7 +239,7 @@ export default function DrugCreditorsPage() {
             </header>
             <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid lg:grid-cols-3">
                 <div className="lg:col-span-1 flex flex-col gap-4">
-                    <AddEntryForm onAddEntry={handleAddEntry} />
+                    <AddEntryForm onAddEntry={handleAddEntry} defaultDate={displayMonth} />
                     <Card>
                         <CardHeader>
                             <CardTitle>สรุปยอดรวม (เดือนที่เลือก)</CardTitle>
