@@ -14,7 +14,9 @@ import {
     Timestamp,
     where,
     startAt,
-    endAt
+    endAt,
+    getDocs,
+    writeBatch
 } from 'firebase/firestore';
 import { startOfDay, startOfMonth, endOfMonth } from 'date-fns';
 
@@ -70,4 +72,31 @@ export const updateDrugCreditorEntry = async (id: string, updatedFields: Partial
 export const deleteDrugCreditorEntry = async (id: string) => {
     const entryDoc = doc(db, 'drugCreditorEntries', id);
     await deleteDoc(entryDoc);
+};
+
+
+export const updateOrderStatus = async (date: Date, order: number, isPaid: boolean) => {
+    // Query for all documents with the specific date and order number
+    const q = query(
+        collectionRef, 
+        where("date", "==", Timestamp.fromDate(startOfDay(date))),
+        where("order", "==", order)
+    );
+
+    const querySnapshot = await getDocs(q);
+
+    if (querySnapshot.empty) {
+        console.log(`No entries found for date ${date} and order ${order}`);
+        return;
+    }
+
+    // Use a batch write to update all found documents
+    const batch = writeBatch(db);
+    querySnapshot.forEach(docSnap => {
+        const docRef = doc(db, 'drugCreditorEntries', docSnap.id);
+        batch.update(docRef, { isPaid: isPaid });
+    });
+
+    // Commit the batch
+    await batch.commit();
 };

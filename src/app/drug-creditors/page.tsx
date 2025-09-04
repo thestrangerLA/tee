@@ -14,7 +14,7 @@ import { format, startOfDay, isWithinInterval, startOfMonth, endOfMonth, getYear
 import { th } from "date-fns/locale";
 import { ArrowLeft, Users, Calendar as CalendarIcon, Trash2, PlusCircle, ChevronDown } from "lucide-react";
 import { DrugCreditorEntry } from '@/lib/types';
-import { listenToDrugCreditorEntries, addDrugCreditorEntry, updateDrugCreditorEntry, deleteDrugCreditorEntry } from '@/services/drugCreditorService';
+import { listenToDrugCreditorEntries, addDrugCreditorEntry, updateDrugCreditorEntry, deleteDrugCreditorEntry, updateOrderStatus } from '@/services/drugCreditorService';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuPortal, DropdownMenuSubTrigger, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
@@ -121,16 +121,16 @@ export default function DrugCreditorsPage() {
 
     const handleAddEntry = async (newEntry: Omit<DrugCreditorEntry, 'id' | 'createdAt' | 'date' | 'isPaid'>, date: Date) => {
         try {
-            await addDrugCreditorEntry(newEntry, date);
+            const selectedDateForEntry = new Date(displayMonth); // Use the month being displayed
+            await addDrugCreditorEntry(newEntry, selectedDateForEntry);
         } catch (error) {
             console.error('Error adding entry:', error);
             toast({ title: 'เกิดข้อผิดพลาด', variant: 'destructive' });
         }
     };
-
+    
     const handleUpdateEntry = async (id: string, field: keyof Omit<DrugCreditorEntry, 'id' | 'createdAt' | 'date'>, value: any) => {
         try {
-            // No toast for inline edits to avoid being noisy
             await updateDrugCreditorEntry(id, { [field]: value });
         } catch (error) {
             console.error('Error updating entry:', error);
@@ -145,6 +145,19 @@ export default function DrugCreditorsPage() {
             toast({ title: "ลบรายการสำเร็จ" });
         } catch (error) {
             console.error("Error deleting entry: ", error);
+            toast({ title: "เกิดข้อผิดพลาด", variant: "destructive" });
+        }
+    };
+    
+    const handleOrderStatusChange = async (date: Date, order: number, isPaid: boolean) => {
+        try {
+            await updateOrderStatus(date, order, isPaid);
+            toast({
+                title: `อัปเดต Order ${order} สำเร็จ`,
+                description: `เปลี่ยนสถานะเป็น ${isPaid ? 'จ่ายแล้ว' : 'ยังไม่ได้จ่าย'}`,
+            });
+        } catch (error) {
+            console.error("Error updating order status: ", error);
             toast({ title: "เกิดข้อผิดพลาด", variant: "destructive" });
         }
     };
@@ -166,9 +179,8 @@ export default function DrugCreditorsPage() {
         const sellingPrice = filteredEntries.reduce((sum, entry) => sum + (entry.sellingPrice || 0), 0);
         const profit = filteredEntries.reduce((sum, entry) => {
             const entryProfit = (entry.sellingPrice || 0) - (entry.cost || 0);
-            return sum + (entryProfit * 0.4); // This profit is the 40% share
+            return sum + (entryProfit * 0.4); 
         }, 0);
-
 
         const unpaidEntries = filteredEntries.filter(e => !e.isPaid);
         const remainingCreditorPayable = unpaidEntries.reduce((sum, entry) => {
@@ -307,14 +319,24 @@ export default function DrugCreditorsPage() {
                                                             return acc;
                                                         }, { payable: 0, profit: 0 });
 
+                                                        const isOrderPaid = entries.every(e => e.isPaid);
+
                                                         return (
                                                         <AccordionItem value={`order-${order}`} key={order}>
                                                             <AccordionTrigger>
-                                                                <div className="flex justify-between w-full pr-4">
+                                                                <div className="flex justify-between w-full pr-4 items-center">
                                                                     <div className="font-semibold">Order: {order}</div>
                                                                     <div className="flex gap-4 items-center">
                                                                         <span className="text-sm text-blue-600">จ่าย (คงเหลือ): {formatCurrency(orderTotals.payable)}</span>
                                                                         <span className="text-sm text-green-600">กำไร (40%): {formatCurrency(orderTotals.profit)}</span>
+                                                                         <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                                                                            <Checkbox 
+                                                                                id={`order-paid-${order}-${summary.date}`}
+                                                                                checked={isOrderPaid} 
+                                                                                onCheckedChange={(checked) => handleOrderStatusChange(summary.date, Number(order), !!checked)}
+                                                                            />
+                                                                            <Label htmlFor={`order-paid-${order}-${summary.date}`} className="text-sm font-medium">เสร็จสิ้น</Label>
+                                                                        </div>
                                                                     </div>
                                                                 </div>
                                                             </AccordionTrigger>
@@ -326,7 +348,6 @@ export default function DrugCreditorsPage() {
                                                                             <TableHead className="w-[120px] text-right">ต้นทุน</TableHead>
                                                                             <TableHead className="w-[120px] text-right">ราคาขาย</TableHead>
                                                                             <TableHead className="w-[120px] text-right">เจ้าหนี้</TableHead>
-                                                                            <TableHead className="w-[80px] text-center">เสร็จสิ้น</TableHead>
                                                                             <TableHead className="w-[50px]"><span className="sr-only">Delete</span></TableHead>
                                                                         </TableRow>
                                                                     </TableHeader>
@@ -347,9 +368,6 @@ export default function DrugCreditorsPage() {
                                                                                         <Input type="number" defaultValue={entry.sellingPrice} onBlur={(e) => handleUpdateEntry(entry.id, 'sellingPrice', Number(e.target.value) || 0)} className="h-8 text-right" disabled={entry.isPaid} />
                                                                                     </TableCell>
                                                                                     <TableCell className="p-1 text-right font-bold text-blue-600">{formatCurrency(creditorPayable)}</TableCell>
-                                                                                    <TableCell className="p-1 text-center">
-                                                                                        <Checkbox checked={entry.isPaid} onCheckedChange={(checked) => handleUpdateEntry(entry.id, 'isPaid', !!checked)} />
-                                                                                    </TableCell>
                                                                                     <TableCell className="p-1 text-center">
                                                                                         <Button variant="ghost" size="icon" onClick={() => handleDeleteEntry(entry.id)}><Trash2 className="h-4 w-4 text-red-500" /></Button>
                                                                                     </TableCell>
