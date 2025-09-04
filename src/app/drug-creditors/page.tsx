@@ -163,16 +163,47 @@ export default function DrugCreditorsPage() {
     };
 
     const dailySummaries = useMemo(() => {
-        const groupedByDay: Record<string, { date: Date; entries: DrugCreditorEntry[] }> = {};
+        const groupedByDay: Record<string, { 
+            date: Date; 
+            entries: DrugCreditorEntry[];
+            totalOrders: number;
+            remainingOrders: number;
+        }> = {};
+
         filteredEntries.forEach(entry => {
             const dayKey = format(entry.date, 'yyyy-MM-dd');
             if (!groupedByDay[dayKey]) {
-                groupedByDay[dayKey] = { date: entry.date, entries: [] };
+                groupedByDay[dayKey] = { 
+                    date: entry.date, 
+                    entries: [],
+                    totalOrders: 0,
+                    remainingOrders: 0
+                };
             }
             groupedByDay[dayKey].entries.push(entry);
         });
+
+        // Calculate order counts after grouping all entries
+        Object.values(groupedByDay).forEach(daySummary => {
+            const ordersInDay = daySummary.entries.reduce((acc, entry) => {
+                const orderKey = String(entry.order);
+                if (!acc[orderKey]) acc[orderKey] = [];
+                acc[orderKey].push(entry);
+                return acc;
+            }, {} as Record<string, DrugCreditorEntry[]>);
+
+            const totalOrders = Object.keys(ordersInDay).length;
+            const remainingOrders = Object.values(ordersInDay).filter(orderEntries => 
+                orderEntries.some(e => !e.isPaid)
+            ).length;
+            
+            daySummary.totalOrders = totalOrders;
+            daySummary.remainingOrders = remainingOrders;
+        });
+
         return Object.values(groupedByDay).sort((a, b) => b.date.getTime() - a.date.getTime());
     }, [filteredEntries]);
+
 
     const pageTotals = useMemo(() => {
         const cost = filteredEntries.reduce((sum, entry) => sum + (entry.cost || 0), 0);
@@ -293,16 +324,13 @@ export default function DrugCreditorsPage() {
                                             return acc;
                                         }, {} as Record<string, DrugCreditorEntry[]>);
 
-                                        const dayProfit = summary.entries.reduce((sum, entry) => sum + ((entry.sellingPrice || 0) - (entry.cost || 0)) * 0.4, 0);
-
                                         return (
                                         <AccordionItem value={`day-${index}`} key={index}>
                                             <AccordionTrigger>
                                                  <div className="flex justify-between w-full pr-4">
                                                     <div className="font-semibold text-lg">{`วันที่ ${format(summary.date, "d")}`}</div>
                                                      <div className="flex gap-4 items-center">
-                                                        <span className="text-sm text-muted-foreground">{Object.keys(ordersInDay).length} orders</span>
-                                                        <span className="text-sm text-green-600">กำไร (40%): {formatCurrency(dayProfit)}</span>
+                                                        <span className={`text-sm font-semibold ${summary.remainingOrders > 0 ? 'text-red-500' : 'text-green-500'}`}>{summary.remainingOrders}/{summary.totalOrders} Orders</span>
                                                     </div>
                                                 </div>
                                             </AccordionTrigger>
@@ -328,25 +356,28 @@ export default function DrugCreditorsPage() {
 
                                                         return (
                                                         <AccordionItem value={`order-${order}`} key={order}>
-                                                            <div className="flex w-full items-center">
-                                                                <AccordionTrigger className="flex-1">
-                                                                    <div className="flex justify-between w-full pr-4 items-center">
-                                                                        <div className="font-semibold">Order: {order}</div>
-                                                                        <div className="flex gap-4 items-center">
-                                                                            <span className="text-sm text-blue-600">จ่าย (คงเหลือ): {formatCurrency(orderTotals.payable)}</span>
-                                                                            <span className="text-sm text-green-600">กำไร (40%): {formatCurrency(orderTotals.share40)}</span>
-                                                                        </div>
-                                                                    </div>
-                                                                </AccordionTrigger>
-                                                                <div className="flex items-center gap-2 pr-4 pl-2" onClick={(e) => e.stopPropagation()}>
-                                                                    <Checkbox 
-                                                                        id={`order-paid-${order}-${summary.date}`}
-                                                                        checked={isOrderPaid} 
-                                                                        onCheckedChange={(checked) => handleOrderStatusChange(summary.date, Number(order), !!checked)}
-                                                                    />
-                                                                    <Label htmlFor={`order-paid-${order}-${summary.date}`} className="text-sm font-medium">เสร็จสิ้น</Label>
-                                                                </div>
-                                                            </div>
+                                                          <div className="flex w-full items-center pr-4 pl-2">
+                                                              <AccordionTrigger className="flex-1 py-2">
+                                                                  <div className="flex justify-between w-full items-center">
+                                                                      <div className="font-semibold">Order: {order}</div>
+                                                                      <div className="flex gap-4 items-center text-sm">
+                                                                          <span className="text-blue-600">จ่าย (คงเหลือ): {formatCurrency(orderTotals.payable)}</span>
+                                                                          <span className="text-green-600">กำไร (40%): {formatCurrency(orderTotals.share40)}</span>
+                                                                          <span className="text-yellow-600">กำไร (60%): {formatCurrency(orderTotals.share60)}</span>
+                                                                      </div>
+                                                                  </div>
+                                                              </AccordionTrigger>
+                                                              <div className="flex items-center gap-2 pl-4" onClick={(e) => e.stopPropagation()}>
+                                                                  <Checkbox
+                                                                      id={`order-paid-${order}-${summary.date.toISOString()}`}
+                                                                      checked={isOrderPaid}
+                                                                      onCheckedChange={(checked) => handleOrderStatusChange(summary.date, Number(order), !!checked)}
+                                                                  />
+                                                                  <Label htmlFor={`order-paid-${order}-${summary.date.toISOString()}`} className="text-sm font-medium whitespace-nowrap">
+                                                                      เสร็จสิ้น
+                                                                  </Label>
+                                                              </div>
+                                                          </div>
                                                             <AccordionContent>
                                                                 <Table>
                                                                     <TableHeader>
