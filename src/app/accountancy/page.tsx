@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Landmark, Wallet, PlusCircle, Calendar as CalendarIcon, ChevronDown, ChevronUp, TrendingUp, ArrowUpCircle, ArrowDownCircle, Minus, Equal, FileText, MoreHorizontal, Pencil, Banknote, Trash2, Users, Truck, PiggyBank, Briefcase, Combine, MinusCircle } from "lucide-react"
+import { ArrowLeft, Landmark, Wallet, PlusCircle, Calendar as CalendarIcon, ChevronDown, ChevronUp, TrendingUp, ArrowUpCircle, ArrowDownCircle, Minus, Equal, FileText, MoreHorizontal, Pencil, Banknote, Trash2, Users, Truck, PiggyBank, Briefcase, Combine, MinusCircle, UserMinus } from "lucide-react"
 import Link from 'next/link'
 import { useToast } from "@/hooks/use-toast"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
@@ -46,10 +46,11 @@ import {
 } from "@/components/ui/dialog"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { listenToTransactions, addTransaction, listenToAccountSummary, updateAccountSummary, deleteTransaction, updateTransaction } from '@/services/accountancyService';
-import type { Transaction, AccountSummary, CashCalculatorState, DebtorCreditorEntry, TransportEntry } from '@/lib/types';
+import type { Transaction, AccountSummary, CashCalculatorState, DebtorCreditorEntry, TransportEntry, DrugCreditorEntry } from '@/lib/types';
 import { listenToCalculatorState, updateCalculatorState } from '@/services/cashCalculatorService';
 import { listenToDebtorCreditorEntries } from '@/services/debtorCreditorService';
 import { listenToTransportEntries } from '@/services/transportService';
+import { listenToAllDrugCreditorEntries } from '@/services/drugCreditorService';
 
 
 const formatCurrency = (value: number) => {
@@ -176,6 +177,7 @@ export default function AccountancyPage() {
 
     const [debtorEntries, setDebtorEntries] = useState<DebtorCreditorEntry[]>([]);
     const [transportEntries, setTransportEntries] = useState<TransportEntry[]>([]);
+    const [drugCreditorEntries, setDrugCreditorEntries] = useState<DrugCreditorEntry[]>([]);
 
     const workingCapital = useMemo(() => accountSummary.workingCapital || 0, [accountSummary]);
 
@@ -191,12 +193,14 @@ export default function AccountancyPage() {
         });
         const unsubscribeDebtors = listenToDebtorCreditorEntries(setDebtorEntries);
         const unsubscribeTransport = listenToTransportEntries(setTransportEntries);
+        const unsubscribeDrugCreditors = listenToAllDrugCreditorEntries(setDrugCreditorEntries);
         
         return () => {
             unsubscribeTransactions();
             unsubscribeSummary();
             unsubscribeDebtors();
             unsubscribeTransport();
+            unsubscribeDrugCreditors();
         };
     }, []);
     
@@ -219,12 +223,23 @@ export default function AccountancyPage() {
             return total + remaining;
         }, 0);
     }, [transportEntries]);
+    
+    const drugCreditorsPayable = useMemo(() => {
+        return drugCreditorEntries
+            .filter(e => !e.isPaid)
+            .reduce((sum, entry) => {
+                const profit = (entry.sellingPrice || 0) - (entry.cost || 0);
+                const share40 = profit * 0.4;
+                return sum + (entry.cost || 0) + share40;
+            }, 0);
+    }, [drugCreditorEntries]);
+
 
     const totalMoney = useMemo(() => accountSummary.cash + accountSummary.transfer, [accountSummary]);
     
     const grandTotalMoney = useMemo(() => {
-        return totalMoney + totalDebtors + transportRemaining;
-    }, [totalMoney, totalDebtors, transportRemaining]);
+        return totalMoney + totalDebtors + transportRemaining - drugCreditorsPayable;
+    }, [totalMoney, totalDebtors, transportRemaining, drugCreditorsPayable]);
 
     const performanceData = useMemo(() => {
         const startOfSelectedMonth = startOfMonth(historyDisplayMonth);
@@ -460,13 +475,14 @@ export default function AccountancyPage() {
                 </div>
             </header>
             <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-                <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4 xl:grid-cols-8">
+                <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4 xl:grid-cols-9">
                      <SummaryCard title="เงินทุน" value={formatCurrency(accountSummary.capital)} icon={<Briefcase className="h-5 w-5 text-primary" />} onClick={() => openEditSummaryDialog('capital')} />
                      <SummaryCard title="เงินสด" value={formatCurrency(accountSummary.cash)} icon={<Wallet className="h-5 w-5 text-primary" />} />
                      <SummaryCard title="เงินโอน" value={formatCurrency(accountSummary.transfer)} icon={<Landmark className="h-5 w-5 text-primary" />} onClick={() => openEditSummaryDialog('transfer')} />
                      <SummaryCard title="รวมเงิน" value={formatCurrency(totalMoney)} icon={<Combine className="h-5 w-5 text-green-600" />} />
                      <SummaryCard title="ลูกหนี้ทั้งหมด" value={formatCurrency(totalDebtors)} icon={<Users className="h-5 w-5 text-yellow-600" />} />
                      <SummaryCard title="ค่าขนส่งคงเหลือ" value={formatCurrency(transportRemaining)} icon={<Truck className="h-5 w-5 text-red-600" />} />
+                     <SummaryCard title="เจ้าหนี้ค่ายาค้างจ่าย" value={formatCurrency(drugCreditorsPayable)} icon={<UserMinus className="h-5 w-5 text-rose-500" />} />
                      <SummaryCard title="รวมเงินทั้งหมด" value={formatCurrency(grandTotalMoney)} icon={<PiggyBank className="h-5 w-5 text-blue-600" />} />
                      <SummaryCard title="ส่วนต่าง" value={formatCurrency(differenceAmount)} icon={<MinusCircle className="h-5 w-5 text-indigo-500" />} />
                 </div>
@@ -762,3 +778,5 @@ export default function AccountancyPage() {
         </div>
     );
 }
+
+    

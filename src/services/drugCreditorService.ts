@@ -22,6 +22,24 @@ import { startOfDay, startOfMonth, endOfMonth } from 'date-fns';
 
 const collectionRef = collection(db, 'drugCreditorEntries');
 
+export const listenToAllDrugCreditorEntries = (callback: (items: DrugCreditorEntry[]) => void) => {
+    const q = query(collectionRef, orderBy('date', 'desc'));
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const entries: DrugCreditorEntry[] = [];
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            entries.push({ 
+                id: doc.id, 
+                ...data,
+                date: (data.date as Timestamp).toDate(),
+                createdAt: (data.createdAt as Timestamp)?.toDate()
+            } as DrugCreditorEntry);
+        });
+        callback(entries);
+    });
+    return unsubscribe;
+};
+
 export const listenToDrugCreditorEntries = (callback: (items: DrugCreditorEntry[]) => void, month: Date) => {
     const startDate = startOfMonth(month);
     const endDate = endOfMonth(month);
@@ -100,3 +118,5 @@ export const updateOrderStatus = async (date: Date, order: number, isPaid: boole
     // Commit the batch
     await batch.commit();
 };
+
+    
