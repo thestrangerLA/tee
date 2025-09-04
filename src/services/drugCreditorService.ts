@@ -11,14 +11,19 @@ import {
     deleteDoc, 
     orderBy,
     serverTimestamp,
-    Timestamp
+    Timestamp,
+    where
 } from 'firebase/firestore';
 import { startOfDay } from 'date-fns';
 
 const collectionRef = collection(db, 'drugCreditorEntries');
 
-export const listenToDrugCreditorEntries = (callback: (items: DrugCreditorEntry[]) => void) => {
-    const q = query(collectionRef, orderBy('date', 'desc'));
+export const listenToDrugCreditorEntries = (callback: (items: DrugCreditorEntry[]) => void, date: Date) => {
+    const q = query(
+        collectionRef, 
+        where("date", "==", Timestamp.fromDate(startOfDay(date))),
+        orderBy('order', 'asc')
+    );
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
         const entries: DrugCreditorEntry[] = [];
         querySnapshot.forEach((doc) => {
@@ -35,12 +40,9 @@ export const listenToDrugCreditorEntries = (callback: (items: DrugCreditorEntry[
     return unsubscribe;
 };
 
-export const addDrugCreditorEntry = async (entry: Omit<DrugCreditorEntry, 'id' | 'createdAt' | 'isPaid'>) => {
+export const addDrugCreditorEntry = async (entry: Omit<DrugCreditorEntry, 'id' | 'createdAt'>) => {
     const entryWithTimestamp = {
         ...entry,
-        cost: entry.cost || 0,
-        sellingPrice: entry.sellingPrice || 0,
-        isPaid: false,
         date: Timestamp.fromDate(entry.date),
         createdAt: serverTimestamp()
     };

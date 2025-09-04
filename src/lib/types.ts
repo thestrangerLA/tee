@@ -55,10 +55,10 @@ export interface DebtorCreditorEntry {
 export interface DrugCreditorEntry {
   id: string;
   date: Date;
+  order: number;
   description: string;
   cost: number;
   sellingPrice: number;
-  isPaid: boolean;
   createdAt: Date;
 }
 
