@@ -7,11 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { format, startOfDay, isWithinInterval, startOfMonth, endOfMonth, getYear, getMonth, setMonth } from "date-fns";
 import { th } from "date-fns/locale";
@@ -29,18 +27,17 @@ import {
   DropdownMenuSubContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Badge } from '@/components/ui/badge';
-
 
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('th-TH', { minimumFractionDigits: 0 }).format(value);
 };
 
-const AddEntryForm = ({ onAddEntry, defaultDate }: { onAddEntry: (entry: Omit<DrugCreditorEntry, 'id' | 'createdAt'>) => Promise<void>, defaultDate: Date }) => {
+const AddEntryForm = ({ onAddEntry, defaultDate }: { onAddEntry: (entry: Omit<DrugCreditorEntry, 'id' | 'createdAt' | 'isPaid'>) => Promise<void>, defaultDate: Date }) => {
     const { toast } = useToast();
     const [date, setDate] = useState<Date | undefined>(defaultDate);
-    const [amount, setAmount] = useState(0);
     const [description, setDescription] = useState('');
+    const [cost, setCost] = useState(0);
+    const [sellingPrice, setSellingPrice] = useState(0);
     
     useEffect(() => {
         setDate(defaultDate);
@@ -48,10 +45,10 @@ const AddEntryForm = ({ onAddEntry, defaultDate }: { onAddEntry: (entry: Omit<Dr
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!date || !amount || !description) {
+        if (!date || !description) {
             toast({
                 title: "ข้อผิดพลาด",
-                description: "กรุณากรอกข้อมูลให้ครบถ้วน",
+                description: "กรุณากรอกวันที่และรายละเอียด",
                 variant: "destructive",
             });
             return;
@@ -60,15 +57,16 @@ const AddEntryForm = ({ onAddEntry, defaultDate }: { onAddEntry: (entry: Omit<Dr
         try {
             await onAddEntry({
                 date: startOfDay(date),
-                amount,
                 description,
-                isPaid: false
+                cost,
+                sellingPrice,
             });
             toast({ title: "เพิ่มรายการสำเร็จ" });
             // Reset form
             setDate(defaultDate);
-            setAmount(0);
             setDescription('');
+            setCost(0);
+            setSellingPrice(0);
         } catch (error) {
             console.error("Error adding entry: ", error);
             toast({
@@ -100,13 +98,19 @@ const AddEntryForm = ({ onAddEntry, defaultDate }: { onAddEntry: (entry: Omit<Dr
                             </PopoverContent>
                         </Popover>
                     </div>
-                    <div className="grid gap-3">
-                        <Label htmlFor="amount">จำนวนเงิน</Label>
-                        <Input id="amount" type="number" placeholder="0" value={amount || ''} onChange={(e) => setAmount(Number(e.target.value))} required />
+                     <div className="grid gap-3">
+                        <Label htmlFor="description">รายการ</Label>
+                        <Input id="description" placeholder="เช่น ค่ายา A, ค่ายา B" value={description} onChange={(e) => setDescription(e.target.value)} required />
                     </div>
-                    <div className="grid gap-3">
-                        <Label htmlFor="description">รายละเอียด/ชื่อ</Label>
-                        <Textarea id="description" placeholder="เช่น ค่ายา A, ค่ายา B" value={description} onChange={(e) => setDescription(e.target.value)} required />
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="grid gap-3">
+                            <Label htmlFor="cost">ต้นทุน</Label>
+                            <Input id="cost" type="number" placeholder="0" value={cost || ''} onChange={(e) => setCost(Number(e.target.value))} />
+                        </div>
+                        <div className="grid gap-3">
+                            <Label htmlFor="sellingPrice">ราคาขาย</Label>
+                            <Input id="sellingPrice" type="number" placeholder="0" value={sellingPrice || ''} onChange={(e) => setSellingPrice(Number(e.target.value))} />
+                        </div>
                     </div>
                     <Button type="submit" className="w-full">
                         <PlusCircle className="mr-2 h-4 w-4" />
@@ -151,19 +155,20 @@ export default function DrugCreditorsPage() {
 
     }, [allEntries, displayMonth]);
     
-    const summaryTotal = useMemo(() => {
+    const summaryTotals = useMemo(() => {
         const start = startOfMonth(displayMonth);
         const end = endOfMonth(displayMonth);
         const monthlyEntries = allEntries.filter(entry => isWithinInterval(entry.date, { start, end }));
         
-        return monthlyEntries
-            .filter(e => !e.isPaid)
-            .reduce((sum, entry) => sum + entry.amount, 0);
-            
+        const totalCost = monthlyEntries.reduce((sum, entry) => sum + entry.cost, 0);
+        const totalSellingPrice = monthlyEntries.reduce((sum, entry) => sum + entry.sellingPrice, 0);
+        const totalProfit = totalSellingPrice - totalCost;
+
+        return { totalCost, totalSellingPrice, totalProfit };
     }, [allEntries, displayMonth]);
 
 
-    const handleAddEntry = async (entry: Omit<DrugCreditorEntry, 'id' | 'createdAt'>) => {
+    const handleAddEntry = async (entry: Omit<DrugCreditorEntry, 'id' | 'createdAt' | 'isPaid'>) => {
         await addDrugCreditorEntry(entry);
     };
 
@@ -253,9 +258,17 @@ export default function DrugCreditorsPage() {
                                 <CardTitle>สรุปยอด (เดือนที่เลือก)</CardTitle>
                             </CardHeader>
                             <CardContent className="grid gap-4">
-                                <div className="flex items-center justify-between rounded-lg border p-4">
-                                    <h3 className="text-lg font-semibold">เจ้าหนี้ค่ายาคงค้าง</h3>
-                                    <p className="text-xl font-bold text-yellow-600">{formatCurrency(summaryTotal)}</p>
+                                <div className="flex items-center justify-between rounded-lg border p-3">
+                                    <h3 className="text-md font-semibold">รวมต้นทุน</h3>
+                                    <p className="text-lg font-bold text-orange-600">{formatCurrency(summaryTotals.totalCost)}</p>
+                                </div>
+                                 <div className="flex items-center justify-between rounded-lg border p-3">
+                                    <h3 className="text-md font-semibold">รวมราคาขาย</h3>
+                                    <p className="text-lg font-bold text-blue-600">{formatCurrency(summaryTotals.totalSellingPrice)}</p>
+                                </div>
+                                <div className="flex items-center justify-between rounded-lg border p-3">
+                                    <h3 className="text-md font-semibold">กำไรสุทธิ</h3>
+                                    <p className={`text-lg font-bold ${summaryTotals.totalProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>{formatCurrency(summaryTotals.totalProfit)}</p>
                                 </div>
                             </CardContent>
                         </Card>
@@ -280,46 +293,57 @@ export default function DrugCreditorsPage() {
                                                     <Table>
                                                         <TableHeader>
                                                             <TableRow>
-                                                                <TableHead>ประเภท</TableHead>
-                                                                <TableHead>รายละเอียด</TableHead>
-                                                                <TableHead className="text-right">จำนวนเงิน</TableHead>
-                                                                <TableHead className="text-center">ชำระแล้ว</TableHead>
+                                                                <TableHead className="w-[150px]">รายการ</TableHead>
+                                                                <TableHead className="text-right">ต้นทุน</TableHead>
+                                                                <TableHead className="text-right">ราคาขาย</TableHead>
+                                                                <TableHead className="text-right">กำไร</TableHead>
+                                                                <TableHead className="text-right">40%</TableHead>
+                                                                <TableHead className="text-right">60%</TableHead>
+                                                                <TableHead className="text-right">รวม</TableHead>
                                                                 <TableHead><span className="sr-only">ลบ</span></TableHead>
                                                             </TableRow>
                                                         </TableHeader>
                                                         <TableBody>
-                                                        {summary.entries.map((entry) => (
-                                                            <TableRow key={entry.id} className={entry.isPaid ? 'bg-green-50/50 text-muted-foreground' : 'bg-yellow-50/50'}>
-                                                                <TableCell className="p-2">
-                                                                     <Badge variant={'secondary'} className="w-[60px] justify-center">
-                                                                        เจ้าหนี้
-                                                                    </Badge>
-                                                                </TableCell>
-                                                                <TableCell className="font-medium p-2">
+                                                        {summary.entries.map((entry) => {
+                                                            const profit = entry.sellingPrice - entry.cost;
+                                                            const share40 = profit * 0.4;
+                                                            const share60 = profit * 0.6;
+                                                            return (
+                                                            <TableRow key={entry.id} className={entry.isPaid ? 'bg-green-50/50 text-muted-foreground' : ''}>
+                                                                <TableCell className="font-medium p-1">
                                                                     <Input 
                                                                         defaultValue={entry.description}
                                                                         onBlur={(e) => handleUpdateEntry(entry.id, { description: e.target.value })}
                                                                         className="h-8"
                                                                     />
                                                                 </TableCell>
-                                                                <TableCell className="p-2">
+                                                                <TableCell className="p-1">
                                                                     <Input 
                                                                         type="number"
-                                                                        defaultValue={entry.amount}
-                                                                        onBlur={(e) => handleUpdateEntry(entry.id, { amount: Number(e.target.value) || 0 })}
+                                                                        defaultValue={entry.cost}
+                                                                        onBlur={(e) => handleUpdateEntry(entry.id, { cost: Number(e.target.value) || 0 })}
                                                                         className="h-8 text-right"
                                                                     />
                                                                 </TableCell>
-                                                                <TableCell className="text-center p-2">
-                                                                    <Checkbox checked={entry.isPaid} onCheckedChange={(checked) => handleUpdateEntry(entry.id, { isPaid: !!checked })} />
+                                                                <TableCell className="p-1">
+                                                                    <Input 
+                                                                        type="number"
+                                                                        defaultValue={entry.sellingPrice}
+                                                                        onBlur={(e) => handleUpdateEntry(entry.id, { sellingPrice: Number(e.target.value) || 0 })}
+                                                                        className="h-8 text-right"
+                                                                    />
                                                                 </TableCell>
-                                                                <TableCell className="p-2">
+                                                                <TableCell className={`text-right p-1 font-semibold ${profit >= 0 ? '' : 'text-red-500'}`}>{formatCurrency(profit)}</TableCell>
+                                                                <TableCell className="text-right p-1">{formatCurrency(share40)}</TableCell>
+                                                                <TableCell className="text-right p-1">{formatCurrency(share60)}</TableCell>
+                                                                <TableCell className="text-right p-1 font-semibold text-blue-600">{formatCurrency(entry.sellingPrice)}</TableCell>
+                                                                <TableCell className="p-1">
                                                                     <Button variant="ghost" size="icon" onClick={() => handleDeleteEntry(entry.id)}>
                                                                         <Trash2 className="h-4 w-4 text-red-500" />
                                                                     </Button>
                                                                 </TableCell>
                                                             </TableRow>
-                                                        ))}
+                                                        )})}
                                                         </TableBody>
                                                     </Table>
                                                 </AccordionContent>
@@ -339,5 +363,3 @@ export default function DrugCreditorsPage() {
         </div>
     );
 }
-
-    

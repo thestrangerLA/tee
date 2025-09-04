@@ -35,9 +35,12 @@ export const listenToDrugCreditorEntries = (callback: (items: DrugCreditorEntry[
     return unsubscribe;
 };
 
-export const addDrugCreditorEntry = async (entry: Omit<DrugCreditorEntry, 'id' | 'createdAt'>) => {
+export const addDrugCreditorEntry = async (entry: Omit<DrugCreditorEntry, 'id' | 'createdAt' | 'isPaid'>) => {
     const entryWithTimestamp = {
         ...entry,
+        cost: entry.cost || 0,
+        sellingPrice: entry.sellingPrice || 0,
+        isPaid: false,
         date: Timestamp.fromDate(entry.date),
         createdAt: serverTimestamp()
     };
