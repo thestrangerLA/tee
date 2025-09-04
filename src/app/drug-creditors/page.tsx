@@ -323,23 +323,25 @@ export default function DrugCreditorsPage() {
 
                                                         return (
                                                         <AccordionItem value={`order-${order}`} key={order}>
-                                                            <AccordionTrigger>
-                                                                <div className="flex justify-between w-full pr-4 items-center">
-                                                                    <div className="font-semibold">Order: {order}</div>
-                                                                    <div className="flex gap-4 items-center">
-                                                                        <span className="text-sm text-blue-600">จ่าย (คงเหลือ): {formatCurrency(orderTotals.payable)}</span>
-                                                                        <span className="text-sm text-green-600">กำไร (40%): {formatCurrency(orderTotals.profit)}</span>
-                                                                         <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                                                                            <Checkbox 
-                                                                                id={`order-paid-${order}-${summary.date}`}
-                                                                                checked={isOrderPaid} 
-                                                                                onCheckedChange={(checked) => handleOrderStatusChange(summary.date, Number(order), !!checked)}
-                                                                            />
-                                                                            <Label htmlFor={`order-paid-${order}-${summary.date}`} className="text-sm font-medium">เสร็จสิ้น</Label>
+                                                            <div className="flex w-full items-center">
+                                                                <AccordionTrigger className="flex-1">
+                                                                    <div className="flex justify-between w-full pr-4 items-center">
+                                                                        <div className="font-semibold">Order: {order}</div>
+                                                                        <div className="flex gap-4 items-center">
+                                                                            <span className="text-sm text-blue-600">จ่าย (คงเหลือ): {formatCurrency(orderTotals.payable)}</span>
+                                                                            <span className="text-sm text-green-600">กำไร (40%): {formatCurrency(orderTotals.profit)}</span>
                                                                         </div>
                                                                     </div>
+                                                                </AccordionTrigger>
+                                                                <div className="flex items-center gap-2 pr-4 pl-2" onClick={(e) => e.stopPropagation()}>
+                                                                    <Checkbox 
+                                                                        id={`order-paid-${order}-${summary.date}`}
+                                                                        checked={isOrderPaid} 
+                                                                        onCheckedChange={(checked) => handleOrderStatusChange(summary.date, Number(order), !!checked)}
+                                                                    />
+                                                                    <Label htmlFor={`order-paid-${order}-${summary.date}`} className="text-sm font-medium">เสร็จสิ้น</Label>
                                                                 </div>
-                                                            </AccordionTrigger>
+                                                            </div>
                                                             <AccordionContent>
                                                                 <Table>
                                                                     <TableHeader>
