@@ -69,12 +69,12 @@ export default function Home() {
            <Link href="/drug-creditors">
             <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-2xl font-bold font-headline">เจ้าหนี้ค่ายา</CardTitle>
+                <CardTitle className="text-2xl font-bold font-headline">ลูกหนี้ค่ายา</CardTitle>
                 <Users className="h-8 w-8 text-rose-500" />
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  จัดการและติดตามรายการเจ้าหนี้ค่ายาโดยเฉพาะ
+                  จัดการและติดตามรายการลูกหนี้ค่ายาโดยเฉพาะ
                 </p>
               </CardContent>
             </Card>
@@ -110,5 +110,3 @@ export default function Home() {
     </div>
   )
 }
-
-    

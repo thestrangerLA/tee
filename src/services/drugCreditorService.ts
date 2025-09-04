@@ -118,5 +118,3 @@ export const updateOrderStatus = async (date: Date, order: number, isPaid: boole
     // Commit the batch
     await batch.commit();
 };
-
-    

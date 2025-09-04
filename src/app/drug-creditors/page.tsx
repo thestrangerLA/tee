@@ -274,7 +274,7 @@ export default function DrugCreditorsPage() {
                 </Button>
                 <div className="flex items-center gap-2">
                     <Users className="h-6 w-6 text-rose-500" />
-                    <h1 className="text-xl font-bold tracking-tight">เจ้าหนี้ค่ายา</h1>
+                    <h1 className="text-xl font-bold tracking-tight">ลูกหนี้ค่ายา</h1>
                 </div>
                  <div className="ml-auto flex items-center gap-4">
                      <MonthYearSelector />
@@ -301,7 +301,7 @@ export default function DrugCreditorsPage() {
                                 <p className="text-lg font-bold text-green-600">{formatCurrency(pageTotals.profit)}</p>
                             </div>
                              <div className="flex items-center justify-between rounded-lg border p-3 bg-red-50">
-                                <h3 className="text-base font-semibold text-red-700">รวมเจ้าหนี้คงเหลือ</h3>
+                                <h3 className="text-base font-semibold text-red-700">รวมลูกหนี้คงเหลือ</h3>
                                 <p className="text-lg font-bold text-red-600">{formatCurrency(pageTotals.remainingCreditorPayable)}</p>
                             </div>
                         </CardContent>
