@@ -12,12 +12,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { useToast } from "@/hooks/use-toast";
-import { format, startOfDay } from "date-fns";
+import { format, startOfDay, isWithinInterval, startOfMonth, endOfMonth, getYear, setMonth, getMonth } from "date-fns";
 import { th } from "date-fns/locale";
-import { ArrowLeft, Users, Calendar as CalendarIcon, Trash2, PlusCircle } from "lucide-react";
+import { ArrowLeft, Users, Calendar as CalendarIcon, Trash2, PlusCircle, ChevronDown } from "lucide-react";
 import { DrugCreditorEntry } from '@/lib/types';
 import { listenToDrugCreditorEntries, addDrugCreditorEntry, updateDrugCreditorEntry, deleteDrugCreditorEntry } from '@/services/drugCreditorService';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuPortal, DropdownMenuSubTrigger, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 
 const formatCurrency = (value: number) => {
@@ -26,7 +27,7 @@ const formatCurrency = (value: number) => {
 };
 
 
-const AddEntryForm = ({ onAddEntry }: { onAddEntry: (entry: Omit<DrugCreditorEntry, 'id' | 'createdAt' | 'date' | 'isPaid'>) => Promise<void> }) => {
+const AddEntryForm = ({ onAddEntry, defaultDate }: { onAddEntry: (entry: Omit<DrugCreditorEntry, 'id' | 'createdAt' | 'date' | 'isPaid'>) => Promise<void>, defaultDate: Date }) => {
     const { toast } = useToast();
     const [order, setOrder] = useState(0);
     const [description, setDescription] = useState('');
@@ -107,16 +108,22 @@ const AddEntryForm = ({ onAddEntry }: { onAddEntry: (entry: Omit<DrugCreditorEnt
 export default function DrugCreditorsPage() {
     const { toast } = useToast();
     const [allEntries, setAllEntries] = useState<DrugCreditorEntry[]>([]);
-    const [displayDate, setDisplayDate] = useState<Date>(new Date());
+    const [displayMonth, setDisplayMonth] = useState<Date>(new Date());
 
     useEffect(() => {
-        const unsubscribe = listenToDrugCreditorEntries(setAllEntries, startOfDay(displayDate));
+        const unsubscribe = listenToDrugCreditorEntries(setAllEntries);
         return () => unsubscribe();
-    }, [displayDate]);
+    }, []);
+
+    const filteredEntries = useMemo(() => {
+        const start = startOfMonth(displayMonth);
+        const end = endOfMonth(displayMonth);
+        return allEntries.filter(entry => isWithinInterval(entry.date, { start, end }));
+    }, [allEntries, displayMonth]);
 
     const handleAddEntry = async (newEntry: Omit<DrugCreditorEntry, 'id' | 'createdAt' | 'date' | 'isPaid'>) => {
         try {
-            await addDrugCreditorEntry(newEntry, displayDate);
+            await addDrugCreditorEntry(newEntry, displayMonth);
         } catch (error) {
             console.error('Error adding entry:', error);
             toast({ title: 'เกิดข้อผิดพลาด', variant: 'destructive' });
@@ -146,7 +153,7 @@ export default function DrugCreditorsPage() {
 
     const groupedByOrder = useMemo(() => {
         const groups: Record<string, DrugCreditorEntry[]> = {};
-        allEntries.forEach(entry => {
+        filteredEntries.forEach(entry => {
             const orderKey = String(entry.order);
             if (!groups[orderKey]) {
                 groups[orderKey] = [];
@@ -154,14 +161,14 @@ export default function DrugCreditorsPage() {
             groups[orderKey].push(entry);
         });
         return Object.entries(groups).sort(([a], [b]) => Number(a) - Number(b));
-    }, [allEntries]);
+    }, [filteredEntries]);
 
     const pageTotals = useMemo(() => {
-        const cost = allEntries.reduce((sum, entry) => sum + (entry.cost || 0), 0);
-        const sellingPrice = allEntries.reduce((sum, entry) => sum + (entry.sellingPrice || 0), 0);
+        const cost = filteredEntries.reduce((sum, entry) => sum + (entry.cost || 0), 0);
+        const sellingPrice = filteredEntries.reduce((sum, entry) => sum + (entry.sellingPrice || 0), 0);
         const profit = sellingPrice - cost;
 
-        const unpaidEntries = allEntries.filter(e => !e.isPaid);
+        const unpaidEntries = filteredEntries.filter(e => !e.isPaid);
         const remainingCreditorPayable = unpaidEntries.reduce((sum, entry) => {
             const entryProfit = (entry.sellingPrice || 0) - (entry.cost || 0);
             const entryShare40 = entryProfit * 0.4;
@@ -169,7 +176,47 @@ export default function DrugCreditorsPage() {
         }, 0);
 
         return { cost, sellingPrice, profit, remainingCreditorPayable };
-    }, [allEntries]);
+    }, [filteredEntries]);
+
+     const MonthYearSelector = () => {
+        const years = Array.from({ length: 3 }, (_, i) => getYear(new Date()) - 1 + i);
+        const months = Array.from({ length: 12 }, (_, i) => setMonth(new Date(), i));
+
+        return (
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="flex items-center gap-2">
+                        {format(displayMonth, "LLLL yyyy", { locale: th })}
+                        <ChevronDown className="h-4 w-4" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    {years.map(year => (
+                         <DropdownMenuSub key={year}>
+                            <DropdownMenuSubTrigger>
+                                <span>{year + 543}</span>
+                            </DropdownMenuSubTrigger>
+                            <DropdownMenuPortal>
+                                <DropdownMenuSubContent>
+                                    {months.map(month => (
+                                        <DropdownMenuItem 
+                                            key={getMonth(month)} 
+                                            onClick={() => {
+                                                const newDate = new Date(year, getMonth(month), 1);
+                                                setDisplayMonth(newDate);
+                                            }}
+                                        >
+                                            {format(month, "LLLL", { locale: th })}
+                                        </DropdownMenuItem>
+                                    ))}
+                                </DropdownMenuSubContent>
+                             </DropdownMenuPortal>
+                        </DropdownMenuSub>
+                    ))}
+                </DropdownMenuContent>
+            </DropdownMenu>
+        );
+    };
 
     return (
         <div className="flex min-h-screen w-full flex-col bg-muted/40">
@@ -185,25 +232,15 @@ export default function DrugCreditorsPage() {
                     <h1 className="text-xl font-bold tracking-tight">เจ้าหนี้ค่ายา</h1>
                 </div>
                  <div className="ml-auto flex items-center gap-4">
-                     <Popover>
-                        <PopoverTrigger asChild>
-                            <Button variant={"outline"} className="w-[280px] justify-start text-left font-normal">
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {displayDate ? format(displayDate, "PPP", { locale: th }) : <span>เลือกวันที่</span>}
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
-                            <Calendar mode="single" selected={displayDate} onSelect={(date) => date && setDisplayDate(date)} initialFocus locale={th} />
-                        </PopoverContent>
-                    </Popover>
+                     <MonthYearSelector />
                 </div>
             </header>
             <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid lg:grid-cols-3">
                 <div className="lg:col-span-1 flex flex-col gap-4">
-                    <AddEntryForm onAddEntry={handleAddEntry}/>
+                    <AddEntryForm onAddEntry={handleAddEntry} defaultDate={displayMonth} />
                     <Card>
                         <CardHeader>
-                            <CardTitle>สรุปยอดรวม (สำหรับวันที่เลือก)</CardTitle>
+                            <CardTitle>สรุปยอดรวม (เดือนที่เลือก)</CardTitle>
                         </CardHeader>
                         <CardContent className="grid gap-4">
                             <div className="flex items-center justify-between rounded-lg border p-3">
@@ -229,7 +266,7 @@ export default function DrugCreditorsPage() {
                     <Card>
                         <CardHeader>
                             <CardTitle>ตารางคำนวณส่วนแบ่ง</CardTitle>
-                             <CardDescription>ข้อมูลสำหรับวันที่ {format(displayDate, "PPP", { locale: th })}</CardDescription>
+                             <CardDescription>ข้อมูลสำหรับเดือน {format(displayMonth, "LLLL yyyy", { locale: th })}</CardDescription>
                         </CardHeader>
                         <CardContent>
                             {groupedByOrder.length > 0 ? (
@@ -238,9 +275,15 @@ export default function DrugCreditorsPage() {
                                         const orderTotals = entries.reduce((acc, entry) => {
                                             const profit = (entry.sellingPrice || 0) - (entry.cost || 0);
                                             const share40 = profit * 0.4;
+                                            const creditorPayable = (entry.cost || 0) + share40;
+
                                             acc.cost += entry.cost || 0;
-                                            acc.payable += (entry.cost || 0) + share40;
                                             acc.profit += profit;
+                                            
+                                            if (!entry.isPaid) {
+                                                acc.payable += creditorPayable;
+                                            }
+                                            
                                             return acc;
                                         }, { cost: 0, payable: 0, profit: 0 });
 
@@ -250,7 +293,7 @@ export default function DrugCreditorsPage() {
                                                 <div className="flex justify-between w-full pr-4">
                                                     <div className="font-semibold text-lg">Order: {order}</div>
                                                      <div className="flex gap-4 items-center">
-                                                        <span className="text-sm text-blue-600">จ่าย: {formatCurrency(orderTotals.payable)}</span>
+                                                        <span className="text-sm text-blue-600">จ่าย (คงเหลือ): {formatCurrency(orderTotals.payable)}</span>
                                                         <span className={`text-sm ${orderTotals.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                                                             กำไร: {formatCurrency(orderTotals.profit)}
                                                         </span>
@@ -312,7 +355,7 @@ export default function DrugCreditorsPage() {
                                 </Accordion>
                             ) : (
                                  <div className="text-center text-muted-foreground py-8">
-                                    ไม่มีรายการสำหรับวันที่เลือก
+                                    ไม่มีรายการในเดือนที่เลือก
                                 </div>
                             )}
                         </CardContent>

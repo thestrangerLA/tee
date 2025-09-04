@@ -18,11 +18,8 @@ import { startOfDay } from 'date-fns';
 
 const collectionRef = collection(db, 'drugCreditorEntries');
 
-export const listenToDrugCreditorEntries = (callback: (items: DrugCreditorEntry[]) => void, date: Date) => {
-    const q = query(
-        collectionRef, 
-        where("date", "==", Timestamp.fromDate(startOfDay(date)))
-    );
+export const listenToDrugCreditorEntries = (callback: (items: DrugCreditorEntry[]) => void) => {
+    const q = query(collectionRef, orderBy('date', 'desc'));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
         const entries: DrugCreditorEntry[] = [];
         querySnapshot.forEach((doc) => {
@@ -34,9 +31,7 @@ export const listenToDrugCreditorEntries = (callback: (items: DrugCreditorEntry[
                 createdAt: (data.createdAt as Timestamp)?.toDate()
             } as DrugCreditorEntry);
         });
-        // Sort on the client-side to avoid needing a composite index
-        const sortedEntries = entries.sort((a, b) => a.order - b.order);
-        callback(sortedEntries);
+        callback(entries);
     });
     return unsubscribe;
 };
