@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { useToast } from "@/hooks/use-toast";
@@ -23,7 +24,7 @@ const formatCurrency = (value: number) => {
 };
 
 
-const AddEntryForm = ({ onAddEntry, defaultDate }: { onAddEntry: (entry: Omit<DrugCreditorEntry, 'id' | 'createdAt' | 'date'>) => Promise<void>, defaultDate: Date }) => {
+const AddEntryForm = ({ onAddEntry, defaultDate }: { onAddEntry: (entry: Omit<DrugCreditorEntry, 'id' | 'createdAt' | 'date' | 'isPaid'>) => Promise<void>, defaultDate: Date }) => {
     const { toast } = useToast();
     const [order, setOrder] = useState(0);
     const [description, setDescription] = useState('');
@@ -111,7 +112,7 @@ export default function DrugCreditorsPage() {
         return () => unsubscribe();
     }, [displayDate]);
 
-    const handleAddEntry = async (newEntry: Omit<DrugCreditorEntry, 'id' | 'createdAt' | 'date'>) => {
+    const handleAddEntry = async (newEntry: Omit<DrugCreditorEntry, 'id' | 'createdAt' | 'date' | 'isPaid'>) => {
         try {
             await addDrugCreditorEntry(newEntry, displayDate);
         } catch (error) {
@@ -142,12 +143,23 @@ export default function DrugCreditorsPage() {
     };
 
     const totals = useMemo(() => {
+        // Calculate totals for all entries
         const cost = entries.reduce((sum, entry) => sum + (entry.cost || 0), 0);
         const sellingPrice = entries.reduce((sum, entry) => sum + (entry.sellingPrice || 0), 0);
         const profit = sellingPrice - cost;
         const share40 = profit * 0.4;
         const share60 = profit * 0.6;
-        return { cost, sellingPrice, profit, share40, share60 };
+        const creditorPayable = cost + share40;
+
+        // Calculate totals only for unpaid entries
+        const unpaidEntries = entries.filter(e => !e.isPaid);
+        const remainingCreditorPayable = unpaidEntries.reduce((sum, entry) => {
+            const entryProfit = (entry.sellingPrice || 0) - (entry.cost || 0);
+            const entryShare40 = entryProfit * 0.4;
+            return sum + (entry.cost || 0) + entryShare40;
+        }, 0);
+
+        return { cost, sellingPrice, profit, share40, share60, creditorPayable, remainingCreditorPayable };
     }, [entries]);
 
     return (
@@ -193,11 +205,13 @@ export default function DrugCreditorsPage() {
                                         <TableRow>
                                             <TableHead className="w-[80px]">order</TableHead>
                                             <TableHead>รายการ</TableHead>
-                                            <TableHead className="w-[150px] text-right">ต้นทุน</TableHead>
-                                            <TableHead className="w-[150px] text-right">ราคาขาย</TableHead>
-                                            <TableHead className="w-[150px] text-right">กำไร</TableHead>
-                                            <TableHead className="w-[150px] text-right">40%</TableHead>
-                                            <TableHead className="w-[150px] text-right">60%</TableHead>
+                                            <TableHead className="w-[120px] text-right">ต้นทุน</TableHead>
+                                            <TableHead className="w-[120px] text-right">ราคาขาย</TableHead>
+                                            <TableHead className="w-[120px] text-right">กำไร</TableHead>
+                                            <TableHead className="w-[120px] text-right">40%</TableHead>
+                                            <TableHead className="w-[120px] text-right">60%</TableHead>
+                                            <TableHead className="w-[140px] text-right">เจ้าหนี้ ต้องจ่าย</TableHead>
+                                            <TableHead className="w-[80px] text-center">เสร็จสิ้น</TableHead>
                                             <TableHead className="w-[50px]"><span className="sr-only">Delete</span></TableHead>
                                         </TableRow>
                                     </TableHeader>
@@ -206,14 +220,16 @@ export default function DrugCreditorsPage() {
                                             const profit = (entry.sellingPrice || 0) - (entry.cost || 0);
                                             const share40 = profit * 0.4;
                                             const share60 = profit * 0.6;
+                                            const creditorPayable = (entry.cost || 0) + share40;
                                             return (
-                                                <TableRow key={entry.id}>
+                                                <TableRow key={entry.id} className={entry.isPaid ? "bg-green-50/50 text-muted-foreground" : ""}>
                                                     <TableCell className="p-1 text-center">{entry.order}</TableCell>
                                                     <TableCell className="p-1">
                                                         <Input
                                                             defaultValue={entry.description}
                                                             onBlur={(e) => handleUpdateEntry(entry.id, 'description', e.target.value)}
                                                             className="h-8"
+                                                            disabled={entry.isPaid}
                                                         />
                                                     </TableCell>
                                                     <TableCell className="p-1">
@@ -222,6 +238,7 @@ export default function DrugCreditorsPage() {
                                                             defaultValue={entry.cost}
                                                             onBlur={(e) => handleUpdateEntry(entry.id, 'cost', Number(e.target.value) || 0)}
                                                             className="h-8 text-right"
+                                                            disabled={entry.isPaid}
                                                         />
                                                     </TableCell>
                                                     <TableCell className="p-1">
@@ -230,11 +247,19 @@ export default function DrugCreditorsPage() {
                                                             defaultValue={entry.sellingPrice}
                                                             onBlur={(e) => handleUpdateEntry(entry.id, 'sellingPrice', Number(e.target.value) || 0)}
                                                             className="h-8 text-right"
+                                                            disabled={entry.isPaid}
                                                         />
                                                     </TableCell>
                                                     <TableCell className="p-1 text-right font-medium">{formatCurrency(profit)}</TableCell>
                                                     <TableCell className="p-1 text-right">{formatCurrency(share40)}</TableCell>
                                                     <TableCell className="p-1 text-right">{formatCurrency(share60)}</TableCell>
+                                                    <TableCell className="p-1 text-right font-bold text-blue-600">{formatCurrency(creditorPayable)}</TableCell>
+                                                    <TableCell className="p-1 text-center">
+                                                         <Checkbox 
+                                                            checked={entry.isPaid} 
+                                                            onCheckedChange={(checked) => handleUpdateEntry(entry.id, 'isPaid', !!checked)} 
+                                                        />
+                                                    </TableCell>
                                                     <TableCell className="p-1 text-center">
                                                         <Button variant="ghost" size="icon" onClick={() => handleDeleteEntry(entry.id)}>
                                                             <Trash2 className="h-4 w-4 text-red-500" />
@@ -250,7 +275,13 @@ export default function DrugCreditorsPage() {
                                             <TableCell className="text-right p-2">{formatCurrency(totals.profit)}</TableCell>
                                             <TableCell className="text-right p-2">{formatCurrency(totals.share40)}</TableCell>
                                             <TableCell className="text-right p-2">{formatCurrency(totals.share60)}</TableCell>
-                                            <TableCell className="p-2"></TableCell>
+                                            <TableCell className="text-right p-2 text-blue-700">{formatCurrency(totals.creditorPayable)}</TableCell>
+                                            <TableCell colSpan={2}></TableCell>
+                                        </TableRow>
+                                        <TableRow className="bg-red-100/50 font-bold">
+                                            <TableCell colSpan={7} className="text-right p-2 text-red-600">รวมเจ้าหนี้คงเหลือ (ที่ยังไม่จ่าย)</TableCell>
+                                            <TableCell className="text-right p-2 text-red-700">{formatCurrency(totals.remainingCreditorPayable)}</TableCell>
+                                            <TableCell colSpan={2}></TableCell>
                                         </TableRow>
                                     </TableBody>
                                 </Table>
@@ -262,4 +293,3 @@ export default function DrugCreditorsPage() {
         </div>
     );
 }
-
