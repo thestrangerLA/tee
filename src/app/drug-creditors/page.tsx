@@ -166,7 +166,7 @@ export default function DrugCreditorsPage() {
         const sellingPrice = filteredEntries.reduce((sum, entry) => sum + (entry.sellingPrice || 0), 0);
         const profit = filteredEntries.reduce((sum, entry) => {
             const entryProfit = (entry.sellingPrice || 0) - (entry.cost || 0);
-            return sum + (entryProfit * 0.6); // Our share is 60%
+            return sum + (entryProfit * 0.4); // This profit is the 40% share
         }, 0);
 
 
@@ -254,7 +254,7 @@ export default function DrugCreditorsPage() {
                                 <p className="text-lg font-bold">{formatCurrency(pageTotals.sellingPrice)}</p>
                             </div>
                             <div className="flex items-center justify-between rounded-lg border p-3">
-                                <h3 className="text-base font-semibold">กำไร (60%)</h3>
+                                <h3 className="text-base font-semibold">กำไร (40%)</h3>
                                 <p className="text-lg font-bold text-green-600">{formatCurrency(pageTotals.profit)}</p>
                             </div>
                              <div className="flex items-center justify-between rounded-lg border p-3 bg-red-50">
@@ -276,11 +276,10 @@ export default function DrugCreditorsPage() {
                                     {groupedByOrder.map(([order, entries]) => {
                                         const orderTotals = entries.reduce((acc, entry) => {
                                             const profit = (entry.sellingPrice || 0) - (entry.cost || 0);
-                                            const share60 = profit * 0.6;
-                                            acc.profit += share60;
+                                            const share40 = profit * 0.4;
+                                            acc.profit += share40;
                                             
                                             if (!entry.isPaid) {
-                                                const share40 = profit * 0.4;
                                                 const creditorPayable = (entry.cost || 0) + share40;
                                                 acc.payable += creditorPayable;
                                             }
@@ -296,7 +295,7 @@ export default function DrugCreditorsPage() {
                                                      <div className="flex gap-4 items-center">
                                                         <span className="text-sm text-blue-600">จ่าย (คงเหลือ): {formatCurrency(orderTotals.payable)}</span>
                                                         <span className={`text-sm ${orderTotals.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                                            กำไร (60%): {formatCurrency(orderTotals.profit)}
+                                                            กำไร (40%): {formatCurrency(orderTotals.profit)}
                                                         </span>
                                                     </div>
                                                 </div>
