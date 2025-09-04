@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,6 +17,8 @@ import { th } from "date-fns/locale";
 import { ArrowLeft, Users, Calendar as CalendarIcon, Trash2, PlusCircle } from "lucide-react";
 import { DrugCreditorEntry } from '@/lib/types';
 import { listenToDrugCreditorEntries, addDrugCreditorEntry, updateDrugCreditorEntry, deleteDrugCreditorEntry } from '@/services/drugCreditorService';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+
 
 const formatCurrency = (value: number) => {
     if (isNaN(value)) return '0';
@@ -24,7 +26,7 @@ const formatCurrency = (value: number) => {
 };
 
 
-const AddEntryForm = ({ onAddEntry, defaultDate }: { onAddEntry: (entry: Omit<DrugCreditorEntry, 'id' | 'createdAt' | 'date' | 'isPaid'>) => Promise<void>, defaultDate: Date }) => {
+const AddEntryForm = ({ onAddEntry }: { onAddEntry: (entry: Omit<DrugCreditorEntry, 'id' | 'createdAt' | 'date' | 'isPaid'>) => Promise<void> }) => {
     const { toast } = useToast();
     const [order, setOrder] = useState(0);
     const [description, setDescription] = useState('');
@@ -104,11 +106,11 @@ const AddEntryForm = ({ onAddEntry, defaultDate }: { onAddEntry: (entry: Omit<Dr
 
 export default function DrugCreditorsPage() {
     const { toast } = useToast();
-    const [entries, setEntries] = useState<DrugCreditorEntry[]>([]);
+    const [allEntries, setAllEntries] = useState<DrugCreditorEntry[]>([]);
     const [displayDate, setDisplayDate] = useState<Date>(new Date());
 
     useEffect(() => {
-        const unsubscribe = listenToDrugCreditorEntries(setEntries, startOfDay(displayDate));
+        const unsubscribe = listenToDrugCreditorEntries(setAllEntries, startOfDay(displayDate));
         return () => unsubscribe();
     }, [displayDate]);
 
@@ -142,25 +144,32 @@ export default function DrugCreditorsPage() {
         }
     };
 
-    const totals = useMemo(() => {
-        // Calculate totals for all entries
-        const cost = entries.reduce((sum, entry) => sum + (entry.cost || 0), 0);
-        const sellingPrice = entries.reduce((sum, entry) => sum + (entry.sellingPrice || 0), 0);
-        const profit = sellingPrice - cost;
-        const share40 = profit * 0.4;
-        const share60 = profit * 0.6;
-        const creditorPayable = cost + share40;
+    const groupedByOrder = useMemo(() => {
+        const groups: Record<string, DrugCreditorEntry[]> = {};
+        allEntries.forEach(entry => {
+            const orderKey = String(entry.order);
+            if (!groups[orderKey]) {
+                groups[orderKey] = [];
+            }
+            groups[orderKey].push(entry);
+        });
+        return Object.entries(groups).sort(([a], [b]) => Number(a) - Number(b));
+    }, [allEntries]);
 
-        // Calculate totals only for unpaid entries
-        const unpaidEntries = entries.filter(e => !e.isPaid);
+    const pageTotals = useMemo(() => {
+        const cost = allEntries.reduce((sum, entry) => sum + (entry.cost || 0), 0);
+        const sellingPrice = allEntries.reduce((sum, entry) => sum + (entry.sellingPrice || 0), 0);
+        const profit = sellingPrice - cost;
+
+        const unpaidEntries = allEntries.filter(e => !e.isPaid);
         const remainingCreditorPayable = unpaidEntries.reduce((sum, entry) => {
             const entryProfit = (entry.sellingPrice || 0) - (entry.cost || 0);
             const entryShare40 = entryProfit * 0.4;
             return sum + (entry.cost || 0) + entryShare40;
         }, 0);
 
-        return { cost, sellingPrice, profit, share40, share60, creditorPayable, remainingCreditorPayable };
-    }, [entries]);
+        return { cost, sellingPrice, profit, remainingCreditorPayable };
+    }, [allEntries]);
 
     return (
         <div className="flex min-h-screen w-full flex-col bg-muted/40">
@@ -190,102 +199,122 @@ export default function DrugCreditorsPage() {
                 </div>
             </header>
             <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid lg:grid-cols-3">
-                <div className="lg:col-span-1">
-                    <AddEntryForm onAddEntry={handleAddEntry} defaultDate={displayDate}/>
+                <div className="lg:col-span-1 flex flex-col gap-4">
+                    <AddEntryForm onAddEntry={handleAddEntry}/>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>สรุปยอดรวม (สำหรับวันที่เลือก)</CardTitle>
+                        </CardHeader>
+                        <CardContent className="grid gap-4">
+                            <div className="flex items-center justify-between rounded-lg border p-3">
+                                <h3 className="text-base font-semibold">ต้นทุนรวม</h3>
+                                <p className="text-lg font-bold">{formatCurrency(pageTotals.cost)}</p>
+                            </div>
+                            <div className="flex items-center justify-between rounded-lg border p-3">
+                                <h3 className="text-base font-semibold">ราคาขายรวม</h3>
+                                <p className="text-lg font-bold">{formatCurrency(pageTotals.sellingPrice)}</p>
+                            </div>
+                            <div className="flex items-center justify-between rounded-lg border p-3">
+                                <h3 className="text-base font-semibold">กำไรรวม</h3>
+                                <p className="text-lg font-bold text-green-600">{formatCurrency(pageTotals.profit)}</p>
+                            </div>
+                             <div className="flex items-center justify-between rounded-lg border p-3 bg-red-50">
+                                <h3 className="text-base font-semibold text-red-700">รวมเจ้าหนี้คงเหลือ</h3>
+                                <p className="text-lg font-bold text-red-600">{formatCurrency(pageTotals.remainingCreditorPayable)}</p>
+                            </div>
+                        </CardContent>
+                    </Card>
                 </div>
                 <div className="lg:col-span-2">
                     <Card>
                         <CardHeader>
                             <CardTitle>ตารางคำนวณส่วนแบ่ง</CardTitle>
+                             <CardDescription>ข้อมูลสำหรับวันที่ {format(displayDate, "PPP", { locale: th })}</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <div className="overflow-x-auto">
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead className="w-[80px]">order</TableHead>
-                                            <TableHead>รายการ</TableHead>
-                                            <TableHead className="w-[120px] text-right">ต้นทุน</TableHead>
-                                            <TableHead className="w-[120px] text-right">ราคาขาย</TableHead>
-                                            <TableHead className="w-[120px] text-right">กำไร</TableHead>
-                                            <TableHead className="w-[120px] text-right">40%</TableHead>
-                                            <TableHead className="w-[120px] text-right">60%</TableHead>
-                                            <TableHead className="w-[140px] text-right">เจ้าหนี้ ต้องจ่าย</TableHead>
-                                            <TableHead className="w-[80px] text-center">เสร็จสิ้น</TableHead>
-                                            <TableHead className="w-[50px]"><span className="sr-only">Delete</span></TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {entries.map((entry) => {
+                            {groupedByOrder.length > 0 ? (
+                                <Accordion type="single" collapsible className="w-full">
+                                    {groupedByOrder.map(([order, entries]) => {
+                                        const orderTotals = entries.reduce((acc, entry) => {
                                             const profit = (entry.sellingPrice || 0) - (entry.cost || 0);
                                             const share40 = profit * 0.4;
-                                            const share60 = profit * 0.6;
-                                            const creditorPayable = (entry.cost || 0) + share40;
-                                            return (
-                                                <TableRow key={entry.id} className={entry.isPaid ? "bg-green-50/50 text-muted-foreground" : ""}>
-                                                    <TableCell className="p-1 text-center">{entry.order}</TableCell>
-                                                    <TableCell className="p-1">
-                                                        <Input
-                                                            defaultValue={entry.description}
-                                                            onBlur={(e) => handleUpdateEntry(entry.id, 'description', e.target.value)}
-                                                            className="h-8"
-                                                            disabled={entry.isPaid}
-                                                        />
-                                                    </TableCell>
-                                                    <TableCell className="p-1">
-                                                        <Input
-                                                            type="number"
-                                                            defaultValue={entry.cost}
-                                                            onBlur={(e) => handleUpdateEntry(entry.id, 'cost', Number(e.target.value) || 0)}
-                                                            className="h-8 text-right"
-                                                            disabled={entry.isPaid}
-                                                        />
-                                                    </TableCell>
-                                                    <TableCell className="p-1">
-                                                        <Input
-                                                            type="number"
-                                                            defaultValue={entry.sellingPrice}
-                                                            onBlur={(e) => handleUpdateEntry(entry.id, 'sellingPrice', Number(e.target.value) || 0)}
-                                                            className="h-8 text-right"
-                                                            disabled={entry.isPaid}
-                                                        />
-                                                    </TableCell>
-                                                    <TableCell className="p-1 text-right font-medium">{formatCurrency(profit)}</TableCell>
-                                                    <TableCell className="p-1 text-right">{formatCurrency(share40)}</TableCell>
-                                                    <TableCell className="p-1 text-right">{formatCurrency(share60)}</TableCell>
-                                                    <TableCell className="p-1 text-right font-bold text-blue-600">{formatCurrency(creditorPayable)}</TableCell>
-                                                    <TableCell className="p-1 text-center">
-                                                         <Checkbox 
-                                                            checked={entry.isPaid} 
-                                                            onCheckedChange={(checked) => handleUpdateEntry(entry.id, 'isPaid', !!checked)} 
-                                                        />
-                                                    </TableCell>
-                                                    <TableCell className="p-1 text-center">
-                                                        <Button variant="ghost" size="icon" onClick={() => handleDeleteEntry(entry.id)}>
-                                                            <Trash2 className="h-4 w-4 text-red-500" />
-                                                        </Button>
-                                                    </TableCell>
-                                                </TableRow>
-                                            );
-                                        })}
-                                        <TableRow className="bg-muted/50 font-bold">
-                                            <TableCell colSpan={2} className="text-right p-2">รวม</TableCell>
-                                            <TableCell className="text-right p-2">{formatCurrency(totals.cost)}</TableCell>
-                                            <TableCell className="text-right p-2">{formatCurrency(totals.sellingPrice)}</TableCell>
-                                            <TableCell className="text-right p-2">{formatCurrency(totals.profit)}</TableCell>
-                                            <TableCell className="text-right p-2">{formatCurrency(totals.share40)}</TableCell>
-                                            <TableCell className="text-right p-2">{formatCurrency(totals.share60)}</TableCell>
-                                            <TableCell className="text-right p-2 text-blue-700">{formatCurrency(totals.creditorPayable)}</TableCell>
-                                            <TableCell colSpan={2}></TableCell>
-                                        </TableRow>
-                                        <TableRow className="bg-red-100/50 font-bold">
-                                            <TableCell colSpan={7} className="text-right p-2 text-red-600">รวมเจ้าหนี้คงเหลือ (ที่ยังไม่จ่าย)</TableCell>
-                                            <TableCell className="text-right p-2 text-red-700">{formatCurrency(totals.remainingCreditorPayable)}</TableCell>
-                                            <TableCell colSpan={2}></TableCell>
-                                        </TableRow>
-                                    </TableBody>
-                                </Table>
-                            </div>
+                                            acc.cost += entry.cost || 0;
+                                            acc.payable += (entry.cost || 0) + share40;
+                                            acc.profit += profit;
+                                            return acc;
+                                        }, { cost: 0, payable: 0, profit: 0 });
+
+                                        return (
+                                        <AccordionItem value={`order-${order}`} key={order}>
+                                            <AccordionTrigger>
+                                                <div className="flex justify-between w-full pr-4">
+                                                    <div className="font-semibold text-lg">Order: {order}</div>
+                                                     <div className="flex gap-4 items-center">
+                                                        <span className="text-sm text-blue-600">จ่าย: {formatCurrency(orderTotals.payable)}</span>
+                                                        <span className={`text-sm ${orderTotals.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                                            กำไร: {formatCurrency(orderTotals.profit)}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </AccordionTrigger>
+                                            <AccordionContent>
+                                                <div className="overflow-x-auto">
+                                                    <Table>
+                                                        <TableHeader>
+                                                            <TableRow>
+                                                                <TableHead>รายการ</TableHead>
+                                                                <TableHead className="w-[120px] text-right">ต้นทุน</TableHead>
+                                                                <TableHead className="w-[120px] text-right">ราคาขาย</TableHead>
+                                                                <TableHead className="w-[120px] text-right">กำไร</TableHead>
+                                                                <TableHead className="w-[120px] text-right">40%</TableHead>
+                                                                <TableHead className="w-[120px] text-right">60%</TableHead>
+                                                                <TableHead className="w-[140px] text-right">เจ้าหนี้ ต้องจ่าย</TableHead>
+                                                                <TableHead className="w-[80px] text-center">เสร็จสิ้น</TableHead>
+                                                                <TableHead className="w-[50px]"><span className="sr-only">Delete</span></TableHead>
+                                                            </TableRow>
+                                                        </TableHeader>
+                                                        <TableBody>
+                                                            {entries.map((entry) => {
+                                                                const profit = (entry.sellingPrice || 0) - (entry.cost || 0);
+                                                                const share40 = profit * 0.4;
+                                                                const share60 = profit * 0.6;
+                                                                const creditorPayable = (entry.cost || 0) + share40;
+                                                                return (
+                                                                    <TableRow key={entry.id} className={entry.isPaid ? "bg-green-50/50 text-muted-foreground" : ""}>
+                                                                        <TableCell className="p-1">
+                                                                            <Input defaultValue={entry.description} onBlur={(e) => handleUpdateEntry(entry.id, 'description', e.target.value)} className="h-8" disabled={entry.isPaid} />
+                                                                        </TableCell>
+                                                                        <TableCell className="p-1">
+                                                                            <Input type="number" defaultValue={entry.cost} onBlur={(e) => handleUpdateEntry(entry.id, 'cost', Number(e.target.value) || 0)} className="h-8 text-right" disabled={entry.isPaid} />
+                                                                        </TableCell>
+                                                                        <TableCell className="p-1">
+                                                                            <Input type="number" defaultValue={entry.sellingPrice} onBlur={(e) => handleUpdateEntry(entry.id, 'sellingPrice', Number(e.target.value) || 0)} className="h-8 text-right" disabled={entry.isPaid} />
+                                                                        </TableCell>
+                                                                        <TableCell className="p-1 text-right font-medium">{formatCurrency(profit)}</TableCell>
+                                                                        <TableCell className="p-1 text-right">{formatCurrency(share40)}</TableCell>
+                                                                        <TableCell className="p-1 text-right">{formatCurrency(share60)}</TableCell>
+                                                                        <TableCell className="p-1 text-right font-bold text-blue-600">{formatCurrency(creditorPayable)}</TableCell>
+                                                                        <TableCell className="p-1 text-center">
+                                                                            <Checkbox checked={entry.isPaid} onCheckedChange={(checked) => handleUpdateEntry(entry.id, 'isPaid', !!checked)} />
+                                                                        </TableCell>
+                                                                        <TableCell className="p-1 text-center">
+                                                                            <Button variant="ghost" size="icon" onClick={() => handleDeleteEntry(entry.id)}><Trash2 className="h-4 w-4 text-red-500" /></Button>
+                                                                        </TableCell>
+                                                                    </TableRow>
+                                                                );
+                                                            })}
+                                                        </TableBody>
+                                                    </Table>
+                                                </div>
+                                            </AccordionContent>
+                                        </AccordionItem>
+                                    )})}
+                                </Accordion>
+                            ) : (
+                                 <div className="text-center text-muted-foreground py-8">
+                                    ไม่มีรายการสำหรับวันที่เลือก
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
                 </div>
