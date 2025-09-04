@@ -51,3 +51,14 @@ export interface DebtorCreditorEntry {
   isPaid: boolean;
   createdAt: Date;
 }
+
+export interface DrugCreditorEntry {
+  id: string;
+  date: Date;
+  amount: number;
+  description: string;
+  isPaid: boolean;
+  createdAt: Date;
+}
+
+    

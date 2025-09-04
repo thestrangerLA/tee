@@ -9,16 +9,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { format, startOfDay, isWithinInterval, startOfMonth, endOfMonth, getYear, getMonth, setMonth, isSameDay } from "date-fns";
+import { format, startOfDay, isWithinInterval, startOfMonth, endOfMonth, getYear, getMonth, setMonth } from "date-fns";
 import { th } from "date-fns/locale";
 import { ArrowLeft, Users, Calendar as CalendarIcon, Trash2, PlusCircle, ChevronDown } from "lucide-react";
-import { DebtorCreditorEntry } from '@/lib/types';
-import { listenToDebtorCreditorEntries, addDebtorCreditorEntry, updateDebtorCreditorEntry, deleteDebtorCreditorEntry } from '@/services/debtorCreditorService';
+import { DrugCreditorEntry } from '@/lib/types';
+import { listenToDrugCreditorEntries, addDrugCreditorEntry, updateDrugCreditorEntry, deleteDrugCreditorEntry } from '@/services/drugCreditorService';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import {
   DropdownMenu,
@@ -37,9 +36,8 @@ const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('th-TH', { minimumFractionDigits: 0 }).format(value);
 };
 
-const AddEntryForm = ({ onAddEntry, defaultDate }: { onAddEntry: (entry: Omit<DebtorCreditorEntry, 'id' | 'createdAt'>) => Promise<void>, defaultDate: Date }) => {
+const AddEntryForm = ({ onAddEntry, defaultDate }: { onAddEntry: (entry: Omit<DrugCreditorEntry, 'id' | 'createdAt'>) => Promise<void>, defaultDate: Date }) => {
     const { toast } = useToast();
-    const [type, setType] = useState<'debtor' | 'creditor'>('debtor');
     const [date, setDate] = useState<Date | undefined>(defaultDate);
     const [amount, setAmount] = useState(0);
     const [description, setDescription] = useState('');
@@ -61,7 +59,6 @@ const AddEntryForm = ({ onAddEntry, defaultDate }: { onAddEntry: (entry: Omit<De
 
         try {
             await onAddEntry({
-                type,
                 date: startOfDay(date),
                 amount,
                 description,
@@ -69,7 +66,6 @@ const AddEntryForm = ({ onAddEntry, defaultDate }: { onAddEntry: (entry: Omit<De
             });
             toast({ title: "เพิ่มรายการสำเร็จ" });
             // Reset form
-            setType('debtor');
             setDate(defaultDate);
             setAmount(0);
             setDescription('');
@@ -86,22 +82,10 @@ const AddEntryForm = ({ onAddEntry, defaultDate }: { onAddEntry: (entry: Omit<De
     return (
         <Card>
             <CardHeader>
-                <CardTitle>เพิ่มรายการลูกหนี้/เจ้าหนี้ทั่วไป</CardTitle>
+                <CardTitle>เพิ่มรายการเจ้าหนี้ค่ายา</CardTitle>
             </CardHeader>
             <CardContent>
                 <form onSubmit={handleSubmit} className="grid gap-6">
-                    <div className="grid gap-3">
-                        <RadioGroup value={type} onValueChange={(v) => setType(v as 'debtor' | 'creditor')} className="flex gap-4">
-                            <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="debtor" id="r-debtor" />
-                                <Label htmlFor="r-debtor">ลูกหนี้ (ต้องรับเงิน)</Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="creditor" id="r-creditor" />
-                                <Label htmlFor="r-creditor">เจ้าหนี้ (ต้องจ่ายเงิน)</Label>
-                            </div>
-                        </RadioGroup>
-                    </div>
                     <div className="grid gap-3">
                         <Label htmlFor="date">วันที่</Label>
                         <Popover>
@@ -122,7 +106,7 @@ const AddEntryForm = ({ onAddEntry, defaultDate }: { onAddEntry: (entry: Omit<De
                     </div>
                     <div className="grid gap-3">
                         <Label htmlFor="description">รายละเอียด/ชื่อ</Label>
-                        <Textarea id="description" placeholder="เช่น ค่าปุ๋ย, นาย ก." value={description} onChange={(e) => setDescription(e.target.value)} required />
+                        <Textarea id="description" placeholder="เช่น ค่ายา A, ค่ายา B" value={description} onChange={(e) => setDescription(e.target.value)} required />
                     </div>
                     <Button type="submit" className="w-full">
                         <PlusCircle className="mr-2 h-4 w-4" />
@@ -135,14 +119,13 @@ const AddEntryForm = ({ onAddEntry, defaultDate }: { onAddEntry: (entry: Omit<De
 };
 
 
-export default function DebtorsPage() {
+export default function DrugCreditorsPage() {
     const { toast } = useToast();
-    const [allEntries, setAllEntries] = useState<DebtorCreditorEntry[]>([]);
+    const [allEntries, setAllEntries] = useState<DrugCreditorEntry[]>([]);
     const [displayMonth, setDisplayMonth] = useState<Date>(new Date());
 
-
     useEffect(() => {
-        const unsubscribe = listenToDebtorCreditorEntries(setAllEntries);
+        const unsubscribe = listenToDrugCreditorEntries(setAllEntries);
         return () => unsubscribe();
     }, []);
 
@@ -151,7 +134,7 @@ export default function DebtorsPage() {
         const end = endOfMonth(displayMonth);
         const monthlyEntries = allEntries.filter(entry => isWithinInterval(entry.date, { start, end }));
 
-        const groupedByDay: Record<string, { date: Date; entries: DebtorCreditorEntry[] }> = {};
+        const groupedByDay: Record<string, { date: Date; entries: DrugCreditorEntry[] }> = {};
 
         monthlyEntries.forEach(entry => {
             const dayKey = format(entry.date, 'yyyy-MM-dd');
@@ -168,31 +151,25 @@ export default function DebtorsPage() {
 
     }, [allEntries, displayMonth]);
     
-    const summaryTotals = useMemo(() => {
+    const summaryTotal = useMemo(() => {
         const start = startOfMonth(displayMonth);
         const end = endOfMonth(displayMonth);
         const monthlyEntries = allEntries.filter(entry => isWithinInterval(entry.date, { start, end }));
         
-        const totalDebtors = monthlyEntries
-            .filter(e => e.type === 'debtor' && !e.isPaid)
+        return monthlyEntries
+            .filter(e => !e.isPaid)
             .reduce((sum, entry) => sum + entry.amount, 0);
             
-        const totalCreditors = monthlyEntries
-            .filter(e => e.type === 'creditor' && !e.isPaid)
-            .reduce((sum, entry) => sum + entry.amount, 0);
-
-        return { totalDebtors, totalCreditors };
     }, [allEntries, displayMonth]);
 
 
-    const handleAddEntry = async (entry: Omit<DebtorCreditorEntry, 'id' | 'createdAt'>) => {
-        await addDebtorCreditorEntry(entry);
+    const handleAddEntry = async (entry: Omit<DrugCreditorEntry, 'id' | 'createdAt'>) => {
+        await addDrugCreditorEntry(entry);
     };
 
-    const handleUpdateEntry = async (id: string, fields: Partial<DebtorCreditorEntry>) => {
+    const handleUpdateEntry = async (id: string, fields: Partial<DrugCreditorEntry>) => {
         try {
-            await updateDebtorCreditorEntry(id, fields);
-            // No toast for inline edits to avoid being noisy
+            await updateDrugCreditorEntry(id, fields);
         } catch (error) {
             console.error("Error updating entry: ", error);
             toast({ title: "เกิดข้อผิดพลาด", variant: "destructive" });
@@ -202,7 +179,7 @@ export default function DebtorsPage() {
     const handleDeleteEntry = async (id: string) => {
         if (!window.confirm("คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?")) return;
         try {
-            await deleteDebtorCreditorEntry(id);
+            await deleteDrugCreditorEntry(id);
             toast({ title: "ลบรายการสำเร็จ" });
         } catch (error) {
             console.error("Error deleting entry: ", error);
@@ -260,8 +237,8 @@ export default function DebtorsPage() {
                     </Link>
                 </Button>
                 <div className="flex items-center gap-2">
-                    <Users className="h-6 w-6 text-primary" />
-                    <h1 className="text-xl font-bold tracking-tight">ลูกหนี้/เจ้าหนี้ทั่วไป</h1>
+                    <Users className="h-6 w-6 text-rose-500" />
+                    <h1 className="text-xl font-bold tracking-tight">เจ้าหนี้ค่ายา</h1>
                 </div>
                 <div className="ml-auto">
                     <MonthYearSelector />
@@ -277,12 +254,8 @@ export default function DebtorsPage() {
                             </CardHeader>
                             <CardContent className="grid gap-4">
                                 <div className="flex items-center justify-between rounded-lg border p-4">
-                                    <h3 className="text-lg font-semibold">ลูกหนี้คงค้าง</h3>
-                                    <p className="text-xl font-bold text-red-600">{formatCurrency(summaryTotals.totalDebtors)}</p>
-                                </div>
-                                <div className="flex items-center justify-between rounded-lg border p-4">
-                                    <h3 className="text-lg font-semibold">เจ้าหนี้คงค้าง</h3>
-                                    <p className="text-xl font-bold text-yellow-600">{formatCurrency(summaryTotals.totalCreditors)}</p>
+                                    <h3 className="text-lg font-semibold">เจ้าหนี้ค่ายาคงค้าง</h3>
+                                    <p className="text-xl font-bold text-yellow-600">{formatCurrency(summaryTotal)}</p>
                                 </div>
                             </CardContent>
                         </Card>
@@ -316,10 +289,10 @@ export default function DebtorsPage() {
                                                         </TableHeader>
                                                         <TableBody>
                                                         {summary.entries.map((entry) => (
-                                                            <TableRow key={entry.id} className={entry.isPaid ? 'bg-green-50/50 text-muted-foreground' : (entry.type === 'debtor' ? 'bg-red-50/50' : 'bg-yellow-50/50')}>
+                                                            <TableRow key={entry.id} className={entry.isPaid ? 'bg-green-50/50 text-muted-foreground' : 'bg-yellow-50/50'}>
                                                                 <TableCell className="p-2">
-                                                                     <Badge variant={entry.type === 'debtor' ? 'destructive' : 'secondary'} className="w-[60px] justify-center">
-                                                                        {entry.type === 'debtor' ? 'ลูกหนี้' : 'เจ้าหนี้'}
+                                                                     <Badge variant={'secondary'} className="w-[60px] justify-center">
+                                                                        เจ้าหนี้
                                                                     </Badge>
                                                                 </TableCell>
                                                                 <TableCell className="font-medium p-2">
