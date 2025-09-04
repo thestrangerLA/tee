@@ -25,7 +25,7 @@ const formatCurrency = (value: number) => {
 };
 
 
-const AddEntryForm = ({ onAddEntry, defaultDate }: { onAddEntry: (entry: Omit<DrugCreditorEntry, 'id' | 'createdAt' | 'date' | 'isPaid'>) => Promise<void>, defaultDate: Date }) => {
+const AddEntryForm = ({ onAddEntry, defaultDate }: { onAddEntry: (entry: Omit<DrugCreditorEntry, 'id' | 'createdAt' | 'date' | 'isPaid'>, date: Date) => Promise<void>, defaultDate: Date }) => {
     const { toast } = useToast();
     const [order, setOrder] = useState(0);
     const [description, setDescription] = useState('');
@@ -50,7 +50,7 @@ const AddEntryForm = ({ onAddEntry, defaultDate }: { onAddEntry: (entry: Omit<Dr
                 description,
                 cost,
                 sellingPrice,
-            });
+            }, defaultDate);
             toast({ title: "เพิ่มรายการสำเร็จ" });
             // Reset form
             setOrder(0);
@@ -119,9 +119,9 @@ export default function DrugCreditorsPage() {
         return allEntries.filter(entry => isWithinInterval(entry.date, { start, end }));
     }, [allEntries, displayMonth]);
 
-    const handleAddEntry = async (newEntry: Omit<DrugCreditorEntry, 'id' | 'createdAt' | 'date' | 'isPaid'>) => {
+    const handleAddEntry = async (newEntry: Omit<DrugCreditorEntry, 'id' | 'createdAt' | 'date' | 'isPaid'>, date: Date) => {
         try {
-            await addDrugCreditorEntry(newEntry, displayMonth);
+            await addDrugCreditorEntry(newEntry, date);
         } catch (error) {
             console.error('Error adding entry:', error);
             toast({ title: 'เกิดข้อผิดพลาด', variant: 'destructive' });
@@ -149,16 +149,16 @@ export default function DrugCreditorsPage() {
         }
     };
 
-    const groupedByOrder = useMemo(() => {
-        const groups: Record<string, DrugCreditorEntry[]> = {};
+    const dailySummaries = useMemo(() => {
+        const groupedByDay: Record<string, { date: Date; entries: DrugCreditorEntry[] }> = {};
         filteredEntries.forEach(entry => {
-            const orderKey = String(entry.order);
-            if (!groups[orderKey]) {
-                groups[orderKey] = [];
+            const dayKey = format(entry.date, 'yyyy-MM-dd');
+            if (!groupedByDay[dayKey]) {
+                groupedByDay[dayKey] = { date: entry.date, entries: [] };
             }
-            groups[orderKey].push(entry);
+            groupedByDay[dayKey].entries.push(entry);
         });
-        return Object.entries(groups).sort(([a], [b]) => Number(a) - Number(b));
+        return Object.values(groupedByDay).sort((a, b) => b.date.getTime() - a.date.getTime());
     }, [filteredEntries]);
 
     const pageTotals = useMemo(() => {
@@ -271,84 +271,98 @@ export default function DrugCreditorsPage() {
                              <CardDescription>ข้อมูลสำหรับเดือน {format(displayMonth, "LLLL yyyy", { locale: th })}</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            {groupedByOrder.length > 0 ? (
+                            {dailySummaries.length > 0 ? (
                                 <Accordion type="single" collapsible className="w-full">
-                                    {groupedByOrder.map(([order, entries]) => {
-                                        const orderTotals = entries.reduce((acc, entry) => {
-                                            const profit = (entry.sellingPrice || 0) - (entry.cost || 0);
-                                            const share40 = profit * 0.4;
-                                            acc.profit += share40;
-                                            
-                                            if (!entry.isPaid) {
-                                                const creditorPayable = (entry.cost || 0) + share40;
-                                                acc.payable += creditorPayable;
-                                            }
-                                            
+                                    {dailySummaries.map((summary, index) => {
+                                        const ordersInDay = summary.entries.reduce((acc, entry) => {
+                                            const orderKey = String(entry.order);
+                                            if (!acc[orderKey]) acc[orderKey] = [];
+                                            acc[orderKey].push(entry);
                                             return acc;
-                                        }, { payable: 0, profit: 0 });
+                                        }, {} as Record<string, DrugCreditorEntry[]>);
+
+                                        const dayProfit = summary.entries.reduce((sum, entry) => sum + ((entry.sellingPrice || 0) - (entry.cost || 0)) * 0.4, 0);
 
                                         return (
-                                        <AccordionItem value={`order-${order}`} key={order}>
+                                        <AccordionItem value={`day-${index}`} key={index}>
                                             <AccordionTrigger>
-                                                <div className="flex justify-between w-full pr-4">
-                                                    <div className="font-semibold text-lg">Order: {order}</div>
+                                                 <div className="flex justify-between w-full pr-4">
+                                                    <div className="font-semibold text-lg">{`วันที่ ${format(summary.date, "d")}`}</div>
                                                      <div className="flex gap-4 items-center">
-                                                        <span className="text-sm text-blue-600">จ่าย (คงเหลือ): {formatCurrency(orderTotals.payable)}</span>
-                                                        <span className={`text-sm ${orderTotals.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                                            กำไร (40%): {formatCurrency(orderTotals.profit)}
-                                                        </span>
+                                                        <span className="text-sm text-muted-foreground">{Object.keys(ordersInDay).length} orders</span>
+                                                        <span className="text-sm text-green-600">กำไร (40%): {formatCurrency(dayProfit)}</span>
                                                     </div>
                                                 </div>
                                             </AccordionTrigger>
-                                            <AccordionContent>
-                                                <div className="overflow-x-auto">
-                                                    <Table>
-                                                        <TableHeader>
-                                                            <TableRow>
-                                                                <TableHead>รายการ</TableHead>
-                                                                <TableHead className="w-[120px] text-right">ต้นทุน</TableHead>
-                                                                <TableHead className="w-[120px] text-right">ราคาขาย</TableHead>
-                                                                <TableHead className="w-[120px] text-right">กำไร</TableHead>
-                                                                <TableHead className="w-[120px] text-right">40%</TableHead>
-                                                                <TableHead className="w-[120px] text-right">60%</TableHead>
-                                                                <TableHead className="w-[140px] text-right">เจ้าหนี้ ต้องจ่าย</TableHead>
-                                                                <TableHead className="w-[80px] text-center">เสร็จสิ้น</TableHead>
-                                                                <TableHead className="w-[50px]"><span className="sr-only">Delete</span></TableHead>
-                                                            </TableRow>
-                                                        </TableHeader>
-                                                        <TableBody>
-                                                            {entries.map((entry) => {
-                                                                const profit = (entry.sellingPrice || 0) - (entry.cost || 0);
-                                                                const share40 = profit * 0.4;
-                                                                const share60 = profit * 0.6;
-                                                                const creditorPayable = (entry.cost || 0) + share40;
-                                                                return (
-                                                                    <TableRow key={entry.id} className={entry.isPaid ? "bg-green-50/50 text-muted-foreground" : ""}>
-                                                                        <TableCell className="p-1">
-                                                                            <Input defaultValue={entry.description} onBlur={(e) => handleUpdateEntry(entry.id, 'description', e.target.value)} className="h-8" disabled={entry.isPaid} />
-                                                                        </TableCell>
-                                                                        <TableCell className="p-1">
-                                                                            <Input type="number" defaultValue={entry.cost} onBlur={(e) => handleUpdateEntry(entry.id, 'cost', Number(e.target.value) || 0)} className="h-8 text-right" disabled={entry.isPaid} />
-                                                                        </TableCell>
-                                                                        <TableCell className="p-1">
-                                                                            <Input type="number" defaultValue={entry.sellingPrice} onBlur={(e) => handleUpdateEntry(entry.id, 'sellingPrice', Number(e.target.value) || 0)} className="h-8 text-right" disabled={entry.isPaid} />
-                                                                        </TableCell>
-                                                                        <TableCell className="p-1 text-right font-medium">{formatCurrency(profit)}</TableCell>
-                                                                        <TableCell className="p-1 text-right">{formatCurrency(share40)}</TableCell>
-                                                                        <TableCell className="p-1 text-right">{formatCurrency(share60)}</TableCell>
-                                                                        <TableCell className="p-1 text-right font-bold text-blue-600">{formatCurrency(creditorPayable)}</TableCell>
-                                                                        <TableCell className="p-1 text-center">
-                                                                            <Checkbox checked={entry.isPaid} onCheckedChange={(checked) => handleUpdateEntry(entry.id, 'isPaid', !!checked)} />
-                                                                        </TableCell>
-                                                                        <TableCell className="p-1 text-center">
-                                                                            <Button variant="ghost" size="icon" onClick={() => handleDeleteEntry(entry.id)}><Trash2 className="h-4 w-4 text-red-500" /></Button>
-                                                                        </TableCell>
-                                                                    </TableRow>
-                                                                );
-                                                            })}
-                                                        </TableBody>
-                                                    </Table>
-                                                </div>
+                                            <AccordionContent className="pl-4 border-l-2">
+                                                <Accordion type="single" collapsible className="w-full">
+                                                    {Object.entries(ordersInDay).map(([order, entries]) => {
+                                                        const orderTotals = entries.reduce((acc, entry) => {
+                                                            const profit = (entry.sellingPrice || 0) - (entry.cost || 0);
+                                                            const share40 = profit * 0.4;
+                                                            acc.profit += share40;
+                                                            if (!entry.isPaid) {
+                                                                acc.payable += (entry.cost || 0) + share40;
+                                                            }
+                                                            return acc;
+                                                        }, { payable: 0, profit: 0 });
+
+                                                        return (
+                                                        <AccordionItem value={`order-${order}`} key={order}>
+                                                            <AccordionTrigger>
+                                                                <div className="flex justify-between w-full pr-4">
+                                                                    <div className="font-semibold">Order: {order}</div>
+                                                                    <div className="flex gap-4 items-center">
+                                                                        <span className="text-sm text-blue-600">จ่าย (คงเหลือ): {formatCurrency(orderTotals.payable)}</span>
+                                                                        <span className="text-sm text-green-600">กำไร (40%): {formatCurrency(orderTotals.profit)}</span>
+                                                                    </div>
+                                                                </div>
+                                                            </AccordionTrigger>
+                                                            <AccordionContent>
+                                                                <Table>
+                                                                    <TableHeader>
+                                                                        <TableRow>
+                                                                            <TableHead>รายการ</TableHead>
+                                                                            <TableHead className="w-[120px] text-right">ต้นทุน</TableHead>
+                                                                            <TableHead className="w-[120px] text-right">ราคาขาย</TableHead>
+                                                                            <TableHead className="w-[120px] text-right">เจ้าหนี้</TableHead>
+                                                                            <TableHead className="w-[80px] text-center">เสร็จสิ้น</TableHead>
+                                                                            <TableHead className="w-[50px]"><span className="sr-only">Delete</span></TableHead>
+                                                                        </TableRow>
+                                                                    </TableHeader>
+                                                                    <TableBody>
+                                                                        {entries.map((entry) => {
+                                                                            const profit = (entry.sellingPrice || 0) - (entry.cost || 0);
+                                                                            const share40 = profit * 0.4;
+                                                                            const creditorPayable = (entry.cost || 0) + share40;
+                                                                            return (
+                                                                                <TableRow key={entry.id} className={entry.isPaid ? "bg-green-50/50 text-muted-foreground" : ""}>
+                                                                                    <TableCell className="p-1">
+                                                                                        <Input defaultValue={entry.description} onBlur={(e) => handleUpdateEntry(entry.id, 'description', e.target.value)} className="h-8" disabled={entry.isPaid} />
+                                                                                    </TableCell>
+                                                                                    <TableCell className="p-1">
+                                                                                        <Input type="number" defaultValue={entry.cost} onBlur={(e) => handleUpdateEntry(entry.id, 'cost', Number(e.target.value) || 0)} className="h-8 text-right" disabled={entry.isPaid} />
+                                                                                    </TableCell>
+                                                                                    <TableCell className="p-1">
+                                                                                        <Input type="number" defaultValue={entry.sellingPrice} onBlur={(e) => handleUpdateEntry(entry.id, 'sellingPrice', Number(e.target.value) || 0)} className="h-8 text-right" disabled={entry.isPaid} />
+                                                                                    </TableCell>
+                                                                                    <TableCell className="p-1 text-right font-bold text-blue-600">{formatCurrency(creditorPayable)}</TableCell>
+                                                                                    <TableCell className="p-1 text-center">
+                                                                                        <Checkbox checked={entry.isPaid} onCheckedChange={(checked) => handleUpdateEntry(entry.id, 'isPaid', !!checked)} />
+                                                                                    </TableCell>
+                                                                                    <TableCell className="p-1 text-center">
+                                                                                        <Button variant="ghost" size="icon" onClick={() => handleDeleteEntry(entry.id)}><Trash2 className="h-4 w-4 text-red-500" /></Button>
+                                                                                    </TableCell>
+                                                                                </TableRow>
+                                                                            );
+                                                                        })}
+                                                                    </TableBody>
+                                                                </Table>
+                                                            </AccordionContent>
+                                                        </AccordionItem>
+                                                        )
+                                                    })}
+                                                </Accordion>
                                             </AccordionContent>
                                         </AccordionItem>
                                     )})}
