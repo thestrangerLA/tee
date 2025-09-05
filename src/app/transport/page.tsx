@@ -35,7 +35,9 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
     
     const totalAmount = useMemo(() => entries.reduce((sum, entry) => sum + (entry.amount || 0), 0), [entries]);
     const totalRemaining = useMemo(() => entries.filter(e => !e.finished).reduce((sum, entry) => sum + (entry.amount || 0), 0), [entries]);
-    
+    const totalEntries = useMemo(() => entries.length, [entries]);
+    const unfinishedEntriesCount = useMemo(() => entries.filter(e => !e.finished).length, [entries]);
+
     const dailySummaries = useMemo(() => {
         const groupedByDay: Record<string, { date: Date, profit: number, entries: TransportEntry[], orderCount: number }> = {};
 
@@ -63,8 +65,12 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
             <CardHeader className="flex flex-row items-center justify-between">
                 <div>
                     <CardTitle>{title}</CardTitle>
-                    <CardDescription>
-                        จำนวนเงินรวม: {formatCurrency(totalAmount)} | คงเหลือ: {formatCurrency(totalRemaining)}
+                    <CardDescription className="flex flex-wrap items-center gap-x-2">
+                        <span>รวม: {formatCurrency(totalAmount)}</span>
+                        <span className="text-red-600">คงเหลือ: {formatCurrency(totalRemaining)}</span>
+                        {totalEntries > 0 && (
+                             <span className="font-semibold">| ค้าง {unfinishedEntriesCount}/{totalEntries} รายการ</span>
+                        )}
                     </CardDescription>
                 </div>
                 <Button size="sm" onClick={() => onAddRow(type)}>
