@@ -110,9 +110,9 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
                                         <Table>
                                             <TableHeader>
                                                 <TableRow>
-                                                    <TableHead className="w-[45%]">รายละเอียด</TableHead>
-                                                    <TableHead className="w-[120px] text-right">ต้นทุน</TableHead>
-                                                    <TableHead className="w-[120px] text-right">จำนวนเงิน</TableHead>
+                                                    <TableHead className="w-[40%]">รายละเอียด</TableHead>
+                                                    <TableHead className="w-[150px] text-right">ต้นทุน</TableHead>
+                                                    <TableHead className="w-[150px] text-right">จำนวนเงิน</TableHead>
                                                     <TableHead className="w-[120px] text-right">กำไร</TableHead>
                                                     <TableHead className="w-[80px] text-center">เสร็จสิ้น</TableHead>
                                                     <TableHead className="w-[50px] text-center">ลบ</TableHead>
