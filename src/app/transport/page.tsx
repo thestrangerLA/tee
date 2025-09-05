@@ -39,7 +39,7 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
     const unfinishedEntriesCount = useMemo(() => entries.filter(e => !e.finished).length, [entries]);
 
     const dailySummaries = useMemo(() => {
-        const groupedByDay: Record<string, { date: Date, profit: number, entries: TransportEntry[], orderCount: number }> = {};
+        const groupedByDay: Record<string, { date: Date, profit: number, entries: TransportEntry[], orderCount: number, unfinishedCount: number, remainingAmount: number }> = {};
 
         entries.forEach(entry => {
             const dayKey = format(entry.date, 'yyyy-MM-dd');
@@ -48,12 +48,18 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
                     date: entry.date,
                     profit: 0,
                     entries: [],
-                    orderCount: 0
+                    orderCount: 0,
+                    unfinishedCount: 0,
+                    remainingAmount: 0
                 };
             }
             groupedByDay[dayKey].entries.push(entry);
             groupedByDay[dayKey].profit += (entry.amount || 0) - (entry.cost || 0);
             groupedByDay[dayKey].orderCount += 1;
+            if (!entry.finished) {
+                groupedByDay[dayKey].unfinishedCount += 1;
+                groupedByDay[dayKey].remainingAmount += (entry.amount || 0);
+            }
         });
 
         return Object.values(groupedByDay).sort((a, b) => b.date.getTime() - a.date.getTime());
@@ -87,8 +93,13 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
                                     <AccordionTrigger>
                                         <div className="flex justify-between w-full pr-4">
                                             <div className="font-semibold">{`วันที่ ${format(summary.date, "d")}`}</div>
-                                            <div className="flex gap-4 items-center">
-                                                <span className="text-sm text-muted-foreground">{summary.orderCount} รายการ</span>
+                                            <div className="flex gap-4 items-center text-sm">
+                                                 <span className={`font-medium ${summary.unfinishedCount > 0 ? 'text-red-500' : 'text-green-500'}`}>
+                                                    ค้าง {summary.unfinishedCount}/{summary.orderCount}
+                                                 </span>
+                                                 {summary.unfinishedCount > 0 && (
+                                                    <span className="text-red-600">เหลือ: {formatCurrency(summary.remainingAmount)}</span>
+                                                 )}
                                                 <span className={summary.profit >= 0 ? 'text-green-600' : 'text-red-600'}>
                                                     กำไร: {formatCurrency(summary.profit)}
                                                 </span>
