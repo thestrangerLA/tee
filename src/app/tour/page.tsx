@@ -74,19 +74,6 @@ export default function TourPage() {
               </CardContent>
             </Card>
           </Link>
-            <Link href="/reports">
-            <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-2xl font-bold font-headline">รายงาน</CardTitle>
-                <BarChart className="h-8 w-8 text-primary" />
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                    ดูรายงานสรุปต่างๆ
-                </p>
-              </CardContent>
-            </Card>
-          </Link>
         </div>
       </main>
     </div>
