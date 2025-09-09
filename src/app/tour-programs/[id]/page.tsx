@@ -335,7 +335,7 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid md:grid-cols-3 gap-6">
                      <div className="grid gap-2">
                         <Label htmlFor="programName">ชื่อโปรแกรม</Label>
                         <Input id="programName" value={program.programName} onChange={(e) => handleProgramChange('programName', e.target.value)} className="print:hidden"/>
@@ -366,9 +366,7 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
                         <Input id="durationDays" type="number" value={program.durationDays} onChange={(e) => handleProgramChange('durationDays', Number(e.target.value))} className="print:hidden"/>
                         <p className="hidden print:block">{program.durationDays}</p>
                     </div>
-                </div>
-                 <div className="grid md:grid-cols-3 gap-6">
-                     <div className="grid gap-2">
+                    <div className="grid gap-2">
                         <Label htmlFor="price">Price</Label>
                         <Input id="price" type="number" value={program.price || ''} onChange={(e) => handleProgramChange('price', Number(e.target.value))} className="print:hidden"/>
                         <p className="hidden print:block">{formatCurrency(program.price)}</p>
@@ -567,5 +565,3 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
     </div>
   )
 }
-
-    
