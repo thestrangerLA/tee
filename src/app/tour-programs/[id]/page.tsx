@@ -83,7 +83,7 @@ const CurrencyEntryTable = ({
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead className="w-[150px]">ວັນທີ (Date)</TableHead>
+                                <TableHead className="w-[150px] print:hidden">ວັນທີ (Date)</TableHead>
                                 <TableHead>ລາຍລະອຽດ (Description)</TableHead>
                                 <TableHead className="text-right">KIP</TableHead>
                                 <TableHead className="text-right">BAHT</TableHead>
@@ -95,10 +95,10 @@ const CurrencyEntryTable = ({
                         <TableBody>
                             {(items as Array<TourCostItem | TourIncomeItem>).map(item => (
                                 <TableRow key={item.id}>
-                                    <TableCell className="p-1">
+                                    <TableCell className="p-1 print:hidden">
                                         <Popover>
                                             <PopoverTrigger asChild>
-                                                <Button variant="outline" className="w-full justify-start text-left font-normal h-8 text-xs print:hidden">
+                                                <Button variant="outline" className="w-full justify-start text-left font-normal h-8 text-xs">
                                                      <CalendarIcon className="mr-1 h-3 w-3" />
                                                     {item.date ? format(item.date, "dd/MM/yy") : <span>เลือกวันที่</span>}
                                                 </Button>
@@ -113,7 +113,6 @@ const CurrencyEntryTable = ({
                                                 />
                                             </PopoverContent>
                                         </Popover>
-                                        <span className="hidden print:inline">{item.date ? format(item.date, "dd/MM/yy") : '-'}</span>
                                     </TableCell>
                                      <TableCell className="p-1">
                                         <Input 
@@ -169,7 +168,8 @@ const CurrencyEntryTable = ({
                         </TableBody>
                         <TableFooter>
                             <TableRow className="bg-muted font-bold">
-                                <TableCell colSpan={2} className="text-right">ລວມ (Total)</TableCell>
+                                <TableCell colSpan={2} className="text-right print:hidden">ລວມ (Total)</TableCell>
+                                <TableCell className="text-right hidden print:table-cell">ລວມ (Total)</TableCell>
                                 <TableCell className="text-right">{formatCurrency(totals.kip)}</TableCell>
                                 <TableCell className="text-right">{formatCurrency(totals.baht)}</TableCell>
                                 <TableCell className="text-right">{formatCurrency(totals.usd)}</TableCell>
@@ -205,9 +205,9 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
     const [program, setProgram] = useState<TourProgram | null>(null);
     const [costItems, setCostItems] = useState<TourCostItem[]>([]);
     const [incomeItems, setIncomeItems] = useState<TourIncomeItem[]>([]);
-    const programId = params.id;
 
     useEffect(() => {
+        const programId = params.id;
         if (!programId) return;
 
         const fetchProgram = async () => {
@@ -223,7 +223,7 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
             unsubscribeCosts();
             unsubscribeIncomes();
         };
-    }, [programId]);
+    }, [params.id]);
     
      useEffect(() => {
         if (program) {
@@ -239,7 +239,7 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
     // --- Cost Item Handlers ---
     const handleAddCostItem = async () => {
         try {
-            await addTourCostItem(programId);
+            await addTourCostItem(params.id);
         } catch (error) { toast({ title: "เกิดข้อผิดพลาดในการเพิ่มต้นทุน", variant: "destructive" }); }
     };
      const handleUpdateCostItem = async (id: string, field: keyof TourCostItem, value: any) => {
@@ -255,7 +255,7 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
     // --- Income Item Handlers ---
     const handleAddIncomeItem = async () => {
         try {
-            await addTourIncomeItem(programId);
+            await addTourIncomeItem(params.id);
         } catch (error) { toast({ title: "เกิดข้อผิดพลาดในการเพิ่มรายรับ", variant: "destructive" }); }
     };
      const handleUpdateIncomeItem = async (id: string, field: keyof TourIncomeItem, value: any) => {
@@ -335,7 +335,7 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6 print:space-y-2 print:p-0">
-                <div className="grid md:grid-cols-3 gap-6 print:gap-2">
+                <div className="grid md:grid-cols-3 gap-6 print:gap-1">
                      <div className="grid gap-2 print:gap-0">
                         <Label htmlFor="programName" className="print:text-xs">ชื่อโปรแกรม</Label>
                         <Input id="programName" value={program.programName} onChange={(e) => handleProgramChange('programName', e.target.value)} className="print:hidden"/>
@@ -565,3 +565,5 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
     </div>
   )
 }
+
+    
