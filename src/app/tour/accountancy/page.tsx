@@ -274,6 +274,10 @@ export default function TourAccountancyPage() {
                                     <AccordionTrigger>
                                         <div className="flex justify-between w-full pr-4">
                                             <div className="font-semibold">{`วันที่ ${format(summary.date, "d MMMM yyyy", { locale: th })}`}</div>
+                                            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
+                                                <span className="text-green-600">รับ: {currencies.map(c => `${formatCurrency(summary.income[c])} ${c.toUpperCase()}`).join(' / ')}</span>
+                                                <span className="text-red-600">จ่าย: {currencies.map(c => `${formatCurrency(summary.expense[c])} ${c.toUpperCase()}`).join(' / ')}</span>
+                                            </div>
                                         </div>
                                     </AccordionTrigger>
                                     <AccordionContent>
@@ -375,3 +379,5 @@ export default function TourAccountancyPage() {
         </div>
     );
 }
+
+    
