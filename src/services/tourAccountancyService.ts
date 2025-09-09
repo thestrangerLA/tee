@@ -10,6 +10,9 @@ import {
 
 const summaryDocRef = doc(db, 'tour-accountSummary', 'latest');
 
+// This is now deprecated in favor of the main accountancy service
+// but kept to avoid breaking old dependencies if any.
+// The new tour accountancy page will use the main accountancyService.
 const initialSummaryState: Omit<TourAccountSummary, 'id'> = {
     capital: { kip: 0, baht: 0, usd: 0, cny: 0 },
     balance: { kip: 0, baht: 0, usd: 0, cny: 0 },
@@ -44,3 +47,5 @@ export const listenToTourAccountSummary = (callback: (summary: TourAccountSummar
 export const updateTourAccountSummary = async (summary: Partial<Omit<TourAccountSummary, 'id'>>) => {
     await setDoc(summaryDocRef, summary, { merge: true });
 };
+
+    
