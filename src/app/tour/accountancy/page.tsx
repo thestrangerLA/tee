@@ -13,10 +13,10 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
 import { Textarea } from "@/components/ui/textarea"
-import { format, isSameDay, startOfMonth, endOfMonth, isWithinInterval, startOfDay, eachDayOfInterval } from "date-fns"
+import { format, isSameDay, startOfMonth, endOfMonth, isWithinInterval, startOfDay, eachDayOfInterval, getYear, setMonth, getMonth } from "date-fns"
 import { th } from "date-fns/locale"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuPortal, DropdownMenuSubContent } from "@/components/ui/dropdown-menu"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { listenToTourAccountSummary, updateTourAccountSummary, listenToTourTransactions, addTourTransaction, updateTourTransaction, deleteTourTransaction } from '@/services/tourAccountancyService';
@@ -56,6 +56,8 @@ export default function TourAccountancyPage() {
     const [newTransaction, setNewTransaction] = useState<Partial<Transaction>>({ type: 'expense', description: '', kip: 0, baht: 0, usd: 0, cny: 0 });
     const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
     const [isFormVisible, setFormVisible] = useState(true);
+    const [historyDisplayMonth, setHistoryDisplayMonth] = useState<Date>(new Date());
+
 
     const [editingField, setEditingField] = useState<'capital' | 'cash' | 'transfer' | null>(null);
     const [editingValues, setEditingValues] = useState<CurrencyValues | null>(null);
@@ -78,8 +80,8 @@ export default function TourAccountancyPage() {
     }, [summary]);
 
      const dailySummaries = useMemo(() => {
-        const start = startOfMonth(new Date()); // Example: current month, can be changed
-        const end = endOfMonth(new Date());
+        const start = startOfMonth(historyDisplayMonth);
+        const end = endOfMonth(historyDisplayMonth);
         
         const monthlyTransactions = transactions.filter(tx => isWithinInterval(tx.date, { start, end }));
 
@@ -105,7 +107,7 @@ export default function TourAccountancyPage() {
         }, {} as Record<string, { date: Date, transactions: Transaction[], income: CurrencyValues, expense: CurrencyValues }>);
 
         return Object.values(grouped).sort((a, b) => b.date.getTime() - a.date.getTime());
-    }, [transactions]);
+    }, [transactions, historyDisplayMonth]);
 
 
     const handleAddTransaction = async (e: React.FormEvent) => {
@@ -179,6 +181,50 @@ export default function TourAccountancyPage() {
         }
     };
 
+    const MonthYearSelector = () => {
+        const currentYear = getYear(new Date());
+        const years = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i); // Show current year +/- 2 years
+        years.push(2025); // Ensure 2025 is available
+        const uniqueYears = [...new Set(years)].sort();
+
+        const months = Array.from({ length: 12 }, (_, i) => setMonth(new Date(), i));
+
+        return (
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="flex items-center gap-2">
+                        {format(historyDisplayMonth, "LLLL yyyy", { locale: th })}
+                        <ChevronDown className="h-4 w-4" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    {uniqueYears.map(year => (
+                         <DropdownMenuSub key={year}>
+                            <DropdownMenuSubTrigger>
+                                <span>{year + 543}</span>
+                            </DropdownMenuSubTrigger>
+                            <DropdownMenuPortal>
+                                <DropdownMenuSubContent>
+                                    {months.map(month => (
+                                        <DropdownMenuItem 
+                                            key={getMonth(month)} 
+                                            onClick={() => {
+                                                const newDate = new Date(year, getMonth(month), 1);
+                                                setHistoryDisplayMonth(newDate);
+                                            }}
+                                        >
+                                            {format(month, "LLLL", { locale: th })}
+                                        </DropdownMenuItem>
+                                    ))}
+                                </DropdownMenuSubContent>
+                             </DropdownMenuPortal>
+                        </DropdownMenuSub>
+                    ))}
+                </DropdownMenuContent>
+            </DropdownMenu>
+        );
+    };
+
     if (!summary) {
         return <div className="flex items-center justify-center h-screen">กำลังโหลดข้อมูล...</div>;
     }
@@ -244,7 +290,7 @@ export default function TourAccountancyPage() {
                                     </div>
                                     <div className="grid gap-2">
                                         <Label htmlFor="description">คำอธิบาย</Label>
-                                        <Textarea id="description" value={newTransaction.description} onChange={(e) => setNewTransaction(p => ({ ...p, description: e.target.value }))} required />
+                                        <Textarea id="description" value={newTransaction.description || ''} onChange={(e) => setNewTransaction(p => ({ ...p, description: e.target.value }))} required />
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         {currencies.map(c => (
@@ -262,9 +308,12 @@ export default function TourAccountancyPage() {
                     </div>
 
                      <Card className="lg:col-span-2">
-                        <CardHeader>
-                            <CardTitle>ประวัติธุรกรรม</CardTitle>
-                            <CardDescription>รายการล่าสุด</CardDescription>
+                        <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                             <div>
+                                <CardTitle>ประวัติธุรกรรม</CardTitle>
+                                <CardDescription>แสดงรายการสำหรับเดือนที่เลือก</CardDescription>
+                            </div>
+                            <MonthYearSelector />
                         </CardHeader>
                         <CardContent>
                              {dailySummaries.length > 0 ? (
@@ -379,5 +428,3 @@ export default function TourAccountancyPage() {
         </div>
     );
 }
-
-    
