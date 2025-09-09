@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, FileText, Trash2, PlusCircle, Calendar as CalendarIcon } from "lucide-react";
+import { ArrowLeft, FileText, Trash2, PlusCircle, Calendar as CalendarIcon, Printer } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { 
     listenToTourCostItemsForProgram, 
@@ -44,12 +44,16 @@ const CurrencyEntryTable = ({
     items, 
     onAddItem,
     onUpdateItem,
-    onDeleteItem
+    onDeleteItem,
+    title,
+    description
 }: { 
     items: (TourCostItem[] | TourIncomeItem[]),
     onAddItem: () => Promise<void>,
     onUpdateItem: (id: string, field: keyof (TourCostItem | TourIncomeItem), value: any) => Promise<void>,
-    onDeleteItem: (id: string) => Promise<void>
+    onDeleteItem: (id: string) => Promise<void>,
+    title: string,
+    description: string,
 }) => {
     
     const totals = useMemo(() => {
@@ -63,12 +67,21 @@ const CurrencyEntryTable = ({
     }, [items]);
 
     return (
-        <Card>
-            <CardHeader className="flex flex-row items-center justify-end">
+        <Card className="print:shadow-none print:border-none">
+            <CardHeader className="flex flex-row items-center justify-between print:hidden">
+                 <div>
+                    <CardTitle>{title}</CardTitle>
+                    <CardDescription>{description}</CardDescription>
+                </div>
                  <Button size="sm" onClick={onAddItem}>
                     <PlusCircle className="mr-2 h-4 w-4"/>
                     เพิ่มรายการ
                 </Button>
+            </CardHeader>
+            {/* Header for printing */}
+             <CardHeader className="hidden print:block">
+                <CardTitle>{title}</CardTitle>
+                <CardDescription>{description}</CardDescription>
             </CardHeader>
              <CardContent>
                 <div className="overflow-x-auto">
@@ -81,7 +94,7 @@ const CurrencyEntryTable = ({
                                 <TableHead className="text-right">BAHT</TableHead>
                                 <TableHead className="text-right">USD</TableHead>
                                 <TableHead className="text-right">CNY</TableHead>
-                                <TableHead className="w-[50px]"><span className="sr-only">ลบ</span></TableHead>
+                                <TableHead className="w-[50px] print:hidden"><span className="sr-only">ลบ</span></TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -90,7 +103,7 @@ const CurrencyEntryTable = ({
                                     <TableCell className="p-1">
                                         <Popover>
                                             <PopoverTrigger asChild>
-                                                <Button variant="outline" className="w-full justify-start text-left font-normal h-8 text-xs">
+                                                <Button variant="outline" className="w-full justify-start text-left font-normal h-8 text-xs print:hidden">
                                                      <CalendarIcon className="mr-1 h-3 w-3" />
                                                     {item.date ? format(item.date, "dd/MM/yy") : <span>เลือกวันที่</span>}
                                                 </Button>
@@ -105,47 +118,53 @@ const CurrencyEntryTable = ({
                                                 />
                                             </PopoverContent>
                                         </Popover>
+                                        <span className="hidden print:inline">{item.date ? format(item.date, "dd/MM/yy") : '-'}</span>
                                     </TableCell>
                                      <TableCell className="p-1">
                                         <Input 
                                             defaultValue={item.detail || ''} 
                                             onBlur={(e) => onUpdateItem(item.id, 'detail', e.target.value)}
-                                            className="h-8"
+                                            className="h-8 print:hidden"
                                         />
+                                         <span className="hidden print:inline">{item.detail || ''}</span>
                                     </TableCell>
                                     <TableCell className="p-1">
                                         <Input
                                             type="text"
                                             defaultValue={formatCurrency(item.kip)}
                                             onBlur={(e) => onUpdateItem(item.id, 'kip', parseFormattedNumber(e.target.value))}
-                                            className="h-8 text-right"
+                                            className="h-8 text-right print:hidden"
                                         />
+                                         <span className="hidden print:inline">{formatCurrency(item.kip)}</span>
                                     </TableCell>
                                      <TableCell className="p-1">
                                         <Input
                                             type="text"
                                             defaultValue={formatCurrency(item.baht)}
                                             onBlur={(e) => onUpdateItem(item.id, 'baht', parseFormattedNumber(e.target.value))}
-                                            className="h-8 text-right"
+                                            className="h-8 text-right print:hidden"
                                         />
+                                         <span className="hidden print:inline">{formatCurrency(item.baht)}</span>
                                     </TableCell>
                                      <TableCell className="p-1">
                                         <Input
                                             type="text"
                                             defaultValue={formatCurrency(item.usd)}
                                             onBlur={(e) => onUpdateItem(item.id, 'usd', parseFormattedNumber(e.target.value))}
-                                            className="h-8 text-right"
+                                            className="h-8 text-right print:hidden"
                                         />
+                                         <span className="hidden print:inline">{formatCurrency(item.usd)}</span>
                                     </TableCell>
                                      <TableCell className="p-1">
                                         <Input
                                             type="text"
                                             defaultValue={formatCurrency(item.cny)}
                                             onBlur={(e) => onUpdateItem(item.id, 'cny', parseFormattedNumber(e.target.value))}
-                                            className="h-8 text-right"
+                                            className="h-8 text-right print:hidden"
                                         />
+                                         <span className="hidden print:inline">{formatCurrency(item.cny)}</span>
                                     </TableCell>
-                                    <TableCell className="p-1 text-center">
+                                    <TableCell className="p-1 text-center print:hidden">
                                         <Button variant="ghost" size="icon" onClick={() => onDeleteItem(item.id)}>
                                             <Trash2 className="h-4 w-4 text-red-500" />
                                         </Button>
@@ -160,7 +179,7 @@ const CurrencyEntryTable = ({
                                 <TableCell className="text-right">{formatCurrency(totals.baht)}</TableCell>
                                 <TableCell className="text-right">{formatCurrency(totals.usd)}</TableCell>
                                 <TableCell className="text-right">{formatCurrency(totals.cny)}</TableCell>
-                                <TableCell></TableCell>
+                                <TableCell className="print:hidden"></TableCell>
                             </TableRow>
                         </TableFooter>
                     </Table>
@@ -173,7 +192,7 @@ const CurrencyEntryTable = ({
 const SummaryCard = ({ title, value, currency, isProfit = false }: { title: string; value: number; currency: string; isProfit?: boolean }) => {
     const profitColor = value >= 0 ? 'text-green-600' : 'text-red-600';
     return (
-        <Card>
+        <Card className="print:shadow-none print:border">
             <CardHeader className="pb-2">
                 <CardTitle className="text-base">{title}</CardTitle>
                 <CardDescription>{currency}</CardDescription>
@@ -191,9 +210,9 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
     const [program, setProgram] = useState<TourProgram | null>(null);
     const [costItems, setCostItems] = useState<TourCostItem[]>([]);
     const [incomeItems, setIncomeItems] = useState<TourIncomeItem[]>([]);
+    const programId = params.id;
 
     useEffect(() => {
-        const programId = params.id;
         if (!programId) return;
 
         const fetchProgram = async () => {
@@ -209,7 +228,7 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
             unsubscribeCosts();
             unsubscribeIncomes();
         };
-    }, [params.id]);
+    }, [programId]);
     
      useEffect(() => {
         if (program) {
@@ -225,7 +244,7 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
     // --- Cost Item Handlers ---
     const handleAddCostItem = async () => {
         try {
-            await addTourCostItem(params.id);
+            await addTourCostItem(programId);
         } catch (error) { toast({ title: "เกิดข้อผิดพลาดในการเพิ่มต้นทุน", variant: "destructive" }); }
     };
      const handleUpdateCostItem = async (id: string, field: keyof TourCostItem, value: any) => {
@@ -241,7 +260,7 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
     // --- Income Item Handlers ---
     const handleAddIncomeItem = async () => {
         try {
-            await addTourIncomeItem(params.id);
+            await addTourIncomeItem(programId);
         } catch (error) { toast({ title: "เกิดข้อผิดพลาดในการเพิ่มรายรับ", variant: "destructive" }); }
     };
      const handleUpdateIncomeItem = async (id: string, field: keyof TourIncomeItem, value: any) => {
@@ -263,13 +282,17 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
     const handleSaveProgramInfo = async () => {
         if (!program) return;
         try {
-            const { programName, tourCode, groupName, pax, destination, durationDays, customerDetails, price, bankCharge, totalPrice } = program;
-            await updateTourProgram(program.id, { programName, tourCode, groupName, pax, destination, durationDays, customerDetails, price, bankCharge, totalPrice });
+            await updateTourProgram(program.id, program);
             toast({ title: "บันทึกข้อมูลโปรแกรมสำเร็จ" });
         } catch (error) {
+             console.error("Failed to save program info:", error);
             toast({ title: "เกิดข้อผิดพลาดในการบันทึกข้อมูลโปรแกรม", variant: "destructive" });
         }
     };
+    
+    const handlePrint = () => {
+        window.print();
+    }
 
 
     const summaryData = useMemo(() => {
@@ -306,10 +329,87 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
              </div>
         )
     }
+    
+    const ProgramInfoCard = () => (
+         <Card className="print:shadow-none print:border-none">
+            <CardHeader>
+                <CardTitle>รายละเอียดโปรแกรมและข้อมูลกลุ่ม</CardTitle>
+                <CardDescription>
+                    วันที่สร้าง: {program.createdAt ? format(program.createdAt, "PPP", {locale: th}) : '-'}
+                </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                     <div className="grid gap-2">
+                        <Label htmlFor="programName">ชื่อโปรแกรม</Label>
+                        <Input id="programName" value={program.programName} onChange={(e) => handleProgramChange('programName', e.target.value)} className="print:hidden"/>
+                         <p className="hidden print:block">{program.programName}</p>
+                    </div>
+                     <div className="grid gap-2">
+                        <Label htmlFor="tourCode">รหัสทัวร์</Label>
+                        <Input id="tourCode" value={program.tourCode} onChange={(e) => handleProgramChange('tourCode', e.target.value)} className="print:hidden"/>
+                        <p className="hidden print:block">{program.tourCode}</p>
+                    </div>
+                     <div className="grid gap-2">
+                        <Label htmlFor="groupName">ชื่อกลุ่ม</Label>
+                        <Input id="groupName" value={program.groupName} onChange={(e) => handleProgramChange('groupName', e.target.value)} className="print:hidden"/>
+                        <p className="hidden print:block">{program.groupName}</p>
+                    </div>
+                    <div className="grid gap-2">
+                        <Label htmlFor="pax">จำนวนคน (Pax)</Label>
+                        <Input id="pax" type="number" value={program.pax} onChange={(e) => handleProgramChange('pax', Number(e.target.value))} className="print:hidden"/>
+                        <p className="hidden print:block">{program.pax}</p>
+                    </div>
+                    <div className="grid gap-2">
+                        <Label htmlFor="destination">จุดหมาย</Label>
+                        <Input id="destination" value={program.destination} onChange={(e) => handleProgramChange('destination', e.target.value)} className="print:hidden"/>
+                        <p className="hidden print:block">{program.destination}</p>
+                    </div>
+                     <div className="grid gap-2">
+                        <Label htmlFor="durationDays">ระยะเวลา (วัน)</Label>
+                        <Input id="durationDays" type="number" value={program.durationDays} onChange={(e) => handleProgramChange('durationDays', Number(e.target.value))} className="print:hidden"/>
+                        <p className="hidden print:block">{program.durationDays}</p>
+                    </div>
+                </div>
+                 <div className="grid md:grid-cols-3 gap-6">
+                     <div className="grid gap-2">
+                        <Label htmlFor="price">Price</Label>
+                        <Input id="price" type="number" value={program.price || ''} onChange={(e) => handleProgramChange('price', Number(e.target.value))} className="print:hidden"/>
+                        <p className="hidden print:block">{formatCurrency(program.price)}</p>
+                    </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="bankCharge">Bank Charge</Label>
+                        <Input id="bankCharge" type="number" value={program.bankCharge || ''} onChange={(e) => handleProgramChange('bankCharge', Number(e.target.value))} className="print:hidden"/>
+                        <p className="hidden print:block">{formatCurrency(program.bankCharge)}</p>
+                    </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="totalPrice">Total Price</Label>
+                        <Input id="totalPrice" type="number" value={program.totalPrice || ''} readOnly className="bg-muted/50 print:hidden" />
+                        <p className="hidden print:block font-bold">{formatCurrency(program.totalPrice)}</p>
+                    </div>
+                </div>
+                 <div className="grid gap-2">
+                    <Label htmlFor="customerDetails">รายละเอียดลูกค้า/กลุ่ม</Label>
+                    <Textarea 
+                        id="customerDetails"
+                        value={program.customerDetails || ''} 
+                        onChange={(e) => handleProgramChange('customerDetails', e.target.value)}
+                        placeholder="เช่น เบอร์โทรติดต่อ, หมายเหตุ, หรือข้อตกลงอื่นๆ"
+                        rows={4}
+                        className="print:hidden"
+                    />
+                    <p className="hidden print:block whitespace-pre-wrap">{program.customerDetails}</p>
+                </div>
+                <div className="flex justify-end print:hidden">
+                    <Button onClick={handleSaveProgramInfo}>บันทึกข้อมูลโปรแกรม</Button>
+                </div>
+            </CardContent>
+        </Card>
+    );
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/40">
-      <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
+    <div className="flex min-h-screen w-full flex-col bg-muted/40 print:bg-white">
+      <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 print:hidden">
         <Button variant="outline" size="icon" className="h-8 w-8" asChild>
           <Link href="/tour-programs">
               <ArrowLeft className="h-4 w-4" />
@@ -320,131 +420,140 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
             <FileText className="h-6 w-6 text-primary" />
             <h1 className="text-xl font-bold tracking-tight font-headline">{program.programName || 'รายละเอียดโปรแกรมทัวร์'}</h1>
         </div>
+        <div className="ml-auto">
+            <Button onClick={handlePrint} size="sm" variant="outline">
+                <Printer className="mr-2 h-4 w-4" />
+                พิมพ์
+            </Button>
+        </div>
       </header>
-      <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-        <Tabs defaultValue="costs">
-            <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="info">ข้อมูลโปรแกรม</TabsTrigger>
-                <TabsTrigger value="costs">คำนวณต้นทุน</TabsTrigger>
-                <TabsTrigger value="income">บันทึกรายรับ</TabsTrigger>
-                <TabsTrigger value="summary">สรุปผล</TabsTrigger>
-            </TabsList>
-            <TabsContent value="info" className="mt-4">
-                 <Card>
-                    <CardHeader>
-                        <CardTitle>รายละเอียดโปรแกรมและข้อมูลกลุ่ม</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                             <div className="grid gap-2">
-                                <Label htmlFor="programName">ชื่อโปรแกรม</Label>
-                                <Input id="programName" value={program.programName} onChange={(e) => handleProgramChange('programName', e.target.value)} />
-                            </div>
-                             <div className="grid gap-2">
-                                <Label htmlFor="tourCode">รหัสทัวร์</Label>
-                                <Input id="tourCode" value={program.tourCode} onChange={(e) => handleProgramChange('tourCode', e.target.value)} />
-                            </div>
-                             <div className="grid gap-2">
-                                <Label htmlFor="groupName">ชื่อกลุ่ม</Label>
-                                <Input id="groupName" value={program.groupName} onChange={(e) => handleProgramChange('groupName', e.target.value)} />
-                            </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor="pax">จำนวนคน (Pax)</Label>
-                                <Input id="pax" type="number" value={program.pax} onChange={(e) => handleProgramChange('pax', Number(e.target.value))} />
-                            </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor="destination">จุดหมาย</Label>
-                                <Input id="destination" value={program.destination} onChange={(e) => handleProgramChange('destination', e.target.value)} />
-                            </div>
-                             <div className="grid gap-2">
-                                <Label htmlFor="durationDays">ระยะเวลา (วัน)</Label>
-                                <Input id="durationDays" type="number" value={program.durationDays} onChange={(e) => handleProgramChange('durationDays', Number(e.target.value))} />
-                            </div>
+      <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 print:p-0 print:gap-4">
+        {/* For Printing */}
+        <div className="hidden print:block space-y-4 p-4">
+            <ProgramInfoCard />
+            <CurrencyEntryTable 
+                items={costItems}
+                onAddItem={handleAddCostItem}
+                onUpdateItem={handleUpdateCostItem as any}
+                onDeleteItem={handleDeleteCostItem}
+                title="ตารางคำนวณต้นทุน"
+                description="บันทึกค่าใช้จ่ายทั้งหมดของโปรแกรมนี้"
+            />
+             <CurrencyEntryTable 
+                items={incomeItems}
+                onAddItem={handleAddIncomeItem}
+                onUpdateItem={handleUpdateIncomeItem as any}
+                onDeleteItem={handleDeleteIncomeItem}
+                title="ตารางบันทึกรายรับ"
+                description="บันทึกรายรับทั้งหมดของโปรแกรมนี้"
+            />
+            <Card className="print:shadow-none print:border-none">
+                <CardHeader>
+                    <CardTitle>สรุปผลประกอบการ</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    <div>
+                        <h3 className="text-lg font-semibold mb-2">ยอดรวมรายรับ</h3>
+                         <div className="grid grid-cols-4 gap-4">
+                            <SummaryCard title="รายรับ" value={summaryData.totalIncomes.kip} currency="KIP" />
+                            <SummaryCard title="รายรับ" value={summaryData.totalIncomes.baht} currency="BAHT" />
+                            <SummaryCard title="รายรับ" value={summaryData.totalIncomes.usd} currency="USD" />
+                            <SummaryCard title="รายรับ" value={summaryData.totalIncomes.cny} currency="CNY" />
                         </div>
-                         <div className="grid md:grid-cols-3 gap-6">
-                             <div className="grid gap-2">
-                                <Label htmlFor="price">Price</Label>
-                                <Input id="price" type="number" value={program.price || ''} onChange={(e) => handleProgramChange('price', Number(e.target.value))} />
-                            </div>
-                              <div className="grid gap-2">
-                                <Label htmlFor="bankCharge">Bank Charge</Label>
-                                <Input id="bankCharge" type="number" value={program.bankCharge || ''} onChange={(e) => handleProgramChange('bankCharge', Number(e.target.value))} />
-                            </div>
-                              <div className="grid gap-2">
-                                <Label htmlFor="totalPrice">Total Price</Label>
-                                <Input id="totalPrice" type="number" value={program.totalPrice || ''} readOnly className="bg-muted/50" />
-                            </div>
+                    </div>
+                    <div>
+                        <h3 className="text-lg font-semibold mb-2">ยอดรวมต้นทุน</h3>
+                         <div className="grid grid-cols-4 gap-4">
+                            <SummaryCard title="ต้นทุน" value={summaryData.totalCosts.kip} currency="KIP" />
+                            <SummaryCard title="ต้นทุน" value={summaryData.totalCosts.baht} currency="BAHT" />
+                            <SummaryCard title="ต้นทุน" value={summaryData.totalCosts.usd} currency="USD" />
+                            <SummaryCard title="ต้นทุน" value={summaryData.totalCosts.cny} currency="CNY" />
                         </div>
-                         <div className="grid gap-2">
-                            <Label htmlFor="customerDetails">รายละเอียดลูกค้า/กลุ่ม</Label>
-                            <Textarea 
-                                id="customerDetails"
-                                value={program.customerDetails || ''} 
-                                onChange={(e) => handleProgramChange('customerDetails', e.target.value)}
-                                placeholder="เช่น เบอร์โทรติดต่อ, หมายเหตุ, หรือข้อตกลงอื่นๆ"
-                                rows={4}
-                            />
+                    </div>
+                     <div>
+                        <h3 className="text-lg font-semibold mb-2">กำไร / ขาดทุนสุทธิ</h3>
+                         <div className="grid grid-cols-4 gap-4">
+                            <SummaryCard title="กำไร/ขาดทุน" value={summaryData.profit.kip} currency="KIP" isProfit />
+                            <SummaryCard title="กำไร/ขาดทุน" value={summaryData.profit.baht} currency="BAHT" isProfit />
+                            <SummaryCard title="กำไร/ขาดทุน" value={summaryData.profit.usd} currency="USD" isProfit />
+                            <SummaryCard title="กำไร/ขาดทุน" value={summaryData.profit.cny} currency="CNY" isProfit />
                         </div>
-                        <div className="flex justify-end">
-                            <Button onClick={handleSaveProgramInfo}>บันทึกข้อมูลโปรแกรม</Button>
-                        </div>
-                    </CardContent>
-                </Card>
-            </TabsContent>
-            <TabsContent value="costs" className="mt-4">
-                <CurrencyEntryTable 
-                    items={costItems}
-                    onAddItem={handleAddCostItem}
-                    onUpdateItem={handleUpdateCostItem as any}
-                    onDeleteItem={handleDeleteCostItem}
-                />
-            </TabsContent>
-            <TabsContent value="income" className="mt-4">
-                 <CurrencyEntryTable 
-                    items={incomeItems}
-                    onAddItem={handleAddIncomeItem}
-                    onUpdateItem={handleUpdateIncomeItem as any}
-                    onDeleteItem={handleDeleteIncomeItem}
-                />
-            </TabsContent>
-            <TabsContent value="summary" className="mt-4">
-                 <Card>
-                    <CardHeader>
-                        <CardTitle>สรุปผลประกอบการ</CardTitle>
-                        <CardDescription>สรุปรายรับ, ต้นทุน, และกำไร/ขาดทุน สำหรับโปรแกรมนี้</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                        <div>
-                            <h3 className="text-lg font-semibold mb-2">ยอดรวมรายรับ</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                <SummaryCard title="รายรับ" value={summaryData.totalIncomes.kip} currency="KIP" />
-                                <SummaryCard title="รายรับ" value={summaryData.totalIncomes.baht} currency="BAHT" />
-                                <SummaryCard title="รายรับ" value={summaryData.totalIncomes.usd} currency="USD" />
-                                <SummaryCard title="รายรับ" value={summaryData.totalIncomes.cny} currency="CNY" />
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
+
+        {/* For Screen */}
+        <div className="print:hidden">
+            <Tabs defaultValue="info" className="mt-4">
+                <TabsList className="grid w-full grid-cols-4">
+                    <TabsTrigger value="info">ข้อมูลโปรแกรม</TabsTrigger>
+                    <TabsTrigger value="costs">คำนวณต้นทุน</TabsTrigger>
+                    <TabsTrigger value="income">บันทึกรายรับ</TabsTrigger>
+                    <TabsTrigger value="summary">สรุปผล</TabsTrigger>
+                </TabsList>
+                <TabsContent value="info" className="mt-4">
+                    <ProgramInfoCard />
+                </TabsContent>
+                <TabsContent value="costs" className="mt-4">
+                    <CurrencyEntryTable 
+                        items={costItems}
+                        onAddItem={handleAddCostItem}
+                        onUpdateItem={handleUpdateCostItem as any}
+                        onDeleteItem={handleDeleteCostItem}
+                        title="ตารางคำนวณต้นทุน"
+                        description="บันทึกค่าใช้จ่ายทั้งหมดของโปรแกรมนี้"
+                    />
+                </TabsContent>
+                <TabsContent value="income" className="mt-4">
+                    <CurrencyEntryTable 
+                        items={incomeItems}
+                        onAddItem={handleAddIncomeItem}
+                        onUpdateItem={handleUpdateIncomeItem as any}
+                        onDeleteItem={handleDeleteIncomeItem}
+                        title="ตารางบันทึกรายรับ"
+                        description="บันทึกรายรับทั้งหมดของโปรแกรมนี้"
+                    />
+                </TabsContent>
+                <TabsContent value="summary" className="mt-4">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>สรุปผลประกอบการ</CardTitle>
+                            <CardDescription>สรุปรายรับ, ต้นทุน, และกำไร/ขาดทุน สำหรับโปรแกรมนี้</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            <div>
+                                <h3 className="text-lg font-semibold mb-2">ยอดรวมรายรับ</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                    <SummaryCard title="รายรับ" value={summaryData.totalIncomes.kip} currency="KIP" />
+                                    <SummaryCard title="รายรับ" value={summaryData.totalIncomes.baht} currency="BAHT" />
+                                    <SummaryCard title="รายรับ" value={summaryData.totalIncomes.usd} currency="USD" />
+                                    <SummaryCard title="รายรับ" value={summaryData.totalIncomes.cny} currency="CNY" />
+                                </div>
                             </div>
-                        </div>
-                        <div>
-                            <h3 className="text-lg font-semibold mb-2">ยอดรวมต้นทุน</h3>
-                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                <SummaryCard title="ต้นทุน" value={summaryData.totalCosts.kip} currency="KIP" />
-                                <SummaryCard title="ต้นทุน" value={summaryData.totalCosts.baht} currency="BAHT" />
-                                <SummaryCard title="ต้นทุน" value={summaryData.totalCosts.usd} currency="USD" />
-                                <SummaryCard title="ต้นทุน" value={summaryData.totalCosts.cny} currency="CNY" />
+                            <div>
+                                <h3 className="text-lg font-semibold mb-2">ยอดรวมต้นทุน</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                    <SummaryCard title="ต้นทุน" value={summaryData.totalCosts.kip} currency="KIP" />
+                                    <SummaryCard title="ต้นทุน" value={summaryData.totalCosts.baht} currency="BAHT" />
+                                    <SummaryCard title="ต้นทุน" value={summaryData.totalCosts.usd} currency="USD" />
+                                    <SummaryCard title="ต้นทุน" value={summaryData.totalCosts.cny} currency="CNY" />
+                                </div>
                             </div>
-                        </div>
-                         <div>
-                            <h3 className="text-lg font-semibold mb-2">กำไร / ขาดทุนสุทธิ</h3>
-                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                <SummaryCard title="กำไร/ขาดทุน" value={summaryData.profit.kip} currency="KIP" isProfit />
-                                <SummaryCard title="กำไร/ขาดทุน" value={summaryData.profit.baht} currency="BAHT" isProfit />
-                                <SummaryCard title="กำไร/ขาดทุน" value={summaryData.profit.usd} currency="USD" isProfit />
-                                <SummaryCard title="กำไร/ขาดทุน" value={summaryData.profit.cny} currency="CNY" isProfit />
+                            <div>
+                                <h3 className="text-lg font-semibold mb-2">กำไร / ขาดทุนสุทธิ</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                    <SummaryCard title="กำไร/ขาดทุน" value={summaryData.profit.kip} currency="KIP" isProfit />
+                                    <SummaryCard title="กำไร/ขาดทุน" value={summaryData.profit.baht} currency="BAHT" isProfit />
+                                    <SummaryCard title="กำไร/ขาดทุน" value={summaryData.profit.usd} currency="USD" isProfit />
+                                    <SummaryCard title="กำไร/ขาดทุน" value={summaryData.profit.cny} currency="CNY" isProfit />
+                                </div>
                             </div>
-                        </div>
-                    </CardContent>
-                </Card>
-            </TabsContent>
-        </Tabs>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+            </Tabs>
+        </div>
       </main>
     </div>
   )
