@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, FilePieChart } from "lucide-react";
+import { ArrowLeft, FilePieChart, Printer } from "lucide-react";
 import { listenToTourPrograms, listenToTourCostItemsForProgram, listenToTourIncomeItemsForProgram } from '@/services/tourProgramService';
 import type { TourProgram, TourCostItem, TourIncomeItem } from '@/lib/types';
 import { format } from 'date-fns';
@@ -117,9 +117,13 @@ export default function TourReportsPage() {
         )
     }
 
+    const handlePrint = () => {
+        window.print();
+    }
+
     return (
         <div className="flex min-h-screen w-full flex-col bg-muted/40">
-            <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
+            <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 print:hidden">
                 <Button variant="outline" size="icon" className="h-8 w-8" asChild>
                     <Link href="/tour">
                         <ArrowLeft className="h-4 w-4" />
@@ -130,9 +134,15 @@ export default function TourReportsPage() {
                     <FilePieChart className="h-6 w-6 text-primary" />
                     <h1 className="text-xl font-bold tracking-tight">รายงานสรุปโปรแกรมทัวร์</h1>
                 </div>
+                <div className="ml-auto">
+                    <Button onClick={handlePrint} size="sm" variant="outline">
+                        <Printer className="mr-2 h-4 w-4" />
+                        พิมพ์
+                    </Button>
+                </div>
             </header>
-            <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-                 <Card>
+            <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 print:p-0 print:gap-0">
+                 <Card className="print:shadow-none print:border-none">
                     <CardHeader>
                         <CardTitle>ภาพรวมผลประกอบการ</CardTitle>
                         <CardDescription>สรุปรายรับ, ค่าใช้จ่าย, และกำไร/ขาดทุน ของแต่ละโปรแกรม</CardDescription>

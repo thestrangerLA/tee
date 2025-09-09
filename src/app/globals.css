@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -77,5 +78,34 @@ body {
   }
   input[type=number] {
     -moz-appearance: textfield; /* Firefox */
+  }
+}
+
+@media print {
+  body {
+    background-color: white;
+    color: black;
+  }
+  .print\:hidden {
+    display: none;
+  }
+  .print\:p-0 {
+    padding: 0;
+  }
+  .print\:gap-0 {
+    gap: 0;
+  }
+  .print\:shadow-none {
+    box-shadow: none;
+  }
+  .print\:border-none {
+    border: none;
+  }
+  main {
+    margin: 0;
+    padding: 0;
+  }
+  header {
+    display: none;
   }
 }
