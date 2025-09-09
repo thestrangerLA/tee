@@ -102,3 +102,19 @@ export interface TourIncomeItem {
   cny: number;
   createdAt: Date;
 }
+
+export interface TourAccountSummary {
+    id: string;
+    capital: {
+        kip: number;
+        baht: number;
+        usd: number;
+        cny: number;
+    };
+    balance: {
+        kip: number;
+        baht: number;
+        usd: number;
+        cny: number;
+    };
+}
