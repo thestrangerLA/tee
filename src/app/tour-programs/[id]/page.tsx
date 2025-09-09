@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useMemo, useEffect } from 'react';
@@ -25,10 +24,11 @@ const parseFormattedNumber = (value: string): number => {
     return Number(value.replace(/,/g, '')) || 0;
 };
 
-export default function TourProgramDetailPage({ params: { id: programId } }: { params: { id: string } }) {
+export default function TourProgramDetailPage({ params }: { params: { id: string } }) {
     const { toast } = useToast();
     const [program, setProgram] = useState<TourProgram | null>(null);
     const [costItems, setCostItems] = useState<TourCostItem[]>([]);
+    const programId = params.id;
 
     useEffect(() => {
         if (!programId) return;
