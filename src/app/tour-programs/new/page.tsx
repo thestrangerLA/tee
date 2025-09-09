@@ -29,10 +29,6 @@ export default function NewTourProgramPage() {
         pax: 0,
         destination: '',
         durationDays: 0,
-        priceKip: 0,
-        priceUsd: 0,
-        priceBaht: 0,
-        priceCny: 0,
     });
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -97,7 +93,7 @@ export default function NewTourProgramPage() {
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleSubmit} className="grid gap-6">
-                            <div className="grid md:grid-cols-2 gap-6">
+                            <div className="grid md:grid-cols-3 gap-6">
                                 <div className="grid gap-2">
                                     <Label htmlFor="date">วันที่</Label>
                                     <Popover>
@@ -116,11 +112,10 @@ export default function NewTourProgramPage() {
                                     <Label htmlFor="tourCode">รหัสทัวร์</Label>
                                     <Input id="tourCode" name="tourCode" value={formData.tourCode} onChange={handleChange} />
                                 </div>
-                            </div>
-
-                            <div className="grid gap-2">
-                                <Label htmlFor="programName">ชื่อโปรแกรม</Label>
-                                <Input id="programName" name="programName" value={formData.programName} onChange={handleChange} required />
+                                  <div className="grid gap-2">
+                                    <Label htmlFor="programName">ชื่อโปรแกรม</Label>
+                                    <Input id="programName" name="programName" value={formData.programName} onChange={handleChange} required />
+                                </div>
                             </div>
 
                             <div className="grid md:grid-cols-2 gap-6">
@@ -144,34 +139,10 @@ export default function NewTourProgramPage() {
                                     <Input id="durationDays" name="durationDays" type="number" value={formData.durationDays} onChange={handleChange} />
                                 </div>
                             </div>
-
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle className="text-lg">ราคาต่อคน</CardTitle>
-                                </CardHeader>
-                                <CardContent className="grid sm:grid-cols-2 md:grid-cols-4 gap-4">
-                                     <div className="grid gap-2">
-                                        <Label htmlFor="priceKip">กีบ</Label>
-                                        <Input id="priceKip" name="priceKip" type="number" value={formData.priceKip} onChange={handleChange} placeholder="0" />
-                                    </div>
-                                     <div className="grid gap-2">
-                                        <Label htmlFor="priceUsd">ดอลลาร์</Label>
-                                        <Input id="priceUsd" name="priceUsd" type="number" value={formData.priceUsd} onChange={handleChange} placeholder="0" />
-                                    </div>
-                                     <div className="grid gap-2">
-                                        <Label htmlFor="priceBaht">บาท</Label>
-                                        <Input id="priceBaht" name="priceBaht" type="number" value={formData.priceBaht} onChange={handleChange} placeholder="0" />
-                                    </div>
-                                     <div className="grid gap-2">
-                                        <Label htmlFor="priceCny">หยวน</Label>
-                                        <Input id="priceCny" name="priceCny" type="number" value={formData.priceCny} onChange={handleChange} placeholder="0" />
-                                    </div>
-                                </CardContent>
-                            </Card>
-
+                            
                             <div className="flex justify-end gap-2">
                                 <Button type="button" variant="outline" onClick={() => router.push('/tour-programs')}>ยกเลิก</Button>
-                                <Button type="submit">บันทึก</Button>
+                                <Button type="submit">บันทึกและไปต่อ</Button>
                             </div>
                         </form>
                     </CardContent>

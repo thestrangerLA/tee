@@ -72,14 +72,23 @@ export interface TourProgram {
   pax: number;
   destination: string;
   durationDays: number;
-  priceKip: number;
-  priceUsd: number;
-  priceBaht: number;
-  priceCny: number;
+  customerDetails?: string;
   createdAt: Date;
 }
 
 export interface TourCostItem {
+  id: string;
+  programId: string;
+  date: Date | null;
+  detail: string;
+  kip: number;
+  baht: number;
+  usd: number;
+  cny: number;
+  createdAt: Date;
+}
+
+export interface TourIncomeItem {
   id: string;
   programId: string;
   date: Date | null;

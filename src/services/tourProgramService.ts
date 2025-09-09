@@ -1,6 +1,6 @@
 
 import { db } from '@/lib/firebase';
-import type { TourCostItem, TourProgram } from '@/lib/types';
+import type { TourCostItem, TourProgram, TourIncomeItem } from '@/lib/types';
 import { 
     collection, 
     addDoc, 
@@ -18,6 +18,7 @@ import {
 
 const programsCollectionRef = collection(db, 'tourPrograms');
 const costsCollectionRef = collection(db, 'tourCostItems');
+const incomeCollectionRef = collection(db, 'tourIncomeItems');
 
 // ---- Tour Program Functions ----
 
@@ -66,6 +67,11 @@ export const addTourProgram = async (program: Omit<TourProgram, 'id' | 'createdA
     return docRef.id;
 };
 
+export const updateTourProgram = async (id: string, updatedFields: Partial<Omit<TourProgram, 'id' | 'createdAt' | 'date'>>) => {
+    const programDoc = doc(db, 'tourPrograms', id);
+    await updateDoc(programDoc, updatedFields);
+};
+
 
 // ---- Tour Cost Item Functions ----
 
@@ -82,14 +88,13 @@ export const listenToTourCostItemsForProgram = (programId: string, callback: (it
                 createdAt: (data.createdAt as Timestamp)?.toDate()
             } as TourCostItem);
         });
-        // Sort by createdAt date on the client side
         items.sort((a, b) => (a.createdAt?.getTime() || 0) - (b.createdAt?.getTime() || 0));
         callback(items);
     });
     return unsubscribe;
 };
 
-export const addTourCostItemForProgram = async (programId: string) => {
+export const addTourCostItem = async (programId: string) => {
     const newItem: Omit<TourCostItem, 'id' | 'createdAt'> = {
         programId: programId,
         date: new Date(),
@@ -107,17 +112,66 @@ export const addTourCostItemForProgram = async (programId: string) => {
 
 export const updateTourCostItem = async (id: string, updatedFields: Partial<Omit<TourCostItem, 'id' | 'createdAt'>>) => {
     const itemDoc = doc(db, 'tourCostItems', id);
-    
-    // Convert Date to Timestamp before updating
     const dataToUpdate: any = { ...updatedFields };
     if (updatedFields.date) {
         dataToUpdate.date = Timestamp.fromDate(updatedFields.date);
     }
-    
     await updateDoc(itemDoc, dataToUpdate);
 };
 
 export const deleteTourCostItem = async (id: string) => {
     const itemDoc = doc(db, 'tourCostItems', id);
+    await deleteDoc(itemDoc);
+};
+
+
+// ---- Tour Income Item Functions ----
+
+export const listenToTourIncomeItemsForProgram = (programId: string, callback: (items: TourIncomeItem[]) => void) => {
+    const q = query(incomeCollectionRef, where('programId', '==', programId));
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const items: TourIncomeItem[] = [];
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            items.push({ 
+                id: doc.id, 
+                ...data,
+                date: (data.date as Timestamp)?.toDate() || null,
+                createdAt: (data.createdAt as Timestamp)?.toDate()
+            } as TourIncomeItem);
+        });
+        items.sort((a, b) => (a.createdAt?.getTime() || 0) - (b.createdAt?.getTime() || 0));
+        callback(items);
+    });
+    return unsubscribe;
+};
+
+export const addTourIncomeItem = async (programId: string) => {
+    const newItem: Omit<TourIncomeItem, 'id' | 'createdAt'> = {
+        programId: programId,
+        date: new Date(),
+        detail: '',
+        kip: 0,
+        baht: 0,
+        usd: 0,
+        cny: 0,
+    };
+    await addDoc(incomeCollectionRef, {
+        ...newItem,
+        createdAt: serverTimestamp()
+    });
+};
+
+export const updateTourIncomeItem = async (id: string, updatedFields: Partial<Omit<TourIncomeItem, 'id' | 'createdAt'>>) => {
+    const itemDoc = doc(db, 'tourIncomeItems', id);
+    const dataToUpdate: any = { ...updatedFields };
+    if (updatedFields.date) {
+        dataToUpdate.date = Timestamp.fromDate(updatedFields.date);
+    }
+    await updateDoc(itemDoc, dataToUpdate);
+};
+
+export const deleteTourIncomeItem = async (id: string) => {
+    const itemDoc = doc(db, 'tourIncomeItems', id);
     await deleteDoc(itemDoc);
 };
