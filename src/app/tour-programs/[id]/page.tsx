@@ -78,11 +78,6 @@ const CurrencyEntryTable = ({
                     เพิ่มรายการ
                 </Button>
             </CardHeader>
-            {/* Header for printing */}
-             <CardHeader className="hidden print:block">
-                <CardTitle>{title}</CardTitle>
-                <CardDescription>{description}</CardDescription>
-            </CardHeader>
              <CardContent>
                 <div className="overflow-x-auto">
                     <Table>
@@ -282,7 +277,8 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
     const handleSaveProgramInfo = async () => {
         if (!program) return;
         try {
-            await updateTourProgram(program.id, program);
+            const { id, createdAt, date, ...dataToUpdate } = program;
+            await updateTourProgram(program.id, dataToUpdate);
             toast({ title: "บันทึกข้อมูลโปรแกรมสำเร็จ" });
         } catch (error) {
              console.error("Failed to save program info:", error);
@@ -406,6 +402,67 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
             </CardContent>
         </Card>
     );
+    
+    const SummaryTables = () => (
+         <>
+            <Card className="print:shadow-none print:border-none">
+                <CardHeader>
+                    <CardTitle>Total Costs</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <Table>
+                        <TableFooter>
+                            <TableRow className="bg-muted font-bold">
+                                <TableCell className="text-right">ລວມ (Total)</TableCell>
+                                <TableCell className="text-right">{formatCurrency(summaryData.totalCosts.kip)} KIP</TableCell>
+                                <TableCell className="text-right">{formatCurrency(summaryData.totalCosts.baht)} BAHT</TableCell>
+                                <TableCell className="text-right">{formatCurrency(summaryData.totalCosts.usd)} USD</TableCell>
+                                <TableCell className="text-right">{formatCurrency(summaryData.totalCosts.cny)} CNY</TableCell>
+                            </TableRow>
+                        </TableFooter>
+                    </Table>
+                </CardContent>
+            </Card>
+             <Card className="print:shadow-none print:border-none">
+                 <CardHeader>
+                    <CardTitle>Total Income</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <Table>
+                        <TableFooter>
+                            <TableRow className="bg-muted font-bold">
+                                <TableCell className="text-right">ລວມ (Total)</TableCell>
+                                <TableCell className="text-right">{formatCurrency(summaryData.totalIncomes.kip)} KIP</TableCell>
+                                <TableCell className="text-right">{formatCurrency(summaryData.totalIncomes.baht)} BAHT</TableCell>
+                                <TableCell className="text-right">{formatCurrency(summaryData.totalIncomes.usd)} USD</TableCell>
+                                <TableCell className="text-right">{formatCurrency(summaryData.totalIncomes.cny)} CNY</TableCell>
+                            </TableRow>
+                        </TableFooter>
+                    </Table>
+                </CardContent>
+            </Card>
+        </>
+    );
+
+    const SummaryProfitCards = () => (
+        <Card className="print:shadow-none print:border-none">
+            <CardHeader>
+                <CardTitle>สรุปผลประกอบการ</CardTitle>
+            </CardHeader>
+            <CardContent>
+                 <div>
+                    <h3 className="text-lg font-semibold mb-2">กำไร / ขาดทุนสุทธิ</h3>
+                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <SummaryCard title="กำไร/ขาดทุน" value={summaryData.profit.kip} currency="KIP" isProfit />
+                        <SummaryCard title="กำไร/ขาดทุน" value={summaryData.profit.baht} currency="BAHT" isProfit />
+                        <SummaryCard title="กำไร/ขาดทุน" value={summaryData.profit.usd} currency="USD" isProfit />
+                        <SummaryCard title="กำไร/ขาดทุน" value={summaryData.profit.cny} currency="CNY" isProfit />
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+    );
+
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40 print:bg-white">
@@ -431,56 +488,8 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
         {/* For Printing */}
         <div className="hidden print:block space-y-4 p-4">
             <ProgramInfoCard />
-            <CurrencyEntryTable 
-                items={costItems}
-                onAddItem={handleAddCostItem}
-                onUpdateItem={handleUpdateCostItem as any}
-                onDeleteItem={handleDeleteCostItem}
-                title="ตารางคำนวณต้นทุน"
-                description="บันทึกค่าใช้จ่ายทั้งหมดของโปรแกรมนี้"
-            />
-             <CurrencyEntryTable 
-                items={incomeItems}
-                onAddItem={handleAddIncomeItem}
-                onUpdateItem={handleUpdateIncomeItem as any}
-                onDeleteItem={handleDeleteIncomeItem}
-                title="ตารางบันทึกรายรับ"
-                description="บันทึกรายรับทั้งหมดของโปรแกรมนี้"
-            />
-            <Card className="print:shadow-none print:border-none">
-                <CardHeader>
-                    <CardTitle>สรุปผลประกอบการ</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                    <div>
-                        <h3 className="text-lg font-semibold mb-2">ยอดรวมรายรับ</h3>
-                         <div className="grid grid-cols-4 gap-4">
-                            <SummaryCard title="รายรับ" value={summaryData.totalIncomes.kip} currency="KIP" />
-                            <SummaryCard title="รายรับ" value={summaryData.totalIncomes.baht} currency="BAHT" />
-                            <SummaryCard title="รายรับ" value={summaryData.totalIncomes.usd} currency="USD" />
-                            <SummaryCard title="รายรับ" value={summaryData.totalIncomes.cny} currency="CNY" />
-                        </div>
-                    </div>
-                    <div>
-                        <h3 className="text-lg font-semibold mb-2">ยอดรวมต้นทุน</h3>
-                         <div className="grid grid-cols-4 gap-4">
-                            <SummaryCard title="ต้นทุน" value={summaryData.totalCosts.kip} currency="KIP" />
-                            <SummaryCard title="ต้นทุน" value={summaryData.totalCosts.baht} currency="BAHT" />
-                            <SummaryCard title="ต้นทุน" value={summaryData.totalCosts.usd} currency="USD" />
-                            <SummaryCard title="ต้นทุน" value={summaryData.totalCosts.cny} currency="CNY" />
-                        </div>
-                    </div>
-                     <div>
-                        <h3 className="text-lg font-semibold mb-2">กำไร / ขาดทุนสุทธิ</h3>
-                         <div className="grid grid-cols-4 gap-4">
-                            <SummaryCard title="กำไร/ขาดทุน" value={summaryData.profit.kip} currency="KIP" isProfit />
-                            <SummaryCard title="กำไร/ขาดทุน" value={summaryData.profit.baht} currency="BAHT" isProfit />
-                            <SummaryCard title="กำไร/ขาดทุน" value={summaryData.profit.usd} currency="USD" isProfit />
-                            <SummaryCard title="กำไร/ขาดทุน" value={summaryData.profit.cny} currency="CNY" isProfit />
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
+            <SummaryTables />
+            <SummaryProfitCards />
         </div>
 
         {/* For Screen */}
@@ -558,3 +567,5 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
     </div>
   )
 }
+
+    
