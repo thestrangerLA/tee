@@ -29,14 +29,28 @@ export default function NewTourProgramPage() {
         pax: 0,
         destination: '',
         durationDays: 0,
+        price: 0,
+        bankCharge: 0,
+        totalPrice: 0,
     });
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value, type } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: type === 'number' ? parseInt(value) || 0 : value
-        }));
+        
+        setFormData(prev => {
+            const newFormData = {
+                ...prev,
+                [name]: type === 'number' ? parseInt(value) || 0 : value
+            };
+
+            if (name === 'price' || name === 'bankCharge') {
+                const price = name === 'price' ? parseInt(value) || 0 : newFormData.price || 0;
+                const bankCharge = name === 'bankCharge' ? parseInt(value) || 0 : newFormData.bankCharge || 0;
+                newFormData.totalPrice = price + bankCharge;
+            }
+
+            return newFormData;
+        });
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -137,6 +151,21 @@ export default function NewTourProgramPage() {
                                 <div className="grid gap-2">
                                     <Label htmlFor="durationDays">ระยะเวลา (วัน)</Label>
                                     <Input id="durationDays" name="durationDays" type="number" value={formData.durationDays} onChange={handleChange} />
+                                </div>
+                            </div>
+
+                             <div className="grid md:grid-cols-3 gap-6">
+                                <div className="grid gap-2">
+                                    <Label htmlFor="price">Price</Label>
+                                    <Input id="price" name="price" type="number" value={formData.price} onChange={handleChange} />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="bankCharge">Bank Charge</Label>
+                                    <Input id="bankCharge" name="bankCharge" type="number" value={formData.bankCharge} onChange={handleChange} />
+                                </div>
+                                 <div className="grid gap-2">
+                                    <Label htmlFor="totalPrice">Total Price</Label>
+                                    <Input id="totalPrice" name="totalPrice" type="number" value={formData.totalPrice} readOnly className="bg-muted/50" />
                                 </div>
                             </div>
                             

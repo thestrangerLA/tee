@@ -73,6 +73,9 @@ export interface TourProgram {
   destination: string;
   durationDays: number;
   customerDetails?: string;
+  price?: number;
+  bankCharge?: number;
+  totalPrice?: number;
   createdAt: Date;
 }
 

@@ -210,6 +210,17 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
             unsubscribeIncomes();
         };
     }, [programId]);
+    
+     useEffect(() => {
+        if (program) {
+            const price = program.price || 0;
+            const bankCharge = program.bankCharge || 0;
+            const newTotalPrice = price + bankCharge;
+            if (newTotalPrice !== program.totalPrice) {
+                setProgram(p => p ? { ...p, totalPrice: newTotalPrice } : null);
+            }
+        }
+    }, [program?.price, program?.bankCharge]);
 
     // --- Cost Item Handlers ---
     const handleAddCostItem = async () => {
@@ -252,9 +263,8 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
     const handleSaveProgramInfo = async () => {
         if (!program) return;
         try {
-            // We only need to save fields that can be edited in the form
-            const { programName, tourCode, groupName, pax, destination, durationDays, customerDetails } = program;
-            await updateTourProgram(program.id, { programName, tourCode, groupName, pax, destination, durationDays, customerDetails });
+            const { programName, tourCode, groupName, pax, destination, durationDays, customerDetails, price, bankCharge, totalPrice } = program;
+            await updateTourProgram(program.id, { programName, tourCode, groupName, pax, destination, durationDays, customerDetails, price, bankCharge, totalPrice });
             toast({ title: "บันทึกข้อมูลโปรแกรมสำเร็จ" });
         } catch (error) {
             toast({ title: "เกิดข้อผิดพลาดในการบันทึกข้อมูลโปรแกรม", variant: "destructive" });
@@ -325,7 +335,7 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
                         <CardTitle>รายละเอียดโปรแกรมและข้อมูลกลุ่ม</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-6">
-                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                              <div className="grid gap-2">
                                 <Label htmlFor="programName">ชื่อโปรแกรม</Label>
                                 <Input id="programName" value={program.programName} onChange={(e) => handleProgramChange('programName', e.target.value)} />
@@ -349,6 +359,20 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
                              <div className="grid gap-2">
                                 <Label htmlFor="durationDays">ระยะเวลา (วัน)</Label>
                                 <Input id="durationDays" type="number" value={program.durationDays} onChange={(e) => handleProgramChange('durationDays', Number(e.target.value))} />
+                            </div>
+                        </div>
+                         <div className="grid md:grid-cols-3 gap-6">
+                             <div className="grid gap-2">
+                                <Label htmlFor="price">Price</Label>
+                                <Input id="price" type="number" value={program.price || ''} onChange={(e) => handleProgramChange('price', Number(e.target.value))} />
+                            </div>
+                              <div className="grid gap-2">
+                                <Label htmlFor="bankCharge">Bank Charge</Label>
+                                <Input id="bankCharge" type="number" value={program.bankCharge || ''} onChange={(e) => handleProgramChange('bankCharge', Number(e.target.value))} />
+                            </div>
+                              <div className="grid gap-2">
+                                <Label htmlFor="totalPrice">Total Price</Label>
+                                <Input id="totalPrice" type="number" value={program.totalPrice || ''} readOnly className="bg-muted/50" />
                             </div>
                         </div>
                          <div className="grid gap-2">

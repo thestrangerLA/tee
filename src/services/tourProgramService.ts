@@ -114,7 +114,7 @@ export const updateTourCostItem = async (id: string, updatedFields: Partial<Omit
     const itemDoc = doc(db, 'tourCostItems', id);
     const dataToUpdate: any = { ...updatedFields };
     if (updatedFields.date) {
-        dataToUpdate.date = Timestamp.fromDate(updatedFields.date);
+        dataToUpdate.date = Timestamp.fromDate(updatedFields.date as Date);
     }
     await updateDoc(itemDoc, dataToUpdate);
 };
@@ -166,7 +166,7 @@ export const updateTourIncomeItem = async (id: string, updatedFields: Partial<Om
     const itemDoc = doc(db, 'tourIncomeItems', id);
     const dataToUpdate: any = { ...updatedFields };
     if (updatedFields.date) {
-        dataToUpdate.date = Timestamp.fromDate(updatedFields.date);
+        dataToUpdate.date = Timestamp.fromDate(updatedFields.date as Date);
     }
     await updateDoc(itemDoc, dataToUpdate);
 };
