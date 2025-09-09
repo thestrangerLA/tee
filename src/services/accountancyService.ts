@@ -17,11 +17,22 @@ import {
     runTransaction
 } from 'firebase/firestore';
 
-const transactionsCollectionRef = collection(db, 'transactions');
-const accountSummaryDocRef = doc(db, 'accountSummary', 'latest');
+type BusinessType = 'agriculture' | 'tour';
+
+const getCollectionRefs = (businessType: BusinessType) => {
+    const transactionsCollectionName = `${businessType}-transactions`;
+    const accountSummaryDocName = `${businessType}-accountSummary`;
+    return {
+        transactionsCollectionRef: collection(db, transactionsCollectionName),
+        accountSummaryDocRef: doc(db, accountSummaryDocName, 'latest'),
+        transactionsCollectionName: transactionsCollectionName,
+    };
+};
+
 
 // Transaction Functions
-export const listenToTransactions = (callback: (items: Transaction[]) => void) => {
+export const listenToTransactions = (businessType: BusinessType, callback: (items: Transaction[]) => void) => {
+    const { transactionsCollectionRef } = getCollectionRefs(businessType);
     const q = query(transactionsCollectionRef, orderBy('date', 'desc'));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
         const transactions: Transaction[] = [];
@@ -38,7 +49,8 @@ export const listenToTransactions = (callback: (items: Transaction[]) => void) =
     return unsubscribe;
 };
 
-export const addTransaction = async (transaction: Omit<Transaction, 'id'>) => {
+export const addTransaction = async (businessType: BusinessType, transaction: Omit<Transaction, 'id'>) => {
+    const { accountSummaryDocRef, transactionsCollectionName } = getCollectionRefs(businessType);
     const transactionWithTimestamp = { ...transaction, date: Timestamp.fromDate(transaction.date) };
 
     await runTransaction(db, async (t) => {
@@ -60,7 +72,7 @@ export const addTransaction = async (transaction: Omit<Transaction, 'id'>) => {
 
         // --- WRITES SECOND ---
         // 1. Add the new transaction document
-        const newTransactionRef = doc(collection(db, "transactions"));
+        const newTransactionRef = doc(collection(db, transactionsCollectionName));
         t.set(newTransactionRef, transactionWithTimestamp);
 
         // 2. Update the account summary
@@ -81,8 +93,9 @@ export const addTransaction = async (transaction: Omit<Transaction, 'id'>) => {
     });
 };
 
-export const updateTransaction = async (id: string, updatedFields: Partial<Omit<Transaction, 'id'>>) => {
-    const transactionDocRef = doc(db, 'transactions', id);
+export const updateTransaction = async (businessType: BusinessType, id: string, updatedFields: Partial<Omit<Transaction, 'id'>>) => {
+    const { transactionsCollectionRef, accountSummaryDocRef } = getCollectionRefs(businessType);
+    const transactionDocRef = doc(transactionsCollectionRef, id);
 
     await runTransaction(db, async (t) => {
         // --- Step 1: READ all necessary documents ---
@@ -130,8 +143,9 @@ export const updateTransaction = async (id: string, updatedFields: Partial<Omit<
 };
 
 
-export const deleteTransaction = async (id: string) => {
-    const transactionDocRef = doc(db, 'transactions', id);
+export const deleteTransaction = async (businessType: BusinessType, id: string) => {
+    const { transactionsCollectionRef, accountSummaryDocRef } = getCollectionRefs(businessType);
+    const transactionDocRef = doc(transactionsCollectionRef, id);
 
      await runTransaction(db, async (t) => {
         // --- Step 1: READ all necessary documents ---
@@ -166,7 +180,8 @@ export const deleteTransaction = async (id: string) => {
 };
 
 // Account Summary Functions
-export const listenToAccountSummary = (callback: (summary: AccountSummary | null) => void) => {
+export const listenToAccountSummary = (businessType: BusinessType, callback: (summary: AccountSummary | null) => void) => {
+    const { accountSummaryDocRef } = getCollectionRefs(businessType);
     const unsubscribe = onSnapshot(accountSummaryDocRef, (docSnapshot) => {
         if (docSnapshot.exists()) {
             const data = docSnapshot.data();
@@ -184,6 +199,7 @@ export const listenToAccountSummary = (callback: (summary: AccountSummary | null
     return unsubscribe;
 };
 
-export const updateAccountSummary = async (summary: Partial<Omit<AccountSummary, 'id'>>) => {
+export const updateAccountSummary = async (businessType: BusinessType, summary: Partial<Omit<AccountSummary, 'id'>>) => {
+    const { accountSummaryDocRef } = getCollectionRefs(businessType);
     await setDoc(accountSummaryDocRef, summary, { merge: true });
 };

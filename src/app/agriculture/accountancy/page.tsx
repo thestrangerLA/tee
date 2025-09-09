@@ -52,6 +52,7 @@ import { listenToDebtorCreditorEntries } from '@/services/debtorCreditorService'
 import { listenToTransportEntries } from '@/services/transportService';
 import { listenToAllDrugCreditorEntries } from '@/services/drugCreditorService';
 
+const businessType = 'agriculture';
 
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('th-TH', { minimumFractionDigits: 0 }).format(value);
@@ -157,7 +158,7 @@ const CashCalculatorCard = ({ onTotalChange }: { onTotalChange: (total: number) 
 };
 
 
-export default function AccountancyPage() {
+export default function AgricultureAccountancyPage() {
     const { toast } = useToast();
     const [accountSummary, setAccountSummary] = useState<AccountSummary>({ id: 'latest', cash: 0, transfer: 0, capital: 0, workingCapital: 0 });
     const [date, setDate] = useState<Date | undefined>(new Date());
@@ -182,13 +183,13 @@ export default function AccountancyPage() {
     const workingCapital = useMemo(() => accountSummary.workingCapital || 0, [accountSummary]);
 
     useEffect(() => {
-        const unsubscribeTransactions = listenToTransactions(setAllTransactions);
-        const unsubscribeSummary = listenToAccountSummary((summary) => {
+        const unsubscribeTransactions = listenToTransactions(businessType, setAllTransactions);
+        const unsubscribeSummary = listenToAccountSummary(businessType, (summary) => {
             if (summary) {
                 setAccountSummary(summary);
             } else {
                  const initialSummary: AccountSummary = { id: 'latest', cash: 0, transfer: 0, capital: 0, workingCapital: 0 };
-                updateAccountSummary(initialSummary).then(() => setAccountSummary(initialSummary));
+                updateAccountSummary(businessType, initialSummary).then(() => setAccountSummary(initialSummary));
             }
         });
         const unsubscribeDebtors = listenToDebtorCreditorEntries(setDebtorEntries);
@@ -206,7 +207,7 @@ export default function AccountancyPage() {
     
     const handleCalculatorTotalChange = async (totalKip: number) => {
         if (totalKip !== accountSummary.cash) {
-            await updateAccountSummary({ cash: totalKip });
+            await updateAccountSummary(businessType, { cash: totalKip });
         }
     };
 
@@ -316,7 +317,7 @@ export default function AccountancyPage() {
         const newTxData = { date: startOfDay(date), ...newTransaction };
 
         try {
-            await addTransaction(newTxData);
+            await addTransaction(businessType, newTxData);
             
             toast({
                 title: "เพิ่มธุรกรรมใหม่สำเร็จ",
@@ -340,7 +341,7 @@ export default function AccountancyPage() {
         if (!window.confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบรายการ "${txToDelete.description || 'ไม่มีชื่อ'}"?`)) return;
 
         try {
-            await deleteTransaction(txToDelete.id);
+            await deleteTransaction(businessType, txToDelete.id);
             toast({
                 title: "ลบธุรกรรมสำเร็จ",
             });
@@ -358,7 +359,7 @@ export default function AccountancyPage() {
         if (!editingTransaction) return;
 
         try {
-            await updateTransaction(editingTransaction.id, {
+            await updateTransaction(businessType, editingTransaction.id, {
                 ...editingTransaction,
                 date: startOfDay(editingTransaction.date),
             });
@@ -395,7 +396,7 @@ export default function AccountancyPage() {
         if (!editingSummaryField) return;
 
         try {
-            await updateAccountSummary({ [editingSummaryField]: editingSummaryValue });
+            await updateAccountSummary(businessType, { [editingSummaryField]: editingSummaryValue });
 
             toast({
                 title: "อัปเดตยอดเงินสำเร็จ",
@@ -465,13 +466,13 @@ export default function AccountancyPage() {
         <div className="flex min-h-screen w-full flex-col bg-muted/40">
             <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
                 <Button variant="outline" size="icon" className="h-8 w-8" asChild>
-                    <Link href="/">
+                    <Link href="/agriculture">
                         <ArrowLeft className="h-4 w-4" />
                         <span className="sr-only">กลับไปหน้าหลัก</span>
                     </Link>
                 </Button>
                 <div className="flex items-center gap-2">
-                    <h1 className="text-xl font-bold tracking-tight">จัดการบัญชี</h1>
+                    <h1 className="text-xl font-bold tracking-tight">จัดการบัญชี (ร้านค้าเกษตร)</h1>
                 </div>
             </header>
             <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
@@ -778,9 +779,3 @@ export default function AccountancyPage() {
         </div>
     );
 }
-
-    
-
-    
-
-    
