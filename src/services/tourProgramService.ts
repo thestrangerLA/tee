@@ -13,7 +13,9 @@ import {
     serverTimestamp,
     Timestamp,
     where,
-    getDoc
+    getDoc,
+    getDocs,
+    writeBatch
 } from 'firebase/firestore';
 
 const programsCollectionRef = collection(db, 'tourPrograms');
@@ -69,8 +71,6 @@ export const addTourProgram = async (program: Omit<TourProgram, 'id' | 'createdA
 
 export const updateTourProgram = async (id: string, updatedFields: Partial<Omit<TourProgram, 'id' | 'createdAt' | 'date'>>) => {
     const programDoc = doc(db, 'tourPrograms', id);
-    // The data received here is already structured correctly for Firestore.
-    // No need to handle Timestamps as the 'date' field is not part of the update.
     await updateDoc(programDoc, updatedFields);
 };
 
