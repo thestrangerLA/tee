@@ -7,10 +7,19 @@ import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, FileText, PlusCircle } from "lucide-react";
-import { listenToTourPrograms } from '@/services/tourProgramService';
+import { ArrowLeft, FileText, PlusCircle, MoreHorizontal } from "lucide-react";
+import { listenToTourPrograms, deleteTourProgram } from '@/services/tourProgramService';
 import type { TourProgram } from '@/lib/types';
 import { format } from 'date-fns';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useToast } from "@/hooks/use-toast";
+
 
 const formatCurrency = (value: number | null | undefined, currency: string) => {
     if (value === null || value === undefined || isNaN(value)) return '-';
@@ -18,6 +27,7 @@ const formatCurrency = (value: number | null | undefined, currency: string) => {
 };
 
 export default function TourProgramsListPage() {
+    const { toast } = useToast();
     const [programs, setPrograms] = useState<TourProgram[]>([]);
     const router = useRouter();
 
@@ -29,6 +39,27 @@ export default function TourProgramsListPage() {
     const handleRowClick = (id: string) => {
         router.push(`/tour-programs/${id}`);
     };
+
+    const handleDeleteProgram = async (programId: string, programName: string) => {
+        if (!window.confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบโปรแกรม "${programName}"? การกระทำนี้จะลบรายรับและรายจ่ายทั้งหมดที่เกี่ยวข้องด้วยและไม่สามารถย้อนกลับได้`)) {
+            return;
+        }
+        try {
+            await deleteTourProgram(programId);
+            toast({
+                title: "ลบโปรแกรมสำเร็จ",
+                description: `โปรแกรม "${programName}" ถูกลบแล้ว`,
+            });
+        } catch (error) {
+            console.error("Error deleting program:", error);
+            toast({
+                title: "เกิดข้อผิดพลาด",
+                description: "ไม่สามารถลบโปรแกรมได้",
+                variant: "destructive",
+            });
+        }
+    };
+
 
     return (
         <div className="flex min-h-screen w-full flex-col bg-muted/40">
@@ -71,23 +102,49 @@ export default function TourProgramsListPage() {
                                         <TableHead>ชื่อกลุ่ม</TableHead>
                                         <TableHead>จุดหมาย</TableHead>
                                         <TableHead className="text-right">จำนวนคน</TableHead>
+                                        <TableHead><span className="sr-only">Actions</span></TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {programs.length > 0 ? (
                                         programs.map(program => (
-                                            <TableRow key={program.id} onClick={() => handleRowClick(program.id)} className="cursor-pointer">
-                                                <TableCell>{program.date ? format(program.date, 'dd/MM/yyyy') : '-'}</TableCell>
-                                                <TableCell>{program.tourCode}</TableCell>
-                                                <TableCell className="font-medium">{program.programName}</TableCell>
-                                                <TableCell>{program.groupName}</TableCell>
-                                                <TableCell>{program.destination}</TableCell>
-                                                <TableCell className="text-right">{program.pax}</TableCell>
+                                            <TableRow key={program.id} className="group">
+                                                <TableCell onClick={() => handleRowClick(program.id)} className="cursor-pointer">{program.date ? format(program.date, 'dd/MM/yyyy') : '-'}</TableCell>
+                                                <TableCell onClick={() => handleRowClick(program.id)} className="cursor-pointer">{program.tourCode}</TableCell>
+                                                <TableCell onClick={() => handleRowClick(program.id)} className="cursor-pointer font-medium">{program.programName}</TableCell>
+                                                <TableCell onClick={() => handleRowClick(program.id)} className="cursor-pointer">{program.groupName}</TableCell>
+                                                <TableCell onClick={() => handleRowClick(program.id)} className="cursor-pointer">{program.destination}</TableCell>
+                                                <TableCell onClick={() => handleRowClick(program.id)} className="cursor-pointer text-right">{program.pax}</TableCell>
+                                                <TableCell className="text-right">
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button variant="ghost" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100">
+                                                                <span className="sr-only">Open menu</span>
+                                                                <MoreHorizontal className="h-4 w-4" />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end">
+                                                            <DropdownMenuLabel>การดำเนินการ</DropdownMenuLabel>
+                                                            <DropdownMenuItem onClick={() => handleRowClick(program.id)}>
+                                                                ดู/แก้ไข
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem
+                                                                className="text-red-600"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleDeleteProgram(program.id, program.programName)
+                                                                }}
+                                                            >
+                                                                ลบ
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                </TableCell>
                                             </TableRow>
                                         ))
                                     ) : (
                                         <TableRow>
-                                            <TableCell colSpan={6} className="text-center">
+                                            <TableCell colSpan={7} className="text-center">
                                                 ยังไม่มีโปรแกรมทัวร์, เริ่มโดยการสร้างโปรแกรมใหม่
                                             </TableCell>
                                         </TableRow>

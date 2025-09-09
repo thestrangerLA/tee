@@ -74,6 +74,31 @@ export const updateTourProgram = async (id: string, updatedFields: Partial<Omit<
     await updateDoc(programDoc, updatedFields);
 };
 
+export const deleteTourProgram = async (programId: string) => {
+    const batch = writeBatch(db);
+
+    // 1. Delete the program itself
+    const programDocRef = doc(db, 'tourPrograms', programId);
+    batch.delete(programDocRef);
+
+    // 2. Query and delete all associated cost items
+    const costsQuery = query(costsCollectionRef, where('programId', '==', programId));
+    const costsSnapshot = await getDocs(costsQuery);
+    costsSnapshot.forEach((doc) => {
+        batch.delete(doc.ref);
+    });
+
+    // 3. Query and delete all associated income items
+    const incomesQuery = query(incomeCollectionRef, where('programId', '==', programId));
+    const incomesSnapshot = await getDocs(incomesQuery);
+    incomesSnapshot.forEach((doc) => {
+        batch.delete(doc.ref);
+    });
+
+    // Commit the batch
+    await batch.commit();
+};
+
 
 // ---- Tour Cost Item Functions ----
 
