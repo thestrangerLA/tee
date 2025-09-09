@@ -63,8 +63,25 @@ export interface DrugCreditorEntry {
   createdAt: Date;
 }
 
+export interface TourProgram {
+  id: string;
+  date: Date;
+  tourCode: string;
+  programName: string;
+  groupName: string;
+  pax: number;
+  destination: string;
+  durationDays: number;
+  priceKip: number;
+  priceUsd: number;
+  priceBaht: number;
+  priceCny: number;
+  createdAt: Date;
+}
+
 export interface TourCostItem {
   id: string;
+  programId: string;
   date: Date | null;
   detail: string;
   kip: number;
