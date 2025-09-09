@@ -183,7 +183,7 @@ const SummaryCard = ({ title, value, currency, isProfit = false }: { title: stri
     const profitColor = value >= 0 ? 'text-green-600' : 'text-red-600';
     return (
         <Card className="print:shadow-none print:border print:p-0">
-            <CardHeader className="pb-2 print:p-1">
+            <CardHeader className="pb-2 print:p-1 print:font-lao">
                 <CardTitle className="text-base print:text-xs">{title}</CardTitle>
                 <CardDescription className="print:text-xs">{currency}</CardDescription>
             </CardHeader>
@@ -418,13 +418,10 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
       </header>
       <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 print:p-4 print:gap-2">
         {/* For Printing */}
-        <div className="hidden print:block space-y-2">
+        <div className="hidden print:block print:space-y-2 print:font-lao">
             <div className="print:p-0">
-                 <h2 className="text-lg font-bold mb-1">ລາຍລະອຽດໜ້າວຽກຂອງແຕ່ລະກຸ່ມ</h2>
-                <p className="text-xs text-muted-foreground mb-2">
-                    Date: {program.createdAt ? format(program.createdAt, "d MMMM yyyy") : '-'}
-                </p>
-                <div className="grid grid-cols-3 gap-x-6 gap-y-1 text-xs">
+                <h2 className="text-lg font-bold mb-1">ລາຍລະອຽດໜ້າວຽກຂອງແຕ່ລະກຸ່ມ</h2>
+                <div className="grid grid-cols-3 gap-x-4 gap-y-1 text-xs mb-2">
                     <div><span className="font-semibold">Program Name:</span> {program.programName}</div>
                     <div><span className="font-semibold">Tour Code:</span> {program.tourCode}</div>
                     <div><span className="font-semibold">Group Name:</span> {program.groupName}</div>
@@ -436,7 +433,7 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
                     <div className="font-bold"><span className="font-semibold">Total Price:</span> {formatCurrency(program.totalPrice)}</div>
                 </div>
                  {program.customerDetails && (
-                    <div className="mt-2">
+                    <div>
                         <h3 className="font-semibold text-xs">ລາຍລະອຽດລູກຄ້າ/ກຸ່ມ:</h3>
                         <p className="whitespace-pre-wrap text-xs">{program.customerDetails}</p>
                     </div>
@@ -544,10 +541,10 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
                             <div>
                                 <h3 className="text-lg font-semibold mb-2">กำไร / ขาดทุนสุทธิ</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                    <SummaryCard title="กำไร/ขาดทุน" value={summaryData.profit.kip} currency="KIP" isProfit />
-                                    <SummaryCard title="กำไร/ขาดทุน" value={summaryData.profit.baht} currency="BAHT" isProfit />
-                                    <SummaryCard title="กำไร/ขาดทุน" value={summaryData.profit.usd} currency="USD" isProfit />
-                                    <SummaryCard title="กำไร/ขาดทุน" value={summaryData.profit.cny} currency="CNY" isProfit />
+                                    <SummaryCard title="ກຳໄລ/ຂາດທຶນ" value={summaryData.profit.kip} currency="KIP" isProfit />
+                                    <SummaryCard title="ກຳໄລ/ຂາດທຶນ" value={summaryData.profit.baht} currency="BAHT" isProfit />
+                                    <SummaryCard title="ກຳໄລ/ຂາດທຶນ" value={summaryData.profit.usd} currency="USD" isProfit />
+                                    <SummaryCard title="ກຳໄລ/ຂາດທຶນ" value={summaryData.profit.cny} currency="CNY" isProfit />
                                 </div>
                             </div>
                         </CardContent>
