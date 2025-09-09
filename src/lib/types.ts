@@ -1,4 +1,5 @@
 
+
 export type StockItem = {
   id: string;
   name: string;
@@ -16,6 +17,12 @@ export interface Transaction {
     date: Date; // Stored as Timestamp in Firestore, converted to Date on client
     amount: number;
     description: string;
+    // Fields for multi-currency support in tour business
+    kip?: number;
+    baht?: number;
+    usd?: number;
+    cny?: number;
+    businessType?: 'agriculture' | 'tour';
 }
 
 export interface AccountSummary {
@@ -103,18 +110,16 @@ export interface TourIncomeItem {
   createdAt: Date;
 }
 
+export type CurrencyValues = {
+    kip: number;
+    baht: number;
+    usd: number;
+    cny: number;
+};
+
 export interface TourAccountSummary {
     id: string;
-    capital: {
-        kip: number;
-        baht: number;
-        usd: number;
-        cny: number;
-    };
-    balance: {
-        kip: number;
-        baht: number;
-        usd: number;
-        cny: number;
-    };
+    capital: CurrencyValues;
+    cash: CurrencyValues;
+    transfer: CurrencyValues;
 }
