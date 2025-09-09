@@ -83,7 +83,7 @@ const CurrencyEntryTable = ({
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead className="w-[150px]">ວັນທີ (Date)</TableHead>
+                                <TableHead className="w-[150px] print:hidden">ວັນທີ (Date)</TableHead>
                                 <TableHead>ລາຍລະອຽດ (Description)</TableHead>
                                 <TableHead className="text-right">KIP</TableHead>
                                 <TableHead className="text-right">BAHT</TableHead>
@@ -95,7 +95,7 @@ const CurrencyEntryTable = ({
                         <TableBody>
                             {(items as Array<TourCostItem | TourIncomeItem>).map(item => (
                                 <TableRow key={item.id}>
-                                    <TableCell className="p-1">
+                                    <TableCell className="p-1 print:hidden">
                                         <Popover>
                                             <PopoverTrigger asChild>
                                                 <Button variant="outline" className="w-full justify-start text-left font-normal h-8 text-xs">
@@ -163,7 +163,8 @@ const CurrencyEntryTable = ({
                         </TableBody>
                         <TableFooter>
                             <TableRow className="bg-muted font-bold">
-                                <TableCell colSpan={2} className="text-right">ລວມ (Total)</TableCell>
+                                <TableCell colSpan={2} className="text-right print:hidden">ລວມ (Total)</TableCell>
+                                <TableCell colSpan={1} className="text-right hidden print:table-cell">ລວມ (Total)</TableCell>
                                 <TableCell className="text-right">{formatCurrency(totals.kip)}</TableCell>
                                 <TableCell className="text-right">{formatCurrency(totals.baht)}</TableCell>
                                 <TableCell className="text-right">{formatCurrency(totals.usd)}</TableCell>
@@ -181,13 +182,13 @@ const CurrencyEntryTable = ({
 const SummaryCard = ({ title, value, currency, isProfit = false }: { title: string; value: number; currency: string; isProfit?: boolean }) => {
     const profitColor = value >= 0 ? 'text-green-600' : 'text-red-600';
     return (
-        <Card className="print:shadow-none print:border">
-            <CardHeader className="pb-2 print:p-2">
-                <CardTitle className="text-base print:text-sm">{title}</CardTitle>
+        <Card className="print:shadow-none print:border print:p-0">
+            <CardHeader className="pb-2 print:p-1">
+                <CardTitle className="text-base print:text-xs">{title}</CardTitle>
                 <CardDescription className="print:text-xs">{currency}</CardDescription>
             </CardHeader>
-            <CardContent className="print:p-2">
-                <p className={`text-2xl font-bold print:text-lg ${isProfit ? profitColor : ''}`}>{formatCurrency(value, true)}</p>
+            <CardContent className="print:p-1">
+                <p className={`text-2xl font-bold print:text-base ${isProfit ? profitColor : ''}`}>{formatCurrency(value, true)}</p>
             </CardContent>
         </Card>
     );
@@ -199,10 +200,10 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
     const [program, setProgram] = useState<TourProgram | null>(null);
     const [costItems, setCostItems] = useState<TourCostItem[]>([]);
     const [incomeItems, setIncomeItems] = useState<TourIncomeItem[]>([]);
+    const { id: programId } = params;
 
     useEffect(() => {
-        if (!params.id) return;
-        const programId = params.id;
+        if (!programId) return;
 
         const fetchProgram = async () => {
             const programData = await getTourProgram(programId);
@@ -217,7 +218,7 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
             unsubscribeCosts();
             unsubscribeIncomes();
         };
-    }, [params.id]);
+    }, [programId]);
     
      useEffect(() => {
         if (program) {
@@ -228,12 +229,12 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
                 setProgram(p => p ? { ...p, totalPrice: newTotalPrice } : null);
             }
         }
-    }, [program?.price, program?.bankCharge]);
+    }, [program?.price, program?.bankCharge, program]);
 
     // --- Cost Item Handlers ---
     const handleAddCostItem = async () => {
         try {
-            await addTourCostItem(params.id);
+            await addTourCostItem(programId);
         } catch (error) { toast({ title: "เกิดข้อผิดพลาดในการเพิ่มต้นทุน", variant: "destructive" }); }
     };
      const handleUpdateCostItem = async (id: string, field: keyof TourCostItem, value: any) => {
@@ -249,7 +250,7 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
     // --- Income Item Handlers ---
     const handleAddIncomeItem = async () => {
         try {
-            await addTourIncomeItem(params.id);
+            await addTourIncomeItem(programId);
         } catch (error) { toast({ title: "เกิดข้อผิดพลาดในการเพิ่มรายรับ", variant: "destructive" }); }
     };
      const handleUpdateIncomeItem = async (id: string, field: keyof TourIncomeItem, value: any) => {
@@ -329,7 +330,7 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6 print:space-y-2 print:p-0">
-                <div className="grid md:grid-cols-3 gap-6 print:gap-1">
+                 <div className="grid md:grid-cols-3 gap-6 print:gap-2">
                      <div className="grid gap-2">
                         <Label htmlFor="programName">ชื่อโปรแกรม</Label>
                         <Input id="programName" value={program.programName} onChange={(e) => handleProgramChange('programName', e.target.value)} className="print:hidden"/>
@@ -417,36 +418,36 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
       </header>
       <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 print:p-4 print:gap-2">
         {/* For Printing */}
-        <div className="hidden print:block space-y-4">
+        <div className="hidden print:block space-y-2">
             <div>
-                <h2 className="text-xl font-bold mb-1">รายละเอียดโปรแกรมและข้อมูลกลุ่ม</h2>
-                <p className="text-xs text-muted-foreground mb-4">
-                    วันที่สร้าง: {program.createdAt ? format(program.createdAt, "d MMMM yyyy", {locale: th}) : '-'}
+                 <h2 className="text-lg font-bold mb-1">ລາຍລະອຽດໜ້າວຽກຂອງແຕ່ລະກຸ່ມ</h2>
+                <p className="text-xs text-muted-foreground mb-2">
+                    Date: {program.createdAt ? format(program.createdAt, "d MMMM yyyy") : '-'}
                 </p>
-                <div className="grid grid-cols-3 gap-x-8 gap-y-2 text-sm">
-                    <div><span className="font-semibold">ชื่อโปรแกรม:</span> {program.programName}</div>
-                    <div><span className="font-semibold">รหัสทัวร์:</span> {program.tourCode}</div>
-                    <div><span className="font-semibold">ชื่อกลุ่ม:</span> {program.groupName}</div>
-                    <div><span className="font-semibold">จำนวนคน (Pax):</span> {program.pax}</div>
-                    <div><span className="font-semibold">จุดหมาย:</span> {program.destination}</div>
-                    <div><span className="font-semibold">ระยะเวลา (วัน):</span> {program.durationDays}</div>
+                <div className="grid grid-cols-3 gap-x-6 gap-y-1 text-xs">
+                    <div><span className="font-semibold">Program Name:</span> {program.programName}</div>
+                    <div><span className="font-semibold">Tour Code:</span> {program.tourCode}</div>
+                    <div><span className="font-semibold">Group Name:</span> {program.groupName}</div>
+                    <div><span className="font-semibold">Pax:</span> {program.pax}</div>
+                    <div><span className="font-semibold">Destination:</span> {program.destination}</div>
+                    <div><span className="font-semibold">Duration:</span> {program.durationDays} days</div>
                     <div><span className="font-semibold">Price:</span> {formatCurrency(program.price)}</div>
                     <div><span className="font-semibold">Bank Charge:</span> {formatCurrency(program.bankCharge)}</div>
-                    <div><span className="font-semibold">Total Price:</span> {formatCurrency(program.totalPrice)}</div>
+                    <div className="font-bold"><span className="font-semibold">Total Price:</span> {formatCurrency(program.totalPrice)}</div>
                 </div>
                  {program.customerDetails && (
-                    <div className="mt-4">
-                        <h3 className="font-semibold text-sm">รายละเอียดลูกค้า/กลุ่ม:</h3>
-                        <p className="whitespace-pre-wrap text-sm">{program.customerDetails}</p>
+                    <div className="mt-2">
+                        <h3 className="font-semibold text-xs">ລາຍລະອຽດລູກຄ້າ/ກຸ່ມ:</h3>
+                        <p className="whitespace-pre-wrap text-xs">{program.customerDetails}</p>
                     </div>
                 )}
             </div>
 
-            <div className="space-y-2">
-                <h2 className="text-lg font-bold border-b pb-1">Total Costs</h2>
+            <div className="space-y-1 pt-1">
+                <h2 className="text-sm font-bold border-b pb-1">ລາຍຈ່າຍ (Total Costs)</h2>
                 <Table>
                     <TableFooter>
-                        <TableRow className="font-bold text-sm">
+                        <TableRow className="font-bold text-xs">
                              <TableCell className="text-right p-1">ລວມ (Total)</TableCell>
                              <TableCell className="text-right p-1">{formatCurrency(summaryData.totalCosts.kip)} KIP</TableCell>
                              <TableCell className="text-right p-1">{formatCurrency(summaryData.totalCosts.baht)} BAHT</TableCell>
@@ -457,11 +458,11 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
                 </Table>
             </div>
             
-            <div className="space-y-2">
-                <h2 className="text-lg font-bold border-b pb-1">Total Income</h2>
+            <div className="space-y-1 pt-1">
+                <h2 className="text-sm font-bold border-b pb-1">ລາຍຮັບ (Total Income)</h2>
                 <Table>
                     <TableFooter>
-                         <TableRow className="font-bold text-sm">
+                         <TableRow className="font-bold text-xs">
                              <TableCell className="text-right p-1">ລວມ (Total)</TableCell>
                              <TableCell className="text-right p-1">{formatCurrency(summaryData.totalIncomes.kip)} KIP</TableCell>
                              <TableCell className="text-right p-1">{formatCurrency(summaryData.totalIncomes.baht)} BAHT</TableCell>
@@ -472,13 +473,13 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
                 </Table>
             </div>
 
-            <div className="space-y-2 pt-2">
-                 <h2 className="text-lg font-bold">สรุปผลประกอบการ</h2>
+            <div className="space-y-1 pt-2">
+                 <h2 className="text-sm font-bold">ສະຫຼຸບຜົນປະກອບການ (Profit/Loss Summary)</h2>
                  <div className="grid grid-cols-4 gap-2">
-                    <SummaryCard title="กำไร/ขาดทุน" value={summaryData.profit.kip} currency="KIP" isProfit />
-                    <SummaryCard title="กำไร/ขาดทุน" value={summaryData.profit.baht} currency="BAHT" isProfit />
-                    <SummaryCard title="กำไร/ขาดทุน" value={summaryData.profit.usd} currency="USD" isProfit />
-                    <SummaryCard title="กำไร/ขาดทุน" value={summaryData.profit.cny} currency="CNY" isProfit />
+                    <SummaryCard title="ກຳໄລ/ຂາດทุน" value={summaryData.profit.kip} currency="KIP" isProfit />
+                    <SummaryCard title="ກຳໄລ/ຂາດทุน" value={summaryData.profit.baht} currency="BAHT" isProfit />
+                    <SummaryCard title="ກຳໄລ/ຂາດทุน" value={summaryData.profit.usd} currency="USD" isProfit />
+                    <SummaryCard title="ກຳໄລ/ຂາດทุน" value={summaryData.profit.cny} currency="CNY" isProfit />
                 </div>
             </div>
         </div>
@@ -558,3 +559,5 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
     </div>
   )
 }
+
+    
