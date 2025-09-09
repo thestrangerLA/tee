@@ -200,25 +200,25 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
     const [program, setProgram] = useState<TourProgram | null>(null);
     const [costItems, setCostItems] = useState<TourCostItem[]>([]);
     const [incomeItems, setIncomeItems] = useState<TourIncomeItem[]>([]);
-    const { id: programId } = params;
+    const { id } = params;
 
     useEffect(() => {
-        if (!programId) return;
+        if (!id) return;
 
         const fetchProgram = async () => {
-            const programData = await getTourProgram(programId);
+            const programData = await getTourProgram(id);
             setProgram(programData);
         };
 
         fetchProgram();
-        const unsubscribeCosts = listenToTourCostItemsForProgram(programId, setCostItems);
-        const unsubscribeIncomes = listenToTourIncomeItemsForProgram(programId, setIncomeItems);
+        const unsubscribeCosts = listenToTourCostItemsForProgram(id, setCostItems);
+        const unsubscribeIncomes = listenToTourIncomeItemsForProgram(id, setIncomeItems);
         
         return () => {
             unsubscribeCosts();
             unsubscribeIncomes();
         };
-    }, [programId]);
+    }, [id]);
     
      useEffect(() => {
         if (program) {
@@ -234,32 +234,32 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
     // --- Cost Item Handlers ---
     const handleAddCostItem = async () => {
         try {
-            await addTourCostItem(programId);
+            await addTourCostItem(id);
         } catch (error) { toast({ title: "เกิดข้อผิดพลาดในการเพิ่มต้นทุน", variant: "destructive" }); }
     };
-     const handleUpdateCostItem = async (id: string, field: keyof TourCostItem, value: any) => {
-        try { await updateTourCostItem(id, { [field]: value }); } 
+     const handleUpdateCostItem = async (itemId: string, field: keyof TourCostItem, value: any) => {
+        try { await updateTourCostItem(itemId, { [field]: value }); } 
         catch (error) { toast({ title: "เกิดข้อผิดพลาดในการอัปเดตต้นทุน", variant: "destructive" }); }
     };
-    const handleDeleteCostItem = async (id: string) => {
+    const handleDeleteCostItem = async (itemId: string) => {
         if (!window.confirm("ยืนยันการลบรายการต้นทุนนี้?")) return;
-        try { await deleteTourCostItem(id); toast({title: "ลบรายการต้นทุนสำเร็จ"}); } 
+        try { await deleteTourCostItem(itemId); toast({title: "ลบรายการต้นทุนสำเร็จ"}); } 
         catch (error) { toast({ title: "เกิดข้อผิดพลาดในการลบต้นทุน", variant: "destructive" }); }
     };
 
     // --- Income Item Handlers ---
     const handleAddIncomeItem = async () => {
         try {
-            await addTourIncomeItem(programId);
+            await addTourIncomeItem(id);
         } catch (error) { toast({ title: "เกิดข้อผิดพลาดในการเพิ่มรายรับ", variant: "destructive" }); }
     };
-     const handleUpdateIncomeItem = async (id: string, field: keyof TourIncomeItem, value: any) => {
-        try { await updateTourIncomeItem(id, { [field]: value }); } 
+     const handleUpdateIncomeItem = async (itemId: string, field: keyof TourIncomeItem, value: any) => {
+        try { await updateTourIncomeItem(itemId, { [field]: value }); } 
         catch (error) { toast({ title: "เกิดข้อผิดพลาดในการอัปเดตรายรับ", variant: "destructive" }); }
     };
-    const handleDeleteIncomeItem = async (id: string) => {
+    const handleDeleteIncomeItem = async (itemId: string) => {
         if (!window.confirm("ยืนยันการลบรายการรายรับนี้?")) return;
-        try { await deleteTourIncomeItem(id); toast({title: "ลบรายการรายรับสำเร็จ"}); } 
+        try { await deleteTourIncomeItem(itemId); toast({title: "ลบรายการรายรับสำเร็จ"}); } 
         catch (error) { toast({ title: "เกิดข้อผิดพลาดในการลบรายรับ", variant: "destructive" }); }
     };
 
@@ -397,7 +397,7 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
     );
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/40 print:bg-white">
+    <div className="flex min-h-screen w-full flex-col bg-muted/40 print:bg-white print:font-lao">
       <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 print:hidden">
         <Button variant="outline" size="icon" className="h-8 w-8" asChild>
           <Link href="/tour-programs">
@@ -419,7 +419,7 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
       <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 print:p-4 print:gap-2">
         {/* For Printing */}
         <div className="hidden print:block space-y-2">
-            <div>
+            <div className="print:p-0">
                  <h2 className="text-lg font-bold mb-1">ລາຍລະອຽດໜ້າວຽກຂອງແຕ່ລະກຸ່ມ</h2>
                 <p className="text-xs text-muted-foreground mb-2">
                     Date: {program.createdAt ? format(program.createdAt, "d MMMM yyyy") : '-'}
@@ -476,10 +476,10 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
             <div className="space-y-1 pt-2">
                  <h2 className="text-sm font-bold">ສະຫຼຸບຜົນປະກອບການ (Profit/Loss Summary)</h2>
                  <div className="grid grid-cols-4 gap-2">
-                    <SummaryCard title="ກຳໄລ/ຂາດทุน" value={summaryData.profit.kip} currency="KIP" isProfit />
-                    <SummaryCard title="ກຳໄລ/ຂາດทุน" value={summaryData.profit.baht} currency="BAHT" isProfit />
-                    <SummaryCard title="ກຳໄລ/ຂາດทุน" value={summaryData.profit.usd} currency="USD" isProfit />
-                    <SummaryCard title="ກຳໄລ/ຂາດทุน" value={summaryData.profit.cny} currency="CNY" isProfit />
+                    <SummaryCard title="ກຳໄລ/ຂາດທຶນ" value={summaryData.profit.kip} currency="KIP" isProfit />
+                    <SummaryCard title="ກຳໄລ/ຂາດທຶນ" value={summaryData.profit.baht} currency="BAHT" isProfit />
+                    <SummaryCard title="ກຳໄລ/ຂາດທຶນ" value={summaryData.profit.usd} currency="USD" isProfit />
+                    <SummaryCard title="ກຳໄລ/ຂາດທຶນ" value={summaryData.profit.cny} currency="CNY" isProfit />
                 </div>
             </div>
         </div>
