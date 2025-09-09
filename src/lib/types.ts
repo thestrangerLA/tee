@@ -62,3 +62,14 @@ export interface DrugCreditorEntry {
   isPaid: boolean;
   createdAt: Date;
 }
+
+export interface TourCostItem {
+  id: string;
+  date: Date | null;
+  detail: string;
+  kip: number;
+  baht: number;
+  usd: number;
+  cny: number;
+  createdAt: Date;
+}
