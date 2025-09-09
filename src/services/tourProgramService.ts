@@ -70,7 +70,7 @@ export const addTourProgram = async (program: Omit<TourProgram, 'id' | 'createdA
 // ---- Tour Cost Item Functions ----
 
 export const listenToTourCostItemsForProgram = (programId: string, callback: (items: TourCostItem[]) => void) => {
-    const q = query(costsCollectionRef, where('programId', '==', programId), orderBy('createdAt', 'asc'));
+    const q = query(costsCollectionRef, where('programId', '==', programId));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
         const items: TourCostItem[] = [];
         querySnapshot.forEach((doc) => {
@@ -82,6 +82,8 @@ export const listenToTourCostItemsForProgram = (programId: string, callback: (it
                 createdAt: (data.createdAt as Timestamp)?.toDate()
             } as TourCostItem);
         });
+        // Sort by createdAt date on the client side
+        items.sort((a, b) => (a.createdAt?.getTime() || 0) - (b.createdAt?.getTime() || 0));
         callback(items);
     });
     return unsubscribe;
