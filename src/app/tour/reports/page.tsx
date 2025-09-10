@@ -187,29 +187,30 @@ export default function TourReportsPage() {
                 </div>
             </header>
             <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-                 {filteredReport ? (
-                    <>
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>ภาพรวมกำไร/ขาดทุน ประจำปี {selectedYear + 543}</CardTitle>
-                        </CardHeader>
-                        <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                            {currencies.map(c => (
-                                <div key={c} className="p-4 bg-muted rounded-lg">
-                                    <p className="text-sm text-muted-foreground">{c}</p>
-                                    <p className={`text-2xl font-bold ${filteredReport.totalProfit[c] >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                        {formatCurrency(filteredReport.totalProfit[c])}
-                                    </p>
-                                </div>
-                            ))}
-                        </CardContent>
-                    </Card>
+                 <Card>
+                    <CardHeader>
+                        <CardTitle>สรุปผลประกอบการรายโปรแกรม</CardTitle>
+                         <CardDescription>ภาพรวมกำไร-ขาดทุน และรายละเอียดของแต่ละโปรแกรมในปี {selectedYear + 543}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                     {filteredReport ? (
+                        <>
+                        <div className="p-4 bg-muted/50 rounded-lg">
+                             <h3 className="text-md font-semibold mb-2">ภาพรวมกำไร/ขาดทุน ประจำปี {selectedYear + 543}</h3>
+                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                {currencies.map(c => (
+                                    <div key={c} className="p-3 bg-background rounded-lg border">
+                                        <p className="text-sm text-muted-foreground">{c}</p>
+                                        <p className={`text-xl font-bold ${filteredReport.totalProfit[c] >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                            {formatCurrency(filteredReport.totalProfit[c])}
+                                        </p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
 
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>รายละเอียดรายโปรแกรม</CardTitle>
-                        </CardHeader>
-                        <CardContent>
+                        <div>
+                             <h3 className="text-md font-semibold mb-2 mt-4">รายละเอียดรายโปรแกรม</h3>
                             <Accordion type="single" collapsible className="w-full">
                                 {filteredReport.programs.map((program) => (
                                      <AccordionItem value={program.id} key={program.id}>
@@ -265,22 +266,23 @@ export default function TourReportsPage() {
                                      </AccordionItem>
                                 ))}
                             </Accordion>
-                        </CardContent>
-                    </Card>
-                    </>
-                 ) : (
-                    <div className="text-center text-muted-foreground py-16">
-                        <p>ไม่มีข้อมูลโปรแกรมสำหรับปี {selectedYear + 543}</p>
-                    </div>
-                 )}
+                        </div>
+                        </>
+                     ) : (
+                        <div className="text-center text-muted-foreground py-16">
+                            <p>ไม่มีข้อมูลโปรแกรมสำหรับปี {selectedYear + 543}</p>
+                        </div>
+                     )}
+                    </CardContent>
+                 </Card>
 
-                {yearlyTransactionReport.length > 0 && (
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2"><BookOpen className="h-5 w-5"/> ประวัติธุรกรรมประจำปี {selectedYear + 543}</CardTitle>
-                            <CardDescription>แสดงรายการธุรกรรมทั้งหมดที่บันทึกในปีนี้ (ไม่รวมรายรับ/รายจ่ายในแต่ละโปรแกรมทัวร์)</CardDescription>
-                        </CardHeader>
-                        <CardContent>
+                 <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2"><BookOpen className="h-5 w-5"/> ประวัติรับ-จ่ายทั่วไป</CardTitle>
+                        <CardDescription>แสดงรายการธุรกรรมทั่วไปที่ไม่ผูกกับโปรแกรมทัวร์ในปี {selectedYear + 543}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {yearlyTransactionReport.length > 0 ? (
                             <Accordion type="single" collapsible className="w-full">
                                 {yearlyTransactionReport.map(({ month, transactions }) => (
                                     <AccordionItem value={`month-${month}`} key={month}>
@@ -316,11 +318,13 @@ export default function TourReportsPage() {
                                     </AccordionItem>
                                 ))}
                             </Accordion>
-                        </CardContent>
-                    </Card>
-                )}
+                        ) : (
+                             <div className="text-center text-muted-foreground py-8">
+                                ไม่มีประวัติรับ-จ่ายทั่วไปในปี {selectedYear + 543}
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
             </main>
         </div>
     );
-
-    
