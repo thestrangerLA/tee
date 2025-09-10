@@ -54,7 +54,6 @@ export const getTourProgram = async (id: string): Promise<TourProgram | null> =>
             ...data,
             date: (data.date as Timestamp).toDate(),
             createdAt: (data.createdAt as Timestamp).toDate(),
-            customerDetails: data.customerDetails || [],
         } as TourProgram;
     } else {
         return null;
@@ -65,7 +64,6 @@ export const addTourProgram = async (program: Omit<TourProgram, 'id' | 'createdA
     const newProgram = {
         ...program,
         tourDates: program.tourDates || '',
-        customerDetails: program.customerDetails || [],
         date: Timestamp.fromDate(program.date),
         createdAt: serverTimestamp()
     };

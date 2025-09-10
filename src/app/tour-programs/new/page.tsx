@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Calendar as CalendarIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -68,7 +69,6 @@ export default function NewTourProgramPage() {
         bankCharge: 0,
         bankChargeCurrency: 'KIP',
         totalPrice: 0, // This will be handled by service or derived
-        customerDetails: [],
     });
 
     const handleFormValueChange = (field: keyof typeof formData, value: any) => {
@@ -157,7 +157,7 @@ export default function NewTourProgramPage() {
                             
                             <div className="grid gap-2">
                                 <Label htmlFor="tourDates">วันที่เดินทาง (Tour Dates)</Label>
-                                <Input id="tourDates" name="tourDates" value={formData.tourDates} onChange={(e) => handleFormValueChange('tourDates', e.target.value)} placeholder="เช่น 30/08/2025-31/08/2025" />
+                                <Textarea id="tourDates" name="tourDates" value={formData.tourDates} onChange={(e) => handleFormValueChange('tourDates', e.target.value)} placeholder="เช่น 30/08/2025-31/08/2025&#10;06/09/2025-07/09/2025" />
                             </div>
 
                             <div className="grid md:grid-cols-2 gap-6">

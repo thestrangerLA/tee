@@ -320,28 +320,6 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
         // Save automatically when select changes
         setTimeout(handleSaveProgramInfo, 0);
     }, [handleSaveProgramInfo]);
-    
-    const handleCustomerDetailChange = (index: number, value: string) => {
-        setLocalProgram(prev => {
-            if (!prev || !prev.customerDetails) return prev;
-            const newDetails = [...prev.customerDetails];
-            newDetails[index] = value;
-            return { ...prev, customerDetails: newDetails };
-        });
-    };
-
-    const handleAddCustomerDetail = () => {
-        if (!localProgram) return;
-        const newDetails = [...(localProgram.customerDetails || []), ''];
-        handleProgramChange('customerDetails', newDetails);
-    };
-
-    const handleRemoveCustomerDetail = (index: number) => {
-        if (!localProgram || !localProgram.customerDetails) return;
-        const newDetails = localProgram.customerDetails.filter((_, i) => i !== index);
-        handleProgramChange('customerDetails', newDetails);
-        setTimeout(handleSaveProgramInfo, 0);
-    };
 
     // --- Cost Item Handlers ---
     const handleAddCostItem = async () => {
@@ -462,10 +440,10 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                         <Input id="groupName" value={localProgram.groupName} onChange={(e) => handleProgramChange('groupName', e.target.value)} onBlur={handleSaveProgramInfo} className="print:hidden" disabled={isSaving} />
                         <p className="hidden print:block print:text-sm">{localProgram.groupName}</p>
                     </div>
-                    <div className="grid gap-2">
+                    <div className="grid gap-2 md:col-span-3">
                         <Label htmlFor="tourDates">วันที่เดินทาง (Tour Dates)</Label>
-                        <Input id="tourDates" value={localProgram.tourDates || ''} onChange={(e) => handleProgramChange('tourDates', e.target.value)} onBlur={handleSaveProgramInfo} className="print:hidden" disabled={isSaving} />
-                        <p className="hidden print:block print:text-sm">{localProgram.tourDates}</p>
+                        <Textarea id="tourDates" value={localProgram.tourDates || ''} onChange={(e) => handleProgramChange('tourDates', e.target.value)} onBlur={handleSaveProgramInfo} className="print:hidden" disabled={isSaving} />
+                        <p className="hidden print:block print:text-sm whitespace-pre-wrap">{localProgram.tourDates}</p>
                     </div>
                     <div className="grid gap-2">
                         <Label htmlFor="pax">จำนวนคน (Pax)</Label>
@@ -503,49 +481,6 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                         onBlur={handleSaveProgramInfo}
                         disabled={isSaving}
                      />
-                </div>
-
-                <Card className="print:shadow-none print:border-none print:p-0">
-                    <CardHeader className="flex flex-row items-center justify-between print:hidden">
-                        <div>
-                            <CardTitle className="text-lg">รายละเอียดลูกค้า/กลุ่ม</CardTitle>
-                            <CardDescription>บันทึกเบอร์โทร, หมายเหตุ, หรือข้อตกลงอื่นๆ</CardDescription>
-                        </div>
-                        <Button size="sm" onClick={handleAddCustomerDetail} disabled={isSaving}>
-                            <PlusCircle className="mr-2 h-4 w-4" />
-                            เพิ่มรายการ
-                        </Button>
-                    </CardHeader>
-                    <CardContent className="space-y-2 print:hidden">
-                        {(localProgram.customerDetails || []).map((detail, index) => (
-                            <div key={index} className="flex items-center gap-2">
-                                <Input
-                                    value={detail}
-                                    onChange={(e) => handleCustomerDetailChange(index, e.target.value)}
-                                    onBlur={() => handleSaveProgramInfo()}
-                                    placeholder={`รายละเอียด #${index + 1}`}
-                                    disabled={isSaving}
-                                />
-                                <Button variant="ghost" size="icon" onClick={() => handleRemoveCustomerDetail(index)} disabled={isSaving}>
-                                    <Trash2 className="h-4 w-4 text-red-500" />
-                                </Button>
-                            </div>
-                        ))}
-                        {(!localProgram.customerDetails || localProgram.customerDetails.length === 0) && (
-                            <p className="text-sm text-muted-foreground text-center py-4">
-                                ยังไม่มีรายละเอียดลูกค้า
-                            </p>
-                        )}
-                    </CardContent>
-                </Card>
-
-                <div className="hidden print:block space-y-1">
-                    <h3 className="font-semibold text-xs print:font-lao">ລາຍລະອຽດລູກຄ້າ/ກຸ່ມ:</h3>
-                    <ul className="list-disc list-inside text-xs space-y-0.5">
-                        {(localProgram.customerDetails || []).map((detail, index) => (
-                            <li key={index}>{detail}</li>
-                        ))}
-                    </ul>
                 </div>
             </CardContent>
         </Card>
@@ -593,7 +528,7 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                 {/* Column 1 */}
                 <div className="space-y-1">
                     <div className="flex justify-between"><strong className="font-semibold">Program Name:</strong><span>{localProgram.programName}</span></div>
-                    <div className="flex justify-between"><strong className="font-semibold">Tour Dates:</strong><span>{localProgram.tourDates}</span></div>
+                    <div className="flex justify-between"><strong className="font-semibold">Tour Dates:</strong><span className="whitespace-pre-wrap text-right">{localProgram.tourDates}</span></div>
                     <div className="flex justify-between"><strong className="font-semibold">Duration:</strong><span>{localProgram.durationDays} days</span></div>
                 </div>
                 {/* Column 2 */}
@@ -619,17 +554,6 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                  </div>
             </div>
             
-             {localProgram.customerDetails && localProgram.customerDetails.length > 0 && (
-                <div className="mt-2 pt-2 border-t">
-                    <h3 className="font-semibold text-sm print:font-lao">ລາຍລະອຽດລູກຄ້າ/ກຸ່ມ:</h3>
-                    <ul className="list-disc list-inside text-sm space-y-0.5 pl-2">
-                        {(localProgram.customerDetails).map((detail, index) => (
-                            <li key={index}>{detail}</li>
-                        ))}
-                    </ul>
-                </div>
-            )}
-
             <div className="space-y-1 pt-2">
                 <h2 className="text-sm font-bold border-b pb-1 print:font-lao">ລາຍຈ່າຍ (Total Costs)</h2>
                 <Table>
