@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import { useState, useMemo, useEffect, useCallback, use } from 'react';
@@ -287,16 +288,7 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
         
         setIsSaving(true);
         try {
-            // Calculate total price before saving
-            const updatedProgram = { ...localProgram };
-            if (updatedProgram.priceCurrency === updatedProgram.bankChargeCurrency) {
-                updatedProgram.totalPrice = updatedProgram.price + updatedProgram.bankCharge;
-            } else {
-                updatedProgram.totalPrice = updatedProgram.price;
-            }
-            
-            const { id, createdAt, date, ...dataToUpdate } = updatedProgram;
-
+            const { id, createdAt, date, ...dataToUpdate } = localProgram;
             await updateTourProgram(id, dataToUpdate);
             toast({ title: "บันทึกข้อมูลโปรแกรมแล้ว" });
         } catch (error) {
@@ -312,9 +304,6 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
             if (!prev) return null;
             const newState = { ...prev, [field]: value };
             
-            // This is not ideal, but it's a quick way to trigger save
-            // after state is set. A better approach might involve a dedicated save button
-            // or a more sophisticated effect.
             setTimeout(() => {
                  if (newState.priceCurrency === newState.bankChargeCurrency) {
                     newState.totalPrice = newState.price + newState.bankCharge;
@@ -346,33 +335,15 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
     const handleAddCustomerDetail = async () => {
         if (!localProgram) return;
         const newDetails = [...(localProgram.customerDetails || []), ''];
-        await handleSaveProgramInfoWithDetails(newDetails);
+        handleProgramChange('customerDetails', newDetails);
     };
 
     const handleRemoveCustomerDetail = async (index: number) => {
         if (!localProgram || !localProgram.customerDetails) return;
-        if (!window.confirm("ยืนยันการลบรายการนี้?")) return;
         const newDetails = localProgram.customerDetails.filter((_, i) => i !== index);
-        await handleSaveProgramInfoWithDetails(newDetails);
+        handleProgramChange('customerDetails', newDetails);
+        await handleSaveProgramInfo();
     };
-    
-    const handleSaveProgramInfoWithDetails = async (details: string[]) => {
-        if (!localProgram || isSaving) return;
-
-        setIsSaving(true);
-        try {
-            const { id, ...dataToUpdate } = { ...localProgram, customerDetails: details };
-            await updateTourProgram(id, dataToUpdate);
-            setLocalProgram(prev => prev ? { ...prev, customerDetails: details } : null);
-            toast({ title: "อัปเดตรายละเอียดลูกค้าแล้ว" });
-        } catch (error) {
-            console.error("Failed to update customer details:", error);
-            toast({ title: "เกิดข้อผิดพลาด", variant: "destructive" });
-        } finally {
-            setIsSaving(false);
-        }
-    };
-
 
     // --- Cost Item Handlers ---
     const handleAddCostItem = async () => {
@@ -536,8 +507,8 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                      />
                 </div>
 
-                <Card className="print:hidden">
-                    <CardHeader className="flex flex-row items-center justify-between">
+                <Card className="print:shadow-none print:border-none print:p-0">
+                    <CardHeader className="flex flex-row items-center justify-between print:hidden">
                         <div>
                             <CardTitle className="text-lg">รายละเอียดลูกค้า/กลุ่ม</CardTitle>
                             <CardDescription>บันทึกเบอร์โทร, หมายเหตุ, หรือข้อตกลงอื่นๆ</CardDescription>
@@ -547,13 +518,13 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                             เพิ่มรายการ
                         </Button>
                     </CardHeader>
-                    <CardContent className="space-y-2">
+                    <CardContent className="space-y-2 print:hidden">
                         {(localProgram.customerDetails || []).map((detail, index) => (
                             <div key={index} className="flex items-center gap-2">
                                 <Input
                                     value={detail}
                                     onChange={(e) => handleCustomerDetailChange(index, e.target.value)}
-                                    onBlur={() => handleSaveProgramInfoWithDetails(localProgram.customerDetails || [])}
+                                    onBlur={() => handleSaveProgramInfo()}
                                     placeholder={`รายละเอียด #${index + 1}`}
                                     disabled={isSaving}
                                 />
@@ -571,7 +542,7 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                 </Card>
 
                 <div className="hidden print:block space-y-1">
-                    <h3 className="font-semibold text-xs">ລາຍລະອຽດລູກຄ້າ/ກຸ່ມ:</h3>
+                    <h3 className="font-semibold text-xs print:font-lao">ລາຍລະອຽດລູກຄ້າ/ກຸ່ມ:</h3>
                     <ul className="list-disc list-inside text-xs space-y-0.5">
                         {(localProgram.customerDetails || []).map((detail, index) => (
                             <li key={index}>{detail}</li>
@@ -617,36 +588,51 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
       </header>
       <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 print:p-2 print:gap-1">
         {/* For Printing */}
-        <div className="hidden print:block print:space-y-1">
-            <div className="print:p-0">
-                <h2 className="text-lg font-bold mb-1 print:font-lao">ລາຍລະອຽດໜ້າວຽກຂອງແຕ່ລະກຸ່ມ</h2>
-                <div className="grid grid-cols-3 gap-x-4 gap-y-0 text-xs mb-1">
-                    <div><span className="font-semibold">Program Name:</span> {localProgram.programName}</div>
-                    <div><span className="font-semibold">Tour Code:</span> {localProgram.tourCode}</div>
-                    <div><span className="font-semibold">Group Name:</span> {localProgram.groupName}</div>
-                    <div><span className="font-semibold">Tour Dates:</span> {localProgram.tourDates}</div>
-                    <div><span className="font-semibold">Pax:</span> {localProgram.pax}</div>
-                    <div><span className="font-semibold">Destination:</span> {localProgram.destination}</div>
-                    <div><span className="font-semibold">Duration:</span> {localProgram.durationDays} days</div>
-                    <div className="font-bold"><span className="font-semibold">Price:</span> {formatCurrency(localProgram.price)} {localProgram.priceCurrency}</div>
-                    <div className="font-bold"><span className="font-semibold">Bank Charge:</span> {formatCurrency(localProgram.bankCharge)} {localProgram.bankChargeCurrency}</div>
-                    {localProgram.priceCurrency === localProgram.bankChargeCurrency && (
-                        <div className="font-bold"><span className="font-semibold">Total Price:</span> {formatCurrency(localProgram.totalPrice)} {localProgram.priceCurrency}</div>
-                    )}
+        <div className="hidden print:block print:space-y-2">
+            <h2 className="text-lg font-bold mb-2 text-center print:font-lao">ລາຍລະອຽດໜ້າວຽກຂອງແຕ່ລະກຸ່ມ</h2>
+            
+            <div className="grid grid-cols-2 gap-x-8 text-sm">
+                {/* Column 1 */}
+                <div className="space-y-1">
+                    <div className="flex justify-between"><strong className="font-semibold">Program Name:</strong><span>{localProgram.programName}</span></div>
+                    <div className="flex justify-between"><strong className="font-semibold">Tour Dates:</strong><span>{localProgram.tourDates}</span></div>
+                    <div className="flex justify-between"><strong className="font-semibold">Duration:</strong><span>{localProgram.durationDays} days</span></div>
                 </div>
-                 {localProgram.customerDetails && localProgram.customerDetails.length > 0 && (
-                    <div className="mt-1">
-                        <h3 className="font-semibold text-xs">ລາຍລະອຽດລູກຄ້າ/ກຸ່ມ:</h3>
-                        <ul className="list-disc list-inside text-xs space-y-0.5">
-                            {(localProgram.customerDetails).map((detail, index) => (
-                                <li key={index}>{detail}</li>
-                            ))}
-                        </ul>
-                    </div>
-                )}
+                {/* Column 2 */}
+                <div className="space-y-1">
+                    <div className="flex justify-between"><strong className="font-semibold">Tour Code:</strong><span>{localProgram.tourCode}</span></div>
+                    <div className="flex justify-between"><strong className="font-semibold">Group Name:</strong><span>{localProgram.groupName}</span></div>
+                    <div className="flex justify-between"><strong className="font-semibold">Pax:</strong><span>{localProgram.pax}</span></div>
+                    <div className="flex justify-between"><strong className="font-semibold">Destination:</strong><span>{localProgram.destination}</span></div>
+                </div>
             </div>
 
-            <div className="space-y-1 pt-1">
+            <div className="grid grid-cols-2 gap-x-8 text-sm mt-2 pt-2 border-t">
+                 {/* Financials */}
+                 <div className="space-y-1">
+                    <div className="flex justify-between"><strong className="font-semibold">Price:</strong><span className="font-bold">{formatCurrency(localProgram.price)} {localProgram.priceCurrency}</span></div>
+                    <div className="flex justify-between"><strong className="font-semibold">Bank Charge:</strong><span className="font-bold">{formatCurrency(localProgram.bankCharge)} {localProgram.bankChargeCurrency}</span></div>
+                    {localProgram.priceCurrency === localProgram.bankChargeCurrency && (
+                        <div className="flex justify-between"><strong className="font-semibold">Total Price:</strong><span className="font-bold">{formatCurrency(localProgram.totalPrice)} {localProgram.priceCurrency}</span></div>
+                    )}
+                 </div>
+                 <div className="space-y-1">
+                    {/* Empty space for alignment, or add other info here */}
+                 </div>
+            </div>
+            
+             {localProgram.customerDetails && localProgram.customerDetails.length > 0 && (
+                <div className="mt-2 pt-2 border-t">
+                    <h3 className="font-semibold text-sm print:font-lao">ລາຍລະອຽດລູກຄ້າ/ກຸ່ມ:</h3>
+                    <ul className="list-disc list-inside text-sm space-y-0.5 pl-2">
+                        {(localProgram.customerDetails).map((detail, index) => (
+                            <li key={index}>{detail}</li>
+                        ))}
+                    </ul>
+                </div>
+            )}
+
+            <div className="space-y-1 pt-2">
                 <h2 className="text-sm font-bold border-b pb-1 print:font-lao">ລາຍຈ່າຍ (Total Costs)</h2>
                 <Table>
                     <TableFooter>
