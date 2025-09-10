@@ -161,6 +161,22 @@ export default function TourReportsPage() {
 
     }, [transactions, selectedYear]);
 
+    const yearlyTransactionTotals = useMemo(() => {
+        const totals = {
+            income: { kip: 0, baht: 0, usd: 0, cny: 0 },
+            expense: { kip: 0, baht: 0, usd: 0, cny: 0 }
+        };
+
+        yearlyTransactionReport.forEach(monthData => {
+            currencyKeys.forEach(c => {
+                totals.income[c] += monthData.income[c];
+                totals.expense[c] += monthData.expense[c];
+            });
+        });
+
+        return totals;
+    }, [yearlyTransactionReport]);
+
 
     const YearSelector = () => {
         const years = Array.from(new Set(reportsData.map(r => r.year))).sort((a,b) => b - a);
@@ -313,7 +329,29 @@ export default function TourReportsPage() {
                                  <CardHeader>
                                      <CardDescription>แสดงรายการธุรกรรมทั่วไปที่ไม่ผูกกับโปรแกรมทัวร์ในปี {selectedYear + 543}</CardDescription>
                                  </CardHeader>
-                                 <CardContent>
+                                 <CardContent className="space-y-4">
+                                     <div className="p-4 bg-muted/50 rounded-lg space-y-2">
+                                         <h3 className="font-semibold">ยอดรวมปี {selectedYear + 543}</h3>
+                                          <Table>
+                                             <TableHeader>
+                                                 <TableRow className="text-xs">
+                                                     <TableHead>ประเภท</TableHead>
+                                                     {currencyKeys.map(c => <TableHead key={c} className="text-right uppercase">{c}</TableHead>)}
+                                                 </TableRow>
+                                             </TableHeader>
+                                             <TableBody>
+                                                 <TableRow>
+                                                     <TableCell className="font-medium">รายรับ</TableCell>
+                                                      {currencyKeys.map(c => <TableCell key={c} className="text-right text-green-600 font-mono">{formatCurrency(yearlyTransactionTotals.income[c])}</TableCell>)}
+                                                 </TableRow>
+                                                  <TableRow>
+                                                     <TableCell className="font-medium">รายจ่าย</TableCell>
+                                                      {currencyKeys.map(c => <TableCell key={c} className="text-right text-red-600 font-mono">{formatCurrency(yearlyTransactionTotals.expense[c])}</TableCell>)}
+                                                 </TableRow>
+                                             </TableBody>
+                                         </Table>
+                                     </div>
+
                                      {yearlyTransactionReport.length > 0 ? (
                                          <Accordion type="single" collapsible className="w-full">
                                              {yearlyTransactionReport.map(({ month, income, expense, transactions }) => (
