@@ -77,10 +77,15 @@
   }
 }
 
+@page {
+  margin: 0;
+}
+
 @media print {
   body {
     background-color: white;
     color: black;
+    margin: 1rem;
   }
   .print\:hidden {
     display: none;
@@ -133,5 +138,3 @@
     content: none !important;
   }
 }
-
-    
