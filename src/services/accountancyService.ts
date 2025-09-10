@@ -14,7 +14,8 @@ import {
     getDoc,
     setDoc,
     Timestamp,
-    runTransaction
+    runTransaction,
+    where
 } from 'firebase/firestore';
 
 type BusinessType = 'agriculture' | 'tour';
@@ -29,11 +30,32 @@ const getCollectionRefs = (businessType: BusinessType) => {
     };
 };
 
+/**
+ * A specific listener for the main reports page that needs ALL transactions from the agriculture business.
+ */
+export const listenToAllTransactions = (callback: (items: Transaction[]) => void) => {
+    const { transactionsCollectionRef } = getCollectionRefs('agriculture');
+    const q = query(transactionsCollectionRef, orderBy('date', 'desc'));
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const transactions: Transaction[] = [];
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            transactions.push({ 
+                id: doc.id, 
+                ...data,
+                date: (data.date as Timestamp).toDate()
+            } as Transaction);
+        });
+        callback(transactions);
+    });
+    return unsubscribe;
+};
+
 
 // Transaction Functions
 export const listenToTransactions = (businessType: BusinessType, callback: (items: Transaction[]) => void) => {
     const { transactionsCollectionRef } = getCollectionRefs(businessType);
-    const q = query(transactionsCollectionRef, orderBy('date', 'desc'));
+    const q = query(transactionsCollectionRef, where("businessType", "==", businessType), orderBy('date', 'desc'));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
         const transactions: Transaction[] = [];
         querySnapshot.forEach((doc) => {
@@ -51,7 +73,11 @@ export const listenToTransactions = (businessType: BusinessType, callback: (item
 
 export const addTransaction = async (businessType: BusinessType, transaction: Omit<Transaction, 'id'>) => {
     const { accountSummaryDocRef, transactionsCollectionName } = getCollectionRefs(businessType);
-    const transactionWithTimestamp = { ...transaction, date: Timestamp.fromDate(transaction.date) };
+    const transactionWithTimestamp = { 
+        ...transaction, 
+        businessType: businessType, // Ensure businessType is set
+        date: Timestamp.fromDate(transaction.date) 
+    };
 
     await runTransaction(db, async (t) => {
         // --- READS FIRST ---

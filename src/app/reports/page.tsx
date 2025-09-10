@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { ArrowLeft, BarChart, ArrowUpCircle, ArrowDownCircle, Scale, Minus } from "lucide-react";
-import { listenToTransactions } from '@/services/accountancyService';
+import { listenToAllTransactions } from '@/services/accountancyService';
 import type { Transaction } from '@/lib/types';
 import { getYear, getMonth, format } from 'date-fns';
 import { th } from "date-fns/locale";
@@ -48,7 +48,8 @@ export default function ReportsPage() {
     const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
 
     useEffect(() => {
-        const unsubscribe = listenToTransactions(setAllTransactions);
+        // Use the specific function to fetch all transactions for the report
+        const unsubscribe = listenToAllTransactions(setAllTransactions);
         return () => unsubscribe();
     }, []);
 
