@@ -497,20 +497,14 @@ export default function AgricultureAccountancyPage() {
                         <MonthYearSelector />
                     </CardHeader>
                     <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-4">
-                        {/* New Cards */}
                         <SummaryCard title="เงินหมุน" value={formatCurrency(workingCapital)} icon={<Combine className="h-5 w-5 text-purple-500" />} onClick={() => openEditSummaryDialog('workingCapital')} />
-                        <SummaryCard title="รวมทั้งหมด" value={formatCurrency(performanceData.totalWithWorkingCapital)} icon={<PlusCircle className="h-5 w-5 text-orange-500" />} />
-                        <SummaryCard title="เงินคงเหลือ" value={formatCurrency(performanceData.remainingWithWorkingCapital)} icon={<Wallet className="h-5 w-5 text-teal-500" />} />
-                        
-                        {/* Spacer to push old cards to a new visual line if needed, or adjust grid for better layout */}
-                        <div className="hidden xl:block"></div>
-
-                        {/* Existing Cards */}
                         <SummaryCard title="ยอดยกมา" value={formatCurrency(performanceData.broughtForward)} icon={<FileText className="h-5 w-5 text-primary" />} />
                         <SummaryCard title="รายรับ" value={formatCurrency(performanceData.income)} icon={<ArrowUpCircle className="h-5 w-5 text-green-500" />} />
+                        <SummaryCard title="รวม" value={formatCurrency(performanceData.totalWithWorkingCapital)} icon={<PlusCircle className="h-5 w-5 text-orange-500" />} />
                         <SummaryCard title="รายจ่าย" value={formatCurrency(performanceData.expense)} icon={<ArrowDownCircle className="h-5 w-5 text-red-500" />} />
-                        <SummaryCard title="กำไรสุทธิ (เดือน)" value={formatCurrency(performanceData.netProfitMonthly)} icon={performanceData.netProfitMonthly >= 0 ? <Equal className="h-5 w-5 text-indigo-500" /> : <Minus className="h-5 w-5 text-red-500" />} />
-                        <SummaryCard title="ยอดคงเหลือสิ้นเดือน" value={formatCurrency(performanceData.endingBalance)} icon={<Banknote className="h-5 w-5 text-blue-500" />} />
+                        <SummaryCard title="คงเหลือ" value={formatCurrency(performanceData.remainingWithWorkingCapital)} icon={<Wallet className="h-5 w-5 text-teal-500" />} />
+                        <SummaryCard title="กำไร (เดือน)" value={formatCurrency(performanceData.netProfitMonthly)} icon={performanceData.netProfitMonthly >= 0 ? <Equal className="h-5 w-5 text-indigo-500" /> : <Minus className="h-5 w-5 text-red-500" />} />
+                        <SummaryCard title="ยอดสิ้นเดือน" value={formatCurrency(performanceData.endingBalance)} icon={<Banknote className="h-5 w-5 text-blue-500" />} />
                     </CardContent>
                 </Card>
 
@@ -779,3 +773,5 @@ export default function AgricultureAccountancyPage() {
         </div>
     );
 }
+
+    
