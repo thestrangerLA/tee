@@ -194,12 +194,7 @@ const SummaryCard = ({ title, value, currency, isProfit = false }: { title: stri
     );
 };
 
-type PageProps = {
-  params: { id: string };
-  searchParams: { [key: string]: string | string[] | undefined };
-};
-
-export default function TourProgramDetailPage({ params }: PageProps) {
+export default function TourProgramDetailPage({ params }: { params: { id: string } }) {
     const { toast } = useToast();
     const [program, setProgram] = useState<TourProgram | null>(null);
     const [costItems, setCostItems] = useState<TourCostItem[]>([]);
@@ -514,7 +509,7 @@ export default function TourProgramDetailPage({ params }: PageProps) {
                         onUpdateItem={handleUpdateIncomeItem as any}
                         onDeleteItem={handleDeleteIncomeItem}
                         title="ตารางบันทึกรายรับ"
-                        description="บันทึกรายรับทั้งหมดของโปรแกรมนี้"
+                        description="บันทึกรายรับทั้งหมด ของโปรแกรมนี้"
                     />
                 </TabsContent>
                 <TabsContent value="summary" className="mt-4">
