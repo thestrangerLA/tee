@@ -257,13 +257,13 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
 
         const fetchProgram = async () => {
             const programData = await getTourProgram(id);
-            if (isActive && programData) {
-                setLocalProgram(programData);
-                if (programData.priceCurrency) {
-                    setPrintCurrencies([programData.priceCurrency]);
+            if (isActive) {
+                if (programData) {
+                    setLocalProgram(programData);
+                    if (programData.priceCurrency) {
+                        setPrintCurrencies([programData.priceCurrency]);
+                    }
                 }
-            }
-             if (isActive) {
                 setIsLoading(false);
             }
         };
@@ -288,8 +288,20 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
         
         setIsSaving(true);
         try {
-            const { id, createdAt, date, ...dataToUpdate } = localProgram;
+            // Recalculate total price before saving
+            const updatedProgram = { ...localProgram };
+             if (updatedProgram.priceCurrency === updatedProgram.bankChargeCurrency) {
+                updatedProgram.totalPrice = (updatedProgram.price || 0) + (updatedProgram.bankCharge || 0);
+            } else {
+                updatedProgram.totalPrice = updatedProgram.price || 0;
+            }
+
+            const { id, createdAt, date, ...dataToUpdate } = updatedProgram;
             await updateTourProgram(id, dataToUpdate);
+            
+            // Re-sync local state with the just saved data to be safe
+            setLocalProgram(updatedProgram);
+
             toast({ title: "บันทึกข้อมูลโปรแกรมแล้ว" });
         } catch (error) {
              console.error("Failed to save program info:", error);
@@ -300,28 +312,14 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
     }, [localProgram, isSaving, toast]);
     
     const handleSelectChange = useCallback((field: keyof TourProgram, value: any) => {
-        setLocalProgram(prev => {
+         setLocalProgram(prev => {
             if (!prev) return null;
             const newState = { ...prev, [field]: value };
-            
-            setTimeout(() => {
-                 if (newState.priceCurrency === newState.bankChargeCurrency) {
-                    newState.totalPrice = newState.price + newState.bankCharge;
-                } else {
-                    newState.totalPrice = newState.price;
-                }
-                const { id, createdAt, date, ...dataToUpdate } = newState;
-                updateTourProgram(id, dataToUpdate).then(() => {
-                    toast({ title: "บันทึกข้อมูลโปรแกรมแล้ว" });
-                }).catch(err => {
-                    console.error("Failed to save program info:", err);
-                    toast({ title: "เกิดข้อผิดพลาดในการบันทึก", variant: "destructive" });
-                });
-            }, 0);
-
             return newState;
         });
-    }, [toast]);
+        // Save automatically when select changes
+        setTimeout(handleSaveProgramInfo, 0);
+    }, [handleSaveProgramInfo]);
     
     const handleCustomerDetailChange = (index: number, value: string) => {
         setLocalProgram(prev => {
@@ -332,17 +330,17 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
         });
     };
 
-    const handleAddCustomerDetail = async () => {
+    const handleAddCustomerDetail = () => {
         if (!localProgram) return;
         const newDetails = [...(localProgram.customerDetails || []), ''];
         handleProgramChange('customerDetails', newDetails);
     };
 
-    const handleRemoveCustomerDetail = async (index: number) => {
+    const handleRemoveCustomerDetail = (index: number) => {
         if (!localProgram || !localProgram.customerDetails) return;
         const newDetails = localProgram.customerDetails.filter((_, i) => i !== index);
         handleProgramChange('customerDetails', newDetails);
-        await handleSaveProgramInfo();
+        setTimeout(handleSaveProgramInfo, 0);
     };
 
     // --- Cost Item Handlers ---
@@ -533,7 +531,7 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                                 </Button>
                             </div>
                         ))}
-                        {(localProgram.customerDetails?.length === 0 || !localProgram.customerDetails) && (
+                        {(!localProgram.customerDetails || localProgram.customerDetails.length === 0) && (
                             <p className="text-sm text-muted-foreground text-center py-4">
                                 ยังไม่มีรายละเอียดลูกค้า
                             </p>
@@ -588,8 +586,8 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
       </header>
       <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 print:p-2 print:gap-1">
         {/* For Printing */}
-        <div className="hidden print:block print:space-y-2">
-            <h2 className="text-lg font-bold mb-2 text-center print:font-lao">ລາຍລະອຽດໜ້າວຽກຂອງແຕ່ລະກຸ່ມ</h2>
+        <div className="hidden print:block print:space-y-4 border border-slate-200 p-4 rounded-lg shadow-sm">
+            <h2 className="text-lg font-bold mb-2 text-center print:font-lao">ສະຫຼຸບໂປຣແກມທົວ</h2>
             
             <div className="grid grid-cols-2 gap-x-8 text-sm">
                 {/* Column 1 */}
