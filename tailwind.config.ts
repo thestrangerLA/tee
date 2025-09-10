@@ -17,8 +17,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        body: ['Sarabun', 'sans-serif'],
-        headline: ['Sarabun', 'sans-serif'],
+        body: ['Noto Sans Lao', 'sans-serif'],
+        headline: ['Noto Sans Lao', 'sans-serif'],
         code: ['monospace'],
       },
       colors: {
