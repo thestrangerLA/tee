@@ -55,18 +55,25 @@ export const listenToAllTransactions = (callback: (items: Transaction[]) => void
 // Transaction Functions
 export const listenToTransactions = (businessType: BusinessType, callback: (items: Transaction[]) => void) => {
     const { transactionsCollectionRef } = getCollectionRefs(businessType);
-    const q = query(transactionsCollectionRef, where("businessType", "==", businessType), orderBy('date', 'desc'));
+    // The query was causing a crash because it required a composite index.
+    // To fix this immediately, we'll fetch ordered by date and filter on the client.
+    const q = query(transactionsCollectionRef, orderBy('date', 'desc'));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
         const transactions: Transaction[] = [];
         querySnapshot.forEach((doc) => {
             const data = doc.data();
-            transactions.push({ 
-                id: doc.id, 
-                ...data,
-                date: (data.date as Timestamp).toDate() // Convert Firestore Timestamp to JS Date
-            } as Transaction);
+            // Perform client-side filtering
+            if (data.businessType === businessType) {
+                transactions.push({ 
+                    id: doc.id, 
+                    ...data,
+                    date: (data.date as Timestamp).toDate() // Convert Firestore Timestamp to JS Date
+                } as Transaction);
+            }
         });
         callback(transactions);
+    }, (error) => {
+        console.error("Error in snapshot listener:", error);
     });
     return unsubscribe;
 };
