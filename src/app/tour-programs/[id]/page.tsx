@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, use } from 'react';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
@@ -230,7 +230,8 @@ const CurrencyInput = ({ label, amount, currency, onAmountChange, onCurrencyChan
 );
 
 
-export default function TourProgramDetailPage({ params }: { params: { id: string } }) {
+export default function TourProgramDetailPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = use(params);
     const { toast } = useToast();
     const [program, setProgram] = useState<TourProgram | null>(null);
     const [costItems, setCostItems] = useState<TourCostItem[]>([]);
@@ -238,7 +239,6 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
     const [printCurrencies, setPrintCurrencies] = useState<Currency[]>(['KIP']);
     
     useEffect(() => {
-        const { id } = params;
         if (!id) return;
 
         const fetchProgram = async () => {
@@ -257,13 +257,13 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
             unsubscribeCosts();
             unsubscribeIncomes();
         };
-    }, [params]);
+    }, [id]);
     
     // --- Cost Item Handlers ---
     const handleAddCostItem = async () => {
-        if (!params.id) return;
+        if (!id) return;
         try {
-            await addTourCostItem(params.id);
+            await addTourCostItem(id);
         } catch (error) { toast({ title: "เกิดข้อผิดพลาดในการเพิ่มต้นทุน", variant: "destructive" }); }
     };
      const handleUpdateCostItem = async (itemId: string, field: keyof TourCostItem, value: any) => {
@@ -278,9 +278,9 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
 
     // --- Income Item Handlers ---
     const handleAddIncomeItem = async () => {
-        if (!params.id) return;
+        if (!id) return;
         try {
-            await addTourIncomeItem(params.id);
+            await addTourIncomeItem(id);
         } catch (error) { toast({ title: "เกิดข้อผิดพลาดในการเพิ่มรายรับ", variant: "destructive" }); }
     };
      const handleUpdateIncomeItem = async (itemId: string, field: keyof TourIncomeItem, value: any) => {
