@@ -187,144 +187,159 @@ export default function TourReportsPage() {
                 </div>
             </header>
             <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-                 <Card>
-                    <CardHeader>
-                        <CardTitle>สรุปผลประกอบการรายโปรแกรม</CardTitle>
-                         <CardDescription>ภาพรวมกำไร-ขาดทุน และรายละเอียดของแต่ละโปรแกรมในปี {selectedYear + 543}</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                     {filteredReport ? (
-                        <>
-                        <div className="p-4 bg-muted/50 rounded-lg">
-                             <h3 className="text-md font-semibold mb-2">ภาพรวมกำไร/ขาดทุน ประจำปี {selectedYear + 543}</h3>
-                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                {currencies.map(c => (
-                                    <div key={c} className="p-3 bg-background rounded-lg border">
-                                        <p className="text-sm text-muted-foreground">{c}</p>
-                                        <p className={`text-xl font-bold ${filteredReport.totalProfit[c] >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                            {formatCurrency(filteredReport.totalProfit[c])}
-                                        </p>
+                 <Accordion type="single" collapsible className="w-full" defaultValue="item-1">
+                    <AccordionItem value="item-1">
+                        <AccordionTrigger className="text-lg font-semibold bg-white p-4 rounded-lg shadow-sm border">
+                            สรุปผลประกอบการรายโปรแกรม
+                        </AccordionTrigger>
+                        <AccordionContent className="pt-4">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>ภาพรวมปี {selectedYear + 543}</CardTitle>
+                                    <CardDescription>ภาพรวมกำไร-ขาดทุน และรายละเอียดของแต่ละโปรแกรม</CardDescription>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                {filteredReport ? (
+                                    <>
+                                    <div className="p-4 bg-muted/50 rounded-lg">
+                                        <h3 className="text-md font-semibold mb-2">ภาพรวมกำไร/ขาดทุน ประจำปี {selectedYear + 543}</h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                            {currencies.map(c => (
+                                                <div key={c} className="p-3 bg-background rounded-lg border">
+                                                    <p className="text-sm text-muted-foreground">{c}</p>
+                                                    <p className={`text-xl font-bold ${filteredReport.totalProfit[c] >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                                        {formatCurrency(filteredReport.totalProfit[c])}
+                                                    </p>
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
-                                ))}
-                            </div>
-                        </div>
 
-                        <div>
-                             <h3 className="text-md font-semibold mb-2 mt-4">รายละเอียดรายโปรแกรม</h3>
-                            <Accordion type="single" collapsible className="w-full">
-                                {filteredReport.programs.map((program) => (
-                                     <AccordionItem value={program.id} key={program.id}>
-                                        <AccordionTrigger className="hover:bg-muted/50 px-4 rounded-md">
-                                            <div className="flex justify-between w-full pr-4 items-center">
-                                                <div className="text-left">
-                                                    <p className="font-bold">{program.programName}</p>
-                                                    <p className="text-sm text-muted-foreground">{program.tourCode} | {format(program.date, "dd MMM yyyy", { locale: th })}</p>
-                                                </div>
-                                                <div className="flex gap-4 text-xs font-mono text-right">
-                                                     {currencies.map(c => (
-                                                        <div key={c} className="w-24">
-                                                            <span className="text-muted-foreground">{c}: </span> 
-                                                            <span className={program.profit[c] >= 0 ? 'text-green-600' : 'text-red-600'}>{formatCurrency(program.profit[c])}</span>
+                                    <div>
+                                        <h3 className="text-md font-semibold mb-2 mt-4">รายละเอียดรายโปรแกรม</h3>
+                                        <Accordion type="single" collapsible className="w-full">
+                                            {filteredReport.programs.map((program) => (
+                                                <AccordionItem value={program.id} key={program.id}>
+                                                    <AccordionTrigger className="hover:bg-muted/50 px-4 rounded-md">
+                                                        <div className="flex justify-between w-full pr-4 items-center">
+                                                            <div className="text-left">
+                                                                <p className="font-bold">{program.programName}</p>
+                                                                <p className="text-sm text-muted-foreground">{program.tourCode} | {format(program.date, "dd MMM yyyy", { locale: th })}</p>
+                                                            </div>
+                                                            <div className="flex gap-4 text-xs font-mono text-right">
+                                                                {currencies.map(c => (
+                                                                    <div key={c} className="w-24">
+                                                                        <span className="text-muted-foreground">{c}: </span> 
+                                                                        <span className={program.profit[c] >= 0 ? 'text-green-600' : 'text-red-600'}>{formatCurrency(program.profit[c])}</span>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
                                                         </div>
-                                                     ))}
-                                                </div>
-                                            </div>
-                                        </AccordionTrigger>
-                                        <AccordionContent className="p-2">
-                                             <Table>
-                                                <TableHeader>
-                                                    <TableRow>
-                                                        <TableHead>สกุลเงิน</TableHead>
-                                                        <TableHead className="text-right">รายรับรวม</TableHead>
-                                                        <TableHead className="text-right">ต้นทุนรวม</TableHead>
-                                                        <TableHead className="text-right">กำไร/ขาดทุน</TableHead>
-                                                    </TableRow>
-                                                </TableHeader>
-                                                <TableBody>
-                                                     {currencies.map(c => (
-                                                         <TableRow key={c}>
-                                                            <TableCell className="font-medium">{c}</TableCell>
-                                                            <TableCell className="text-right text-green-600">{formatCurrency(program.totalIncome[c])}</TableCell>
-                                                            <TableCell className="text-right text-red-600">{formatCurrency(program.totalCost[c])}</TableCell>
-                                                            <TableCell className={`text-right font-bold ${program.profit[c] >= 0 ? 'text-green-700' : 'text-red-700'}`}>
-                                                                {formatCurrency(program.profit[c])}
-                                                            </TableCell>
-                                                         </TableRow>
-                                                     ))}
-                                                </TableBody>
-                                                <TableFooter>
-                                                    <TableRow>
-                                                        <TableCell colSpan={4} className="text-right print:hidden">
-                                                            <Button variant="outline" size="sm" asChild>
-                                                                <Link href={`/tour-programs/${program.id}`}>ไปที่หน้ารายละเอียด</Link>
-                                                            </Button>
-                                                        </TableCell>
-                                                    </TableRow>
-                                                </TableFooter>
-                                             </Table>
-                                        </AccordionContent>
-                                     </AccordionItem>
-                                ))}
-                            </Accordion>
-                        </div>
-                        </>
-                     ) : (
-                        <div className="text-center text-muted-foreground py-16">
-                            <p>ไม่มีข้อมูลโปรแกรมสำหรับปี {selectedYear + 543}</p>
-                        </div>
-                     )}
-                    </CardContent>
-                 </Card>
-
-                 <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2"><BookOpen className="h-5 w-5"/> ประวัติรับ-จ่ายทั่วไป</CardTitle>
-                        <CardDescription>แสดงรายการธุรกรรมทั่วไปที่ไม่ผูกกับโปรแกรมทัวร์ในปี {selectedYear + 543}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        {yearlyTransactionReport.length > 0 ? (
-                            <Accordion type="single" collapsible className="w-full">
-                                {yearlyTransactionReport.map(({ month, transactions }) => (
-                                    <AccordionItem value={`month-${month}`} key={month}>
-                                        <AccordionTrigger>
-                                            {format(setMonth(new Date(), month), 'LLLL yyyy', { locale: th })}
-                                        </AccordionTrigger>
-                                        <AccordionContent>
-                                            <Table>
-                                                <TableHeader>
-                                                    <TableRow>
-                                                        <TableHead>วันที่</TableHead>
-                                                        <TableHead>คำอธิบาย</TableHead>
-                                                        <TableHead>ประเภท</TableHead>
-                                                        {currencyKeys.map(c => <TableHead key={c} className="text-right uppercase">{c}</TableHead>)}
-                                                    </TableRow>
-                                                </TableHeader>
-                                                <TableBody>
-                                                    {transactions.map(tx => (
-                                                        <TableRow key={tx.id} className={tx.type === 'income' ? 'bg-green-50/30' : 'bg-red-50/30'}>
-                                                            <TableCell>{format(tx.date, 'dd/MM/yy')}</TableCell>
-                                                            <TableCell>{tx.description}</TableCell>
-                                                            <TableCell>{tx.type === 'income' ? 'รายรับ' : 'รายจ่าย'}</TableCell>
-                                                            {currencyKeys.map(c => (
-                                                                <TableCell key={c} className={`text-right font-mono ${tx[c] || 0 > 0 ? (tx.type === 'income' ? 'text-green-700' : 'text-red-700') : ''}`}>
-                                                                    {(tx[c] || 0) > 0 ? formatCurrency(tx[c]!) : '-'}
-                                                                </TableCell>
-                                                            ))}
-                                                        </TableRow>
-                                                    ))}
-                                                </TableBody>
-                                            </Table>
-                                        </AccordionContent>
-                                    </AccordionItem>
-                                ))}
-                            </Accordion>
-                        ) : (
-                             <div className="text-center text-muted-foreground py-8">
-                                ไม่มีประวัติรับ-จ่ายทั่วไปในปี {selectedYear + 543}
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
+                                                    </AccordionTrigger>
+                                                    <AccordionContent className="p-2">
+                                                        <Table>
+                                                            <TableHeader>
+                                                                <TableRow>
+                                                                    <TableHead>สกุลเงิน</TableHead>
+                                                                    <TableHead className="text-right">รายรับรวม</TableHead>
+                                                                    <TableHead className="text-right">ต้นทุนรวม</TableHead>
+                                                                    <TableHead className="text-right">กำไร/ขาดทุน</TableHead>
+                                                                </TableRow>
+                                                            </TableHeader>
+                                                            <TableBody>
+                                                                {currencies.map(c => (
+                                                                    <TableRow key={c}>
+                                                                        <TableCell className="font-medium">{c}</TableCell>
+                                                                        <TableCell className="text-right text-green-600">{formatCurrency(program.totalIncome[c])}</TableCell>
+                                                                        <TableCell className="text-right text-red-600">{formatCurrency(program.totalCost[c])}</TableCell>
+                                                                        <TableCell className={`text-right font-bold ${program.profit[c] >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                                                                            {formatCurrency(program.profit[c])}
+                                                                        </TableCell>
+                                                                    </TableRow>
+                                                                ))}
+                                                            </TableBody>
+                                                            <TableFooter>
+                                                                <TableRow>
+                                                                    <TableCell colSpan={4} className="text-right print:hidden">
+                                                                        <Button variant="outline" size="sm" asChild>
+                                                                            <Link href={`/tour-programs/${program.id}`}>ไปที่หน้ารายละเอียด</Link>
+                                                                        </Button>
+                                                                    </TableCell>
+                                                                </TableRow>
+                                                            </TableFooter>
+                                                        </Table>
+                                                    </AccordionContent>
+                                                </AccordionItem>
+                                            ))}
+                                        </Accordion>
+                                    </div>
+                                    </>
+                                ) : (
+                                    <div className="text-center text-muted-foreground py-16">
+                                        <p>ไม่มีข้อมูลโปรแกรมสำหรับปี {selectedYear + 543}</p>
+                                    </div>
+                                )}
+                                </CardContent>
+                            </Card>
+                        </AccordionContent>
+                    </AccordionItem>
+                    <AccordionItem value="item-2">
+                        <AccordionTrigger className="text-lg font-semibold bg-white p-4 rounded-lg shadow-sm border">
+                             <div className="flex items-center gap-2"><BookOpen className="h-5 w-5"/> ประวัติรับ-จ่ายทั่วไป</div>
+                        </AccordionTrigger>
+                         <AccordionContent className="pt-4">
+                             <Card>
+                                 <CardHeader>
+                                     <CardDescription>แสดงรายการธุรกรรมทั่วไปที่ไม่ผูกกับโปรแกรมทัวร์ในปี {selectedYear + 543}</CardDescription>
+                                 </CardHeader>
+                                 <CardContent>
+                                     {yearlyTransactionReport.length > 0 ? (
+                                         <Accordion type="single" collapsible className="w-full">
+                                             {yearlyTransactionReport.map(({ month, transactions }) => (
+                                                 <AccordionItem value={`month-${month}`} key={month}>
+                                                     <AccordionTrigger>
+                                                         {format(setMonth(new Date(), month), 'LLLL yyyy', { locale: th })}
+                                                     </AccordionTrigger>
+                                                     <AccordionContent>
+                                                         <Table>
+                                                             <TableHeader>
+                                                                 <TableRow>
+                                                                     <TableHead>วันที่</TableHead>
+                                                                     <TableHead>คำอธิบาย</TableHead>
+                                                                     <TableHead>ประเภท</TableHead>
+                                                                     {currencyKeys.map(c => <TableHead key={c} className="text-right uppercase">{c}</TableHead>)}
+                                                                 </TableRow>
+                                                             </TableHeader>
+                                                             <TableBody>
+                                                                 {transactions.map(tx => (
+                                                                     <TableRow key={tx.id} className={tx.type === 'income' ? 'bg-green-50/30' : 'bg-red-50/30'}>
+                                                                         <TableCell>{format(tx.date, 'dd/MM/yy')}</TableCell>
+                                                                         <TableCell>{tx.description}</TableCell>
+                                                                         <TableCell>{tx.type === 'income' ? 'รายรับ' : 'รายจ่าย'}</TableCell>
+                                                                         {currencyKeys.map(c => (
+                                                                             <TableCell key={c} className={`text-right font-mono ${tx[c] || 0 > 0 ? (tx.type === 'income' ? 'text-green-700' : 'text-red-700') : ''}`}>
+                                                                                 {(tx[c] || 0) > 0 ? formatCurrency(tx[c]!) : '-'}
+                                                                             </TableCell>
+                                                                         ))}
+                                                                     </TableRow>
+                                                                 ))}
+                                                             </TableBody>
+                                                         </Table>
+                                                     </AccordionContent>
+                                                 </AccordionItem>
+                                             ))}
+                                         </Accordion>
+                                     ) : (
+                                         <div className="text-center text-muted-foreground py-8">
+                                             ไม่มีประวัติรับ-จ่ายทั่วไปในปี {selectedYear + 543}
+                                         </div>
+                                     )}
+                                 </CardContent>
+                             </Card>
+                         </AccordionContent>
+                    </AccordionItem>
+                 </Accordion>
             </main>
         </div>
     );
+}
