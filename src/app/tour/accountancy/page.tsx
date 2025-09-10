@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Landmark, Wallet, PlusCircle, Calendar as CalendarIcon, ChevronDown, ChevronUp, MoreHorizontal, Pencil, Trash2, Briefcase, Combine } from "lucide-react"
+import { ArrowLeft, Landmark, Wallet, PlusCircle, Calendar as CalendarIcon, ChevronDown, ChevronUp, MoreHorizontal, Pencil, Trash2, Briefcase, Combine, ArrowUpCircle, ArrowDownCircle, Scale } from "lucide-react"
 import Link from 'next/link'
 import { useToast } from "@/hooks/use-toast"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
@@ -28,8 +28,8 @@ const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('th-TH', { minimumFractionDigits: 0 }).format(value);
 }
 
-const SummaryCard = ({ title, values, icon, onClick }: { title: string, values: CurrencyValues, icon: React.ReactNode, onClick?: () => void }) => (
-    <Card className={`${onClick ? 'cursor-pointer hover:bg-muted/80' : ''}`} onClick={onClick}>
+const SummaryCard = ({ title, values, icon, onClick, className }: { title: string, values: CurrencyValues, icon: React.ReactNode, onClick?: () => void, className?: string }) => (
+    <Card className={`${onClick ? 'cursor-pointer hover:bg-muted/80' : ''} ${className}`} onClick={onClick}>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <div className="flex items-center gap-2">
                <CardTitle className="text-base font-medium">{title}</CardTitle>
@@ -41,7 +41,7 @@ const SummaryCard = ({ title, values, icon, onClick }: { title: string, values: 
             {currencies.map(c => (
                 <div key={c} className="text-sm">
                     <span className="font-semibold uppercase">{c}: </span>
-                    <span>{formatCurrency(values[c] || 0)}</span>
+                    <span className={values[c] < 0 ? 'text-red-600' : ''}>{formatCurrency(values[c] || 0)}</span>
                 </div>
             ))}
         </CardContent>
@@ -78,6 +78,33 @@ export default function TourAccountancyPage() {
             return acc;
         }, { kip: 0, baht: 0, usd: 0, cny: 0 });
     }, [summary]);
+
+    const monthlySummary = useMemo(() => {
+        const start = startOfMonth(historyDisplayMonth);
+        const end = endOfMonth(historyDisplayMonth);
+        const monthlyTransactions = transactions.filter(tx => isWithinInterval(tx.date, { start, end }));
+
+        const monthlyIncome = { kip: 0, baht: 0, usd: 0, cny: 0 };
+        const monthlyExpense = { kip: 0, baht: 0, usd: 0, cny: 0 };
+        const netProfit = { kip: 0, baht: 0, usd: 0, cny: 0 };
+        
+        monthlyTransactions.forEach(tx => {
+            currencies.forEach(c => {
+                if (tx.type === 'income') {
+                    monthlyIncome[c] += tx[c] || 0;
+                } else {
+                    monthlyExpense[c] += tx[c] || 0;
+                }
+            });
+        });
+
+        currencies.forEach(c => {
+            netProfit[c] = monthlyIncome[c] - monthlyExpense[c];
+        });
+
+        return { monthlyIncome, monthlyExpense, netProfit };
+
+    }, [transactions, historyDisplayMonth]);
 
      const dailySummaries = useMemo(() => {
         const start = startOfMonth(historyDisplayMonth);
@@ -248,11 +275,14 @@ export default function TourAccountancyPage() {
                 <h1 className="text-xl font-bold tracking-tight">จัดการบัญชี (ธุรกิจทัวร์)</h1>
             </header>
             <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
                      <SummaryCard title="เงินทุน" values={summary.capital} icon={<Briefcase className="h-5 w-5 text-primary" />} onClick={() => openEditDialog('capital')} />
                      <SummaryCard title="เงินสด" values={summary.cash} icon={<Wallet className="h-5 w-5 text-primary" />} onClick={() => openEditDialog('cash')} />
                      <SummaryCard title="เงินโอน" values={summary.transfer} icon={<Landmark className="h-5 w-5 text-primary" />} onClick={() => openEditDialog('transfer')} />
                      <SummaryCard title="รวมเงินคงเหลือ" values={totalBalance} icon={<Combine className="h-5 w-5 text-green-600" />} />
+                     <SummaryCard title="รายรับรวม (เดือน)" values={monthlySummary.monthlyIncome} icon={<ArrowUpCircle className="h-5 w-5 text-green-500" />} className="bg-green-50/50" />
+                     <SummaryCard title="รายจ่ายรวม (เดือน)" values={monthlySummary.monthlyExpense} icon={<ArrowDownCircle className="h-5 w-5 text-red-500" />} className="bg-red-50/50" />
+                     <SummaryCard title="กำไร/ขาดทุน (เดือน)" values={monthlySummary.netProfit} icon={<Scale className="h-5 w-5 text-blue-500" />} className="bg-blue-50/50" />
                 </div>
                 <div className="grid gap-4 md:gap-8 lg:grid-cols-3">
                     <div className="lg:col-span-1 flex flex-col gap-4">
