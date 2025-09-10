@@ -7,10 +7,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { ArrowLeft, FilePieChart, ChevronDown } from "lucide-react";
+import { ArrowLeft, FilePieChart, ChevronDown, BookOpen } from "lucide-react";
 import { listenToAllTourPrograms, listenToAllTourCostItems, listenToAllTourIncomeItems } from '@/services/tourReportService';
-import type { TourProgram, TourCostItem, TourIncomeItem, Currency } from '@/lib/types';
-import { getYear, format, getMonth, setMonth } from 'date-fns';
+import { listenToTourTransactions } from '@/services/tourAccountancyService';
+import type { TourProgram, TourCostItem, TourIncomeItem, Currency, Transaction } from '@/lib/types';
+import { getYear, format, getMonth, setMonth, isWithinInterval, startOfYear, endOfYear } from 'date-fns';
 import { th } from "date-fns/locale";
 import {
   DropdownMenu,
@@ -25,6 +26,8 @@ const formatCurrency = (value: number) => {
 };
 
 const currencies: Currency[] = ['KIP', 'BAHT', 'USD', 'CNY'];
+const currencyKeys: (keyof Transaction)[] = ['kip', 'baht', 'usd', 'cny'];
+
 
 type ProgramReport = TourProgram & {
     totalCost: Record<Currency, number>;
@@ -43,16 +46,19 @@ export default function TourReportsPage() {
     const [programs, setPrograms] = useState<TourProgram[]>([]);
     const [costs, setCosts] = useState<TourCostItem[]>([]);
     const [incomes, setIncomes] = useState<TourIncomeItem[]>([]);
+    const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [selectedYear, setSelectedYear] = useState(getYear(new Date()));
 
     useEffect(() => {
         const unsubscribePrograms = listenToAllTourPrograms(setPrograms);
         const unsubscribeCosts = listenToAllTourCostItems(setCosts);
         const unsubscribeIncomes = listenToAllTourIncomeItems(setIncomes);
+        const unsubscribeTransactions = listenToTourTransactions(setTransactions);
         return () => {
             unsubscribePrograms();
             unsubscribeCosts();
             unsubscribeIncomes();
+            unsubscribeTransactions();
         };
     }, []);
 
@@ -115,8 +121,34 @@ export default function TourReportsPage() {
         return reportsData.find(r => r.year === selectedYear);
     }, [reportsData, selectedYear]);
 
+    const yearlyTransactionReport = useMemo(() => {
+        const yearDate = new Date(selectedYear, 0, 1);
+        const start = startOfYear(yearDate);
+        const end = endOfYear(yearDate);
+
+        const yearlyTransactions = transactions.filter(tx => isWithinInterval(tx.date, { start, end }));
+
+        const groupedByMonth = yearlyTransactions.reduce((acc, tx) => {
+            const month = getMonth(tx.date);
+            if (!acc[month]) {
+                acc[month] = [];
+            }
+            acc[month].push(tx);
+            return acc;
+        }, {} as Record<number, Transaction[]>);
+
+        return Object.entries(groupedByMonth)
+            .map(([month, txs]) => ({ month: parseInt(month), transactions: txs}))
+            .sort((a,b) => a.month - b.month);
+
+    }, [transactions, selectedYear]);
+
+
     const YearSelector = () => {
-        const years = reportsData.map(r => r.year);
+        const years = Array.from(new Set(reportsData.map(r => r.year))).sort((a,b) => b - a);
+        if (years.length === 0 && !years.includes(selectedYear)) {
+            years.unshift(selectedYear);
+        }
         
         return (
             <DropdownMenu>
@@ -190,7 +222,7 @@ export default function TourReportsPage() {
                                                 <div className="flex gap-4 text-xs font-mono text-right">
                                                      {currencies.map(c => (
                                                         <div key={c} className="w-24">
-                                                            <span className="text-muted-foreground">{c}: </span>
+                                                            <span className="text-muted-foreground">{c}: </span> 
                                                             <span className={program.profit[c] >= 0 ? 'text-green-600' : 'text-red-600'}>{formatCurrency(program.profit[c])}</span>
                                                         </div>
                                                      ))}
@@ -238,10 +270,57 @@ export default function TourReportsPage() {
                     </>
                  ) : (
                     <div className="text-center text-muted-foreground py-16">
-                        <p>ไม่มีข้อมูลสำหรับปี {selectedYear + 543}</p>
+                        <p>ไม่มีข้อมูลโปรแกรมสำหรับปี {selectedYear + 543}</p>
                     </div>
                  )}
+
+                {yearlyTransactionReport.length > 0 && (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2"><BookOpen className="h-5 w-5"/> ประวัติธุรกรรมประจำปี {selectedYear + 543}</CardTitle>
+                            <CardDescription>แสดงรายการธุรกรรมทั้งหมดที่บันทึกในปีนี้ (ไม่รวมรายรับ/รายจ่ายในแต่ละโปรแกรมทัวร์)</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <Accordion type="single" collapsible className="w-full">
+                                {yearlyTransactionReport.map(({ month, transactions }) => (
+                                    <AccordionItem value={`month-${month}`} key={month}>
+                                        <AccordionTrigger>
+                                            {format(setMonth(new Date(), month), 'LLLL yyyy', { locale: th })}
+                                        </AccordionTrigger>
+                                        <AccordionContent>
+                                            <Table>
+                                                <TableHeader>
+                                                    <TableRow>
+                                                        <TableHead>วันที่</TableHead>
+                                                        <TableHead>คำอธิบาย</TableHead>
+                                                        <TableHead>ประเภท</TableHead>
+                                                        {currencyKeys.map(c => <TableHead key={c} className="text-right uppercase">{c}</TableHead>)}
+                                                    </TableRow>
+                                                </TableHeader>
+                                                <TableBody>
+                                                    {transactions.map(tx => (
+                                                        <TableRow key={tx.id} className={tx.type === 'income' ? 'bg-green-50/30' : 'bg-red-50/30'}>
+                                                            <TableCell>{format(tx.date, 'dd/MM/yy')}</TableCell>
+                                                            <TableCell>{tx.description}</TableCell>
+                                                            <TableCell>{tx.type === 'income' ? 'รายรับ' : 'รายจ่าย'}</TableCell>
+                                                            {currencyKeys.map(c => (
+                                                                <TableCell key={c} className={`text-right font-mono ${tx[c] || 0 > 0 ? (tx.type === 'income' ? 'text-green-700' : 'text-red-700') : ''}`}>
+                                                                    {(tx[c] || 0) > 0 ? formatCurrency(tx[c]!) : '-'}
+                                                                </TableCell>
+                                                            ))}
+                                                        </TableRow>
+                                                    ))}
+                                                </TableBody>
+                                            </Table>
+                                        </AccordionContent>
+                                    </AccordionItem>
+                                ))}
+                            </Accordion>
+                        </CardContent>
+                    </Card>
+                )}
             </main>
         </div>
     );
-}
+
+    
