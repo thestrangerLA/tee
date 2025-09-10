@@ -10,7 +10,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { ArrowLeft, FilePieChart, ChevronDown, BookOpen } from "lucide-react";
 import { listenToAllTourPrograms, listenToAllTourCostItems, listenToAllTourIncomeItems } from '@/services/tourReportService';
 import { listenToTourTransactions } from '@/services/tourAccountancyService';
-import type { TourProgram, TourCostItem, TourIncomeItem, Currency, Transaction } from '@/lib/types';
+import type { TourProgram, TourCostItem, TourIncomeItem, Currency, Transaction, CurrencyValues } from '@/lib/types';
 import { getYear, format, getMonth, setMonth, isWithinInterval, startOfYear, endOfYear } from 'date-fns';
 import { th } from "date-fns/locale";
 import {
@@ -26,7 +26,7 @@ const formatCurrency = (value: number) => {
 };
 
 const currencies: Currency[] = ['KIP', 'BAHT', 'USD', 'CNY'];
-const currencyKeys: (keyof Transaction)[] = ['kip', 'baht', 'usd', 'cny'];
+const currencyKeys: (keyof CurrencyValues)[] = ['kip', 'baht', 'usd', 'cny'];
 
 
 type ProgramReport = TourProgram & {
@@ -127,19 +127,37 @@ export default function TourReportsPage() {
         const end = endOfYear(yearDate);
 
         const yearlyTransactions = transactions.filter(tx => isWithinInterval(tx.date, { start, end }));
+        
+        const initialTotals = () => ({ kip: 0, baht: 0, usd: 0, cny: 0 });
 
         const groupedByMonth = yearlyTransactions.reduce((acc, tx) => {
             const month = getMonth(tx.date);
             if (!acc[month]) {
-                acc[month] = [];
+                acc[month] = {
+                    transactions: [],
+                    income: initialTotals(),
+                    expense: initialTotals()
+                };
             }
-            acc[month].push(tx);
+            acc[month].transactions.push(tx);
+            currencyKeys.forEach(c => {
+                 if (tx.type === 'income') {
+                    acc[month].income[c] += tx[c] || 0;
+                } else {
+                    acc[month].expense[c] += tx[c] || 0;
+                }
+            });
             return acc;
-        }, {} as Record<number, Transaction[]>);
+        }, {} as Record<number, { transactions: Transaction[], income: CurrencyValues, expense: CurrencyValues }>);
 
         return Object.entries(groupedByMonth)
-            .map(([month, txs]) => ({ month: parseInt(month), transactions: txs}))
-            .sort((a,b) => a.month - b.month);
+            .map(([month, data]) => ({ 
+                month: parseInt(month), 
+                transactions: data.transactions,
+                income: data.income,
+                expense: data.expense
+            }))
+            .sort((a, b) => a.month - b.month);
 
     }, [transactions, selectedYear]);
 
@@ -298,10 +316,21 @@ export default function TourReportsPage() {
                                  <CardContent>
                                      {yearlyTransactionReport.length > 0 ? (
                                          <Accordion type="single" collapsible className="w-full">
-                                             {yearlyTransactionReport.map(({ month, transactions }) => (
+                                             {yearlyTransactionReport.map(({ month, income, expense, transactions }) => (
                                                  <AccordionItem value={`month-${month}`} key={month}>
                                                      <AccordionTrigger>
-                                                         {format(setMonth(new Date(), month), 'LLLL yyyy', { locale: th })}
+                                                        <div className="flex flex-col md:flex-row justify-between w-full pr-4 text-sm">
+                                                            <div className="font-semibold text-base mb-2 md:mb-0">{format(setMonth(new Date(), month), 'LLLL yyyy', { locale: th })}</div>
+                                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4">
+                                                                {currencyKeys.map(c => (
+                                                                    <div key={c} className="flex items-center justify-end gap-1">
+                                                                        <span className="font-bold uppercase text-xs">{c}:</span>
+                                                                        <span className="text-green-600 font-mono">{formatCurrency(income[c])}</span>/
+                                                                        <span className="text-red-600 font-mono">{formatCurrency(expense[c])}</span>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
                                                      </AccordionTrigger>
                                                      <AccordionContent>
                                                          <Table>
@@ -346,5 +375,3 @@ export default function TourReportsPage() {
         </div>
     );
 }
-
-    
