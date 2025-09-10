@@ -399,11 +399,16 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                         <p className="hidden print:block print:text-sm">{program.groupName}</p>
                     </div>
                     <div className="grid gap-2">
+                        <Label htmlFor="tourDates">วันที่เดินทาง (Tour Dates)</Label>
+                        <Input id="tourDates" value={program.tourDates || ''} onChange={(e) => handleProgramChange('tourDates', e.target.value)} className="print:hidden"/>
+                        <p className="hidden print:block print:text-sm">{program.tourDates}</p>
+                    </div>
+                    <div className="grid gap-2">
                         <Label htmlFor="pax">จำนวนคน (Pax)</Label>
                         <Input id="pax" type="number" value={program.pax} onChange={(e) => handleProgramChange('pax', Number(e.target.value))} className="print:hidden"/>
                         <p className="hidden print:block print:text-sm">{program.pax}</p>
                     </div>
-                    <div className="grid gap-2">
+                     <div className="grid gap-2">
                         <Label htmlFor="destination">จุดหมาย</Label>
                         <Input id="destination" value={program.destination} onChange={(e) => handleProgramChange('destination', e.target.value)} className="print:hidden"/>
                         <p className="hidden print:block print:text-sm">{program.destination}</p>
@@ -493,6 +498,7 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                     <div><span className="font-semibold">Program Name:</span> {program.programName}</div>
                     <div><span className="font-semibold">Tour Code:</span> {program.tourCode}</div>
                     <div><span className="font-semibold">Group Name:</span> {program.groupName}</div>
+                    <div><span className="font-semibold">Tour Dates:</span> {program.tourDates}</div>
                     <div><span className="font-semibold">Pax:</span> {program.pax}</div>
                     <div><span className="font-semibold">Destination:</span> {program.destination}</div>
                     <div><span className="font-semibold">Duration:</span> {program.durationDays} days</div>

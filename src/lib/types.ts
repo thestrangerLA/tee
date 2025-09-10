@@ -75,6 +75,7 @@ export type Currency = 'KIP' | 'BAHT' | 'USD' | 'CNY';
 export interface TourProgram {
   id: string;
   date: Date;
+  tourDates?: string;
   tourCode: string;
   programName: string;
   groupName: string;

@@ -61,6 +61,7 @@ export default function NewTourProgramPage() {
         groupName: '',
         pax: 0,
         destination: '',
+        tourDates: '',
         durationDays: 0,
         price: 0,
         priceCurrency: 'KIP',
@@ -130,7 +131,7 @@ export default function NewTourProgramPage() {
                         <form onSubmit={handleSubmit} className="grid gap-6">
                             <div className="grid md:grid-cols-3 gap-6">
                                 <div className="grid gap-2">
-                                    <Label htmlFor="date">วันที่</Label>
+                                    <Label htmlFor="date">วันที่สร้าง</Label>
                                     <Popover>
                                         <PopoverTrigger asChild>
                                             <Button variant={"outline"} className="w-full justify-start text-left font-normal">
@@ -151,6 +152,11 @@ export default function NewTourProgramPage() {
                                     <Label htmlFor="programName">ชื่อโปรแกรม</Label>
                                     <Input id="programName" name="programName" value={formData.programName} onChange={(e) => handleFormValueChange('programName', e.target.value)} required />
                                 </div>
+                            </div>
+                            
+                            <div className="grid gap-2">
+                                <Label htmlFor="tourDates">วันที่เดินทาง (Tour Dates)</Label>
+                                <Input id="tourDates" name="tourDates" value={formData.tourDates} onChange={(e) => handleFormValueChange('tourDates', e.target.value)} placeholder="เช่น 30/08/2025-31/08/2025" />
                             </div>
 
                             <div className="grid md:grid-cols-2 gap-6">
