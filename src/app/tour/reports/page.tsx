@@ -189,8 +189,11 @@ export default function TourReportsPage() {
             <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
                  <Accordion type="single" collapsible className="w-full" defaultValue="item-1">
                     <AccordionItem value="item-1">
-                        <AccordionTrigger className="text-lg font-semibold bg-white p-4 rounded-lg shadow-sm border">
-                            สรุปผลประกอบการรายโปรแกรม
+                        <AccordionTrigger className="text-lg font-semibold bg-white p-4 rounded-lg shadow-sm border hover:bg-muted/50 no-underline hover:no-underline">
+                             <div className="flex items-center gap-2">
+                                <FilePieChart className="h-5 w-5 text-primary" />
+                                <span>สรุปผลประกอบการรายโปรแกรม</span>
+                            </div>
                         </AccordionTrigger>
                         <AccordionContent className="pt-4">
                             <Card>
@@ -284,8 +287,8 @@ export default function TourReportsPage() {
                         </AccordionContent>
                     </AccordionItem>
                     <AccordionItem value="item-2">
-                        <AccordionTrigger className="text-lg font-semibold bg-white p-4 rounded-lg shadow-sm border">
-                             <div className="flex items-center gap-2"><BookOpen className="h-5 w-5"/> ประวัติรับ-จ่ายทั่วไป</div>
+                        <AccordionTrigger className="text-lg font-semibold bg-white p-4 rounded-lg shadow-sm border hover:bg-muted/50 no-underline hover:no-underline">
+                             <div className="flex items-center gap-2"><BookOpen className="h-5 w-5 text-primary"/> ประวัติรับ-จ่ายทั่วไป</div>
                         </AccordionTrigger>
                          <AccordionContent className="pt-4">
                              <Card>
@@ -343,3 +346,5 @@ export default function TourReportsPage() {
         </div>
     );
 }
+
+    
