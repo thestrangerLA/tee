@@ -471,7 +471,7 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
             </div>
 
             <div className="space-y-1 pt-2">
-                 <h2 className="text-sm font-bold">ສະຫຼຸບຜົນປະກອບການ (Profit/Loss Summary)</h2>
+                 <h2 className="text-sm font-bold print:font-lao">ກຳໄລ/ຂາດທຶນ (Profit/Loss Summary)</h2>
                  <div className="grid grid-cols-4 gap-2">
                     <SummaryCard title="ກຳໄລ/ຂາດທຶນ" value={summaryData.profit.kip} currency="KIP" isProfit />
                     <SummaryCard title="ກຳໄລ/ຂາດທຶນ" value={summaryData.profit.baht} currency="BAHT" isProfit />
@@ -556,5 +556,3 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
     </div>
   )
 }
-
-    
