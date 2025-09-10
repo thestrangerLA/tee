@@ -600,22 +600,12 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
             <Tabs defaultValue="info" className="mt-4">
                 <TabsList className="grid w-full grid-cols-4">
                     <TabsTrigger value="info">ข้อมูลโปรแกรม</TabsTrigger>
-                    <TabsTrigger value="costs">คำนวณต้นทุน</TabsTrigger>
                     <TabsTrigger value="income">บันทึกรายรับ</TabsTrigger>
+                    <TabsTrigger value="costs">คำนวณต้นทุน</TabsTrigger>
                     <TabsTrigger value="summary">สรุปผล</TabsTrigger>
                 </TabsList>
                 <TabsContent value="info" className="mt-4">
                     <ProgramInfoCard />
-                </TabsContent>
-                <TabsContent value="costs" className="mt-4">
-                    <CurrencyEntryTable 
-                        items={costItems}
-                        onAddItem={handleAddCostItem}
-                        onUpdateItem={handleUpdateCostItem as any}
-                        onDeleteItem={handleDeleteCostItem}
-                        title="ตารางคำนวณต้นทุน"
-                        description="บันทึกค่าใช้จ่ายทั้งหมดของโปรแกรมนี้"
-                    />
                 </TabsContent>
                 <TabsContent value="income" className="mt-4">
                     <CurrencyEntryTable 
@@ -627,6 +617,16 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                         description="บันทึกรายรับทั้งหมด ของโปรแกรมนี้"
                     />
                 </TabsContent>
+                <TabsContent value="costs" className="mt-4">
+                    <CurrencyEntryTable 
+                        items={costItems}
+                        onAddItem={handleAddCostItem}
+                        onUpdateItem={handleUpdateCostItem as any}
+                        onDeleteItem={handleDeleteCostItem}
+                        title="ตารางคำนวณต้นทุน"
+                        description="บันทึกค่าใช้จ่ายทั้งหมดของโปรแกรมนี้"
+                    />
+                </TabsContent>
                 <TabsContent value="summary" className="mt-4">
                     <Card>
                         <CardHeader>
@@ -634,7 +634,7 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                             <CardDescription>สรุปรายรับ, ต้นทุน, และกำไร/ขาดทุน สำหรับโปรแกรมนี้</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">
-                            <div>
+                             <div>
                                 <h3 className="text-lg font-semibold mb-2">ยอดรวมรายรับ</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                                     <SummaryCard title="รายรับ" value={summaryData.totalIncomes.kip} currency="KIP" />
@@ -670,3 +670,5 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
     </div>
   )
 }
+
+    
