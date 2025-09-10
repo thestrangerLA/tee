@@ -67,8 +67,8 @@ const CurrencyEntryTable = ({
     }, [items]);
 
     return (
-        <Card className="print:hidden">
-            <CardHeader className="flex flex-row items-center justify-between">
+        <Card>
+            <CardHeader className="flex flex-row items-center justify-between print:hidden">
                  <div>
                     <CardTitle>{title}</CardTitle>
                     <CardDescription>{description}</CardDescription>
@@ -89,7 +89,7 @@ const CurrencyEntryTable = ({
                                 <TableHead className="text-right">BAHT</TableHead>
                                 <TableHead className="text-right">USD</TableHead>
                                 <TableHead className="text-right">CNY</TableHead>
-                                <TableHead className="w-[50px]"><span className="sr-only">ลบ</span></TableHead>
+                                <TableHead className="w-[50px] print:hidden"><span className="sr-only">ลบ</span></TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -153,7 +153,7 @@ const CurrencyEntryTable = ({
                                             className="h-8 text-right"
                                         />
                                     </TableCell>
-                                    <TableCell className="p-1 text-center">
+                                    <TableCell className="p-1 text-center print:hidden">
                                         <Button variant="ghost" size="icon" onClick={() => onDeleteItem(item.id)}>
                                             <Trash2 className="h-4 w-4 text-red-500" />
                                         </Button>
@@ -169,7 +169,7 @@ const CurrencyEntryTable = ({
                                 <TableCell className="text-right">{formatCurrency(totals.baht)}</TableCell>
                                 <TableCell className="text-right">{formatCurrency(totals.usd)}</TableCell>
                                 <TableCell className="text-right">{formatCurrency(totals.cny)}</TableCell>
-                                <TableCell></TableCell>
+                                <TableCell className="print:hidden"></TableCell>
                             </TableRow>
                         </TableFooter>
                     </Table>
@@ -194,8 +194,12 @@ const SummaryCard = ({ title, value, currency, isProfit = false }: { title: stri
     );
 };
 
+type PageProps = {
+  params: { id: string };
+  searchParams: { [key: string]: string | string[] | undefined };
+};
 
-export default function TourProgramDetailPage({ params }: { params: { id: string } }) {
+export default function TourProgramDetailPage({ params }: PageProps) {
     const { toast } = useToast();
     const [program, setProgram] = useState<TourProgram | null>(null);
     const [costItems, setCostItems] = useState<TourCostItem[]>([]);
@@ -397,7 +401,7 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
     );
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/40 print:bg-white print:font-lao">
+    <div className="flex min-h-screen w-full flex-col bg-muted/40 print:bg-white">
       <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 print:hidden">
         <Button variant="outline" size="icon" className="h-8 w-8" asChild>
           <Link href="/tour-programs">
@@ -416,12 +420,12 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
             </Button>
         </div>
       </header>
-      <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 print:p-4 print:gap-2">
+      <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 print:p-2 print:gap-1">
         {/* For Printing */}
-        <div className="hidden print:block print:space-y-2 print:font-lao">
+        <div className="hidden print:block print:space-y-1">
             <div className="print:p-0">
-                <h2 className="text-lg font-bold mb-1">ລາຍລະອຽດໜ້າວຽກຂອງແຕ່ລະກຸ່ມ</h2>
-                <div className="grid grid-cols-3 gap-x-4 gap-y-1 text-xs mb-2">
+                <h2 className="text-lg font-bold mb-1 print:font-lao">ລາຍລະອຽດໜ້າວຽກຂອງແຕ່ລະກຸ່ມ</h2>
+                <div className="grid grid-cols-3 gap-x-4 gap-y-0 text-xs mb-1">
                     <div><span className="font-semibold">Program Name:</span> {program.programName}</div>
                     <div><span className="font-semibold">Tour Code:</span> {program.tourCode}</div>
                     <div><span className="font-semibold">Group Name:</span> {program.groupName}</div>
@@ -433,7 +437,7 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
                     <div className="font-bold"><span className="font-semibold">Total Price:</span> {formatCurrency(program.totalPrice)}</div>
                 </div>
                  {program.customerDetails && (
-                    <div>
+                    <div className="mt-1">
                         <h3 className="font-semibold text-xs">ລາຍລະອຽດລູກຄ້າ/ກຸ່ມ:</h3>
                         <p className="whitespace-pre-wrap text-xs">{program.customerDetails}</p>
                     </div>
@@ -441,14 +445,14 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
             </div>
 
             <div className="space-y-1 pt-1">
-                <h2 className="text-sm font-bold border-b pb-1">ລາຍຈ່າຍ (Total Costs)</h2>
+                <h2 className="text-sm font-bold border-b pb-1 print:font-lao">ລາຍຈ່າຍ (Total Costs)</h2>
                 <Table>
                     <TableFooter>
                         <TableRow className="font-bold text-xs">
                              <TableCell className="text-right p-1">ລວມ (Total)</TableCell>
                              <TableCell className="text-right p-1">{formatCurrency(summaryData.totalCosts.kip)} KIP</TableCell>
                              <TableCell className="text-right p-1">{formatCurrency(summaryData.totalCosts.baht)} BAHT</TableCell>
-                             <TableCell className="text-right p-1">{formatCurrency(summaryData.totalCosts.usd)} USD</TableCell>
+                             <TableCell className="text-right p-1">{formatCurrency(summaryData.totalCosts.usd)} USD</TableCell>                             
                              <TableCell className="text-right p-1">{formatCurrency(summaryData.totalCosts.cny)} CNY</TableCell>
                         </TableRow>
                     </TableFooter>
@@ -456,7 +460,7 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
             </div>
             
             <div className="space-y-1 pt-1">
-                <h2 className="text-sm font-bold border-b pb-1">ລາຍຮັບ (Total Income)</h2>
+                <h2 className="text-sm font-bold border-b pb-1 print:font-lao">ລາຍຮັບ (Total Income)</h2>
                 <Table>
                     <TableFooter>
                          <TableRow className="font-bold text-xs">
@@ -556,3 +560,5 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
     </div>
   )
 }
+
+    

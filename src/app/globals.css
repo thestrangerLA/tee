@@ -85,7 +85,6 @@ body {
   body {
     background-color: white;
     color: black;
-    font-family: 'Noto Sans Lao', sans-serif;
   }
   .print\:hidden {
     display: none;
@@ -96,15 +95,24 @@ body {
   .print\:p-0 {
     padding: 0;
   }
+  .print\:p-1 {
+    padding: 0.25rem;
+  }
+  .print\:p-2 {
+    padding: 0.5rem;
+  }
   .print\:gap-0 {
     gap: 0;
+  }
+  .print\:gap-1 {
+    gap: 0.25rem;
   }
   .print\:gap-2 {
     gap: 0.5rem;
   }
-  .print\:space-y-2 {
-    margin-top: 0.5rem;
-    margin-bottom: 0.5rem;
+  .print\:space-y-1 {
+    margin-top: 0.25rem;
+    margin-bottom: 0.25rem;
   }
   .print\:shadow-none {
     box-shadow: none;
@@ -114,9 +122,6 @@ body {
   }
    .print\:border {
     border-width: 1px;
-  }
-  .print\:p-1 {
-    padding: 0.25rem;
   }
   main {
     margin: 0;
@@ -130,4 +135,4 @@ body {
   }
 }
 
-
+    
