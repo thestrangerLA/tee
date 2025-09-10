@@ -235,7 +235,7 @@ const CurrencyInput = ({ label, amount, currency, onAmountChange, onCurrencyChan
 export default function TourProgramDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
     const { toast } = useToast();
-    const [program, setProgram] = useState<TourProgram | null>(null);
+    const [localProgram, setLocalProgram] = useState<TourProgram | null>(null);
     const [costItems, setCostItems] = useState<TourCostItem[]>([]);
     const [incomeItems, setIncomeItems] = useState<TourIncomeItem[]>([]);
     const [printCurrencies, setPrintCurrencies] = useState<Currency[]>(['KIP']);
@@ -245,7 +245,7 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
 
         const fetchProgram = async () => {
             const programData = await getTourProgram(id);
-            setProgram(programData);
+            setLocalProgram(programData);
             if (programData) {
                 setPrintCurrencies([programData.priceCurrency]);
             }
@@ -297,17 +297,17 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
 
     // --- Program Info Handler ---
     const handleProgramChange = (field: keyof TourProgram, value: any) => {
-        if (!program) return;
-        setProgram(prev => {
+        if (!localProgram) return;
+        setLocalProgram(prev => {
             if (!prev) return null;
             return { ...prev, [field]: value };
         });
     };
 
     const handleSaveProgramInfo = async () => {
-        if (!program) return;
+        if (!localProgram) return;
         try {
-            const updatedProgramData = { ...program };
+            const updatedProgramData = { ...localProgram };
              if (updatedProgramData.priceCurrency === updatedProgramData.bankChargeCurrency) {
                 updatedProgramData.totalPrice = (updatedProgramData.price || 0) + (updatedProgramData.bankCharge || 0);
             } else {
@@ -316,7 +316,7 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
             
             const { id, createdAt, date, ...dataToUpdate } = updatedProgramData;
 
-            await updateTourProgram(program.id, dataToUpdate);
+            await updateTourProgram(localProgram.id, dataToUpdate);
             toast({ title: "บันทึกข้อมูลโปรแกรมแล้ว" });
         } catch (error) {
              console.error("Failed to save program info:", error);
@@ -365,7 +365,7 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
     };
 
 
-    if (!program) {
+    if (!localProgram) {
         return (
              <div className="flex min-h-screen w-full flex-col items-center justify-center bg-muted/40">
                 <p>กำลังโหลดโปรแกรมทัวร์...</p>
@@ -378,61 +378,61 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
             <CardHeader className="print:hidden">
                 <CardTitle>รายละเอียดโปรแกรมและข้อมูลกลุ่ม</CardTitle>
                 <CardDescription>
-                    วันที่สร้าง: {program.createdAt ? format(program.createdAt, "PPP", {locale: th}) : '-'}
+                    วันที่สร้าง: {localProgram.createdAt ? format(localProgram.createdAt, "PPP", {locale: th}) : '-'}
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6 print:space-y-2 print:p-0">
                  <div className="grid md:grid-cols-3 gap-6 print:gap-2">
                      <div className="grid gap-2">
                         <Label htmlFor="programName">ชื่อโปรแกรม</Label>
-                        <Input id="programName" value={program.programName} onChange={(e) => handleProgramChange('programName', e.target.value)} onBlur={handleSaveProgramInfo} className="print:hidden"/>
-                         <p className="hidden print:block print:text-sm print:font-semibold">{program.programName}</p>
+                        <Input id="programName" value={localProgram.programName} onChange={(e) => handleProgramChange('programName', e.target.value)} onBlur={handleSaveProgramInfo} className="print:hidden"/>
+                         <p className="hidden print:block print:text-sm print:font-semibold">{localProgram.programName}</p>
                     </div>
                      <div className="grid gap-2">
                         <Label htmlFor="tourCode">รหัสทัวร์</Label>
-                        <Input id="tourCode" value={program.tourCode} onChange={(e) => handleProgramChange('tourCode', e.target.value)} onBlur={handleSaveProgramInfo} className="print:hidden"/>
-                        <p className="hidden print:block print:text-sm">{program.tourCode}</p>
+                        <Input id="tourCode" value={localProgram.tourCode} onChange={(e) => handleProgramChange('tourCode', e.target.value)} onBlur={handleSaveProgramInfo} className="print:hidden"/>
+                        <p className="hidden print:block print:text-sm">{localProgram.tourCode}</p>
                     </div>
                      <div className="grid gap-2">
                         <Label htmlFor="groupName">ชื่อกลุ่ม</Label>
-                        <Input id="groupName" value={program.groupName} onChange={(e) => handleProgramChange('groupName', e.target.value)} onBlur={handleSaveProgramInfo} className="print:hidden"/>
-                        <p className="hidden print:block print:text-sm">{program.groupName}</p>
+                        <Input id="groupName" value={localProgram.groupName} onChange={(e) => handleProgramChange('groupName', e.target.value)} onBlur={handleSaveProgramInfo} className="print:hidden"/>
+                        <p className="hidden print:block print:text-sm">{localProgram.groupName}</p>
                     </div>
                     <div className="grid gap-2">
                         <Label htmlFor="tourDates">วันที่เดินทาง (Tour Dates)</Label>
-                        <Input id="tourDates" value={program.tourDates || ''} onChange={(e) => handleProgramChange('tourDates', e.target.value)} onBlur={handleSaveProgramInfo} className="print:hidden"/>
-                        <p className="hidden print:block print:text-sm">{program.tourDates}</p>
+                        <Input id="tourDates" value={localProgram.tourDates || ''} onChange={(e) => handleProgramChange('tourDates', e.target.value)} onBlur={handleSaveProgramInfo} className="print:hidden"/>
+                        <p className="hidden print:block print:text-sm">{localProgram.tourDates}</p>
                     </div>
                     <div className="grid gap-2">
                         <Label htmlFor="pax">จำนวนคน (Pax)</Label>
-                        <Input id="pax" type="number" value={program.pax} onChange={(e) => handleProgramChange('pax', Number(e.target.value))} onBlur={handleSaveProgramInfo} className="print:hidden"/>
-                        <p className="hidden print:block print:text-sm">{program.pax}</p>
+                        <Input id="pax" type="number" value={localProgram.pax} onChange={(e) => handleProgramChange('pax', Number(e.target.value))} onBlur={handleSaveProgramInfo} className="print:hidden"/>
+                        <p className="hidden print:block print:text-sm">{localProgram.pax}</p>
                     </div>
                      <div className="grid gap-2">
                         <Label htmlFor="destination">จุดหมาย</Label>
-                        <Input id="destination" value={program.destination} onChange={(e) => handleProgramChange('destination', e.target.value)} onBlur={handleSaveProgramInfo} className="print:hidden"/>
-                        <p className="hidden print:block print:text-sm">{program.destination}</p>
+                        <Input id="destination" value={localProgram.destination} onChange={(e) => handleProgramChange('destination', e.target.value)} onBlur={handleSaveProgramInfo} className="print:hidden"/>
+                        <p className="hidden print:block print:text-sm">{localProgram.destination}</p>
                     </div>
                      <div className="grid gap-2">
                         <Label htmlFor="durationDays">ระยะเวลา (วัน)</Label>
-                        <Input id="durationDays" type="number" value={program.durationDays} onChange={(e) => handleProgramChange('durationDays', Number(e.target.value))} onBlur={handleSaveProgramInfo} className="print:hidden"/>
-                        <p className="hidden print:block print:text-sm">{program.durationDays}</p>
+                        <Input id="durationDays" type="number" value={localProgram.durationDays} onChange={(e) => handleProgramChange('durationDays', Number(e.target.value))} onBlur={handleSaveProgramInfo} className="print:hidden"/>
+                        <p className="hidden print:block print:text-sm">{localProgram.durationDays}</p>
                     </div>
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-6 print:grid-cols-2">
                      <CurrencyInput 
                         label="Price"
-                        amount={program.price}
-                        currency={program.priceCurrency}
+                        amount={localProgram.price}
+                        currency={localProgram.priceCurrency}
                         onAmountChange={(v) => handleProgramChange('price', v)}
                         onCurrencyChange={(v) => handleProgramChange('priceCurrency', v)}
                         onBlur={handleSaveProgramInfo}
                      />
                      <CurrencyInput 
                         label="Bank Charge"
-                        amount={program.bankCharge}
-                        currency={program.bankChargeCurrency}
+                        amount={localProgram.bankCharge}
+                        currency={localProgram.bankChargeCurrency}
                         onAmountChange={(v) => handleProgramChange('bankCharge', v)}
                         onCurrencyChange={(v) => handleProgramChange('bankChargeCurrency', v)}
                         onBlur={handleSaveProgramInfo}
@@ -443,14 +443,14 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                     <Label htmlFor="customerDetails" className="print:text-xs">รายละเอียดลูกค้า/กลุ่ม</Label>
                     <Textarea 
                         id="customerDetails"
-                        value={program.customerDetails || ''} 
+                        value={localProgram.customerDetails || ''} 
                         onChange={(e) => handleProgramChange('customerDetails', e.target.value)}
                         onBlur={handleSaveProgramInfo}
                         placeholder="เช่น เบอร์โทรติดต่อ, หมายเหตุ, หรือข้อตกลงอื่นๆ"
                         rows={4}
                         className="print:hidden"
                     />
-                    <p className="hidden print:block whitespace-pre-wrap print:text-sm">{program.customerDetails}</p>
+                    <p className="hidden print:block whitespace-pre-wrap print:text-sm">{localProgram.customerDetails}</p>
                 </div>
             </CardContent>
         </Card>
@@ -467,7 +467,7 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
         </Button>
         <div className="flex items-center gap-2">
             <FileText className="h-6 w-6 text-primary" />
-            <h1 className="text-xl font-bold tracking-tight font-headline">{program.programName || 'รายละเอียดโปรแกรมทัวร์'}</h1>
+            <h1 className="text-xl font-bold tracking-tight font-headline">{localProgram.programName || 'รายละเอียดโปรแกรมทัวร์'}</h1>
         </div>
         <div className="ml-auto flex items-center gap-4">
              <div className="flex items-center space-x-2">
@@ -495,23 +495,23 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
             <div className="print:p-0">
                 <h2 className="text-lg font-bold mb-1 print:font-lao">ລາຍລະອຽດໜ້າວຽກຂອງແຕ່ລະກຸ່ມ</h2>
                 <div className="grid grid-cols-3 gap-x-4 gap-y-0 text-xs mb-1">
-                    <div><span className="font-semibold">Program Name:</span> {program.programName}</div>
-                    <div><span className="font-semibold">Tour Code:</span> {program.tourCode}</div>
-                    <div><span className="font-semibold">Group Name:</span> {program.groupName}</div>
-                    <div><span className="font-semibold">Tour Dates:</span> {program.tourDates}</div>
-                    <div><span className="font-semibold">Pax:</span> {program.pax}</div>
-                    <div><span className="font-semibold">Destination:</span> {program.destination}</div>
-                    <div><span className="font-semibold">Duration:</span> {program.durationDays} days</div>
-                    <div className="font-bold"><span className="font-semibold">Price:</span> {formatCurrency(program.price)} {program.priceCurrency}</div>
-                    <div className="font-bold"><span className="font-semibold">Bank Charge:</span> {formatCurrency(program.bankCharge)} {program.bankChargeCurrency}</div>
-                    {program.priceCurrency === program.bankChargeCurrency && (
-                        <div className="font-bold"><span className="font-semibold">Total Price:</span> {formatCurrency(program.totalPrice)} {program.priceCurrency}</div>
+                    <div><span className="font-semibold">Program Name:</span> {localProgram.programName}</div>
+                    <div><span className="font-semibold">Tour Code:</span> {localProgram.tourCode}</div>
+                    <div><span className="font-semibold">Group Name:</span> {localProgram.groupName}</div>
+                    <div><span className="font-semibold">Tour Dates:</span> {localProgram.tourDates}</div>
+                    <div><span className="font-semibold">Pax:</span> {localProgram.pax}</div>
+                    <div><span className="font-semibold">Destination:</span> {localProgram.destination}</div>
+                    <div><span className="font-semibold">Duration:</span> {localProgram.durationDays} days</div>
+                    <div className="font-bold"><span className="font-semibold">Price:</span> {formatCurrency(localProgram.price)} {localProgram.priceCurrency}</div>
+                    <div className="font-bold"><span className="font-semibold">Bank Charge:</span> {formatCurrency(localProgram.bankCharge)} {localProgram.bankChargeCurrency}</div>
+                    {localProgram.priceCurrency === localProgram.bankChargeCurrency && (
+                        <div className="font-bold"><span className="font-semibold">Total Price:</span> {formatCurrency(localProgram.totalPrice)} {localProgram.priceCurrency}</div>
                     )}
                 </div>
-                 {program.customerDetails && (
+                 {localProgram.customerDetails && (
                     <div className="mt-1">
                         <h3 className="font-semibold text-xs">ລາຍລະອຽດລູກຄ້າ/ກຸ່ມ:</h3>
-                        <p className="whitespace-pre-wrap text-xs">{program.customerDetails}</p>
+                        <p className="whitespace-pre-wrap text-xs">{localProgram.customerDetails}</p>
                     </div>
                 )}
             </div>
@@ -632,5 +632,3 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
     </div>
   )
 }
-
-    
