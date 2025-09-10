@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useMemo, useEffect, use } from 'react';
+import { useState, useMemo, useEffect, useCallback, use } from 'react';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
@@ -31,6 +31,8 @@ import { th } from 'date-fns/locale';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Skeleton } from '@/components/ui/skeleton';
+
 
 const formatCurrency = (value: number | null | undefined, includeSymbol = false) => {
     if (value === null || value === undefined || isNaN(value)) return includeSymbol ? '0' : '';
@@ -198,13 +200,14 @@ const SummaryCard = ({ title, value, currency, isProfit = false }: { title: stri
     );
 };
 
-const CurrencyInput = ({ label, amount, currency, onAmountChange, onCurrencyChange, onBlur }: {
+const CurrencyInput = ({ label, amount, currency, onAmountChange, onCurrencyChange, onBlur, disabled }: {
     label: string;
     amount: number;
     currency: Currency;
     onAmountChange: (value: number) => void;
     onCurrencyChange: (value: Currency) => void;
     onBlur: () => void;
+    disabled?: boolean;
 }) => (
     <div className="grid gap-2">
         <Label htmlFor={label.toLowerCase()} className="print:hidden">{label}</Label>
@@ -217,8 +220,9 @@ const CurrencyInput = ({ label, amount, currency, onAmountChange, onCurrencyChan
                 onChange={(e) => onAmountChange(Number(e.target.value))}
                 onBlur={onBlur}
                 className="w-2/3 print:hidden"
+                disabled={disabled}
             />
-            <Select value={currency} onValueChange={(v) => { onCurrencyChange(v as Currency); onBlur(); }}>
+            <Select value={currency} onValueChange={(v) => { onCurrencyChange(v as Currency); onBlur(); }} disabled={disabled}>
                 <SelectTrigger className="w-1/3 print:hidden">
                     <SelectValue />
                 </SelectTrigger>
@@ -235,40 +239,80 @@ const CurrencyInput = ({ label, amount, currency, onAmountChange, onCurrencyChan
 export default function TourProgramDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
     const { toast } = useToast();
+    
     const [localProgram, setLocalProgram] = useState<TourProgram | null>(null);
     const [costItems, setCostItems] = useState<TourCostItem[]>([]);
     const [incomeItems, setIncomeItems] = useState<TourIncomeItem[]>([]);
     const [printCurrencies, setPrintCurrencies] = useState<Currency[]>(['KIP']);
     
+    const [isLoading, setIsLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
+
     useEffect(() => {
         if (!id) return;
-
-        let programUnsubscribe: (() => void) | null = null;
         
+        let isActive = true;
+        setIsLoading(true);
+
         const fetchProgram = async () => {
             const programData = await getTourProgram(id);
-            if (programData) {
+            if (isActive && programData) {
                 setLocalProgram(programData);
                 if (programData.priceCurrency) {
                     setPrintCurrencies([programData.priceCurrency]);
                 }
             }
+             if (isActive) {
+                setIsLoading(false);
+            }
         };
 
         fetchProgram();
-
         const unsubscribeCosts = listenToTourCostItemsForProgram(id, setCostItems);
         const unsubscribeIncomes = listenToTourIncomeItemsForProgram(id, setIncomeItems);
         
         return () => {
+            isActive = false;
             unsubscribeCosts();
             unsubscribeIncomes();
-             if (programUnsubscribe) {
-                programUnsubscribe();
-            }
         };
     }, [id]);
+
+    const handleProgramChange = useCallback((field: keyof TourProgram, value: any) => {
+        setLocalProgram(prev => prev ? { ...prev, [field]: value } : null);
+    }, []);
+
+    const handleSaveProgramInfo = useCallback(async () => {
+        if (!localProgram || isSaving) return;
+        
+        setIsSaving(true);
+        try {
+            const { id, createdAt, date, ...dataToUpdate } = localProgram;
+            await updateTourProgram(id, dataToUpdate);
+            toast({ title: "บันทึกข้อมูลโปรแกรมแล้ว" });
+        } catch (error) {
+             console.error("Failed to save program info:", error);
+            toast({ title: "เกิดข้อผิดพลาดในการบันทึก", variant: "destructive" });
+        } finally {
+            setIsSaving(false);
+        }
+    }, [localProgram, isSaving, toast]);
     
+    const handleSelectChange = useCallback((field: keyof TourProgram, value: any) => {
+        setLocalProgram(prev => {
+            const newState = prev ? { ...prev, [field]: value } : null;
+            
+            // Trigger save after state update
+            if (newState) {
+                // Use a timeout to ensure the state update is processed before saving
+                setTimeout(() => handleSaveProgramInfo(), 0);
+            }
+            
+            return newState;
+        });
+    }, [handleSaveProgramInfo]);
+
+
     // --- Cost Item Handlers ---
     const handleAddCostItem = async () => {
         if (!id) return;
@@ -303,38 +347,9 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
         catch (error) { toast({ title: "เกิดข้อผิดพลาดในการลบรายรับ", variant: "destructive" }); }
     };
 
-    // --- Program Info Handler ---
-    const handleProgramChange = (field: keyof TourProgram, value: any) => {
-        setLocalProgram(prev => {
-            if (!prev) return null;
-            return { ...prev, [field]: value };
-        });
-    };
-
-    const handleSaveProgramInfo = async () => {
-        if (!localProgram) return;
-        try {
-            const updatedProgramData = { ...localProgram };
-             if (updatedProgramData.priceCurrency === updatedProgramData.bankChargeCurrency) {
-                updatedProgramData.totalPrice = (updatedProgramData.price || 0) + (updatedProgramData.bankCharge || 0);
-            } else {
-                updatedProgramData.totalPrice = updatedProgramData.price;
-            }
-            
-            const { id, createdAt, date, ...dataToUpdate } = updatedProgramData;
-
-            await updateTourProgram(localProgram.id, dataToUpdate);
-            toast({ title: "บันทึกข้อมูลโปรแกรมแล้ว" });
-        } catch (error) {
-             console.error("Failed to save program info:", error);
-            toast({ title: "เกิดข้อผิดพลาดในการบันทึกข้อมูลโปรแกรม", variant: "destructive" });
-        }
-    };
-    
     const handlePrint = () => {
         window.print();
     }
-
 
     const summaryData = useMemo(() => {
         const totalCosts = costItems.reduce((acc, item) => {
@@ -371,11 +386,22 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
         );
     };
 
+    if (isLoading) {
+        return (
+             <div className="flex min-h-screen w-full flex-col items-center justify-center bg-muted/40 p-4">
+                <div className="w-full max-w-4xl space-y-4">
+                    <Skeleton className="h-12 w-1/3" />
+                    <Skeleton className="h-40 w-full" />
+                    <Skeleton className="h-64 w-full" />
+                </div>
+             </div>
+        )
+    }
 
     if (!localProgram) {
         return (
              <div className="flex min-h-screen w-full flex-col items-center justify-center bg-muted/40">
-                <p>กำลังโหลดโปรแกรมทัวร์...</p>
+                <p>ไม่พบข้อมูลโปรแกรมทัวร์</p>
              </div>
         )
     }
@@ -386,43 +412,44 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                 <CardTitle>รายละเอียดโปรแกรมและข้อมูลกลุ่ม</CardTitle>
                 <CardDescription>
                     วันที่สร้าง: {localProgram.createdAt ? format(localProgram.createdAt, "PPP", {locale: th}) : '-'}
+                     {isSaving && <span className="ml-4 text-blue-500 animate-pulse">กำลังบันทึก...</span>}
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6 print:space-y-2 print:p-0">
                  <div className="grid md:grid-cols-3 gap-6 print:gap-2">
                      <div className="grid gap-2">
                         <Label htmlFor="programName">ชื่อโปรแกรม</Label>
-                        <Input id="programName" value={localProgram.programName} onChange={(e) => handleProgramChange('programName', e.target.value)} onBlur={handleSaveProgramInfo} className="print:hidden"/>
+                        <Input id="programName" value={localProgram.programName} onChange={(e) => handleProgramChange('programName', e.target.value)} onBlur={handleSaveProgramInfo} className="print:hidden" disabled={isSaving} />
                          <p className="hidden print:block print:text-sm print:font-semibold">{localProgram.programName}</p>
                     </div>
                      <div className="grid gap-2">
                         <Label htmlFor="tourCode">รหัสทัวร์</Label>
-                        <Input id="tourCode" value={localProgram.tourCode} onChange={(e) => handleProgramChange('tourCode', e.target.value)} onBlur={handleSaveProgramInfo} className="print:hidden"/>
+                        <Input id="tourCode" value={localProgram.tourCode} onChange={(e) => handleProgramChange('tourCode', e.target.value)} onBlur={handleSaveProgramInfo} className="print:hidden" disabled={isSaving} />
                         <p className="hidden print:block print:text-sm">{localProgram.tourCode}</p>
                     </div>
                      <div className="grid gap-2">
                         <Label htmlFor="groupName">ชื่อกลุ่ม</Label>
-                        <Input id="groupName" value={localProgram.groupName} onChange={(e) => handleProgramChange('groupName', e.target.value)} onBlur={handleSaveProgramInfo} className="print:hidden"/>
+                        <Input id="groupName" value={localProgram.groupName} onChange={(e) => handleProgramChange('groupName', e.target.value)} onBlur={handleSaveProgramInfo} className="print:hidden" disabled={isSaving} />
                         <p className="hidden print:block print:text-sm">{localProgram.groupName}</p>
                     </div>
                     <div className="grid gap-2">
                         <Label htmlFor="tourDates">วันที่เดินทาง (Tour Dates)</Label>
-                        <Input id="tourDates" value={localProgram.tourDates || ''} onChange={(e) => handleProgramChange('tourDates', e.target.value)} onBlur={handleSaveProgramInfo} className="print:hidden"/>
+                        <Input id="tourDates" value={localProgram.tourDates || ''} onChange={(e) => handleProgramChange('tourDates', e.target.value)} onBlur={handleSaveProgramInfo} className="print:hidden" disabled={isSaving} />
                         <p className="hidden print:block print:text-sm">{localProgram.tourDates}</p>
                     </div>
                     <div className="grid gap-2">
                         <Label htmlFor="pax">จำนวนคน (Pax)</Label>
-                        <Input id="pax" type="number" value={localProgram.pax} onChange={(e) => handleProgramChange('pax', Number(e.target.value))} onBlur={handleSaveProgramInfo} className="print:hidden"/>
+                        <Input id="pax" type="number" value={localProgram.pax} onChange={(e) => handleProgramChange('pax', Number(e.target.value))} onBlur={handleSaveProgramInfo} className="print:hidden" disabled={isSaving} />
                         <p className="hidden print:block print:text-sm">{localProgram.pax}</p>
                     </div>
                      <div className="grid gap-2">
                         <Label htmlFor="destination">จุดหมาย</Label>
-                        <Input id="destination" value={localProgram.destination} onChange={(e) => handleProgramChange('destination', e.target.value)} onBlur={handleSaveProgramInfo} className="print:hidden"/>
+                        <Input id="destination" value={localProgram.destination} onChange={(e) => handleProgramChange('destination', e.target.value)} onBlur={handleSaveProgramInfo} className="print:hidden" disabled={isSaving} />
                         <p className="hidden print:block print:text-sm">{localProgram.destination}</p>
                     </div>
                      <div className="grid gap-2">
                         <Label htmlFor="durationDays">ระยะเวลา (วัน)</Label>
-                        <Input id="durationDays" type="number" value={localProgram.durationDays} onChange={(e) => handleProgramChange('durationDays', Number(e.target.value))} onBlur={handleSaveProgramInfo} className="print:hidden"/>
+                        <Input id="durationDays" type="number" value={localProgram.durationDays} onChange={(e) => handleProgramChange('durationDays', Number(e.target.value))} onBlur={handleSaveProgramInfo} className="print:hidden" disabled={isSaving} />
                         <p className="hidden print:block print:text-sm">{localProgram.durationDays}</p>
                     </div>
                 </div>
@@ -435,6 +462,7 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                         onAmountChange={(v) => handleProgramChange('price', v)}
                         onCurrencyChange={(v) => handleProgramChange('priceCurrency', v)}
                         onBlur={handleSaveProgramInfo}
+                        disabled={isSaving}
                      />
                      <CurrencyInput 
                         label="Bank Charge"
@@ -443,6 +471,7 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                         onAmountChange={(v) => handleProgramChange('bankCharge', v)}
                         onCurrencyChange={(v) => handleProgramChange('bankChargeCurrency', v)}
                         onBlur={handleSaveProgramInfo}
+                        disabled={isSaving}
                      />
                 </div>
 
@@ -456,6 +485,7 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                         placeholder="เช่น เบอร์โทรติดต่อ, หมายเหตุ, หรือข้อตกลงอื่นๆ"
                         rows={4}
                         className="print:hidden"
+                        disabled={isSaving}
                     />
                     <p className="hidden print:block whitespace-pre-wrap print:text-sm">{localProgram.customerDetails}</p>
                 </div>
