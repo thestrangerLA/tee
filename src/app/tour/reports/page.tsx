@@ -221,7 +221,7 @@ export default function TourReportsPage() {
                                                 </TableBody>
                                                 <TableFooter>
                                                     <TableRow>
-                                                        <TableCell colSpan={4} className="text-right">
+                                                        <TableCell colSpan={4} className="text-right print:hidden">
                                                             <Button variant="outline" size="sm" asChild>
                                                                 <Link href={`/tour-programs/${program.id}`}>ไปที่หน้ารายละเอียด</Link>
                                                             </Button>
