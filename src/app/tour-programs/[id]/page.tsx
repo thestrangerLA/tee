@@ -198,12 +198,13 @@ const SummaryCard = ({ title, value, currency, isProfit = false }: { title: stri
     );
 };
 
-const CurrencyInput = ({ label, amount, currency, onAmountChange, onCurrencyChange }: {
+const CurrencyInput = ({ label, amount, currency, onAmountChange, onCurrencyChange, onBlur }: {
     label: string;
     amount: number;
     currency: Currency;
     onAmountChange: (value: number) => void;
     onCurrencyChange: (value: Currency) => void;
+    onBlur: () => void;
 }) => (
     <div className="grid gap-2">
         <Label htmlFor={label.toLowerCase()} className="print:hidden">{label}</Label>
@@ -214,9 +215,10 @@ const CurrencyInput = ({ label, amount, currency, onAmountChange, onCurrencyChan
                 type="number"
                 value={amount || ''}
                 onChange={(e) => onAmountChange(Number(e.target.value))}
+                onBlur={onBlur}
                 className="w-2/3 print:hidden"
             />
-            <Select value={currency} onValueChange={(v) => onCurrencyChange(v as Currency)} >
+            <Select value={currency} onValueChange={(v) => { onCurrencyChange(v as Currency); onBlur(); }}>
                 <SelectTrigger className="w-1/3 print:hidden">
                     <SelectValue />
                 </SelectTrigger>
@@ -297,27 +299,25 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
     const handleProgramChange = (field: keyof TourProgram, value: any) => {
         if (!program) return;
         setProgram(prev => {
-            const newProgram = prev ? { ...prev, [field]: value } : null;
-            if (newProgram && (field === 'price' || field === 'bankCharge')) {
-                const totalPrice = (newProgram.price || 0) + (newProgram.bankCharge || 0);
-                 if (newProgram.priceCurrency === newProgram.bankChargeCurrency) {
-                    newProgram.totalPrice = totalPrice;
-                } else {
-                    // When currencies are different, we can't simply add them.
-                    // For now, we'll set it to price, but a conversion logic would be needed for accuracy.
-                    newProgram.totalPrice = newProgram.price;
-                }
-            }
-            return newProgram;
+            if (!prev) return null;
+            return { ...prev, [field]: value };
         });
     };
 
     const handleSaveProgramInfo = async () => {
         if (!program) return;
         try {
-            const { id, createdAt, date, ...dataToUpdate } = program;
+            const updatedProgramData = { ...program };
+             if (updatedProgramData.priceCurrency === updatedProgramData.bankChargeCurrency) {
+                updatedProgramData.totalPrice = (updatedProgramData.price || 0) + (updatedProgramData.bankCharge || 0);
+            } else {
+                updatedProgramData.totalPrice = updatedProgramData.price;
+            }
+            
+            const { id, createdAt, date, ...dataToUpdate } = updatedProgramData;
+
             await updateTourProgram(program.id, dataToUpdate);
-            toast({ title: "บันทึกข้อมูลโปรแกรมสำเร็จ" });
+            toast({ title: "บันทึกข้อมูลโปรแกรมแล้ว" });
         } catch (error) {
              console.error("Failed to save program info:", error);
             toast({ title: "เกิดข้อผิดพลาดในการบันทึกข้อมูลโปรแกรม", variant: "destructive" });
@@ -385,37 +385,37 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                  <div className="grid md:grid-cols-3 gap-6 print:gap-2">
                      <div className="grid gap-2">
                         <Label htmlFor="programName">ชื่อโปรแกรม</Label>
-                        <Input id="programName" value={program.programName} onChange={(e) => handleProgramChange('programName', e.target.value)} className="print:hidden"/>
+                        <Input id="programName" value={program.programName} onChange={(e) => handleProgramChange('programName', e.target.value)} onBlur={handleSaveProgramInfo} className="print:hidden"/>
                          <p className="hidden print:block print:text-sm print:font-semibold">{program.programName}</p>
                     </div>
                      <div className="grid gap-2">
                         <Label htmlFor="tourCode">รหัสทัวร์</Label>
-                        <Input id="tourCode" value={program.tourCode} onChange={(e) => handleProgramChange('tourCode', e.target.value)} className="print:hidden"/>
+                        <Input id="tourCode" value={program.tourCode} onChange={(e) => handleProgramChange('tourCode', e.target.value)} onBlur={handleSaveProgramInfo} className="print:hidden"/>
                         <p className="hidden print:block print:text-sm">{program.tourCode}</p>
                     </div>
                      <div className="grid gap-2">
                         <Label htmlFor="groupName">ชื่อกลุ่ม</Label>
-                        <Input id="groupName" value={program.groupName} onChange={(e) => handleProgramChange('groupName', e.target.value)} className="print:hidden"/>
+                        <Input id="groupName" value={program.groupName} onChange={(e) => handleProgramChange('groupName', e.target.value)} onBlur={handleSaveProgramInfo} className="print:hidden"/>
                         <p className="hidden print:block print:text-sm">{program.groupName}</p>
                     </div>
                     <div className="grid gap-2">
                         <Label htmlFor="tourDates">วันที่เดินทาง (Tour Dates)</Label>
-                        <Input id="tourDates" value={program.tourDates || ''} onChange={(e) => handleProgramChange('tourDates', e.target.value)} className="print:hidden"/>
+                        <Input id="tourDates" value={program.tourDates || ''} onChange={(e) => handleProgramChange('tourDates', e.target.value)} onBlur={handleSaveProgramInfo} className="print:hidden"/>
                         <p className="hidden print:block print:text-sm">{program.tourDates}</p>
                     </div>
                     <div className="grid gap-2">
                         <Label htmlFor="pax">จำนวนคน (Pax)</Label>
-                        <Input id="pax" type="number" value={program.pax} onChange={(e) => handleProgramChange('pax', Number(e.target.value))} className="print:hidden"/>
+                        <Input id="pax" type="number" value={program.pax} onChange={(e) => handleProgramChange('pax', Number(e.target.value))} onBlur={handleSaveProgramInfo} className="print:hidden"/>
                         <p className="hidden print:block print:text-sm">{program.pax}</p>
                     </div>
                      <div className="grid gap-2">
                         <Label htmlFor="destination">จุดหมาย</Label>
-                        <Input id="destination" value={program.destination} onChange={(e) => handleProgramChange('destination', e.target.value)} className="print:hidden"/>
+                        <Input id="destination" value={program.destination} onChange={(e) => handleProgramChange('destination', e.target.value)} onBlur={handleSaveProgramInfo} className="print:hidden"/>
                         <p className="hidden print:block print:text-sm">{program.destination}</p>
                     </div>
                      <div className="grid gap-2">
                         <Label htmlFor="durationDays">ระยะเวลา (วัน)</Label>
-                        <Input id="durationDays" type="number" value={program.durationDays} onChange={(e) => handleProgramChange('durationDays', Number(e.target.value))} className="print:hidden"/>
+                        <Input id="durationDays" type="number" value={program.durationDays} onChange={(e) => handleProgramChange('durationDays', Number(e.target.value))} onBlur={handleSaveProgramInfo} className="print:hidden"/>
                         <p className="hidden print:block print:text-sm">{program.durationDays}</p>
                     </div>
                 </div>
@@ -427,6 +427,7 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                         currency={program.priceCurrency}
                         onAmountChange={(v) => handleProgramChange('price', v)}
                         onCurrencyChange={(v) => handleProgramChange('priceCurrency', v)}
+                        onBlur={handleSaveProgramInfo}
                      />
                      <CurrencyInput 
                         label="Bank Charge"
@@ -434,6 +435,7 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                         currency={program.bankChargeCurrency}
                         onAmountChange={(v) => handleProgramChange('bankCharge', v)}
                         onCurrencyChange={(v) => handleProgramChange('bankChargeCurrency', v)}
+                        onBlur={handleSaveProgramInfo}
                      />
                 </div>
 
@@ -443,14 +445,12 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                         id="customerDetails"
                         value={program.customerDetails || ''} 
                         onChange={(e) => handleProgramChange('customerDetails', e.target.value)}
+                        onBlur={handleSaveProgramInfo}
                         placeholder="เช่น เบอร์โทรติดต่อ, หมายเหตุ, หรือข้อตกลงอื่นๆ"
                         rows={4}
                         className="print:hidden"
                     />
                     <p className="hidden print:block whitespace-pre-wrap print:text-sm">{program.customerDetails}</p>
-                </div>
-                <div className="flex justify-end print:hidden">
-                    <Button onClick={handleSaveProgramInfo}>บันทึกข้อมูลโปรแกรม</Button>
                 </div>
             </CardContent>
         </Card>
@@ -632,3 +632,5 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
     </div>
   )
 }
+
+    
