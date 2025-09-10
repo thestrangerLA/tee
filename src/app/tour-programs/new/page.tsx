@@ -68,6 +68,7 @@ export default function NewTourProgramPage() {
         bankCharge: 0,
         bankChargeCurrency: 'KIP',
         totalPrice: 0, // This will be handled by service or derived
+        customerDetails: [],
     });
 
     const handleFormValueChange = (field: keyof typeof formData, value: any) => {
@@ -89,7 +90,7 @@ export default function NewTourProgramPage() {
              const newProgramData: Omit<TourProgram, 'id' | 'createdAt'> = {
                 ...formData,
                 date: startOfDay(date),
-                totalPrice: formData.price + formData.bankCharge, // Simple sum for now
+                totalPrice: formData.priceCurrency === formData.bankChargeCurrency ? formData.price + formData.bankCharge : formData.price,
             };
             const newProgramId = await addTourProgram(newProgramData);
             toast({

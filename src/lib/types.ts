@@ -82,7 +82,7 @@ export interface TourProgram {
   pax: number;
   destination: string;
   durationDays: number;
-  customerDetails?: string;
+  customerDetails?: string[];
   price: number;
   priceCurrency: Currency;
   bankCharge: number;

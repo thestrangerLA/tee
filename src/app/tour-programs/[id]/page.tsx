@@ -287,7 +287,16 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
         
         setIsSaving(true);
         try {
-            const { id, createdAt, date, ...dataToUpdate } = localProgram;
+            // Calculate total price before saving
+            const updatedProgram = { ...localProgram };
+            if (updatedProgram.priceCurrency === updatedProgram.bankChargeCurrency) {
+                updatedProgram.totalPrice = updatedProgram.price + updatedProgram.bankCharge;
+            } else {
+                updatedProgram.totalPrice = updatedProgram.price;
+            }
+            
+            const { id, createdAt, date, ...dataToUpdate } = updatedProgram;
+
             await updateTourProgram(id, dataToUpdate);
             toast({ title: "บันทึกข้อมูลโปรแกรมแล้ว" });
         } catch (error) {
@@ -300,17 +309,69 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
     
     const handleSelectChange = useCallback((field: keyof TourProgram, value: any) => {
         setLocalProgram(prev => {
-            const newState = prev ? { ...prev, [field]: value } : null;
+            if (!prev) return null;
+            const newState = { ...prev, [field]: value };
             
-            // Trigger save after state update
-            if (newState) {
-                // Use a timeout to ensure the state update is processed before saving
-                setTimeout(() => handleSaveProgramInfo(), 0);
-            }
-            
+            // This is not ideal, but it's a quick way to trigger save
+            // after state is set. A better approach might involve a dedicated save button
+            // or a more sophisticated effect.
+            setTimeout(() => {
+                 if (newState.priceCurrency === newState.bankChargeCurrency) {
+                    newState.totalPrice = newState.price + newState.bankCharge;
+                } else {
+                    newState.totalPrice = newState.price;
+                }
+                const { id, createdAt, date, ...dataToUpdate } = newState;
+                updateTourProgram(id, dataToUpdate).then(() => {
+                    toast({ title: "บันทึกข้อมูลโปรแกรมแล้ว" });
+                }).catch(err => {
+                    console.error("Failed to save program info:", err);
+                    toast({ title: "เกิดข้อผิดพลาดในการบันทึก", variant: "destructive" });
+                });
+            }, 0);
+
             return newState;
         });
-    }, [handleSaveProgramInfo]);
+    }, [toast]);
+    
+    const handleCustomerDetailChange = (index: number, value: string) => {
+        setLocalProgram(prev => {
+            if (!prev || !prev.customerDetails) return prev;
+            const newDetails = [...prev.customerDetails];
+            newDetails[index] = value;
+            return { ...prev, customerDetails: newDetails };
+        });
+    };
+
+    const handleAddCustomerDetail = async () => {
+        if (!localProgram) return;
+        const newDetails = [...(localProgram.customerDetails || []), ''];
+        await handleSaveProgramInfoWithDetails(newDetails);
+    };
+
+    const handleRemoveCustomerDetail = async (index: number) => {
+        if (!localProgram || !localProgram.customerDetails) return;
+        if (!window.confirm("ยืนยันการลบรายการนี้?")) return;
+        const newDetails = localProgram.customerDetails.filter((_, i) => i !== index);
+        await handleSaveProgramInfoWithDetails(newDetails);
+    };
+    
+    const handleSaveProgramInfoWithDetails = async (details: string[]) => {
+        if (!localProgram || isSaving) return;
+
+        setIsSaving(true);
+        try {
+            const { id, ...dataToUpdate } = { ...localProgram, customerDetails: details };
+            await updateTourProgram(id, dataToUpdate);
+            setLocalProgram(prev => prev ? { ...prev, customerDetails: details } : null);
+            toast({ title: "อัปเดตรายละเอียดลูกค้าแล้ว" });
+        } catch (error) {
+            console.error("Failed to update customer details:", error);
+            toast({ title: "เกิดข้อผิดพลาด", variant: "destructive" });
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
 
     // --- Cost Item Handlers ---
@@ -460,7 +521,7 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                         amount={localProgram.price}
                         currency={localProgram.priceCurrency}
                         onAmountChange={(v) => handleProgramChange('price', v)}
-                        onCurrencyChange={(v) => handleProgramChange('priceCurrency', v)}
+                        onCurrencyChange={(v) => handleSelectChange('priceCurrency', v)}
                         onBlur={handleSaveProgramInfo}
                         disabled={isSaving}
                      />
@@ -469,25 +530,53 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                         amount={localProgram.bankCharge}
                         currency={localProgram.bankChargeCurrency}
                         onAmountChange={(v) => handleProgramChange('bankCharge', v)}
-                        onCurrencyChange={(v) => handleProgramChange('bankChargeCurrency', v)}
+                        onCurrencyChange={(v) => handleSelectChange('bankChargeCurrency', v)}
                         onBlur={handleSaveProgramInfo}
                         disabled={isSaving}
                      />
                 </div>
 
-                 <div className="grid gap-2">
-                    <Label htmlFor="customerDetails" className="print:text-xs">รายละเอียดลูกค้า/กลุ่ม</Label>
-                    <Textarea 
-                        id="customerDetails"
-                        value={localProgram.customerDetails || ''} 
-                        onChange={(e) => handleProgramChange('customerDetails', e.target.value)}
-                        onBlur={handleSaveProgramInfo}
-                        placeholder="เช่น เบอร์โทรติดต่อ, หมายเหตุ, หรือข้อตกลงอื่นๆ"
-                        rows={4}
-                        className="print:hidden"
-                        disabled={isSaving}
-                    />
-                    <p className="hidden print:block whitespace-pre-wrap print:text-sm">{localProgram.customerDetails}</p>
+                <Card className="print:hidden">
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <div>
+                            <CardTitle className="text-lg">รายละเอียดลูกค้า/กลุ่ม</CardTitle>
+                            <CardDescription>บันทึกเบอร์โทร, หมายเหตุ, หรือข้อตกลงอื่นๆ</CardDescription>
+                        </div>
+                        <Button size="sm" onClick={handleAddCustomerDetail} disabled={isSaving}>
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            เพิ่มรายการ
+                        </Button>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                        {(localProgram.customerDetails || []).map((detail, index) => (
+                            <div key={index} className="flex items-center gap-2">
+                                <Input
+                                    value={detail}
+                                    onChange={(e) => handleCustomerDetailChange(index, e.target.value)}
+                                    onBlur={() => handleSaveProgramInfoWithDetails(localProgram.customerDetails || [])}
+                                    placeholder={`รายละเอียด #${index + 1}`}
+                                    disabled={isSaving}
+                                />
+                                <Button variant="ghost" size="icon" onClick={() => handleRemoveCustomerDetail(index)} disabled={isSaving}>
+                                    <Trash2 className="h-4 w-4 text-red-500" />
+                                </Button>
+                            </div>
+                        ))}
+                        {(localProgram.customerDetails?.length === 0 || !localProgram.customerDetails) && (
+                            <p className="text-sm text-muted-foreground text-center py-4">
+                                ยังไม่มีรายละเอียดลูกค้า
+                            </p>
+                        )}
+                    </CardContent>
+                </Card>
+
+                <div className="hidden print:block space-y-1">
+                    <h3 className="font-semibold text-xs">ລາຍລະອຽດລູກຄ້າ/ກຸ່ມ:</h3>
+                    <ul className="list-disc list-inside text-xs space-y-0.5">
+                        {(localProgram.customerDetails || []).map((detail, index) => (
+                            <li key={index}>{detail}</li>
+                        ))}
+                    </ul>
                 </div>
             </CardContent>
         </Card>
@@ -545,10 +634,14 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                         <div className="font-bold"><span className="font-semibold">Total Price:</span> {formatCurrency(localProgram.totalPrice)} {localProgram.priceCurrency}</div>
                     )}
                 </div>
-                 {localProgram.customerDetails && (
+                 {localProgram.customerDetails && localProgram.customerDetails.length > 0 && (
                     <div className="mt-1">
                         <h3 className="font-semibold text-xs">ລາຍລະອຽດລູກຄ້າ/ກຸ່ມ:</h3>
-                        <p className="whitespace-pre-wrap text-xs">{localProgram.customerDetails}</p>
+                        <ul className="list-disc list-inside text-xs space-y-0.5">
+                            {(localProgram.customerDetails).map((detail, index) => (
+                                <li key={index}>{detail}</li>
+                            ))}
+                        </ul>
                     </div>
                 )}
             </div>
@@ -669,5 +762,3 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
     </div>
   )
 }
-
-    
