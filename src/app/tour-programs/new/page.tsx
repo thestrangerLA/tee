@@ -11,11 +11,44 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Calendar as CalendarIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { addTourProgram } from '@/services/tourProgramService';
-import type { TourProgram } from '@/lib/types';
+import type { TourProgram, Currency } from '@/lib/types';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format, startOfDay } from 'date-fns';
 import { th } from 'date-fns/locale';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+
+const currencies: Currency[] = ['KIP', 'BAHT', 'USD', 'CNY'];
+
+const CurrencyInput = ({ label, amount, currency, onAmountChange, onCurrencyChange }: {
+    label: string;
+    amount: number;
+    currency: Currency;
+    onAmountChange: (value: number) => void;
+    onCurrencyChange: (value: Currency) => void;
+}) => (
+    <div className="grid gap-2">
+        <Label htmlFor={label.toLowerCase()}>{label}</Label>
+        <div className="flex gap-2">
+            <Input
+                id={label.toLowerCase()}
+                type="number"
+                value={amount || ''}
+                onChange={(e) => onAmountChange(Number(e.target.value))}
+                className="w-2/3"
+            />
+            <Select value={currency} onValueChange={(v) => onCurrencyChange(v as Currency)}>
+                <SelectTrigger className="w-1/3">
+                    <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                    {currencies.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+            </Select>
+        </div>
+    </div>
+);
 
 
 export default function NewTourProgramPage() {
@@ -30,28 +63,15 @@ export default function NewTourProgramPage() {
         destination: '',
         durationDays: 0,
         price: 0,
+        priceCurrency: 'KIP',
         bankCharge: 0,
-        totalPrice: 0,
+        bankChargeCurrency: 'KIP',
+        totalPrice: 0, // This will be handled by service or derived
     });
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value, type } = e.target;
-        
-        setFormData(prev => {
-            const newFormData = {
-                ...prev,
-                [name]: type === 'number' ? parseInt(value) || 0 : value
-            };
-
-            if (name === 'price' || name === 'bankCharge') {
-                const price = name === 'price' ? parseInt(value) || 0 : newFormData.price || 0;
-                const bankCharge = name === 'bankCharge' ? parseInt(value) || 0 : newFormData.bankCharge || 0;
-                newFormData.totalPrice = price + bankCharge;
-            }
-
-            return newFormData;
-        });
-    };
+    const handleFormValueChange = (field: keyof typeof formData, value: any) => {
+        setFormData(prev => ({...prev, [field]: value}));
+    }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -65,9 +85,10 @@ export default function NewTourProgramPage() {
         }
 
         try {
-            const newProgramData: Omit<TourProgram, 'id' | 'createdAt'> = {
+             const newProgramData: Omit<TourProgram, 'id' | 'createdAt'> = {
                 ...formData,
                 date: startOfDay(date),
+                totalPrice: formData.price + formData.bankCharge, // Simple sum for now
             };
             const newProgramId = await addTourProgram(newProgramData);
             toast({
@@ -124,49 +145,51 @@ export default function NewTourProgramPage() {
                                 </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="tourCode">รหัสทัวร์</Label>
-                                    <Input id="tourCode" name="tourCode" value={formData.tourCode} onChange={handleChange} />
+                                    <Input id="tourCode" name="tourCode" value={formData.tourCode} onChange={(e) => handleFormValueChange('tourCode', e.target.value)} />
                                 </div>
                                   <div className="grid gap-2">
                                     <Label htmlFor="programName">ชื่อโปรแกรม</Label>
-                                    <Input id="programName" name="programName" value={formData.programName} onChange={handleChange} required />
+                                    <Input id="programName" name="programName" value={formData.programName} onChange={(e) => handleFormValueChange('programName', e.target.value)} required />
                                 </div>
                             </div>
 
                             <div className="grid md:grid-cols-2 gap-6">
                                 <div className="grid gap-2">
                                     <Label htmlFor="groupName">ชื่อกลุ่ม</Label>
-                                    <Input id="groupName" name="groupName" value={formData.groupName} onChange={handleChange} />
+                                    <Input id="groupName" name="groupName" value={formData.groupName} onChange={(e) => handleFormValueChange('groupName', e.target.value)} />
                                 </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="pax">จำนวนคน (Pax)</Label>
-                                    <Input id="pax" name="pax" type="number" value={formData.pax} onChange={handleChange} />
+                                    <Input id="pax" name="pax" type="number" value={formData.pax} onChange={(e) => handleFormValueChange('pax', Number(e.target.value))} />
                                 </div>
                             </div>
                             
                             <div className="grid md:grid-cols-2 gap-6">
                                 <div className="grid gap-2">
                                     <Label htmlFor="destination">จุดหมาย</Label>
-                                    <Input id="destination" name="destination" value={formData.destination} onChange={handleChange} />
+                                    <Input id="destination" name="destination" value={formData.destination} onChange={(e) => handleFormValueChange('destination', e.target.value)} />
                                 </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="durationDays">ระยะเวลา (วัน)</Label>
-                                    <Input id="durationDays" name="durationDays" type="number" value={formData.durationDays} onChange={handleChange} />
+                                    <Input id="durationDays" name="durationDays" type="number" value={formData.durationDays} onChange={(e) => handleFormValueChange('durationDays', Number(e.target.value))} />
                                 </div>
                             </div>
 
-                             <div className="grid md:grid-cols-3 gap-6">
-                                <div className="grid gap-2">
-                                    <Label htmlFor="price">Price</Label>
-                                    <Input id="price" name="price" type="number" value={formData.price} onChange={handleChange} />
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label htmlFor="bankCharge">Bank Charge</Label>
-                                    <Input id="bankCharge" name="bankCharge" type="number" value={formData.bankCharge} onChange={handleChange} />
-                                </div>
-                                 <div className="grid gap-2">
-                                    <Label htmlFor="totalPrice">Total Price</Label>
-                                    <Input id="totalPrice" name="totalPrice" type="number" value={formData.totalPrice} readOnly className="bg-muted/50" />
-                                </div>
+                             <div className="grid md:grid-cols-2 gap-6">
+                                 <CurrencyInput 
+                                    label="Price"
+                                    amount={formData.price}
+                                    currency={formData.priceCurrency}
+                                    onAmountChange={(v) => handleFormValueChange('price', v)}
+                                    onCurrencyChange={(v) => handleFormValueChange('priceCurrency', v)}
+                                 />
+                                 <CurrencyInput 
+                                    label="Bank Charge"
+                                    amount={formData.bankCharge}
+                                    currency={formData.bankChargeCurrency}
+                                    onAmountChange={(v) => handleFormValueChange('bankCharge', v)}
+                                    onCurrencyChange={(v) => handleFormValueChange('bankChargeCurrency', v)}
+                                 />
                             </div>
                             
                             <div className="flex justify-end gap-2">

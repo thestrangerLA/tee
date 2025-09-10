@@ -70,6 +70,8 @@ export interface DrugCreditorEntry {
   createdAt: Date;
 }
 
+export type Currency = 'KIP' | 'BAHT' | 'USD' | 'CNY';
+
 export interface TourProgram {
   id: string;
   date: Date;
@@ -80,9 +82,11 @@ export interface TourProgram {
   destination: string;
   durationDays: number;
   customerDetails?: string;
-  price?: number;
-  bankCharge?: number;
-  totalPrice?: number;
+  price: number;
+  priceCurrency: Currency;
+  bankCharge: number;
+  bankChargeCurrency: Currency;
+  totalPrice: number;
   createdAt: Date;
 }
 

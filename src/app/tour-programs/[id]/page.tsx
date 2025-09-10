@@ -23,12 +23,14 @@ import {
     deleteTourIncomeItem,
     updateTourProgram
 } from '@/services/tourProgramService';
-import type { TourCostItem, TourIncomeItem, TourProgram } from '@/lib/types';
+import type { TourCostItem, TourIncomeItem, TourProgram, Currency } from '@/lib/types';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from 'date-fns';
 import { th } from 'date-fns/locale';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const formatCurrency = (value: number | null | undefined, includeSymbol = false) => {
     if (value === null || value === undefined || isNaN(value)) return includeSymbol ? '0' : '';
@@ -39,6 +41,8 @@ const formatCurrency = (value: number | null | undefined, includeSymbol = false)
 const parseFormattedNumber = (value: string): number => {
     return Number(value.replace(/,/g, '')) || 0;
 };
+
+const allCurrencies: Currency[] = ['KIP', 'BAHT', 'USD', 'CNY'];
 
 const CurrencyEntryTable = ({ 
     items, 
@@ -194,11 +198,44 @@ const SummaryCard = ({ title, value, currency, isProfit = false }: { title: stri
     );
 };
 
+const CurrencyInput = ({ label, amount, currency, onAmountChange, onCurrencyChange }: {
+    label: string;
+    amount: number;
+    currency: Currency;
+    onAmountChange: (value: number) => void;
+    onCurrencyChange: (value: Currency) => void;
+}) => (
+    <div className="grid gap-2">
+        <Label htmlFor={label.toLowerCase()} className="print:hidden">{label}</Label>
+        <p className="hidden print:block print:text-xs font-semibold">{label}</p>
+        <div className="flex gap-2">
+            <Input
+                id={label.toLowerCase()}
+                type="number"
+                value={amount || ''}
+                onChange={(e) => onAmountChange(Number(e.target.value))}
+                className="w-2/3 print:hidden"
+            />
+            <Select value={currency} onValueChange={(v) => onCurrencyChange(v as Currency)} >
+                <SelectTrigger className="w-1/3 print:hidden">
+                    <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                    {allCurrencies.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+            </Select>
+            <p className="hidden print:block print:text-sm">{`${formatCurrency(amount)} ${currency}`}</p>
+        </div>
+    </div>
+);
+
+
 export default function TourProgramDetailPage({ params }: { params: { id: string } }) {
     const { toast } = useToast();
     const [program, setProgram] = useState<TourProgram | null>(null);
     const [costItems, setCostItems] = useState<TourCostItem[]>([]);
     const [incomeItems, setIncomeItems] = useState<TourIncomeItem[]>([]);
+    const [printCurrencies, setPrintCurrencies] = useState<Currency[]>(['KIP']);
     const { id } = params;
 
     useEffect(() => {
@@ -207,6 +244,9 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
         const fetchProgram = async () => {
             const programData = await getTourProgram(id);
             setProgram(programData);
+            if (programData) {
+                setPrintCurrencies([programData.priceCurrency]);
+            }
         };
 
         fetchProgram();
@@ -219,17 +259,6 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
         };
     }, [id]);
     
-     useEffect(() => {
-        if (program) {
-            const price = program.price || 0;
-            const bankCharge = program.bankCharge || 0;
-            const newTotalPrice = price + bankCharge;
-            if (newTotalPrice !== program.totalPrice) {
-                setProgram(p => p ? { ...p, totalPrice: newTotalPrice } : null);
-            }
-        }
-    }, [program?.price, program?.bankCharge, program]);
-
     // --- Cost Item Handlers ---
     const handleAddCostItem = async () => {
         try {
@@ -265,7 +294,20 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
     // --- Program Info Handler ---
     const handleProgramChange = (field: keyof TourProgram, value: any) => {
         if (!program) return;
-        setProgram(prev => prev ? { ...prev, [field]: value } : null);
+        setProgram(prev => {
+            const newProgram = prev ? { ...prev, [field]: value } : null;
+            if (newProgram && (field === 'price' || field === 'bankCharge')) {
+                const totalPrice = (newProgram.price || 0) + (newProgram.bankCharge || 0);
+                 if (newProgram.priceCurrency === newProgram.bankChargeCurrency) {
+                    newProgram.totalPrice = totalPrice;
+                } else {
+                    // When currencies are different, we can't simply add them.
+                    // For now, we'll set it to price, but a conversion logic would be needed for accuracy.
+                    newProgram.totalPrice = newProgram.price;
+                }
+            }
+            return newProgram;
+        });
     };
 
     const handleSaveProgramInfo = async () => {
@@ -311,6 +353,15 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
 
         return { totalCosts, totalIncomes, profit };
     }, [costItems, incomeItems]);
+    
+    const handlePrintCurrencyToggle = (currency: Currency) => {
+        setPrintCurrencies(prev => 
+            prev.includes(currency) 
+                ? prev.filter(c => c !== currency) 
+                : [...prev, currency]
+        );
+    };
+
 
     if (!program) {
         return (
@@ -360,22 +411,25 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
                         <Input id="durationDays" type="number" value={program.durationDays} onChange={(e) => handleProgramChange('durationDays', Number(e.target.value))} className="print:hidden"/>
                         <p className="hidden print:block print:text-sm">{program.durationDays}</p>
                     </div>
-                    <div className="grid gap-2">
-                        <Label htmlFor="price">Price</Label>
-                        <Input id="price" type="number" value={program.price || ''} onChange={(e) => handleProgramChange('price', Number(e.target.value))} className="print:hidden"/>
-                        <p className="hidden print:block print:text-sm">{formatCurrency(program.price)}</p>
-                    </div>
-                      <div className="grid gap-2">
-                        <Label htmlFor="bankCharge">Bank Charge</Label>
-                        <Input id="bankCharge" type="number" value={program.bankCharge || ''} onChange={(e) => handleProgramChange('bankCharge', Number(e.target.value))} className="print:hidden"/>
-                        <p className="hidden print:block print:text-sm">{formatCurrency(program.bankCharge)}</p>
-                    </div>
-                      <div className="grid gap-2">
-                        <Label htmlFor="totalPrice">Total Price</Label>
-                        <Input id="totalPrice" type="number" value={program.totalPrice || ''} readOnly className="bg-muted/50 print:hidden" />
-                        <p className="hidden print:block font-bold print:text-sm">{formatCurrency(program.totalPrice)}</p>
-                    </div>
                 </div>
+
+                <div className="grid md:grid-cols-2 gap-6 print:grid-cols-2">
+                     <CurrencyInput 
+                        label="Price"
+                        amount={program.price}
+                        currency={program.priceCurrency}
+                        onAmountChange={(v) => handleProgramChange('price', v)}
+                        onCurrencyChange={(v) => handleProgramChange('priceCurrency', v)}
+                     />
+                     <CurrencyInput 
+                        label="Bank Charge"
+                        amount={program.bankCharge}
+                        currency={program.bankChargeCurrency}
+                        onAmountChange={(v) => handleProgramChange('bankCharge', v)}
+                        onCurrencyChange={(v) => handleProgramChange('bankChargeCurrency', v)}
+                     />
+                </div>
+
                  <div className="grid gap-2">
                     <Label htmlFor="customerDetails" className="print:text-xs">รายละเอียดลูกค้า/กลุ่ม</Label>
                     <Textarea 
@@ -408,7 +462,20 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
             <FileText className="h-6 w-6 text-primary" />
             <h1 className="text-xl font-bold tracking-tight font-headline">{program.programName || 'รายละเอียดโปรแกรมทัวร์'}</h1>
         </div>
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-4">
+             <div className="flex items-center space-x-2">
+                <span className="text-sm font-medium">สกุลเงินสำหรับพิมพ์:</span>
+                {allCurrencies.map((currency) => (
+                <div key={currency} className="flex items-center space-x-1">
+                    <Checkbox
+                        id={`print-${currency}`}
+                        checked={printCurrencies.includes(currency)}
+                        onCheckedChange={() => handlePrintCurrencyToggle(currency)}
+                    />
+                    <Label htmlFor={`print-${currency}`} className="text-sm font-normal">{currency}</Label>
+                </div>
+                ))}
+            </div>
             <Button onClick={handlePrint} size="sm" variant="outline">
                 <Printer className="mr-2 h-4 w-4" />
                 พิมพ์
@@ -427,9 +494,11 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
                     <div><span className="font-semibold">Pax:</span> {program.pax}</div>
                     <div><span className="font-semibold">Destination:</span> {program.destination}</div>
                     <div><span className="font-semibold">Duration:</span> {program.durationDays} days</div>
-                    <div><span className="font-semibold">Price:</span> {formatCurrency(program.price)}</div>
-                    <div><span className="font-semibold">Bank Charge:</span> {formatCurrency(program.bankCharge)}</div>
-                    <div className="font-bold"><span className="font-semibold">Total Price:</span> {formatCurrency(program.totalPrice)}</div>
+                    <div className="font-bold"><span className="font-semibold">Price:</span> {formatCurrency(program.price)} {program.priceCurrency}</div>
+                    <div className="font-bold"><span className="font-semibold">Bank Charge:</span> {formatCurrency(program.bankCharge)} {program.bankChargeCurrency}</div>
+                    {program.priceCurrency === program.bankChargeCurrency && (
+                        <div className="font-bold"><span className="font-semibold">Total Price:</span> {formatCurrency(program.totalPrice)} {program.priceCurrency}</div>
+                    )}
                 </div>
                  {program.customerDetails && (
                     <div className="mt-1">
@@ -445,10 +514,10 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
                     <TableFooter>
                         <TableRow className="font-bold text-xs">
                              <TableCell className="text-right p-1">ລວມ (Total)</TableCell>
-                             <TableCell className="text-right p-1">{formatCurrency(summaryData.totalCosts.kip)} KIP</TableCell>
-                             <TableCell className="text-right p-1">{formatCurrency(summaryData.totalCosts.baht)} BAHT</TableCell>
-                             <TableCell className="text-right p-1">{formatCurrency(summaryData.totalCosts.usd)} USD</TableCell>                             
-                             <TableCell className="text-right p-1">{formatCurrency(summaryData.totalCosts.cny)} CNY</TableCell>
+                            {printCurrencies.includes('KIP') && <TableCell className="text-right p-1">{formatCurrency(summaryData.totalCosts.kip)} KIP</TableCell>}
+                            {printCurrencies.includes('BAHT') && <TableCell className="text-right p-1">{formatCurrency(summaryData.totalCosts.baht)} BAHT</TableCell>}
+                            {printCurrencies.includes('USD') && <TableCell className="text-right p-1">{formatCurrency(summaryData.totalCosts.usd)} USD</TableCell>}
+                            {printCurrencies.includes('CNY') && <TableCell className="text-right p-1">{formatCurrency(summaryData.totalCosts.cny)} CNY</TableCell>}
                         </TableRow>
                     </TableFooter>
                 </Table>
@@ -460,10 +529,10 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
                     <TableFooter>
                          <TableRow className="font-bold text-xs">
                              <TableCell className="text-right p-1">ລວມ (Total)</TableCell>
-                             <TableCell className="text-right p-1">{formatCurrency(summaryData.totalIncomes.kip)} KIP</TableCell>
-                             <TableCell className="text-right p-1">{formatCurrency(summaryData.totalIncomes.baht)} BAHT</TableCell>
-                             <TableCell className="text-right p-1">{formatCurrency(summaryData.totalIncomes.usd)} USD</TableCell>
-                             <TableCell className="text-right p-1">{formatCurrency(summaryData.totalIncomes.cny)} CNY</TableCell>
+                             {printCurrencies.includes('KIP') && <TableCell className="text-right p-1">{formatCurrency(summaryData.totalIncomes.kip)} KIP</TableCell>}
+                             {printCurrencies.includes('BAHT') && <TableCell className="text-right p-1">{formatCurrency(summaryData.totalIncomes.baht)} BAHT</TableCell>}
+                             {printCurrencies.includes('USD') && <TableCell className="text-right p-1">{formatCurrency(summaryData.totalIncomes.usd)} USD</TableCell>}
+                             {printCurrencies.includes('CNY') && <TableCell className="text-right p-1">{formatCurrency(summaryData.totalIncomes.cny)} CNY</TableCell>}
                         </TableRow>
                     </TableFooter>
                 </Table>
@@ -472,10 +541,10 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
             <div className="space-y-1 pt-2">
                  <h2 className="text-sm font-bold print:font-lao">ກຳໄລ/ຂາດທຶນ (Profit/Loss Summary)</h2>
                  <div className="grid grid-cols-4 gap-2">
-                    <SummaryCard title="ກຳໄລ/ຂາດທຶນ" value={summaryData.profit.kip} currency="KIP" isProfit />
-                    <SummaryCard title="ກຳໄລ/ຂາດທຶນ" value={summaryData.profit.baht} currency="BAHT" isProfit />
-                    <SummaryCard title="ກຳໄລ/ຂາດທຶນ" value={summaryData.profit.usd} currency="USD" isProfit />
-                    <SummaryCard title="ກຳໄລ/ຂາດທຶນ" value={summaryData.profit.cny} currency="CNY" isProfit />
+                    {printCurrencies.includes('KIP') && <SummaryCard title="ກຳໄລ/ຂາດທຶນ" value={summaryData.profit.kip} currency="KIP" isProfit />}
+                    {printCurrencies.includes('BAHT') && <SummaryCard title="ກຳໄລ/ຂາດທຶນ" value={summaryData.profit.baht} currency="BAHT" isProfit />}
+                    {printCurrencies.includes('USD') && <SummaryCard title="ກຳໄລ/ຂາດທຶນ" value={summaryData.profit.usd} currency="USD" isProfit />}
+                    {printCurrencies.includes('CNY') && <SummaryCard title="ກຳໄລ/ຂາດທຶນ" value={summaryData.profit.cny} currency="CNY" isProfit />}
                 </div>
             </div>
         </div>
@@ -555,5 +624,3 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
     </div>
   )
 }
-
-    

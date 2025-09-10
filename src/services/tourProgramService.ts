@@ -59,7 +59,7 @@ export const getTourProgram = async (id: string): Promise<TourProgram | null> =>
     }
 }
 
-export const addTourProgram = async (program: Omit<TourProgram, 'id' | 'createdAt'>) => {
+export const addTourProgram = async (program: Omit<TourProgram, 'id' | 'createdAt'>): Promise<string> => {
     const newProgram = {
         ...program,
         date: Timestamp.fromDate(program.date),
