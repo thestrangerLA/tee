@@ -232,8 +232,8 @@ const CurrencyInput = ({ label, amount, currency, onAmountChange, onCurrencyChan
 );
 
 
-export default function TourProgramDetailPage({ params }: { params: { id: string } }) {
-    const { id } = params;
+export default function TourProgramDetailPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = use(params);
     const { toast } = useToast();
     const [localProgram, setLocalProgram] = useState<TourProgram | null>(null);
     const [costItems, setCostItems] = useState<TourCostItem[]>([]);
@@ -243,11 +243,15 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
     useEffect(() => {
         if (!id) return;
 
+        let programUnsubscribe: (() => void) | null = null;
+        
         const fetchProgram = async () => {
             const programData = await getTourProgram(id);
             if (programData) {
                 setLocalProgram(programData);
-                setPrintCurrencies([programData.priceCurrency]);
+                if (programData.priceCurrency) {
+                    setPrintCurrencies([programData.priceCurrency]);
+                }
             }
         };
 
@@ -259,6 +263,9 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
         return () => {
             unsubscribeCosts();
             unsubscribeIncomes();
+             if (programUnsubscribe) {
+                programUnsubscribe();
+            }
         };
     }, [id]);
     
