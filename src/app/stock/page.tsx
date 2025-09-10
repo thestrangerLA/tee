@@ -77,7 +77,7 @@ export default function StockPage() {
         </Button>
         <div className="flex items-center gap-2">
             <Leaf className="h-6 w-6 text-primary" />
-            <h1 className="text-xl font-bold tracking-tight font-headline">ผู้จัดการสต็อกสินค้าเกษตร</h1>
+            <h1 className="text-xl font-bold tracking-tight font-headline">Work</h1>
         </div>
       </header>
       <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
