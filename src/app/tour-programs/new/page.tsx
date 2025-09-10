@@ -146,11 +146,11 @@ export default function NewTourProgramPage() {
                                     </Popover>
                                 </div>
                                 <div className="grid gap-2">
-                                    <Label htmlFor="tourCode">รหัสทัวร์</Label>
+                                    <Label htmlFor="tourCode">Group Code</Label>
                                     <Input id="tourCode" name="tourCode" value={formData.tourCode} onChange={(e) => handleFormValueChange('tourCode', e.target.value)} />
                                 </div>
                                   <div className="grid gap-2">
-                                    <Label htmlFor="programName">ชื่อโปรแกรม</Label>
+                                    <Label htmlFor="programName">Tour Program</Label>
                                     <Input id="programName" name="programName" value={formData.programName} onChange={(e) => handleFormValueChange('programName', e.target.value)} required />
                                 </div>
                             </div>
@@ -162,7 +162,7 @@ export default function NewTourProgramPage() {
 
                             <div className="grid md:grid-cols-2 gap-6">
                                 <div className="grid gap-2">
-                                    <Label htmlFor="groupName">ชื่อกลุ่ม</Label>
+                                    <Label htmlFor="groupName">Nationality</Label>
                                     <Input id="groupName" name="groupName" value={formData.groupName} onChange={(e) => handleFormValueChange('groupName', e.target.value)} />
                                 </div>
                                 <div className="grid gap-2">

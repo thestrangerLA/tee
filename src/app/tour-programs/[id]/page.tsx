@@ -426,17 +426,17 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
             <CardContent className="space-y-6 print:space-y-2 print:p-0">
                  <div className="grid md:grid-cols-3 gap-6 print:gap-2">
                      <div className="grid gap-2">
-                        <Label htmlFor="programName">ชื่อโปรแกรม</Label>
+                        <Label htmlFor="programName">Tour Program</Label>
                         <Input id="programName" value={localProgram.programName} onChange={(e) => handleProgramChange('programName', e.target.value)} onBlur={handleSaveProgramInfo} className="print:hidden" disabled={isSaving} />
                          <p className="hidden print:block print:text-sm print:font-semibold">{localProgram.programName}</p>
                     </div>
                      <div className="grid gap-2">
-                        <Label htmlFor="tourCode">รหัสทัวร์</Label>
+                        <Label htmlFor="tourCode">Group Code</Label>
                         <Input id="tourCode" value={localProgram.tourCode} onChange={(e) => handleProgramChange('tourCode', e.target.value)} onBlur={handleSaveProgramInfo} className="print:hidden" disabled={isSaving} />
                         <p className="hidden print:block print:text-sm">{localProgram.tourCode}</p>
                     </div>
                      <div className="grid gap-2">
-                        <Label htmlFor="groupName">ชื่อกลุ่ม</Label>
+                        <Label htmlFor="groupName">Nationality</Label>
                         <Input id="groupName" value={localProgram.groupName} onChange={(e) => handleProgramChange('groupName', e.target.value)} onBlur={handleSaveProgramInfo} className="print:hidden" disabled={isSaving} />
                         <p className="hidden print:block print:text-sm">{localProgram.groupName}</p>
                     </div>
@@ -527,14 +527,14 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
             <div className="grid grid-cols-2 gap-x-8 text-sm">
                 {/* Column 1 */}
                 <div className="space-y-1">
-                    <div className="flex justify-between"><strong className="font-semibold">Program Name:</strong><span>{localProgram.programName}</span></div>
+                    <div className="flex justify-between"><strong className="font-semibold">Tour Program:</strong><span>{localProgram.programName}</span></div>
                     <div className="flex justify-between"><strong className="font-semibold">Tour Dates:</strong><span className="whitespace-pre-wrap text-right">{localProgram.tourDates}</span></div>
                     <div className="flex justify-between"><strong className="font-semibold">Duration:</strong><span>{localProgram.durationDays} days</span></div>
                 </div>
                 {/* Column 2 */}
                 <div className="space-y-1">
-                    <div className="flex justify-between"><strong className="font-semibold">Tour Code:</strong><span>{localProgram.tourCode}</span></div>
-                    <div className="flex justify-between"><strong className="font-semibold">Group Name:</strong><span>{localProgram.groupName}</span></div>
+                    <div className="flex justify-between"><strong className="font-semibold">Group Code:</strong><span>{localProgram.tourCode}</span></div>
+                    <div className="flex justify-between"><strong className="font-semibold">Nationality:</strong><span>{localProgram.groupName}</span></div>
                     <div className="flex justify-between"><strong className="font-semibold">Pax:</strong><span>{localProgram.pax}</span></div>
                     <div className="flex justify-between"><strong className="font-semibold">Destination:</strong><span>{localProgram.destination}</span></div>
                 </div>

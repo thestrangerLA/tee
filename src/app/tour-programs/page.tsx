@@ -97,9 +97,9 @@ export default function TourProgramsListPage() {
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead>วันที่</TableHead>
-                                        <TableHead>รหัสทัวร์</TableHead>
-                                        <TableHead>ชื่อโปรแกรม</TableHead>
-                                        <TableHead>ชื่อกลุ่ม</TableHead>
+                                        <TableHead>Group Code</TableHead>
+                                        <TableHead>Tour Program</TableHead>
+                                        <TableHead>Nationality</TableHead>
                                         <TableHead>จุดหมาย</TableHead>
                                         <TableHead className="text-right">จำนวนคน</TableHead>
                                         <TableHead><span className="sr-only">Actions</span></TableHead>
