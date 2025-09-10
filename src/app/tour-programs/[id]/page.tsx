@@ -236,9 +236,9 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
     const [costItems, setCostItems] = useState<TourCostItem[]>([]);
     const [incomeItems, setIncomeItems] = useState<TourIncomeItem[]>([]);
     const [printCurrencies, setPrintCurrencies] = useState<Currency[]>(['KIP']);
-    const { id } = params;
-
+    
     useEffect(() => {
+        const { id } = params;
         if (!id) return;
 
         const fetchProgram = async () => {
@@ -257,12 +257,13 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
             unsubscribeCosts();
             unsubscribeIncomes();
         };
-    }, [id]);
+    }, [params]);
     
     // --- Cost Item Handlers ---
     const handleAddCostItem = async () => {
+        if (!params.id) return;
         try {
-            await addTourCostItem(id);
+            await addTourCostItem(params.id);
         } catch (error) { toast({ title: "เกิดข้อผิดพลาดในการเพิ่มต้นทุน", variant: "destructive" }); }
     };
      const handleUpdateCostItem = async (itemId: string, field: keyof TourCostItem, value: any) => {
@@ -277,8 +278,9 @@ export default function TourProgramDetailPage({ params }: { params: { id: string
 
     // --- Income Item Handlers ---
     const handleAddIncomeItem = async () => {
+        if (!params.id) return;
         try {
-            await addTourIncomeItem(id);
+            await addTourIncomeItem(params.id);
         } catch (error) { toast({ title: "เกิดข้อผิดพลาดในการเพิ่มรายรับ", variant: "destructive" }); }
     };
      const handleUpdateIncomeItem = async (itemId: string, field: keyof TourIncomeItem, value: any) => {
