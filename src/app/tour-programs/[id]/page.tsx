@@ -598,15 +598,6 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                 <div className={activeTab === 'summary' ? 'block' : 'hidden'}>
                     <PrintHeader title="ສະຫຼຸບໂປຣແກມທົວ (Tour Program Summary)" />
                     <div className="hidden print:block space-y-4">
-                        <div className="space-y-2">
-                             <h3 className="text-base font-semibold border-b pb-1 font-lao">ລາຍຈ່າຍ (Total Costs)</h3>
-                             <div className="flex justify-between text-sm pr-4">
-                                <span className="font-lao">ລວມ (Total)</span>
-                                <div className='flex gap-4 font-semibold'>
-                                    {printCurrencies.map(c => <span key={c}>{`${formatCurrency((summaryData.totalCosts as any)[c.toLowerCase()])} ${c}`}</span>)}
-                                </div>
-                            </div>
-                        </div>
                          <div className="space-y-2">
                             <h3 className="text-base font-semibold border-b pb-1 font-lao">ລາຍຮັບ (Total Income)</h3>
                              <div className="flex justify-between text-sm pr-4">
@@ -617,13 +608,22 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                             </div>
                         </div>
                         <div className="space-y-2">
+                             <h3 className="text-base font-semibold border-b pb-1 font-lao">ລາຍຈ່າຍ (Total Costs)</h3>
+                             <div className="flex justify-between text-sm pr-4">
+                                <span className="font-lao">ລວມ (Total)</span>
+                                <div className='flex gap-4 font-semibold'>
+                                    {printCurrencies.map(c => <span key={c}>{`${formatCurrency((summaryData.totalCosts as any)[c.toLowerCase()])} ${c}`}</span>)}
+                                </div>
+                            </div>
+                        </div>
+                        <div className="space-y-2">
                              <h3 className="text-base font-semibold border-b pb-1 font-lao">ກໍາໄລ/ຂາດທຶນ (Profit/Loss Summary)</h3>
                              <Table>
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead>สกุลเงิน (Currency)</TableHead>
-                                        <TableHead className="text-right">ລາຍຈ່າຍ (Costs)</TableHead>
                                         <TableHead className="text-right">ລາຍຮັບ (Income)</TableHead>
+                                        <TableHead className="text-right">ລາຍຈ່າຍ (Costs)</TableHead>
                                         <TableHead className="text-right">ກໍາໄລ/ຂາດທຶນ (Profit/Loss)</TableHead>
                                     </TableRow>
                                 </TableHeader>
@@ -633,8 +633,8 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                                         return (
                                             <TableRow key={c}>
                                                 <TableCell className="font-medium">{c}</TableCell>
-                                                <TableCell className="text-right">{formatCurrency(summaryData.totalCosts[currencyKey])}</TableCell>
                                                 <TableCell className="text-right">{formatCurrency(summaryData.totalIncomes[currencyKey])}</TableCell>
+                                                <TableCell className="text-right">{formatCurrency(summaryData.totalCosts[currencyKey])}</TableCell>
                                                 <TableCell className={`text-right font-bold ${summaryData.profit[currencyKey] >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                                                     {formatCurrency(summaryData.profit[currencyKey])}
                                                 </TableCell>
