@@ -90,8 +90,7 @@ const CurrencyEntryTable = ({
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead className="w-[150px] print:hidden">ວັນທີ (Date)</TableHead>
-                                <TableHead className="w-[100px] hidden print:table-cell">ວັນທີ (Date)</TableHead>
+                                <TableHead className="w-[150px] print:w-[100px] print:text-xs print:font-lao">ວັນທີ (Date)</TableHead>
                                 <TableHead className="print:font-lao">ລາຍລະອຽດ (Description)</TableHead>
                                 <TableHead className="text-right">KIP</TableHead>
                                 <TableHead className="text-right">BAHT</TableHead>
@@ -103,9 +102,9 @@ const CurrencyEntryTable = ({
                         <TableBody>
                             {(items as Array<TourCostItem | TourIncomeItem>).map(item => (
                                 <TableRow key={item.id}>
-                                    <TableCell className="p-1 print:hidden">
+                                    <TableCell className="p-1">
                                         <Popover>
-                                            <PopoverTrigger asChild>
+                                            <PopoverTrigger asChild className="print:hidden">
                                                 <Button variant="outline" className="w-full justify-start text-left font-normal h-8 text-xs">
                                                      <CalendarIcon className="mr-1 h-3 w-3" />
                                                     {item.date ? format(item.date, "dd/MM/yy") : <span>เลือกวันที่</span>}
@@ -121,15 +120,13 @@ const CurrencyEntryTable = ({
                                                 />
                                             </PopoverContent>
                                         </Popover>
-                                    </TableCell>
-                                    <TableCell className="hidden print:table-cell p-1">
-                                        {item.date ? format(item.date, "dd/MM/yy") : ''}
+                                        <span className="hidden print:inline">{item.date ? format(item.date, "dd/MM/yy") : ''}</span>
                                     </TableCell>
                                      <TableCell className="p-1">
                                         <Input 
                                             defaultValue={item.detail || ''} 
                                             onBlur={(e) => onUpdateItem(item.id, 'detail', e.target.value)}
-                                            className="h-8 print:border-none print:pl-0"
+                                            className="h-8 print:border-none print:pl-0 print:font-lao"
                                         />
                                     </TableCell>
                                     <TableCell className="p-1">
@@ -172,7 +169,7 @@ const CurrencyEntryTable = ({
                                 </TableRow>
                             ))}
                         </TableBody>
-                        <TableFooter>
+                        <TableFooter className="print:hidden">
                             <TableRow className="bg-muted font-bold">
                                 <TableCell colSpan={2} className="text-right print:font-lao">ລວມ (Total)</TableCell>
                                 <TableCell className="text-right">{formatCurrency(totals.kip)}</TableCell>
@@ -546,7 +543,6 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                     <TabsTrigger value="summary">สรุปผล</TabsTrigger>
                 </TabsList>
                 <TabsContent value="info" className="mt-4">
-                    <PrintHeader title="รายละเอียดโปรแกรม" />
                     <ProgramInfoCard />
                 </TabsContent>
                 <TabsContent value="income" className="mt-4">
@@ -585,7 +581,7 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                             <CardDescription>สรุปรายรับ, ต้นทุน, และกำไร/ขาดทุน สำหรับโปรแกรมนี้</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6 print:p-0 print:space-y-2">
-                             <div className={activeTab === 'summary' ? 'print:block' : 'print:hidden'}>
+                             <div>
                                 <h3 className="text-lg font-semibold mb-2 print:font-lao print:text-sm print:font-bold print:border-b print:pb-1">ລາຍຮັບ (Total Income)</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 print:grid-cols-4">
                                     <SummaryCard title="รายรับ" value={summaryData.totalIncomes.kip} currency="KIP" />
@@ -594,7 +590,7 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                                     <SummaryCard title="รายรับ" value={summaryData.totalIncomes.cny} currency="CNY" />
                                 </div>
                             </div>
-                            <div className={activeTab === 'summary' ? 'print:block' : 'print:hidden'}>
+                            <div>
                                 <h3 className="text-lg font-semibold mb-2 print:font-lao print:text-sm print:font-bold print:border-b print:pb-1">ລາຍຈ່າຍ (Total Costs)</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 print:grid-cols-4">
                                     <SummaryCard title="ต้นทุน" value={summaryData.totalCosts.kip} currency="KIP" />
@@ -621,4 +617,3 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
     </div>
   )
 }
-
