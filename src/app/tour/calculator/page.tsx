@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { ArrowLeft, Calculator, Save, Download, MapPin, Calendar as CalendarIcon, BedDouble, Truck, Plane, TrainFront, PlusCircle } from "lucide-react";
+import { ArrowLeft, Calculator, Save, Download, MapPin, Calendar as CalendarIcon, BedDouble, Truck, Plane, TrainFront, PlusCircle, Camera, UtensilsCrossed, Users, FileText } from "lucide-react";
 import { format } from 'date-fns';
 import { th } from 'date-fns/locale';
 
@@ -183,6 +183,34 @@ export default function TourCalculatorPage() {
                             buttonText="เพิ่มค่าตั๋วรถไฟ"
                             buttonColor="bg-red-600 hover:bg-red-700"
                             iconColor="bg-red-100"
+                        />
+                        <CostCategoryCard 
+                            title="ค่าเข้าชมสถานที่" 
+                            icon={<Camera className="h-6 w-6 text-pink-600" />} 
+                            buttonText="เพิ่มค่าเข้าชมสถานที่"
+                            buttonColor="bg-pink-600 hover:bg-pink-700"
+                            iconColor="bg-pink-100"
+                        />
+                        <CostCategoryCard 
+                            title="ค่าอาหาร" 
+                            icon={<UtensilsCrossed className="h-6 w-6 text-yellow-600" />} 
+                            buttonText="เพิ่มค่าอาหาร"
+                            buttonColor="bg-yellow-600 hover:bg-yellow-700 text-black"
+                            iconColor="bg-yellow-100"
+                        />
+                        <CostCategoryCard 
+                            title="ค่าไกด์" 
+                            icon={<Users className="h-6 w-6 text-blue-600" />} 
+                            buttonText="เพิ่มค่าไกด์"
+                            buttonColor="bg-blue-600 hover:bg-blue-700"
+                            iconColor="bg-blue-100"
+                        />
+                        <CostCategoryCard 
+                            title="ค่าเอกสาร" 
+                            icon={<FileText className="h-6 w-6 text-slate-600" />} 
+                            buttonText="เพิ่มค่าเอกสาร"
+                            buttonColor="bg-slate-600 hover:bg-slate-700"
+                            iconColor="bg-slate-100"
                         />
                     </CardContent>
                  </Card>
