@@ -554,6 +554,21 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                  </div>
             </div>
             
+             <div className="space-y-1 pt-1">
+                <h2 className="text-sm font-bold border-b pb-1 print:font-lao">ລາຍຮັບ (Total Income)</h2>
+                <Table>
+                    <TableFooter>
+                         <TableRow className="font-bold text-xs">
+                             <TableCell className="text-right p-1">ລວມ (Total)</TableCell>
+                             {printCurrencies.includes('KIP') && <TableCell className="text-right p-1">{formatCurrency(summaryData.totalIncomes.kip)} KIP</TableCell>}
+                             {printCurrencies.includes('BAHT') && <TableCell className="text-right p-1">{formatCurrency(summaryData.totalIncomes.baht)} BAHT</TableCell>}
+                             {printCurrencies.includes('USD') && <TableCell className="text-right p-1">{formatCurrency(summaryData.totalIncomes.usd)} USD</TableCell>}
+                             {printCurrencies.includes('CNY') && <TableCell className="text-right p-1">{formatCurrency(summaryData.totalIncomes.cny)} CNY</TableCell>}
+                        </TableRow>
+                    </TableFooter>
+                </Table>
+            </div>
+
             <div className="space-y-1 pt-2">
                 <h2 className="text-sm font-bold border-b pb-1 print:font-lao">ລາຍຈ່າຍ (Total Costs)</h2>
                 <Table>
@@ -564,21 +579,6 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                             {printCurrencies.includes('BAHT') && <TableCell className="text-right p-1">{formatCurrency(summaryData.totalCosts.baht)} BAHT</TableCell>}
                             {printCurrencies.includes('USD') && <TableCell className="text-right p-1">{formatCurrency(summaryData.totalCosts.usd)} USD</TableCell>}
                             {printCurrencies.includes('CNY') && <TableCell className="text-right p-1">{formatCurrency(summaryData.totalCosts.cny)} CNY</TableCell>}
-                        </TableRow>
-                    </TableFooter>
-                </Table>
-            </div>
-            
-            <div className="space-y-1 pt-1">
-                <h2 className="text-sm font-bold border-b pb-1 print:font-lao">ລາຍຮັບ (Total Income)</h2>
-                <Table>
-                    <TableFooter>
-                         <TableRow className="font-bold text-xs">
-                             <TableCell className="text-right p-1">ລວມ (Total)</TableCell>
-                             {printCurrencies.includes('KIP') && <TableCell className="text-right p-1">{formatCurrency(summaryData.totalIncomes.kip)} KIP</TableCell>}
-                             {printCurrencies.includes('BAHT') && <TableCell className="text-right p-1">{formatCurrency(summaryData.totalIncomes.baht)} BAHT</TableCell>}
-                             {printCurrencies.includes('USD') && <TableCell className="text-right p-1">{formatCurrency(summaryData.totalIncomes.usd)} USD</TableCell>}
-                             {printCurrencies.includes('CNY') && <TableCell className="text-right p-1">{formatCurrency(summaryData.totalIncomes.cny)} CNY</TableCell>}
                         </TableRow>
                     </TableFooter>
                 </Table>
@@ -655,7 +655,7 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                             <div>
                                 <h3 className="text-lg font-semibold mb-2">กำไร / ขาดทุนสุทธิ</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                    <SummaryCard title="ກຳໄລ/ຂາດທຶນ" value={summaryData.profit.kip} currency="KIP" isProfit />
+                                    <SummaryCard title="ກຳໄລ/ຂาดທຶນ" value={summaryData.profit.kip} currency="KIP" isProfit />
                                     <SummaryCard title="ກຳໄລ/ຂາດທຶນ" value={summaryData.profit.baht} currency="BAHT" isProfit />
                                     <SummaryCard title="ກຳໄລ/ຂາດທຶນ" value={summaryData.profit.usd} currency="USD" isProfit />
                                     <SummaryCard title="ກຳໄລ/ຂາດທຶນ" value={summaryData.profit.cny} currency="CNY" isProfit />
