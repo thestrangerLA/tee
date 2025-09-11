@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { ArrowLeft, Save, Download, MapPin, Calendar as CalendarIcon, BedDouble, Truck, Plane, TrainFront, PlusCircle, Camera, UtensilsCrossed, Users, FileText, Trash2, Copy, Clock } from "lucide-react";
+import { ArrowLeft, Save, Download, MapPin, Calendar as CalendarIcon, BedDouble, Truck, Plane, TrainFront, PlusCircle, Camera, UtensilsCrossed, Users, FileText, Trash2, Copy, Clock, Eye, EyeOff } from "lucide-react";
 import { format } from 'date-fns';
 import { th } from 'date-fns/locale';
 import { TotalCostCard } from '@/components/tour/TotalCostCard';
@@ -116,18 +116,22 @@ export default function TourCalculatorPage() {
         guides: [],
         documents: [],
     });
+    
+    const [itemVisibility, setItemVisibility] = useState<Record<string, boolean>>({});
 
-    // Generic state update function
+    const toggleItemVisibility = (itemId: string) => {
+        setItemVisibility(prev => ({ ...prev, [itemId]: !prev[itemId] }));
+    };
+
     const updateCosts = useCallback(<T extends keyof TourCosts>(category: T, data: TourCosts[T]) => {
         setAllCosts(prev => ({ ...prev, [category]: data }));
     }, []);
-
-    // Effect to save to localStorage and dispatch events after state has been updated
+    
     useEffect(() => {
         costCategories.forEach(category => {
             try {
                 localStorage.setItem(`${LOCAL_STORAGE_KEY_PREFIX}${category}`, JSON.stringify(allCosts[category]));
-                window.dispatchEvent(new CustomEvent(`${category}Update`));
+                window.dispatchEvent(new CustomEvent(`${category.replace(/-/g, '')}Update`));
             } catch (error) {
                 console.error(`Failed to save ${category} to localStorage`, error);
             }
@@ -354,10 +358,13 @@ export default function TourCalculatorPage() {
                                                   <CardHeader className="flex-row items-center justify-between p-3 bg-muted/50">
                                                       <CardTitle className="text-base">ທີ່ພັກ #{index + 1}</CardTitle>
                                                       <div>
-                                                          <Button variant="ghost" size="icon" onClick={() => duplicateItem('accommodations', acc.id)}><Copy className="h-4 w-4"/></Button>
+                                                          <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(acc.id)}>
+                                                              {itemVisibility[acc.id] ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
+                                                          </Button>
                                                           <Button variant="ghost" size="icon" onClick={() => deleteItem('accommodations', acc.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
                                                       </div>
                                                   </CardHeader>
+                                                 {(itemVisibility[acc.id] !== false) && (
                                                   <CardContent className="p-4 space-y-4">
                                                       {/* Acc Fields */}
                                                           <div className="grid md:grid-cols-2 gap-4">
@@ -425,6 +432,7 @@ export default function TourCalculatorPage() {
                                                       ))}
                                                       <Button size="sm" variant="outline" onClick={() => addRoom(acc.id)}><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຫ້ອງ</Button>
                                                   </CardContent>
+                                                  )}
                                               </Card>
                                           ))}
                                           <div className="flex gap-2 mt-2">
@@ -441,10 +449,13 @@ export default function TourCalculatorPage() {
                                                   <CardHeader className="flex-row items-center justify-between p-3 bg-muted/50">
                                                       <CardTitle className="text-base">ການເດີນທາງ #{index + 1}</CardTitle>
                                                       <div>
-                                                          <Button variant="ghost" size="icon" onClick={() => duplicateItem('trips', trip.id)}><Copy className="h-4 w-4"/></Button>
+                                                          <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(trip.id)}>
+                                                              {itemVisibility[trip.id] ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
+                                                          </Button>
                                                           <Button variant="ghost" size="icon" onClick={() => deleteItem('trips', trip.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
                                                       </div>
                                                   </CardHeader>
+                                                  {(itemVisibility[trip.id] !== false) && (
                                                   <CardContent className="p-4 space-y-4">
                                                       <div className="grid grid-cols-2 gap-4">
                                                             <div className="space-y-2">
@@ -484,6 +495,7 @@ export default function TourCalculatorPage() {
                                                           </div>
                                                       </div>
                                                   </CardContent>
+                                                  )}
                                               </Card>
                                           ))}
                                           <div className="flex gap-2 mt-2">
@@ -499,10 +511,13 @@ export default function TourCalculatorPage() {
                                                   <CardHeader className="flex-row items-center justify-between p-3 bg-muted/50">
                                                       <CardTitle className="text-base">ປີ້ຍົນ #{index + 1}</CardTitle>
                                                       <div>
-                                                          <Button variant="ghost" size="icon" onClick={() => duplicateItem('flights', flight.id)}><Copy className="h-4 w-4"/></Button>
+                                                          <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(flight.id)}>
+                                                              {itemVisibility[flight.id] ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
+                                                          </Button>
                                                           <Button variant="ghost" size="icon" onClick={() => deleteItem('flights', flight.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
                                                       </div>
                                                   </CardHeader>
+                                                  {(itemVisibility[flight.id] !== false) && (
                                                   <CardContent className="p-4 space-y-4">
                                                       <div className="grid grid-cols-2 gap-4">
                                                           <div className="space-y-2">
@@ -552,6 +567,7 @@ export default function TourCalculatorPage() {
                                                           </div>
                                                       </div>
                                                   </CardContent>
+                                                  )}
                                                 </Card>
                                             ))}
                                           <div className="flex gap-2 mt-2">
@@ -567,10 +583,13 @@ export default function TourCalculatorPage() {
                                                     <CardHeader className="flex-row items-center justify-between p-3 bg-muted/50">
                                                         <CardTitle className="text-base">ປີ້ລົດໄຟ #{index + 1}</CardTitle>
                                                         <div>
-                                                            <Button variant="ghost" size="icon" onClick={() => duplicateItem('trainTickets', ticket.id)}><Copy className="h-4 w-4"/></Button>
+                                                            <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(ticket.id)}>
+                                                                {itemVisibility[ticket.id] ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
+                                                            </Button>
                                                             <Button variant="ghost" size="icon" onClick={() => deleteItem('trainTickets', ticket.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
                                                         </div>
                                                     </CardHeader>
+                                                    {(itemVisibility[ticket.id] !== false) && (
                                                     <CardContent className="p-4 space-y-4">
                                                          <div className="grid grid-cols-2 gap-4">
                                                           <div className="space-y-2">
@@ -624,6 +643,7 @@ export default function TourCalculatorPage() {
                                                           </div>
                                                       </div>
                                                     </CardContent>
+                                                    )}
                                                 </Card>
                                             ))}
                                             <div className="flex gap-2 mt-2">
@@ -639,10 +659,13 @@ export default function TourCalculatorPage() {
                                                     <CardHeader className="flex-row items-center justify-between p-3 bg-muted/50">
                                                         <CardTitle className="text-base">ຄ່າເຂົ້າຊົມ #{index + 1}</CardTitle>
                                                         <div>
-                                                            <Button variant="ghost" size="icon" onClick={() => duplicateItem('entranceFees', fee.id)}><Copy className="h-4 w-4"/></Button>
+                                                            <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(fee.id)}>
+                                                                {itemVisibility[fee.id] ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
+                                                            </Button>
                                                             <Button variant="ghost" size="icon" onClick={() => deleteItem('entranceFees', fee.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
                                                         </div>
                                                     </CardHeader>
+                                                    {(itemVisibility[fee.id] !== false) && (
                                                     <CardContent className="p-4 space-y-4">
                                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                              <div className="space-y-2">
@@ -672,6 +695,7 @@ export default function TourCalculatorPage() {
                                                             </div>
                                                         </div>
                                                     </CardContent>
+                                                    )}
                                                  </Card>
                                             ))}
                                             <div className="flex gap-2 mt-2">
@@ -687,10 +711,13 @@ export default function TourCalculatorPage() {
                                                     <CardHeader className="flex-row items-center justify-between p-3 bg-muted/50">
                                                         <CardTitle className="text-base">ລາຍການອາຫານ #{index + 1}</CardTitle>
                                                         <div>
-                                                            <Button variant="ghost" size="icon" onClick={() => duplicateItem('meals', meal.id)}><Copy className="h-4 w-4"/></Button>
+                                                            <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(meal.id)}>
+                                                                {itemVisibility[meal.id] ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
+                                                            </Button>
                                                             <Button variant="ghost" size="icon" onClick={() => deleteItem('meals', meal.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
                                                         </div>
                                                     </CardHeader>
+                                                    {(itemVisibility[meal.id] !== false) && (
                                                     <CardContent className="p-4 space-y-4">
                                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                             <div className="space-y-2">
@@ -730,6 +757,7 @@ export default function TourCalculatorPage() {
                                                             </div>
                                                         </div>
                                                     </CardContent>
+                                                    )}
                                                 </Card>
                                             ))}
                                             <div className="flex gap-2 mt-2">
@@ -745,10 +773,13 @@ export default function TourCalculatorPage() {
                                                     <CardHeader className="flex-row items-center justify-between p-3 bg-muted/50">
                                                         <CardTitle className="text-base">ລາຍການໄກด์ #{index + 1}</CardTitle>
                                                         <div>
-                                                            <Button variant="ghost" size="icon" onClick={() => duplicateItem('guides', guide.id)}><Copy className="h-4 w-4"/></Button>
+                                                            <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(guide.id)}>
+                                                                {itemVisibility[guide.id] ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
+                                                            </Button>
                                                             <Button variant="ghost" size="icon" onClick={() => deleteItem('guides', guide.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
                                                         </div>
                                                     </CardHeader>
+                                                    {(itemVisibility[guide.id] !== false) && (
                                                      <CardContent className="p-4 space-y-4">
                                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                              <div className="space-y-2">
@@ -778,6 +809,7 @@ export default function TourCalculatorPage() {
                                                             </div>
                                                         </div>
                                                     </CardContent>
+                                                    )}
                                                 </Card>
                                             ))}
                                             <div className="flex gap-2 mt-2">
@@ -793,10 +825,13 @@ export default function TourCalculatorPage() {
                                                     <CardHeader className="flex-row items-center justify-between p-3 bg-muted/50">
                                                         <CardTitle className="text-base">ລາຍການເອກະສານ #{index + 1}</CardTitle>
                                                         <div>
-                                                            <Button variant="ghost" size="icon" onClick={() => duplicateItem('documents', doc.id)}><Copy className="h-4 w-4"/></Button>
+                                                            <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(doc.id)}>
+                                                                {itemVisibility[doc.id] ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
+                                                            </Button>
                                                             <Button variant="ghost" size="icon" onClick={() => deleteItem('documents', doc.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
                                                         </div>
                                                     </CardHeader>
+                                                    {(itemVisibility[doc.id] !== false) && (
                                                     <CardContent className="p-4 space-y-4">
                                                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                               <div className="space-y-2">
@@ -822,6 +857,7 @@ export default function TourCalculatorPage() {
                                                             </div>
                                                         </div>
                                                     </CardContent>
+                                                    )}
                                                 </Card>
                                             ))}
                                             <div className="flex gap-2 mt-2">
