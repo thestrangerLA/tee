@@ -91,6 +91,7 @@ const CurrencyEntryTable = ({
                         <TableHeader>
                             <TableRow>
                                 <TableHead className="w-[150px] print:hidden">ວັນທີ (Date)</TableHead>
+                                <TableHead className="w-[100px] hidden print:table-cell">ວັນທີ (Date)</TableHead>
                                 <TableHead className="print:font-lao">ລາຍລະອຽດ (Description)</TableHead>
                                 <TableHead className="text-right">KIP</TableHead>
                                 <TableHead className="text-right">BAHT</TableHead>
@@ -120,6 +121,9 @@ const CurrencyEntryTable = ({
                                                 />
                                             </PopoverContent>
                                         </Popover>
+                                    </TableCell>
+                                    <TableCell className="hidden print:table-cell p-1">
+                                        {item.date ? format(item.date, "dd/MM/yy") : ''}
                                     </TableCell>
                                      <TableCell className="p-1">
                                         <Input 
@@ -170,8 +174,7 @@ const CurrencyEntryTable = ({
                         </TableBody>
                         <TableFooter>
                             <TableRow className="bg-muted font-bold">
-                                <TableCell colSpan={2} className="text-right print:hidden">ລວມ (Total)</TableCell>
-                                <TableCell colSpan={1} className="text-right hidden print:table-cell print:font-lao">ລວມ (Total)</TableCell>
+                                <TableCell colSpan={2} className="text-right print:font-lao">ລວມ (Total)</TableCell>
                                 <TableCell className="text-right">{formatCurrency(totals.kip)}</TableCell>
                                 <TableCell className="text-right">{formatCurrency(totals.baht)}</TableCell>
                                 <TableCell className="text-right">{formatCurrency(totals.usd)}</TableCell>
@@ -546,27 +549,31 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                     <PrintHeader title="รายละเอียดโปรแกรม" />
                     <ProgramInfoCard />
                 </TabsContent>
-                <TabsContent value="income" className="mt-4 print:block">
-                     <PrintHeader title="ລາຍຮັບ (Total Income)" />
-                    <CurrencyEntryTable 
-                        items={incomeItems}
-                        onAddItem={handleAddIncomeItem}
-                        onUpdateItem={handleUpdateIncomeItem as any}
-                        onDeleteItem={handleDeleteIncomeItem}
-                        title="ตารางบันทึกรายรับ"
-                        description="บันทึกรายรับทั้งหมด ของโปรแกรมนี้"
-                    />
+                <TabsContent value="income" className="mt-4">
+                     <div className={activeTab === 'income' ? 'print:block' : 'print:hidden'}>
+                        <PrintHeader title="ລາຍຮັບ (Total Income)" />
+                        <CurrencyEntryTable 
+                            items={incomeItems}
+                            onAddItem={handleAddIncomeItem}
+                            onUpdateItem={handleUpdateIncomeItem as any}
+                            onDeleteItem={handleDeleteIncomeItem}
+                            title="ตารางบันทึกรายรับ"
+                            description="บันทึกรายรับทั้งหมด ของโปรแกรมนี้"
+                        />
+                    </div>
                 </TabsContent>
-                <TabsContent value="costs" className="mt-4 print:block">
-                     <PrintHeader title="ລາຍຈ່າຍ (Total Costs)" />
-                    <CurrencyEntryTable 
-                        items={costItems}
-                        onAddItem={handleAddCostItem}
-                        onUpdateItem={handleUpdateCostItem as any}
-                        onDeleteItem={handleDeleteCostItem}
-                        title="ตารางคำนวณต้นทุน"
-                        description="บันทึกค่าใช้จ่ายทั้งหมดของโปรแกรมนี้"
-                    />
+                <TabsContent value="costs" className="mt-4">
+                     <div className={activeTab === 'costs' ? 'print:block' : 'print:hidden'}>
+                        <PrintHeader title="ລາຍຈ່າຍ (Total Costs)" />
+                        <CurrencyEntryTable 
+                            items={costItems}
+                            onAddItem={handleAddCostItem}
+                            onUpdateItem={handleUpdateCostItem as any}
+                            onDeleteItem={handleDeleteCostItem}
+                            title="ตารางคำนวณต้นทุน"
+                            description="บันทึกค่าใช้จ่ายทั้งหมดของโปรแกรมนี้"
+                        />
+                    </div>
                 </TabsContent>
                 <TabsContent value="summary" className="mt-4">
                     <div className={activeTab === 'summary' ? 'print:block' : 'print:hidden'}>
@@ -614,3 +621,4 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
     </div>
   )
 }
+
