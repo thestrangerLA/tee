@@ -207,7 +207,7 @@ export default function TourCalculatorPage() {
                             iconColor="bg-yellow-100"
                         />
                         <CostCategoryCard 
-                            href="#"
+                            href="/tour/guides"
                             title="ຄ່າໄກด์" 
                             icon={<Users className="h-6 w-6 text-blue-600" />} 
                             buttonText="ເພີ່ມຄ່າໄກด์"
