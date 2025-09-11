@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { v4 as uuidv4 } from 'uuid';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,8 +35,37 @@ const formatNumber = (num: number, options?: Intl.NumberFormatOptions) => {
     return new Intl.NumberFormat('en-US', options).format(num);
 };
 
+const LOCAL_STORAGE_KEY = 'tour-meals';
+
 export default function MealsPage() {
     const [mealCosts, setMealCosts] = useState<MealCost[]>([]);
+
+    useEffect(() => {
+        try {
+            const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+            if (savedData) {
+                setMealCosts(JSON.parse(savedData));
+            }
+        } catch (error) {
+            console.error("Failed to load meals data from localStorage", error);
+        }
+    }, []);
+
+    useEffect(() => {
+        try {
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(mealCosts));
+            window.dispatchEvent(new CustomEvent('mealsUpdate'));
+        } catch (error) {
+            console.error("Failed to save meals data to localStorage", error);
+        }
+    }, [mealCosts]);
+
+    const handleReset = () => {
+        if (window.confirm("ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບຂໍ້ມູນທັງໝົດໃນໜ້ານີ້?")) {
+            setMealCosts([]);
+        }
+    };
+
 
     const addMealCost = () => {
         const newMealCost: MealCost = {
@@ -99,7 +128,11 @@ export default function MealsPage() {
                     <UtensilsCrossed className="h-6 w-6 text-primary" />
                     <h1 className="text-xl font-bold tracking-tight">ຄ່າອາຫານ</h1>
                 </div>
-                <div className="ml-auto">
+                <div className="ml-auto flex items-center gap-2">
+                     <Button variant="destructive" size="sm" onClick={handleReset}>
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        ລ້າງຂໍ້ມູນ
+                    </Button>
                     <Button onClick={addMealCost} className="bg-yellow-600 hover:bg-yellow-700 text-black">
                         <PlusCircle className="mr-2 h-4 w-4" />
                         ເພີ່ມຄ່າອາຫານ

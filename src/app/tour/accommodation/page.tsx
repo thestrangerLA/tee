@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { v4 as uuidv4 } from 'uuid';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -43,9 +43,44 @@ type Accommodation = {
 
 const formatNumber = (num: number) => new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(num);
 
+const LOCAL_STORAGE_KEY = 'tour-accommodation';
+
 export default function AccommodationPage() {
     const [accommodations, setAccommodations] = useState<Accommodation[]>([]);
     const [grandTotal, setGrandTotal] = useState<Record<Currency, number>>({ USD: 0, THB: 0, LAK: 0, CNY: 0 });
+
+    useEffect(() => {
+        try {
+            const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+            if (savedData) {
+                const parsedData = JSON.parse(savedData, (key, value) => {
+                    if (key === 'checkInDate' && typeof value === 'string') {
+                        return new Date(value);
+                    }
+                    return value;
+                });
+                setAccommodations(parsedData);
+            }
+        } catch (error) {
+            console.error("Failed to load accommodation data from localStorage", error);
+        }
+    }, []);
+
+    useEffect(() => {
+        try {
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(accommodations));
+            window.dispatchEvent(new CustomEvent('accommodationsUpdate'));
+        } catch (error) {
+            console.error("Failed to save accommodation data to localStorage", error);
+        }
+    }, [accommodations]);
+    
+    const handleReset = () => {
+        if (window.confirm("ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບຂໍ້ມູນທັງໝົດໃນໜ້ານີ້?")) {
+            setAccommodations([]);
+        }
+    };
+
 
     const addAccommodation = () => {
         const newAcc: Accommodation = {
@@ -147,7 +182,11 @@ export default function AccommodationPage() {
                     <BedDouble className="h-6 w-6 text-primary" />
                     <h1 className="text-xl font-bold tracking-tight">ຄ່າທີ່ພັກ</h1>
                 </div>
-                <div className="ml-auto">
+                <div className="ml-auto flex items-center gap-2">
+                     <Button variant="destructive" size="sm" onClick={handleReset}>
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        ລ້າງຂໍ້ມູນ
+                    </Button>
                     <Button onClick={addAccommodation}>
                         <PlusCircle className="mr-2 h-4 w-4" />
                         ເພີ່ມຄ່າທີ່ພັກ
@@ -195,7 +234,7 @@ export default function AccommodationPage() {
                                                 <PopoverTrigger asChild>
                                                     <Button variant={"outline"} className="w-full justify-start text-left font-normal">
                                                         <CalendarIcon className="mr-2 h-4 w-4" />
-                                                        {acc.checkInDate ? format(acc.checkInDate, "dd/MM/yyyy") : <span>mm/dd/yyyy</span>}
+                                                        {acc.checkInDate ? format(new Date(acc.checkInDate), "dd/MM/yyyy") : <span>mm/dd/yyyy</span>}
                                                     </Button>
                                                 </PopoverTrigger>
                                                 <PopoverContent className="w-auto p-0">
@@ -276,7 +315,7 @@ export default function AccommodationPage() {
                                 <div className="mt-4 p-4 bg-purple-100 rounded-lg flex justify-between items-center">
                                     <span className="font-bold text-lg text-purple-800">ລວມຄ່າທີ່ພັກນີ້ທັງໝົດ:</span>
                                     <div className="text-right">
-                                        {(Object.keys(accommodationTotals[acc.id]) as Currency[]).filter(c => accommodationTotals[acc.id][c] > 0).map(c => (
+                                        {(Object.keys(accommodationTotals[acc.id] || {}) as Currency[]).filter(c => accommodationTotals[acc.id][c] > 0).map(c => (
                                             <p key={c} className="font-bold text-lg text-purple-800">
                                                 {formatNumber(accommodationTotals[acc.id][c])} {c}
                                             </p>

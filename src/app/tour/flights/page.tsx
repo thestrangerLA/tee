@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { v4 as uuidv4 } from 'uuid';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,9 +36,44 @@ type Flight = {
 
 const formatNumber = (num: number) => new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(num);
 
+const LOCAL_STORAGE_KEY = 'tour-flights';
+
 export default function FlightsPage() {
     const [flights, setFlights] = useState<Flight[]>([]);
     const [grandTotal, setGrandTotal] = useState<Record<Currency, number>>({ USD: 0, THB: 0, LAK: 0, CNY: 0 });
+
+    useEffect(() => {
+        try {
+            const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+            if (savedData) {
+                 const parsedData = JSON.parse(savedData, (key, value) => {
+                    if (key === 'departureDate' && typeof value === 'string') {
+                        return new Date(value);
+                    }
+                    return value;
+                });
+                setFlights(parsedData);
+            }
+        } catch (error) {
+            console.error("Failed to load flight data from localStorage", error);
+        }
+    }, []);
+
+    useEffect(() => {
+        try {
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(flights));
+            window.dispatchEvent(new CustomEvent('flightsUpdate'));
+        } catch (error) {
+            console.error("Failed to save flight data to localStorage", error);
+        }
+    }, [flights]);
+
+    const handleReset = () => {
+        if (window.confirm("ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບຂໍ້ມູນທັງໝົດໃນໜ້ານີ້?")) {
+            setFlights([]);
+        }
+    };
+
 
     const addFlight = () => {
         const newFlight: Flight = {
@@ -97,7 +132,11 @@ export default function FlightsPage() {
                     <Plane className="h-6 w-6 text-primary" />
                     <h1 className="text-xl font-bold tracking-tight">ຄ່າປີ້ຍົນ</h1>
                 </div>
-                <div className="ml-auto">
+                <div className="ml-auto flex items-center gap-2">
+                    <Button variant="destructive" size="sm" onClick={handleReset}>
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        ລ້າງຂໍ້ມູນ
+                    </Button>
                     <Button onClick={addFlight} className="bg-orange-600 hover:bg-orange-700">
                         <PlusCircle className="mr-2 h-4 w-4" />
                         ເພີ່ມຄ່າປີ້ຍົນ
@@ -136,7 +175,7 @@ export default function FlightsPage() {
                                                 <PopoverTrigger asChild>
                                                     <Button variant={"outline"} className="w-[180px] justify-start text-left font-normal">
                                                         <CalendarIcon className="mr-2 h-4 w-4" />
-                                                        {flight.departureDate ? format(flight.departureDate, "dd/MM/yyyy") : <span>mm/dd/yyyy</span>}
+                                                        {flight.departureDate ? format(new Date(flight.departureDate), "dd/MM/yyyy") : <span>mm/dd/yyyy</span>}
                                                     </Button>
                                                 </PopoverTrigger>
                                                 <PopoverContent className="w-auto p-0">

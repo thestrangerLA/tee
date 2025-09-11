@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { v4 as uuidv4 } from 'uuid';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,9 +36,37 @@ const formatNumber = (num: number, currency: Currency) => {
     return `${symbols[currency]}${new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(num)}`;
 };
 
+const LOCAL_STORAGE_KEY = 'tour-transport';
+
 export default function TransportPage() {
     const [trips, setTrips] = useState<Trip[]>([]);
     const [grandTotal, setGrandTotal] = useState<Record<Currency, number>>({ USD: 0, THB: 0, LAK: 0, CNY: 0 });
+
+    useEffect(() => {
+        try {
+            const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+            if (savedData) {
+                setTrips(JSON.parse(savedData));
+            }
+        } catch (error) {
+            console.error("Failed to load transport data from localStorage", error);
+        }
+    }, []);
+
+    useEffect(() => {
+        try {
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(trips));
+            window.dispatchEvent(new CustomEvent('tripsUpdate'));
+        } catch (error) {
+            console.error("Failed to save transport data to localStorage", error);
+        }
+    }, [trips]);
+    
+    const handleReset = () => {
+        if (window.confirm("ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບຂໍ້ມູນທັງໝົດໃນໜ້ານີ້?")) {
+            setTrips([]);
+        }
+    };
 
     const addTrip = () => {
         const newTrip: Trip = {
@@ -99,7 +127,11 @@ export default function TransportPage() {
                     <Truck className="h-6 w-6 text-primary" />
                     <h1 className="text-xl font-bold tracking-tight">ຄ່າຂົນສົ່ງ</h1>
                 </div>
-                <div className="ml-auto">
+                <div className="ml-auto flex items-center gap-2">
+                     <Button variant="destructive" size="sm" onClick={handleReset}>
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        ລ້າງຂໍ້ມູນ
+                    </Button>
                     <Button onClick={addTrip} className="bg-green-600 hover:bg-green-700">
                         <PlusCircle className="mr-2 h-4 w-4" />
                         ເພີ່ມຄ່າຂົນສົ່ງ

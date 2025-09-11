@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { v4 as uuidv4 } from 'uuid';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,9 +34,38 @@ const formatNumber = (num: number, currency: Currency) => {
     return `${new Intl.NumberFormat('en-US', { minimumFractionDigits: 0 }).format(num)} ${symbols[currency]}`;
 };
 
+const LOCAL_STORAGE_KEY = 'tour-guides';
+
 export default function GuidesPage() {
     const [fees, setFees] = useState<GuideFee[]>([]);
     const [grandTotal, setGrandTotal] = useState<Record<Currency, number>>({ USD: 0, THB: 0, LAK: 0, CNY: 0 });
+
+    useEffect(() => {
+        try {
+            const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+            if (savedData) {
+                setFees(JSON.parse(savedData));
+            }
+        } catch (error) {
+            console.error("Failed to load guides data from localStorage", error);
+        }
+    }, []);
+
+    useEffect(() => {
+        try {
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(fees));
+            window.dispatchEvent(new CustomEvent('guidesUpdate'));
+        } catch (error) {
+            console.error("Failed to save guides data to localStorage", error);
+        }
+    }, [fees]);
+
+    const handleReset = () => {
+        if (window.confirm("ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບຂໍ້ມູນທັງໝົດໃນໜ້ານີ້?")) {
+            setFees([]);
+        }
+    };
+
 
     const addFee = () => {
         const newFee: GuideFee = {
@@ -94,7 +123,11 @@ export default function GuidesPage() {
                     <Users className="h-6 w-6 text-primary" />
                     <h1 className="text-xl font-bold tracking-tight">ຄ່າໄກด์</h1>
                 </div>
-                <div className="ml-auto">
+                <div className="ml-auto flex items-center gap-2">
+                    <Button variant="destructive" size="sm" onClick={handleReset}>
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        ລ້າງຂໍ້ມູນ
+                    </Button>
                     <Button onClick={addFee} className="bg-blue-600 hover:bg-blue-700">
                         <PlusCircle className="mr-2 h-4 w-4" />
                         ເພີ່ມຄ່າໄກด์

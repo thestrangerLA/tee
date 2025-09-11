@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { v4 as uuidv4 } from 'uuid';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,9 +40,44 @@ const formatNumber = (num: number, currency: Currency) => {
     return `${new Intl.NumberFormat('en-US', { minimumFractionDigits: 0 }).format(num)} ${symbols[currency]}`;
 };
 
+const LOCAL_STORAGE_KEY = 'tour-train-tickets';
+
 export default function TrainTicketsPage() {
     const [tickets, setTickets] = useState<TrainTicket[]>([]);
     const [grandTotal, setGrandTotal] = useState<Record<Currency, number>>({ USD: 0, THB: 0, LAK: 0, CNY: 0 });
+    
+    useEffect(() => {
+        try {
+            const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+            if (savedData) {
+                const parsedData = JSON.parse(savedData, (key, value) => {
+                    if (key === 'departureDate' && typeof value === 'string') {
+                        return new Date(value);
+                    }
+                    return value;
+                });
+                setTickets(parsedData);
+            }
+        } catch (error) {
+            console.error("Failed to load train ticket data from localStorage", error);
+        }
+    }, []);
+
+    useEffect(() => {
+        try {
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(tickets));
+            window.dispatchEvent(new CustomEvent('trainTicketsUpdate'));
+        } catch (error) {
+            console.error("Failed to save train ticket data to localStorage", error);
+        }
+    }, [tickets]);
+
+    const handleReset = () => {
+        if (window.confirm("ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບຂໍ້ມູນທັງໝົດໃນໜ້ານີ້?")) {
+            setTickets([]);
+        }
+    };
+
 
     const addTicket = () => {
         const newTicket: TrainTicket = {
@@ -102,7 +137,11 @@ export default function TrainTicketsPage() {
                     <TrainFront className="h-6 w-6 text-primary" />
                     <h1 className="text-xl font-bold tracking-tight">ຄ່າປີ້ລົດໄຟ</h1>
                 </div>
-                <div className="ml-auto">
+                <div className="ml-auto flex items-center gap-2">
+                     <Button variant="destructive" size="sm" onClick={handleReset}>
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        ລ້າງຂໍ້ມູນ
+                    </Button>
                     <Button onClick={addTicket} className="bg-red-600 hover:bg-red-700">
                         <PlusCircle className="mr-2 h-4 w-4" />
                         ເພີ່ມຄ່າປີ້ລົດໄຟ
@@ -141,7 +180,7 @@ export default function TrainTicketsPage() {
                                                 <PopoverTrigger asChild>
                                                     <Button variant={"outline"} className="w-[180px] justify-start text-left font-normal">
                                                         <CalendarIcon className="mr-2 h-4 w-4" />
-                                                        {ticket.departureDate ? format(ticket.departureDate, "dd/MM/yyyy") : <span>mm/dd/yyyy</span>}
+                                                        {ticket.departureDate ? format(new Date(ticket.departureDate), "dd/MM/yyyy") : <span>mm/dd/yyyy</span>}
                                                     </Button>
                                                 </PopoverTrigger>
                                                 <PopoverContent className="w-auto p-0">

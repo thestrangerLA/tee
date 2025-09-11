@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { v4 as uuidv4 } from 'uuid';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,9 +33,38 @@ const formatNumber = (num: number, currency: Currency) => {
     return `${new Intl.NumberFormat('en-US', { minimumFractionDigits: 0 }).format(num)} ${symbols[currency]}`;
 };
 
+const LOCAL_STORAGE_KEY = 'tour-documents';
+
 export default function DocumentsPage() {
     const [fees, setFees] = useState<DocumentFee[]>([]);
     const [grandTotal, setGrandTotal] = useState<Record<Currency, number>>({ USD: 0, THB: 0, LAK: 0, CNY: 0 });
+
+    useEffect(() => {
+        try {
+            const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+            if (savedData) {
+                setFees(JSON.parse(savedData));
+            }
+        } catch (error) {
+            console.error("Failed to load documents data from localStorage", error);
+        }
+    }, []);
+
+    useEffect(() => {
+        try {
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(fees));
+            window.dispatchEvent(new CustomEvent('documentsUpdate'));
+        } catch (error) {
+            console.error("Failed to save documents data to localStorage", error);
+        }
+    }, [fees]);
+
+    const handleReset = () => {
+        if (window.confirm("ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບຂໍ້ມູນທັງໝົດໃນໜ້ານີ້?")) {
+            setFees([]);
+        }
+    };
+
 
     const addFee = () => {
         const newFee: DocumentFee = {
@@ -92,7 +121,11 @@ export default function DocumentsPage() {
                     <FileText className="h-6 w-6 text-primary" />
                     <h1 className="text-xl font-bold tracking-tight">ຄ່າເອກະສານ</h1>
                 </div>
-                <div className="ml-auto">
+                <div className="ml-auto flex items-center gap-2">
+                    <Button variant="destructive" size="sm" onClick={handleReset}>
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        ລ້າງຂໍ້ມູນ
+                    </Button>
                     <Button onClick={addFee} className="bg-slate-600 hover:bg-slate-700">
                         <PlusCircle className="mr-2 h-4 w-4" />
                         ເພີ່ມຄ່າເອກະສານ
