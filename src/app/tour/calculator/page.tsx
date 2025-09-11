@@ -199,7 +199,7 @@ export default function TourCalculatorPage() {
                             iconColor="bg-pink-100"
                         />
                         <CostCategoryCard 
-                            href="#"
+                            href="/tour/meals"
                             title="ຄ່າອາຫານ" 
                             icon={<UtensilsCrossed className="h-6 w-6 text-yellow-600" />} 
                             buttonText="ເພີ່ມຄ່າອາຫານ"
