@@ -191,7 +191,7 @@ export default function TourCalculatorPage() {
                             iconColor="bg-red-100"
                         />
                         <CostCategoryCard 
-                            href="#"
+                            href="/tour/entrance-fees"
                             title="ຄ່າເຂົ້າຊົມສະຖານທີ່" 
                             icon={<Camera className="h-6 w-6 text-pink-600" />} 
                             buttonText="ເພີ່ມຄ່າເຂົ້າຊົມ"
