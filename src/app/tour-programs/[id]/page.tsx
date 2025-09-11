@@ -120,13 +120,13 @@ const CurrencyEntryTable = ({
                                                 />
                                             </PopoverContent>
                                         </Popover>
-                                        <span className="hidden print:inline">{item.date ? format(item.date, "dd/MM/yy") : ''}</span>
+                                        <span className="hidden print:inline print:text-xs">{item.date ? format(item.date, "dd/MM/yy") : ''}</span>
                                     </TableCell>
                                      <TableCell className="p-1">
                                         <Input 
                                             defaultValue={item.detail || ''} 
                                             onBlur={(e) => onUpdateItem(item.id, 'detail', e.target.value)}
-                                            className="h-8 print:border-none print:pl-0 print:font-lao"
+                                            className="h-8 print:border-none print:pl-0 print:font-lao print:text-sm"
                                         />
                                     </TableCell>
                                     <TableCell className="p-1">
@@ -134,7 +134,7 @@ const CurrencyEntryTable = ({
                                             type="text"
                                             defaultValue={formatCurrency(item.kip)}
                                             onBlur={(e) => onUpdateItem(item.id, 'kip', parseFormattedNumber(e.target.value))}
-                                            className="h-8 text-right print:border-none"
+                                            className="h-8 text-right print:border-none print:text-sm"
                                         />
                                     </TableCell>
                                      <TableCell className="p-1">
@@ -142,7 +142,7 @@ const CurrencyEntryTable = ({
                                             type="text"
                                             defaultValue={formatCurrency(item.baht)}
                                             onBlur={(e) => onUpdateItem(item.id, 'baht', parseFormattedNumber(e.target.value))}
-                                            className="h-8 text-right print:border-none"
+                                            className="h-8 text-right print:border-none print:text-sm"
                                         />
                                     </TableCell>
                                      <TableCell className="p-1">
@@ -150,7 +150,7 @@ const CurrencyEntryTable = ({
                                             type="text"
                                             defaultValue={formatCurrency(item.usd)}
                                             onBlur={(e) => onUpdateItem(item.id, 'usd', parseFormattedNumber(e.target.value))}
-                                            className="h-8 text-right print:border-none"
+                                            className="h-8 text-right print:border-none print:text-sm"
                                         />
                                     </TableCell>
                                      <TableCell className="p-1">
@@ -158,7 +158,7 @@ const CurrencyEntryTable = ({
                                             type="text"
                                             defaultValue={formatCurrency(item.cny)}
                                             onBlur={(e) => onUpdateItem(item.id, 'cny', parseFormattedNumber(e.target.value))}
-                                            className="h-8 text-right print:border-none"
+                                            className="h-8 text-right print:border-none print:text-sm"
                                         />
                                     </TableCell>
                                     <TableCell className="p-1 text-center print:hidden">
@@ -177,6 +177,19 @@ const CurrencyEntryTable = ({
                                 <TableCell className="text-right">{formatCurrency(totals.usd)}</TableCell>
                                 <TableCell className="text-right">{formatCurrency(totals.cny)}</TableCell>
                                 <TableCell className="print:hidden"></TableCell>
+                            </TableRow>
+                        </TableFooter>
+                    </Table>
+                </div>
+                 <div className="hidden print:block pt-4">
+                    <Table>
+                        <TableFooter>
+                            <TableRow className="bg-muted font-bold">
+                                <TableCell colSpan={2} className="text-right print:font-lao">ລວມ (Total)</TableCell>
+                                <TableCell className="text-right">{formatCurrency(totals.kip)}</TableCell>
+                                <TableCell className="text-right">{formatCurrency(totals.baht)}</TableCell>
+                                <TableCell className="text-right">{formatCurrency(totals.usd)}</TableCell>
+                                <TableCell className="text-right">{formatCurrency(totals.cny)}</TableCell>
                             </TableRow>
                         </TableFooter>
                     </Table>
@@ -534,85 +547,83 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
         </div>
       </header>
       <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 print:p-2 print:gap-1">
-        <div>
-            <Tabs defaultValue="info" onValueChange={(v) => setActiveTab(v as TabValue)} className="mt-4">
-                <TabsList className="grid w-full grid-cols-4 print:hidden">
-                    <TabsTrigger value="info">ข้อมูลโปรแกรม</TabsTrigger>
-                    <TabsTrigger value="income">บันทึกรายรับ</TabsTrigger>
-                    <TabsTrigger value="costs">คำนวณต้นทุน</TabsTrigger>
-                    <TabsTrigger value="summary">สรุปผล</TabsTrigger>
-                </TabsList>
-                <TabsContent value="info" className="mt-4">
-                    <ProgramInfoCard />
-                </TabsContent>
-                <TabsContent value="income" className="mt-4">
-                     <div className={activeTab === 'income' ? 'print:block' : 'print:hidden'}>
-                        <PrintHeader title="ລາຍຮັບ (Total Income)" />
-                        <CurrencyEntryTable 
-                            items={incomeItems}
-                            onAddItem={handleAddIncomeItem}
-                            onUpdateItem={handleUpdateIncomeItem as any}
-                            onDeleteItem={handleDeleteIncomeItem}
-                            title="ตารางบันทึกรายรับ"
-                            description="บันทึกรายรับทั้งหมด ของโปรแกรมนี้"
-                        />
-                    </div>
-                </TabsContent>
-                <TabsContent value="costs" className="mt-4">
-                     <div className={activeTab === 'costs' ? 'print:block' : 'print:hidden'}>
-                        <PrintHeader title="ລາຍຈ່າຍ (Total Costs)" />
-                        <CurrencyEntryTable 
-                            items={costItems}
-                            onAddItem={handleAddCostItem}
-                            onUpdateItem={handleUpdateCostItem as any}
-                            onDeleteItem={handleDeleteCostItem}
-                            title="ตารางคำนวณต้นทุน"
-                            description="บันทึกค่าใช้จ่ายทั้งหมดของโปรแกรมนี้"
-                        />
-                    </div>
-                </TabsContent>
-                <TabsContent value="summary" className="mt-4">
-                    <div className={activeTab === 'summary' ? 'print:block' : 'print:hidden'}>
-                        <PrintHeader title="ສະຫຼຸບໂປຣແກມທົວ (Tour Program Summary)" />
-                    </div>
-                    <Card>
-                        <CardHeader className="print:hidden">
-                            <CardTitle>สรุปผลประกอบการ</CardTitle>
-                            <CardDescription>สรุปรายรับ, ต้นทุน, และกำไร/ขาดทุน สำหรับโปรแกรมนี้</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-6 print:p-0 print:space-y-2">
-                             <div>
-                                <h3 className="text-lg font-semibold mb-2 print:font-lao print:text-sm print:font-bold print:border-b print:pb-1">ລາຍຮັບ (Total Income)</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 print:grid-cols-4">
-                                    <SummaryCard title="รายรับ" value={summaryData.totalIncomes.kip} currency="KIP" />
-                                    <SummaryCard title="รายรับ" value={summaryData.totalIncomes.baht} currency="BAHT" />
-                                    <SummaryCard title="รายรับ" value={summaryData.totalIncomes.usd} currency="USD" />
-                                    <SummaryCard title="รายรับ" value={summaryData.totalIncomes.cny} currency="CNY" />
-                                </div>
-                            </div>
-                            <div>
-                                <h3 className="text-lg font-semibold mb-2 print:font-lao print:text-sm print:font-bold print:border-b print:pb-1">ລາຍຈ່າຍ (Total Costs)</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 print:grid-cols-4">
-                                    <SummaryCard title="ต้นทุน" value={summaryData.totalCosts.kip} currency="KIP" />
-                                    <SummaryCard title="ต้นทุน" value={summaryData.totalCosts.baht} currency="BAHT" />
-                                    <SummaryCard title="ต้นทุน" value={summaryData.totalCosts.usd} currency="USD" />
-                                    <SummaryCard title="ต้นทุน" value={summaryData.totalCosts.cny} currency="CNY" />
-                                </div>
-                            </div>
-                            <div>
-                                <h3 className="text-lg font-semibold mb-2 print:font-lao print:text-sm print:font-bold print:border-b print:pb-1">ກຳໄລ / ຂາດທຶນ (Profit / Loss)</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 print:grid-cols-4">
-                                    {printCurrencies.includes('KIP') && <SummaryCard title="ກຳໄລ/ຂາດທຶນ" value={summaryData.profit.kip} currency="KIP" isProfit />}
-                                    {printCurrencies.includes('BAHT') && <SummaryCard title="ກຳໄລ/ຂາດທຶນ" value={summaryData.profit.baht} currency="BAHT" isProfit />}
-                                    {printCurrencies.includes('USD') && <SummaryCard title="ກຳໄລ/ຂາດທຶນ" value={summaryData.profit.usd} currency="USD" isProfit />}
-                                    {printCurrencies.includes('CNY') && <SummaryCard title="ກຳໄລ/ຂາດທຶນ" value={summaryData.profit.cny} currency="CNY" isProfit />}
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-            </Tabs>
-        </div>
+        <Tabs defaultValue="info" onValueChange={(v) => setActiveTab(v as TabValue)} className="mt-4">
+          <TabsList className="grid w-full grid-cols-4 print:hidden">
+              <TabsTrigger value="info">ข้อมูลโปรแกรม</TabsTrigger>
+              <TabsTrigger value="income">บันทึกรายรับ</TabsTrigger>
+              <TabsTrigger value="costs">คำนวณต้นทุน</TabsTrigger>
+              <TabsTrigger value="summary">สรุปผล</TabsTrigger>
+          </TabsList>
+          <TabsContent value="info" className="mt-4">
+              <ProgramInfoCard />
+          </TabsContent>
+          <TabsContent value="income" className="mt-4">
+               <div className={activeTab === 'income' ? 'block' : 'hidden'}>
+                  <PrintHeader title="ລາຍຮັບ (Total Income)" />
+                  <CurrencyEntryTable 
+                      items={incomeItems}
+                      onAddItem={handleAddIncomeItem}
+                      onUpdateItem={handleUpdateIncomeItem as any}
+                      onDeleteItem={handleDeleteIncomeItem}
+                      title="ตารางบันทึกรายรับ"
+                      description="บันทึกรายรับทั้งหมด ของโปรแกรมนี้"
+                  />
+              </div>
+          </TabsContent>
+          <TabsContent value="costs" className="mt-4">
+               <div className={activeTab === 'costs' ? 'block' : 'hidden'}>
+                  <PrintHeader title="ລາຍຈ່າຍ (Total Costs)" />
+                  <CurrencyEntryTable 
+                      items={costItems}
+                      onAddItem={handleAddCostItem}
+                      onUpdateItem={handleUpdateCostItem as any}
+                      onDeleteItem={handleDeleteCostItem}
+                      title="ตารางคำนวณต้นทุน"
+                      description="บันทึกค่าใช้จ่ายทั้งหมดของโปรแกรมนี้"
+                  />
+              </div>
+          </TabsContent>
+          <TabsContent value="summary" className="mt-4">
+              <div className={activeTab === 'summary' ? 'block' : 'hidden'}>
+                  <PrintHeader title="ສະຫຼຸບໂປຣແກມທົວ (Tour Program Summary)" />
+              </div>
+              <Card>
+                  <CardHeader className="print:hidden">
+                      <CardTitle>สรุปผลประกอบการ</CardTitle>
+                      <CardDescription>สรุปรายรับ, ต้นทุน, และกำไร/ขาดทุน สำหรับโปรแกรมนี้</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6 print:p-0 print:space-y-2">
+                       <div>
+                          <h3 className="text-lg font-semibold mb-2 print:font-lao print:text-sm print:font-bold print:border-b print:pb-1">ລາຍຮັບ (Total Income)</h3>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 print:grid-cols-4">
+                              <SummaryCard title="รายรับ" value={summaryData.totalIncomes.kip} currency="KIP" />
+                              <SummaryCard title="รายรับ" value={summaryData.totalIncomes.baht} currency="BAHT" />
+                              <SummaryCard title="รายรับ" value={summaryData.totalIncomes.usd} currency="USD" />
+                              <SummaryCard title="รายรับ" value={summaryData.totalIncomes.cny} currency="CNY" />
+                          </div>
+                      </div>
+                      <div>
+                          <h3 className="text-lg font-semibold mb-2 print:font-lao print:text-sm print:font-bold print:border-b print:pb-1">ລາຍຈ່າຍ (Total Costs)</h3>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 print:grid-cols-4">
+                              <SummaryCard title="ต้นทุน" value={summaryData.totalCosts.kip} currency="KIP" />
+                              <SummaryCard title="ต้นทุน" value={summaryData.totalCosts.baht} currency="BAHT" />
+                              <SummaryCard title="ต้นทุน" value={summaryData.totalCosts.usd} currency="USD" />
+                              <SummaryCard title="ต้นทุน" value={summaryData.totalCosts.cny} currency="CNY" />
+                          </div>
+                      </div>
+                      <div>
+                          <h3 className="text-lg font-semibold mb-2 print:font-lao print:text-sm print:font-bold print:border-b print:pb-1">ກຳໄລ / ຂາດທຶນ (Profit / Loss)</h3>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 print:grid-cols-4">
+                              {printCurrencies.includes('KIP') && <SummaryCard title="ກຳໄລ/ຂາດທຶນ" value={summaryData.profit.kip} currency="KIP" isProfit />}
+                              {printCurrencies.includes('BAHT') && <SummaryCard title="ກຳໄລ/ຂາດທຶນ" value={summaryData.profit.baht} currency="BAHT" isProfit />}
+                              {printCurrencies.includes('USD') && <SummaryCard title="ກຳໄລ/ຂາດທຶນ" value={summaryData.profit.usd} currency="USD" isProfit />}
+                              {printCurrencies.includes('CNY') && <SummaryCard title="ກຳໄລ/ຂາດທຶນ" value={summaryData.profit.cny} currency="CNY" isProfit />}
+                          </div>
+                      </div>
+                  </CardContent>
+              </Card>
+          </TabsContent>
+      </Tabs>
       </main>
     </div>
   )
