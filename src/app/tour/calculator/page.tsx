@@ -183,7 +183,7 @@ export default function TourCalculatorPage() {
                             iconColor="bg-orange-100"
                         />
                          <CostCategoryCard 
-                            href="#"
+                            href="/tour/train-tickets"
                             title="ຄ່າປີ້ລົດໄຟ" 
                             icon={<TrainFront className="h-6 w-6 text-red-600" />} 
                             buttonText="ເພີ່ມຄ່າປີ້ລົດໄຟ"
