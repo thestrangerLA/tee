@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -113,18 +114,22 @@ export default function TourCalculatorPage() {
     });
 
     // Generic state update function
-    const updateCosts = <T extends keyof TourCosts>(category: T, data: TourCosts[T]) => {
-        setAllCosts(prev => {
-            const newState = { ...prev, [category]: data };
+    const updateCosts = useCallback(<T extends keyof TourCosts>(category: T, data: TourCosts[T]) => {
+        setAllCosts(prev => ({ ...prev, [category]: data }));
+    }, []);
+
+    // Effect to save to localStorage and dispatch events after state has been updated
+    useEffect(() => {
+        costCategories.forEach(category => {
             try {
-                localStorage.setItem(`${LOCAL_STORAGE_KEY_PREFIX}${category}`, JSON.stringify(data));
+                localStorage.setItem(`${LOCAL_STORAGE_KEY_PREFIX}${category}`, JSON.stringify(allCosts[category]));
                 window.dispatchEvent(new CustomEvent(`${category}Update`));
             } catch (error) {
                 console.error(`Failed to save ${category} to localStorage`, error);
             }
-            return newState;
         });
-    };
+    }, [allCosts]);
+
 
     // Load all data from localStorage on initial render
     useEffect(() => {
@@ -609,6 +614,5 @@ export default function TourCalculatorPage() {
     );
 
     
-}
 
     
