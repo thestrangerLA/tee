@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { ArrowLeft, BookOpen, Calendar as CalendarIcon } from "lucide-react";
+import { ArrowLeft, BookOpen, Calendar as CalendarIcon, Printer } from "lucide-react";
 import { listenToTourTransactions, addTourTransaction } from '@/services/tourAccountancyService';
 import type { Transaction, CurrencyValues } from '@/lib/types';
 import { getMonth, format, setMonth, isWithinInterval, startOfYear, endOfYear, getYear } from 'date-fns';
@@ -147,8 +147,8 @@ export default function GeneralLedgerPage() {
 
 
     return (
-        <div className="flex min-h-screen w-full flex-col bg-muted/40">
-            <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
+        <div className="flex min-h-screen w-full flex-col bg-muted/40 print:bg-white">
+            <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 print:hidden">
                 <Button variant="outline" size="icon" className="h-8 w-8" asChild>
                     <Link href="/tour/reports">
                         <ArrowLeft className="h-4 w-4" />
@@ -159,9 +159,23 @@ export default function GeneralLedgerPage() {
                     <BookOpen className="h-6 w-6 text-primary"/>
                     <h1 className="text-xl font-bold tracking-tight">ประวัติรับ-จ่ายทั่วไป</h1>
                 </div>
+                 <div className="ml-auto">
+                     <Button onClick={() => window.print()} variant="outline" size="sm">
+                        <Printer className="mr-2 h-4 w-4" />
+                        พิมพ์
+                    </Button>
+                </div>
             </header>
-            <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-                 <Card>
+            <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 print:p-2 print:gap-2">
+                 <div className="hidden print:block text-center mb-4">
+                    <h1 className="text-xl font-bold">ประวัติรับ-จ่ายทั่วไป</h1>
+                    {startDate && endDate && (
+                        <p className="text-sm text-muted-foreground">
+                            สำหรับวันที่ {format(startDate, "d MMM yyyy", { locale: th })} - {format(endDate, "d MMM yyyy", { locale: th })}
+                        </p>
+                    )}
+                </div>
+                 <Card className="print:hidden">
                     <CardHeader>
                         <CardTitle>ตัวกรองรายงาน</CardTitle>
                     </CardHeader>
@@ -196,14 +210,14 @@ export default function GeneralLedgerPage() {
                     </CardContent>
                 </Card>
 
-                 <Card>
-                    <CardHeader>
+                 <Card className="print:shadow-none print:border-none">
+                    <CardHeader className="print:hidden">
                          <CardDescription>
                             แสดงรายการธุรกรรมทั่วไปที่ไม่ผูกกับโปรแกรมทัวร์สำหรับช่วงวันที่ที่เลือก
                         </CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="p-4 bg-muted/50 rounded-lg space-y-2">
+                    <CardContent className="space-y-4 print:p-0">
+                        <div className="p-4 bg-muted/50 rounded-lg space-y-2 print:border print:p-2">
                             <h3 className="font-semibold">ยอดรวมสำหรับช่วงวันที่ที่เลือก</h3>
                             <Table>
                                 <TableHeader>
@@ -234,10 +248,10 @@ export default function GeneralLedgerPage() {
                         </div>
 
                         {reportData.monthlyReports.length > 0 ? (
-                            <Accordion type="single" collapsible className="w-full">
+                            <Accordion type="single" collapsible className="w-full print:border-none">
                                 {reportData.monthlyReports.map(({ year, month, transactions, net }) => (
-                                    <AccordionItem value={`month-${year}-${month}`} key={`${year}-${month}`}>
-                                        <AccordionTrigger>
+                                    <AccordionItem value={`month-${year}-${month}`} key={`${year}-${month}`} className="print:border-b-0">
+                                        <AccordionTrigger className="print:hidden">
                                         <div className="flex flex-col md:flex-row justify-between w-full pr-4 text-sm">
                                             <div className="font-semibold text-base mb-2 md:mb-0">{format(setMonth(new Date(year, month), month), 'LLLL yyyy', { locale: th })}</div>
                                              <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-x-4">
@@ -250,7 +264,10 @@ export default function GeneralLedgerPage() {
                                             </div>
                                         </div>
                                         </AccordionTrigger>
-                                        <AccordionContent>
+                                        <div className="hidden print:block my-4">
+                                            <h3 className="font-semibold text-lg border-b pb-2">{format(setMonth(new Date(year, month), month), 'LLLL yyyy', { locale: th })}</h3>
+                                        </div>
+                                        <AccordionContent className="print:block">
                                             <Table>
                                                 <TableHeader>
                                                     <TableRow>
@@ -291,5 +308,7 @@ export default function GeneralLedgerPage() {
     );
 }
 
+
+    
 
     
