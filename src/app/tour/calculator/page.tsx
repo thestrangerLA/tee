@@ -167,7 +167,7 @@ export default function TourCalculatorPage() {
                             iconColor="bg-purple-100"
                         />
                         <CostCategoryCard 
-                            href="#"
+                            href="/tour/transport"
                             title="ค่าขนส่ง" 
                             icon={<Truck className="h-6 w-6 text-green-600" />} 
                             buttonText="เพิ่มค่าขนส่ง"
@@ -228,3 +228,5 @@ export default function TourCalculatorPage() {
         </div>
     );
 }
+
+    
