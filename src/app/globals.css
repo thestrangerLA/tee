@@ -83,9 +83,6 @@
 }
 
 @media print {
-  body > *:not(.print-container) {
-    display: none;
-  }
   .print-container {
       display: block !important;
       padding: 1rem;

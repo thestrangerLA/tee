@@ -196,7 +196,7 @@ export default function GeneralLedgerPage() {
                     </CardContent>
                 </Card>
 
-                <div className="print-container">
+                <div className="print-container hidden">
                     <div className="space-y-4">
                         <div className="text-center">
                             <h1 className="text-xl font-bold font-lao">ຍອດລວມສໍາລັບຊ່ວງວັນທີທີ່ເລືອກ</h1>
