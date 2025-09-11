@@ -215,7 +215,7 @@ export default function TourCalculatorPage() {
                             iconColor="bg-blue-100"
                         />
                         <CostCategoryCard 
-                            href="#"
+                            href="/tour/documents"
                             title="ຄ່າເອກະສານ" 
                             icon={<FileText className="h-6 w-6 text-slate-600" />} 
                             buttonText="ເພີ່ມຄ່າເອກະສານ"
