@@ -43,7 +43,7 @@ export default function ProgramSummaryPage() {
     const [programs, setPrograms] = useState<TourProgram[]>([]);
     const [costs, setCosts] = useState<TourCostItem[]>([]);
     const [incomes, setIncomes] = useState<TourIncomeItem[]>([]);
-    const [startDate, setStartDate] = useState<Date | undefined>(startOfYear(new Date()));
+    const [startDate, setStartDate] = useState<Date | undefined>(new Date(2025, 7, 1));
     const [endDate, setEndDate] = useState<Date | undefined>(endOfYear(new Date()));
 
     useEffect(() => {
@@ -264,5 +264,3 @@ export default function ProgramSummaryPage() {
         </div>
     );
 }
-
-    
