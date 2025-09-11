@@ -74,7 +74,7 @@ const CurrencyEntryTable = ({
     }, [items]);
 
     return (
-        <Card>
+        <Card className="print:shadow-none print:border-none">
             <CardHeader className="flex flex-row items-center justify-between print:hidden">
                  <div>
                     <CardTitle>{title}</CardTitle>
@@ -85,13 +85,13 @@ const CurrencyEntryTable = ({
                     เพิ่มรายการ
                 </Button>
             </CardHeader>
-             <CardContent>
+             <CardContent className="print:p-0">
                 <div className="overflow-x-auto">
                     <Table>
                         <TableHeader>
                             <TableRow>
                                 <TableHead className="w-[150px] print:hidden">ວັນທີ (Date)</TableHead>
-                                <TableHead>ລາຍລະອຽດ (Description)</TableHead>
+                                <TableHead className="print:font-lao">ລາຍລະອຽດ (Description)</TableHead>
                                 <TableHead className="text-right">KIP</TableHead>
                                 <TableHead className="text-right">BAHT</TableHead>
                                 <TableHead className="text-right">USD</TableHead>
@@ -125,7 +125,7 @@ const CurrencyEntryTable = ({
                                         <Input 
                                             defaultValue={item.detail || ''} 
                                             onBlur={(e) => onUpdateItem(item.id, 'detail', e.target.value)}
-                                            className="h-8"
+                                            className="h-8 print:border-none print:pl-0"
                                         />
                                     </TableCell>
                                     <TableCell className="p-1">
@@ -133,7 +133,7 @@ const CurrencyEntryTable = ({
                                             type="text"
                                             defaultValue={formatCurrency(item.kip)}
                                             onBlur={(e) => onUpdateItem(item.id, 'kip', parseFormattedNumber(e.target.value))}
-                                            className="h-8 text-right"
+                                            className="h-8 text-right print:border-none"
                                         />
                                     </TableCell>
                                      <TableCell className="p-1">
@@ -141,7 +141,7 @@ const CurrencyEntryTable = ({
                                             type="text"
                                             defaultValue={formatCurrency(item.baht)}
                                             onBlur={(e) => onUpdateItem(item.id, 'baht', parseFormattedNumber(e.target.value))}
-                                            className="h-8 text-right"
+                                            className="h-8 text-right print:border-none"
                                         />
                                     </TableCell>
                                      <TableCell className="p-1">
@@ -149,7 +149,7 @@ const CurrencyEntryTable = ({
                                             type="text"
                                             defaultValue={formatCurrency(item.usd)}
                                             onBlur={(e) => onUpdateItem(item.id, 'usd', parseFormattedNumber(e.target.value))}
-                                            className="h-8 text-right"
+                                            className="h-8 text-right print:border-none"
                                         />
                                     </TableCell>
                                      <TableCell className="p-1">
@@ -157,7 +157,7 @@ const CurrencyEntryTable = ({
                                             type="text"
                                             defaultValue={formatCurrency(item.cny)}
                                             onBlur={(e) => onUpdateItem(item.id, 'cny', parseFormattedNumber(e.target.value))}
-                                            className="h-8 text-right"
+                                            className="h-8 text-right print:border-none"
                                         />
                                     </TableCell>
                                     <TableCell className="p-1 text-center print:hidden">
@@ -171,7 +171,7 @@ const CurrencyEntryTable = ({
                         <TableFooter>
                             <TableRow className="bg-muted font-bold">
                                 <TableCell colSpan={2} className="text-right print:hidden">ລວມ (Total)</TableCell>
-                                <TableCell colSpan={1} className="text-right hidden print:table-cell">ລວມ (Total)</TableCell>
+                                <TableCell colSpan={1} className="text-right hidden print:table-cell print:font-lao">ລວມ (Total)</TableCell>
                                 <TableCell className="text-right">{formatCurrency(totals.kip)}</TableCell>
                                 <TableCell className="text-right">{formatCurrency(totals.baht)}</TableCell>
                                 <TableCell className="text-right">{formatCurrency(totals.usd)}</TableCell>
@@ -236,6 +236,7 @@ const CurrencyInput = ({ label, amount, currency, onAmountChange, onCurrencyChan
     </div>
 );
 
+type TabValue = 'info' | 'income' | 'costs' | 'summary';
 
 export default function TourProgramDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
@@ -248,6 +249,7 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
     
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
+    const [activeTab, setActiveTab] = useState<TabValue>('info');
 
     useEffect(() => {
         if (!id) return;
@@ -414,55 +416,67 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
         )
     }
     
+    const PrintHeader = ({ title }: { title: string }) => (
+        <div className="hidden print:block print:space-y-4 border-b-2 border-slate-300 pb-4 mb-4">
+            <h2 className="text-lg font-bold mb-2 text-center print:font-lao">{title}</h2>
+            <div className="grid grid-cols-2 gap-x-8 text-sm">
+                 <div className="space-y-1">
+                    <div className="flex justify-between"><strong className="font-semibold">Tour Program:</strong><span>{localProgram.programName}</span></div>
+                    <div className="flex justify-between"><strong className="font-semibold">Tour Dates:</strong><span className="whitespace-pre-wrap text-right">{localProgram.tourDates}</span></div>
+                    <div className="flex justify-between"><strong className="font-semibold">Duration:</strong><span>{localProgram.durationDays} days</span></div>
+                </div>
+                <div className="space-y-1">
+                    <div className="flex justify-between"><strong className="font-semibold">Group Code:</strong><span>{localProgram.tourCode}</span></div>
+                    <div className="flex justify-between"><strong className="font-semibold">Nationality:</strong><span>{localProgram.groupName}</span></div>
+                    <div className="flex justify-between"><strong className="font-semibold">Pax:</strong><span>{localProgram.pax}</span></div>
+                    <div className="flex justify-between"><strong className="font-semibold">Destination:</strong><span>{localProgram.destination}</span></div>
+                </div>
+            </div>
+        </div>
+    );
+
     const ProgramInfoCard = () => (
-         <Card className="print:shadow-none print:border-none print:p-0">
-            <CardHeader className="print:hidden">
+         <Card className="print:hidden">
+            <CardHeader>
                 <CardTitle>รายละเอียดโปรแกรมและข้อมูลกลุ่ม</CardTitle>
                 <CardDescription>
                     วันที่สร้าง: {localProgram.createdAt ? format(localProgram.createdAt, "PPP", {locale: th}) : '-'}
                      {isSaving && <span className="ml-4 text-blue-500 animate-pulse">กำลังบันทึก...</span>}
                 </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6 print:space-y-2 print:p-0">
-                 <div className="grid md:grid-cols-3 gap-6 print:gap-2">
+            <CardContent className="space-y-6">
+                 <div className="grid md:grid-cols-3 gap-6">
                      <div className="grid gap-2">
                         <Label htmlFor="programName">Tour Program</Label>
-                        <Input id="programName" value={localProgram.programName} onChange={(e) => handleProgramChange('programName', e.target.value)} onBlur={handleSaveProgramInfo} className="print:hidden" disabled={isSaving} />
-                         <p className="hidden print:block print:text-sm print:font-semibold">{localProgram.programName}</p>
+                        <Input id="programName" value={localProgram.programName} onChange={(e) => handleProgramChange('programName', e.target.value)} onBlur={handleSaveProgramInfo} disabled={isSaving} />
                     </div>
                      <div className="grid gap-2">
                         <Label htmlFor="tourCode">Group Code</Label>
-                        <Input id="tourCode" value={localProgram.tourCode} onChange={(e) => handleProgramChange('tourCode', e.target.value)} onBlur={handleSaveProgramInfo} className="print:hidden" disabled={isSaving} />
-                        <p className="hidden print:block print:text-sm">{localProgram.tourCode}</p>
+                        <Input id="tourCode" value={localProgram.tourCode} onChange={(e) => handleProgramChange('tourCode', e.target.value)} onBlur={handleSaveProgramInfo} disabled={isSaving} />
                     </div>
                      <div className="grid gap-2">
                         <Label htmlFor="groupName">Nationality</Label>
-                        <Input id="groupName" value={localProgram.groupName} onChange={(e) => handleProgramChange('groupName', e.target.value)} onBlur={handleSaveProgramInfo} className="print:hidden" disabled={isSaving} />
-                        <p className="hidden print:block print:text-sm">{localProgram.groupName}</p>
+                        <Input id="groupName" value={localProgram.groupName} onChange={(e) => handleProgramChange('groupName', e.target.value)} onBlur={handleSaveProgramInfo} disabled={isSaving} />
                     </div>
                     <div className="grid gap-2 md:col-span-3">
                         <Label htmlFor="tourDates">วันที่เดินทาง (Tour Dates)</Label>
-                        <Textarea id="tourDates" value={localProgram.tourDates || ''} onChange={(e) => handleProgramChange('tourDates', e.target.value)} onBlur={handleSaveProgramInfo} className="print:hidden" disabled={isSaving} />
-                        <p className="hidden print:block print:text-sm whitespace-pre-wrap">{localProgram.tourDates}</p>
+                        <Textarea id="tourDates" value={localProgram.tourDates || ''} onChange={(e) => handleProgramChange('tourDates', e.target.value)} onBlur={handleSaveProgramInfo} disabled={isSaving} />
                     </div>
                     <div className="grid gap-2">
                         <Label htmlFor="pax">จำนวนคน (Pax)</Label>
-                        <Input id="pax" type="number" value={localProgram.pax} onChange={(e) => handleProgramChange('pax', Number(e.target.value))} onBlur={handleSaveProgramInfo} className="print:hidden" disabled={isSaving} />
-                        <p className="hidden print:block print:text-sm">{localProgram.pax}</p>
+                        <Input id="pax" type="number" value={localProgram.pax} onChange={(e) => handleProgramChange('pax', Number(e.target.value))} onBlur={handleSaveProgramInfo} disabled={isSaving} />
                     </div>
                      <div className="grid gap-2">
                         <Label htmlFor="destination">จุดหมาย</Label>
-                        <Input id="destination" value={localProgram.destination} onChange={(e) => handleProgramChange('destination', e.target.value)} onBlur={handleSaveProgramInfo} className="print:hidden" disabled={isSaving} />
-                        <p className="hidden print:block print:text-sm">{localProgram.destination}</p>
+                        <Input id="destination" value={localProgram.destination} onChange={(e) => handleProgramChange('destination', e.target.value)} onBlur={handleSaveProgramInfo} disabled={isSaving} />
                     </div>
                      <div className="grid gap-2">
                         <Label htmlFor="durationDays">ระยะเวลา (วัน)</Label>
-                        <Input id="durationDays" type="number" value={localProgram.durationDays} onChange={(e) => handleProgramChange('durationDays', Number(e.target.value))} onBlur={handleSaveProgramInfo} className="print:hidden" disabled={isSaving} />
-                        <p className="hidden print:block print:text-sm">{localProgram.durationDays}</p>
+                        <Input id="durationDays" type="number" value={localProgram.durationDays} onChange={(e) => handleProgramChange('durationDays', Number(e.target.value))} onBlur={handleSaveProgramInfo} disabled={isSaving} />
                     </div>
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-6 print:grid-cols-2">
+                <div className="grid md:grid-cols-2 gap-6">
                      <CurrencyInput 
                         label="Price"
                         amount={localProgram.price}
@@ -520,84 +534,8 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
         </div>
       </header>
       <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 print:p-2 print:gap-1">
-        {/* For Printing */}
-        <div className="hidden print:block print:space-y-4 border border-slate-200 p-4 rounded-lg shadow-sm">
-            <h2 className="text-lg font-bold mb-2 text-center print:font-lao">ສະຫຼຸບໂປຣແກມທົວ</h2>
-            
-            <div className="grid grid-cols-2 gap-x-8 text-sm">
-                {/* Column 1 */}
-                <div className="space-y-1">
-                    <div className="flex justify-between"><strong className="font-semibold">Tour Program:</strong><span>{localProgram.programName}</span></div>
-                    <div className="flex justify-between"><strong className="font-semibold">Tour Dates:</strong><span className="whitespace-pre-wrap text-right">{localProgram.tourDates}</span></div>
-                    <div className="flex justify-between"><strong className="font-semibold">Duration:</strong><span>{localProgram.durationDays} days</span></div>
-                </div>
-                {/* Column 2 */}
-                <div className="space-y-1">
-                    <div className="flex justify-between"><strong className="font-semibold">Group Code:</strong><span>{localProgram.tourCode}</span></div>
-                    <div className="flex justify-between"><strong className="font-semibold">Nationality:</strong><span>{localProgram.groupName}</span></div>
-                    <div className="flex justify-between"><strong className="font-semibold">Pax:</strong><span>{localProgram.pax}</span></div>
-                    <div className="flex justify-between"><strong className="font-semibold">Destination:</strong><span>{localProgram.destination}</span></div>
-                </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-x-8 text-sm mt-2 pt-2 border-t">
-                 {/* Financials */}
-                 <div className="space-y-1">
-                    <div className="flex justify-between"><strong className="font-semibold">Price:</strong><span className="font-bold">{formatCurrency(localProgram.price)} {localProgram.priceCurrency}</span></div>
-                    <div className="flex justify-between"><strong className="font-semibold">Bank Charge:</strong><span className="font-bold">{formatCurrency(localProgram.bankCharge)} {localProgram.bankChargeCurrency}</span></div>
-                    {localProgram.priceCurrency === localProgram.bankChargeCurrency && (
-                        <div className="flex justify-between"><strong className="font-semibold">Total Price:</strong><span className="font-bold">{formatCurrency(localProgram.totalPrice)} {localProgram.priceCurrency}</span></div>
-                    )}
-                 </div>
-                 <div className="space-y-1">
-                    {/* Empty space for alignment, or add other info here */}
-                 </div>
-            </div>
-            
-             <div className="space-y-1 pt-1">
-                <h2 className="text-sm font-bold border-b pb-1 print:font-lao">ລາຍຮັບ (Total Income)</h2>
-                <Table>
-                    <TableFooter>
-                         <TableRow className="font-bold text-xs">
-                             <TableCell className="text-right p-1">ລວມ (Total)</TableCell>
-                             {printCurrencies.includes('KIP') && <TableCell className="text-right p-1">{formatCurrency(summaryData.totalIncomes.kip)} KIP</TableCell>}
-                             {printCurrencies.includes('BAHT') && <TableCell className="text-right p-1">{formatCurrency(summaryData.totalIncomes.baht)} BAHT</TableCell>}
-                             {printCurrencies.includes('USD') && <TableCell className="text-right p-1">{formatCurrency(summaryData.totalIncomes.usd)} USD</TableCell>}
-                             {printCurrencies.includes('CNY') && <TableCell className="text-right p-1">{formatCurrency(summaryData.totalIncomes.cny)} CNY</TableCell>}
-                        </TableRow>
-                    </TableFooter>
-                </Table>
-            </div>
-
-            <div className="space-y-1 pt-2">
-                <h2 className="text-sm font-bold border-b pb-1 print:font-lao">ລາຍຈ່າຍ (Total Costs)</h2>
-                <Table>
-                    <TableFooter>
-                        <TableRow className="font-bold text-xs">
-                             <TableCell className="text-right p-1">ລວມ (Total)</TableCell>
-                            {printCurrencies.includes('KIP') && <TableCell className="text-right p-1">{formatCurrency(summaryData.totalCosts.kip)} KIP</TableCell>}
-                            {printCurrencies.includes('BAHT') && <TableCell className="text-right p-1">{formatCurrency(summaryData.totalCosts.baht)} BAHT</TableCell>}
-                            {printCurrencies.includes('USD') && <TableCell className="text-right p-1">{formatCurrency(summaryData.totalCosts.usd)} USD</TableCell>}
-                            {printCurrencies.includes('CNY') && <TableCell className="text-right p-1">{formatCurrency(summaryData.totalCosts.cny)} CNY</TableCell>}
-                        </TableRow>
-                    </TableFooter>
-                </Table>
-            </div>
-
-            <div className="space-y-1 pt-2">
-                 <h2 className="text-sm font-bold print:font-lao">ກຳໄລ/ຂາດທຶນ (Profit/Loss Summary)</h2>
-                 <div className="grid grid-cols-4 gap-2">
-                    {printCurrencies.includes('KIP') && <SummaryCard title="ກຳໄລ/ຂາດທຶນ" value={summaryData.profit.kip} currency="KIP" isProfit />}
-                    {printCurrencies.includes('BAHT') && <SummaryCard title="ກຳໄລ/ຂາດທຶນ" value={summaryData.profit.baht} currency="BAHT" isProfit />}
-                    {printCurrencies.includes('USD') && <SummaryCard title="ກຳໄລ/ຂາດທຶນ" value={summaryData.profit.usd} currency="USD" isProfit />}
-                    {printCurrencies.includes('CNY') && <SummaryCard title="ກຳໄລ/ຂາດທຶນ" value={summaryData.profit.cny} currency="CNY" isProfit />}
-                </div>
-            </div>
-        </div>
-
-        {/* For Screen */}
-        <div className="print:hidden">
-            <Tabs defaultValue="info" className="mt-4">
+        <div>
+            <Tabs defaultValue="info" onValueChange={(v) => setActiveTab(v as TabValue)} className="mt-4 print:hidden">
                 <TabsList className="grid w-full grid-cols-4">
                     <TabsTrigger value="info">ข้อมูลโปรแกรม</TabsTrigger>
                     <TabsTrigger value="income">บันทึกรายรับ</TabsTrigger>
@@ -605,9 +543,11 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                     <TabsTrigger value="summary">สรุปผล</TabsTrigger>
                 </TabsList>
                 <TabsContent value="info" className="mt-4">
+                    <PrintHeader title="รายละเอียดโปรแกรม" />
                     <ProgramInfoCard />
                 </TabsContent>
-                <TabsContent value="income" className="mt-4">
+                <TabsContent value="income" className="mt-4 print:block">
+                     <PrintHeader title="ລາຍຮັບ (Total Income)" />
                     <CurrencyEntryTable 
                         items={incomeItems}
                         onAddItem={handleAddIncomeItem}
@@ -617,7 +557,8 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                         description="บันทึกรายรับทั้งหมด ของโปรแกรมนี้"
                     />
                 </TabsContent>
-                <TabsContent value="costs" className="mt-4">
+                <TabsContent value="costs" className="mt-4 print:block">
+                     <PrintHeader title="ລາຍຈ່າຍ (Total Costs)" />
                     <CurrencyEntryTable 
                         items={costItems}
                         onAddItem={handleAddCostItem}
@@ -628,24 +569,27 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                     />
                 </TabsContent>
                 <TabsContent value="summary" className="mt-4">
+                    <div className={activeTab === 'summary' ? 'print:block' : 'print:hidden'}>
+                        <PrintHeader title="ສະຫຼຸບໂປຣແກມທົວ (Tour Program Summary)" />
+                    </div>
                     <Card>
-                        <CardHeader>
+                        <CardHeader className="print:hidden">
                             <CardTitle>สรุปผลประกอบการ</CardTitle>
                             <CardDescription>สรุปรายรับ, ต้นทุน, และกำไร/ขาดทุน สำหรับโปรแกรมนี้</CardDescription>
                         </CardHeader>
-                        <CardContent className="space-y-6">
-                             <div>
-                                <h3 className="text-lg font-semibold mb-2">ยอดรวมรายรับ</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <CardContent className="space-y-6 print:p-0 print:space-y-2">
+                             <div className={activeTab === 'summary' ? 'print:block' : 'print:hidden'}>
+                                <h3 className="text-lg font-semibold mb-2 print:font-lao print:text-sm print:font-bold print:border-b print:pb-1">ລາຍຮັບ (Total Income)</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 print:grid-cols-4">
                                     <SummaryCard title="รายรับ" value={summaryData.totalIncomes.kip} currency="KIP" />
                                     <SummaryCard title="รายรับ" value={summaryData.totalIncomes.baht} currency="BAHT" />
                                     <SummaryCard title="รายรับ" value={summaryData.totalIncomes.usd} currency="USD" />
                                     <SummaryCard title="รายรับ" value={summaryData.totalIncomes.cny} currency="CNY" />
                                 </div>
                             </div>
-                            <div>
-                                <h3 className="text-lg font-semibold mb-2">ยอดรวมต้นทุน</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div className={activeTab === 'summary' ? 'print:block' : 'print:hidden'}>
+                                <h3 className="text-lg font-semibold mb-2 print:font-lao print:text-sm print:font-bold print:border-b print:pb-1">ລາຍຈ່າຍ (Total Costs)</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 print:grid-cols-4">
                                     <SummaryCard title="ต้นทุน" value={summaryData.totalCosts.kip} currency="KIP" />
                                     <SummaryCard title="ต้นทุน" value={summaryData.totalCosts.baht} currency="BAHT" />
                                     <SummaryCard title="ต้นทุน" value={summaryData.totalCosts.usd} currency="USD" />
@@ -653,12 +597,12 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                                 </div>
                             </div>
                             <div>
-                                <h3 className="text-lg font-semibold mb-2">กำไร / ขาดทุนสุทธิ</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                    <SummaryCard title="ກຳໄລ/ຂาดທຶນ" value={summaryData.profit.kip} currency="KIP" isProfit />
-                                    <SummaryCard title="ກຳໄລ/ຂາດທຶນ" value={summaryData.profit.baht} currency="BAHT" isProfit />
-                                    <SummaryCard title="ກຳໄລ/ຂາດທຶນ" value={summaryData.profit.usd} currency="USD" isProfit />
-                                    <SummaryCard title="ກຳໄລ/ຂາດທຶນ" value={summaryData.profit.cny} currency="CNY" isProfit />
+                                <h3 className="text-lg font-semibold mb-2 print:font-lao print:text-sm print:font-bold print:border-b print:pb-1">ກຳໄລ / ຂາດທຶນ (Profit / Loss)</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 print:grid-cols-4">
+                                    {printCurrencies.includes('KIP') && <SummaryCard title="ກຳໄລ/ຂາດທຶນ" value={summaryData.profit.kip} currency="KIP" isProfit />}
+                                    {printCurrencies.includes('BAHT') && <SummaryCard title="ກຳໄລ/ຂາດທຶນ" value={summaryData.profit.baht} currency="BAHT" isProfit />}
+                                    {printCurrencies.includes('USD') && <SummaryCard title="ກຳໄລ/ຂາດທຶນ" value={summaryData.profit.usd} currency="USD" isProfit />}
+                                    {printCurrencies.includes('CNY') && <SummaryCard title="ກຳໄລ/ຂາດທຶນ" value={summaryData.profit.cny} currency="CNY" isProfit />}
                                 </div>
                             </div>
                         </CardContent>
@@ -670,5 +614,3 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
     </div>
   )
 }
-
-    
