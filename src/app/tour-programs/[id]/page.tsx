@@ -430,9 +430,9 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
     }
     
     const PrintHeader = ({ title }: { title: string }) => (
-        <div className="hidden print:block print:space-y-4 border-b-2 border-slate-300 pb-4 mb-4">
-            <h2 className="text-lg font-bold mb-2 text-center print:font-lao">{title}</h2>
-             <div className="grid grid-cols-2 gap-x-8 text-sm">
+         <div className="hidden print:block print:space-y-4 pb-4 mb-4">
+            <h2 className="text-lg font-bold mb-2 text-center font-lao">{title}</h2>
+             <div className="grid grid-cols-2 gap-x-8 text-sm border-b-2 border-slate-300 pb-4">
                  <div className="space-y-1">
                     <div className="flex justify-between"><strong className="font-semibold">Tour Program:</strong><span>{localProgram.programName}</span></div>
                     <div className="flex justify-between"><strong className="font-semibold">Tour Dates:</strong><span className="whitespace-pre-wrap text-right">{localProgram.tourDates}</span></div>
@@ -445,7 +445,6 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                     <div className="flex justify-between"><strong className="font-semibold">Destination:</strong><span>{localProgram.destination}</span></div>
                 </div>
             </div>
-            {/* Price section for summary print */}
             {activeTab === 'summary' && (
                  <div className="hidden print:grid print:grid-cols-2 print:gap-x-8 print:text-sm print:border-b-2 print:border-slate-300 print:pb-4 print:mb-4">
                     <div>
@@ -600,29 +599,29 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                     <PrintHeader title="ສະຫຼຸບໂປຣແກມທົວ (Tour Program Summary)" />
                     <div className="hidden print:block space-y-4">
                         {printCurrencies.map(currency => (
-                            <div key={currency}>
+                            <div key={currency} className="space-y-4">
                                 <div className="space-y-2">
-                                    <h3 className="text-base font-semibold border-b pb-1">ลายจ่าย (Total Costs)</h3>
-                                    <div className="flex justify-between text-sm">
-                                        <span>ລວມ (Total)</span>
+                                    <h3 className="text-base font-semibold border-b pb-1 font-lao">ລາຍຈ່າຍ (Total Costs)</h3>
+                                    <div className="flex justify-between text-sm pr-4">
+                                        <span className="font-lao">ລວມ (Total)</span>
                                         <span className="font-semibold">{formatCurrency((summaryData.totalCosts as any)[currency.toLowerCase()])} {currency}</span>
                                     </div>
                                 </div>
-                                 <div className="space-y-2 mt-4">
-                                    <h3 className="text-base font-semibold border-b pb-1">ลายรับ (Total Income)</h3>
-                                     <div className="flex justify-between text-sm">
-                                        <span>ລວມ (Total)</span>
+                                 <div className="space-y-2">
+                                    <h3 className="text-base font-semibold border-b pb-1 font-lao">ລາຍຮັບ (Total Income)</h3>
+                                     <div className="flex justify-between text-sm pr-4">
+                                        <span className="font-lao">ລວມ (Total)</span>
                                         <span className="font-semibold">{formatCurrency((summaryData.totalIncomes as any)[currency.toLowerCase()])} {currency}</span>
                                     </div>
                                 </div>
-                                <div className="space-y-2 mt-4">
-                                     <h3 className="text-base font-semibold border-b pb-1">ກໍາໄລ/ຂາດທຶນ (Profit/Loss Summary)</h3>
-                                     <Card className="w-48">
-                                         <CardHeader className="pb-1">
-                                            <CardTitle className="text-sm">ກໍາໄລ/ຂາດທຶນ</CardTitle>
+                                <div className="space-y-2">
+                                     <h3 className="text-base font-semibold border-b pb-1 font-lao">ກໍາໄລ/ຂາດທຶນ (Profit/Loss Summary)</h3>
+                                     <Card className="w-48 shadow-none border">
+                                         <CardHeader className="pb-1 p-2">
+                                            <CardTitle className="text-sm font-lao">ກໍາໄລ/ຂາດທຶນ</CardTitle>
                                             <CardDescription>{currency}</CardDescription>
                                          </CardHeader>
-                                        <CardContent>
+                                        <CardContent className="p-2">
                                             <p className={`text-xl font-bold ${(summaryData.profit as any)[currency.toLowerCase()] >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                                                 {formatCurrency((summaryData.profit as any)[currency.toLowerCase()])}
                                             </p>
