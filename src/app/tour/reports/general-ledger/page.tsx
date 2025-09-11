@@ -6,8 +6,7 @@ import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { ArrowLeft, BookOpen, Calendar as CalendarIcon, Printer } from "lucide-react";
+import { ArrowLeft, BookOpen, Calendar as CalendarIcon, Printer, ChevronRight } from "lucide-react";
 import { listenToTourTransactions, addTourTransaction } from '@/services/tourAccountancyService';
 import type { Transaction, CurrencyValues } from '@/lib/types';
 import { getMonth, format, setMonth, isWithinInterval, startOfYear, endOfYear, getYear } from 'date-fns';
@@ -52,33 +51,32 @@ export default function GeneralLedgerPage() {
 
         const groupedByMonth = filteredTransactions.reduce((acc, tx) => {
             const month = getMonth(tx.date);
-            if (!acc[month]) {
-                acc[month] = {
-                    year: getYear(tx.date),
+            const year = getYear(tx.date);
+            const key = `${year}-${month}`;
+            if (!acc[key]) {
+                acc[key] = {
+                    year,
+                    month,
                     transactions: [],
                     income: initialTotals(),
                     expense: initialTotals(),
                     net: initialTotals()
                 };
             }
-            acc[month].transactions.push(tx);
+            acc[key].transactions.push(tx);
             currencyKeys.forEach(c => {
                  if (tx.type === 'income') {
-                    acc[month].income[c] += tx[c] || 0;
+                    acc[key].income[c] += tx[c] || 0;
                 } else {
-                    acc[month].expense[c] += tx[c] || 0;
+                    acc[key].expense[c] += tx[c] || 0;
                 }
-                acc[month].net[c] = acc[month].income[c] - acc[month].expense[c];
+                acc[key].net[c] = acc[key].income[c] - acc[key].expense[c];
             });
             return acc;
-        }, {} as Record<number, { year: number, transactions: Transaction[], income: CurrencyValues, expense: CurrencyValues, net: CurrencyValues }>);
+        }, {} as Record<string, { year: number, month: number, transactions: Transaction[], income: CurrencyValues, expense: CurrencyValues, net: CurrencyValues }>);
         
-        const monthlyReports = Object.entries(groupedByMonth)
-            .map(([month, data]) => ({ 
-                month: parseInt(month), 
-                ...data
-            }))
-            .sort((a, b) => (a.year - b.year) || (a.month - b.month));
+        const monthlyReports = Object.values(groupedByMonth)
+            .sort((a, b) => (b.year - a.year) || (b.month - a.month));
         
         const grandTotals = {
             income: initialTotals(),
@@ -148,7 +146,7 @@ export default function GeneralLedgerPage() {
 
     return (
         <div className="flex min-h-screen w-full flex-col bg-muted/40 print:bg-white">
-            <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 print:hidden">
+            <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
                 <Button variant="outline" size="icon" className="h-8 w-8" asChild>
                     <Link href="/tour/reports">
                         <ArrowLeft className="h-4 w-4" />
@@ -159,23 +157,9 @@ export default function GeneralLedgerPage() {
                     <BookOpen className="h-6 w-6 text-primary"/>
                     <h1 className="text-xl font-bold tracking-tight">ประวัติรับ-จ่ายทั่วไป</h1>
                 </div>
-                 <div className="ml-auto">
-                     <Button onClick={() => window.print()} variant="outline" size="sm">
-                        <Printer className="mr-2 h-4 w-4" />
-                        พิมพ์
-                    </Button>
-                </div>
             </header>
-            <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 print:p-2 print:gap-2">
-                 <div className="hidden print:block text-center mb-4">
-                    <h1 className="text-xl font-bold">ประวัติรับ-จ่ายทั่วไป</h1>
-                    {startDate && endDate && (
-                        <p className="text-sm text-muted-foreground">
-                            สำหรับวันที่ {format(startDate, "d MMM yyyy", { locale: th })} - {format(endDate, "d MMM yyyy", { locale: th })}
-                        </p>
-                    )}
-                </div>
-                 <Card className="print:hidden">
+            <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
+                 <Card>
                     <CardHeader>
                         <CardTitle>ตัวกรองรายงาน</CardTitle>
                     </CardHeader>
@@ -210,14 +194,14 @@ export default function GeneralLedgerPage() {
                     </CardContent>
                 </Card>
 
-                 <Card className="print:shadow-none print:border-none">
-                    <CardHeader className="print:hidden">
+                 <Card>
+                    <CardHeader>
                          <CardDescription>
                             แสดงรายการธุรกรรมทั่วไปที่ไม่ผูกกับโปรแกรมทัวร์สำหรับช่วงวันที่ที่เลือก
                         </CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-4 print:p-0">
-                        <div className="p-4 bg-muted/50 rounded-lg space-y-2 print:border print:p-2">
+                    <CardContent className="space-y-4">
+                        <div className="p-4 bg-muted/50 rounded-lg space-y-2">
                             <h3 className="font-semibold">ยอดรวมสำหรับช่วงวันที่ที่เลือก</h3>
                             <Table>
                                 <TableHeader>
@@ -248,54 +232,34 @@ export default function GeneralLedgerPage() {
                         </div>
 
                         {reportData.monthlyReports.length > 0 ? (
-                            <Accordion type="single" collapsible className="w-full print:border-none">
-                                {reportData.monthlyReports.map(({ year, month, transactions, net }) => (
-                                    <AccordionItem value={`month-${year}-${month}`} key={`${year}-${month}`} className="print:border-b-0">
-                                        <AccordionTrigger className="print:hidden">
-                                        <div className="flex flex-col md:flex-row justify-between w-full pr-4 text-sm">
-                                            <div className="font-semibold text-base mb-2 md:mb-0">{format(setMonth(new Date(year, month), month), 'LLLL yyyy', { locale: th })}</div>
-                                             <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-x-4">
-                                                {currencyKeys.map(c => (
-                                                    <div key={c} className="flex items-center justify-end gap-1">
-                                                        <span className="font-bold uppercase text-xs">{c}:</span>
-                                                        <span className={`font-mono text-xs ${net[c] >= 0 ? 'text-blue-600' : 'text-red-600'}`}>{formatCurrency(net[c])}</span>
-                                                    </div>
-                                                ))}
+                           <div className="space-y-2">
+                            {reportData.monthlyReports.map(({ year, month, net }) => (
+                                <Link 
+                                    href={`/tour/reports/general-ledger-month?year=${year}&month=${month}`} 
+                                    key={`${year}-${month}`}
+                                    passHref
+                                >
+                                    <Card className="hover:bg-muted/50 cursor-pointer">
+                                        <CardContent className="p-4 flex items-center justify-between">
+                                            <div className="font-semibold text-base">
+                                                {format(setMonth(new Date(year, month), month), 'LLLL yyyy', { locale: th })}
                                             </div>
-                                        </div>
-                                        </AccordionTrigger>
-                                        <div className="hidden print:block my-4">
-                                            <h3 className="font-semibold text-lg border-b pb-2">{format(setMonth(new Date(year, month), month), 'LLLL yyyy', { locale: th })}</h3>
-                                        </div>
-                                        <AccordionContent className="print:block">
-                                            <Table>
-                                                <TableHeader>
-                                                    <TableRow>
-                                                        <TableHead>วันที่</TableHead>
-                                                        <TableHead>คำอธิบาย</TableHead>
-                                                        <TableHead>ประเภท</TableHead>
-                                                        {currencyKeys.map(c => <TableHead key={c} className="text-right uppercase">{c}</TableHead>)}
-                                                    </TableRow>
-                                                </TableHeader>
-                                                <TableBody>
-                                                    {transactions.map(tx => (
-                                                        <TableRow key={tx.id} className={tx.type === 'income' ? 'bg-green-50/30' : 'bg-red-50/30'}>
-                                                            <TableCell>{format(tx.date, 'dd/MM/yy')}</TableCell>
-                                                            <TableCell>{tx.description}</TableCell>
-                                                            <TableCell>{tx.type === 'income' ? 'รายรับ' : 'รายจ่าย'}</TableCell>
-                                                            {currencyKeys.map(c => (
-                                                                <TableCell key={c} className={`text-right font-mono ${tx[c] || 0 > 0 ? (tx.type === 'income' ? 'text-green-700' : 'text-red-700') : ''}`}>
-                                                                    {(tx[c] || 0) > 0 ? formatCurrency(tx[c]!) : '-'}
-                                                                </TableCell>
-                                                            ))}
-                                                        </TableRow>
+                                            <div className="flex items-center gap-4">
+                                                <div className="hidden sm:grid grid-cols-4 gap-x-4 text-xs">
+                                                    {currencyKeys.map(c => (
+                                                        <div key={c} className="flex items-center justify-end gap-1">
+                                                            <span className="font-bold uppercase text-muted-foreground">{c}:</span>
+                                                            <span className={`font-mono w-20 text-right ${net[c] >= 0 ? 'text-blue-600' : 'text-red-600'}`}>{formatCurrency(net[c])}</span>
+                                                        </div>
                                                     ))}
-                                                </TableBody>
-                                            </Table>
-                                        </AccordionContent>
-                                    </AccordionItem>
-                                ))}
-                            </Accordion>
+                                                </div>
+                                                <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                </Link>
+                            ))}
+                           </div>
                         ) : (
                             <div className="text-center text-muted-foreground py-8">
                                 ไม่มีประวัติรับ-จ่ายทั่วไปในปีที่เลือก
@@ -307,8 +271,3 @@ export default function GeneralLedgerPage() {
         </div>
     );
 }
-
-
-    
-
-    
