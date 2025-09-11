@@ -9,7 +9,7 @@ export default function Home() {
       <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
         <div className="flex items-center gap-2">
             <Leaf className="h-6 w-6 text-primary" />
-            <h1 className="text-xl font-bold tracking-tight font-headline">แอปพลิเคชันธุรกิจ</h1>
+            <h1 className="text-xl font-bold tracking-tight font-headline">ແອັບພລິເຄຊັນທຸລະກິດ</h1>
         </div>
       </header>
       <main className="flex flex-1 flex-col items-center justify-center gap-8 p-4">
@@ -17,12 +17,12 @@ export default function Home() {
           <Link href="/tour">
             <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-2xl font-bold font-headline">ธุรกิจทัวร์</CardTitle>
+                <CardTitle className="text-2xl font-bold font-headline">ທຸລະກິດທ່ອງທ່ຽວ</CardTitle>
                 <FerrisWheel className="h-8 w-8 text-primary" />
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  จัดการข้อมูลและโปรแกรมทัวร์
+                  ຈັດການຂໍ້ມູນ ແລະ ໂປຣແກຣມທົວ
                 </p>
               </CardContent>
             </Card>
@@ -30,12 +30,12 @@ export default function Home() {
           <Link href="/agriculture">
             <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-2xl font-bold font-headline">ธุรกิจร้านค้าเกษตร</CardTitle>
+                <CardTitle className="text-2xl font-bold font-headline">ທຸລະກິດກະສິກຳ</CardTitle>
                 <Leaf className="h-8 w-8 text-primary" />
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  จัดการสต็อก, บัญชี, และข้อมูลอื่นๆ สำหรับร้านค้าเกษตร
+                  ຈັດການສະຕັອກ, ບັນຊີ, ແລະ ຂໍ້ມູນອື່ນໆ
                 </p>
               </CardContent>
             </Card>
@@ -45,3 +45,5 @@ export default function Home() {
     </div>
   )
 }
+
+    

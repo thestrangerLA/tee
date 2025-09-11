@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,9 +10,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { ArrowLeft, Calculator, Save, Download, MapPin, Calendar as CalendarIcon, BedDouble, Truck, Plane, TrainFront, PlusCircle, Camera, UtensilsCrossed, Users, FileText } from "lucide-react";
+import { ArrowLeft, Save, Download, MapPin, Calendar as CalendarIcon, BedDouble, Truck, Plane, TrainFront, PlusCircle, Camera, UtensilsCrossed, Users, FileText } from "lucide-react";
 import { format } from 'date-fns';
 import { th } from 'date-fns/locale';
+import { TotalCostCard } from '@/components/tour/TotalCostCard';
 
 const CostCategoryCard = ({ title, icon, buttonText, buttonColor, iconColor, href }: { title: string, icon: React.ReactNode, buttonText: string, buttonColor: string, iconColor: string, href: string }) => (
     <Card className="shadow-sm">
@@ -63,6 +64,8 @@ export default function TourCalculatorPage() {
                 </div>
             </header>
             <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-4 md:gap-8 bg-muted/40">
+                 <TotalCostCard />
+
                  <Card className="w-full max-w-6xl mx-auto">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
@@ -152,7 +155,7 @@ export default function TourCalculatorPage() {
                  <Card className="w-full max-w-6xl mx-auto">
                      <CardHeader>
                         <CardTitle className="flex items-center gap-2">
-                            <Calculator className="h-6 w-6 text-primary" />
+                            
                             ຄຳນວນຄ່າໃຊ້ຈ່າຍ
                         </CardTitle>
                         <CardDescription>ເພີ່ມ ແລະ ຈັດການຄ່າໃຊ້ຈ່າຍຕ່າງໆ ສໍາລັບໂປຣແກຣມທົວນີ້</CardDescription>
@@ -227,4 +230,5 @@ export default function TourCalculatorPage() {
             </main>
         </div>
     );
-}
+
+    
