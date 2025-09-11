@@ -15,19 +15,19 @@ export default function TourReportsPage() {
                 <Button variant="outline" size="icon" className="h-8 w-8" asChild>
                     <Link href="/tour">
                         <ArrowLeft className="h-4 w-4" />
-                        <span className="sr-only">กลับไปหน้าหลัก</span>
+                        <span className="sr-only">ກັບໄປໜ້າຫຼັກ</span>
                     </Link>
                 </Button>
                 <div className="flex items-center gap-2">
                     <FilePieChart className="h-6 w-6 text-primary" />
-                    <h1 className="text-xl font-bold tracking-tight">สรุปยอดธุรกิจทัวร์</h1>
+                    <h1 className="text-xl font-bold tracking-tight">ສະຫຼຸບຍອດທຸລະກິດທ່ອງທ່ຽວ</h1>
                 </div>
             </header>
             <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 md:gap-8 max-w-4xl mx-auto w-full">
                 <Card>
                     <CardHeader>
-                        <CardTitle>เลือกรายงาน</CardTitle>
-                        <CardDescription>เลือกประเภทรายงานที่ต้องการดู</CardDescription>
+                        <CardTitle>ເລືອກລາຍງານ</CardTitle>
+                        <CardDescription>ເລືອກປະເພດລາຍງານທີ່ຕ້ອງການເບິ່ງ</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <Link href="/tour/reports/program-summary">
@@ -38,8 +38,8 @@ export default function TourReportsPage() {
                                           <FilePieChart className="h-6 w-6 text-primary" />
                                         </div>
                                         <div>
-                                            <CardTitle className="text-lg">สรุปผลประกอบการรายโปรแกรม</CardTitle>
-                                            <CardDescription>ดูภาพรวมกำไร-ขาดทุนของแต่ละโปรแกรมทัวร์</CardDescription>
+                                            <CardTitle className="text-lg">ສະຫຼຸບຜົນປະກອບການລາຍໂປຣແກຣມ</CardTitle>
+                                            <CardDescription>ເບິ່ງภาพລວມກຳໄລ-ຂາດທຶນຂອງແຕ່ລະໂປຣແກຣມທົວ</CardDescription>
                                         </div>
                                     </div>
                                     <ChevronRight className="h-5 w-5 text-muted-foreground" />
@@ -54,8 +54,8 @@ export default function TourReportsPage() {
                                           <BookOpen className="h-6 w-6 text-primary" />
                                         </div>
                                         <div>
-                                            <CardTitle className="text-lg">ประวัติรับ-จ่ายทั่วไป</CardTitle>
-                                            <CardDescription>ดูรายการธุรกรรมที่ไม่ผูกกับโปรแกรมทัวร์</CardDescription>
+                                            <CardTitle className="text-lg">ປະຫວັດຮັບ-ຈ່າຍທົ່ວໄປ</CardTitle>
+                                            <CardDescription>ເບິ່ງລາຍການທຸລະກຳທີ່ບໍ່ຜູກກັບໂປຣແກຣມທົວ</CardDescription>
                                         </div>
                                     </div>
                                      <ChevronRight className="h-5 w-5 text-muted-foreground" />
@@ -68,4 +68,3 @@ export default function TourReportsPage() {
         </div>
     );
 }
-

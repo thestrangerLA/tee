@@ -50,19 +50,6 @@ const SummaryCard = ({ title, values, icon, onClick, className }: { title: strin
     </Card>
 );
 
-const PerformanceSummaryCard = ({ title, value, icon, className }: { title: string, value: number, icon: React.ReactNode, className?: string }) => (
-    <Card className={className}>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{title}</CardTitle>
-            {icon}
-        </CardHeader>
-        <CardContent>
-            <div className={`text-2xl font-bold ${value < 0 ? 'text-red-600' : ''}`}>{formatCurrency(value)}</div>
-        </CardContent>
-    </Card>
-);
-
-
 export default function TourAccountancyPage() {
     const { toast } = useToast();
     const [summary, setSummary] = useState<TourAccountSummary | null>(null);
@@ -172,7 +159,7 @@ export default function TourAccountancyPage() {
     const handleAddTransaction = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!date || !newTransaction.description) {
-            toast({ title: "ข้อมูลไม่ครบ", description: "กรุณากรอกวันที่และคำอธิบาย", variant: "destructive" });
+            toast({ title: "ຂໍ້ມູນບໍ່ຄົບ", description: "ກະລຸນາໃສ່ວັນທີ ແລະ ຄຳອະທິບາຍ", variant: "destructive" });
             return;
         }
         try {
@@ -180,18 +167,18 @@ export default function TourAccountancyPage() {
                 date: startOfDay(date),
                 type: newTransaction.type || 'expense',
                 description: newTransaction.description || '',
-                amount: 0, // Not used in multi-currency
+                amount: 0,
                 kip: Number(newTransaction.kip || 0),
                 baht: Number(newTransaction.baht || 0),
                 usd: Number(newTransaction.usd || 0),
                 cny: Number(newTransaction.cny || 0),
             });
-            toast({ title: "เพิ่มธุรกรรมสำเร็จ" });
+            toast({ title: "ເພີ່ມທຸລະກຳສຳເລັດ" });
             setNewTransaction({ type: 'expense', description: '', kip: 0, baht: 0, usd: 0, cny: 0 });
             setDate(new Date());
         } catch (error) {
             console.error("Error adding transaction: ", error);
-            toast({ title: "เกิดข้อผิดพลาด", variant: "destructive" });
+            toast({ title: "ເກີດຂໍ້ຜິດພາດ", variant: "destructive" });
         }
     };
     
@@ -202,22 +189,22 @@ export default function TourAccountancyPage() {
                 ...editingTransaction,
                 date: startOfDay(editingTransaction.date),
             });
-            toast({ title: "อัปเดตธุรกรรมสำเร็จ" });
+            toast({ title: "ອັບເດດທຸລະກຳສຳເລັດ" });
             setEditingTransaction(null);
         } catch (error) {
             console.error("Error updating transaction: ", error);
-            toast({ title: "เกิดข้อผิดพลาด", variant: "destructive" });
+            toast({ title: "ເກີດຂໍ້ຜິດພາດ", variant: "destructive" });
         }
     };
 
     const handleDeleteTransaction = async (id: string) => {
-        if (!window.confirm("คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?")) return;
+        if (!window.confirm("ເຈົ້າແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບລາຍການນີ້?")) return;
         try {
             await deleteTourTransaction(id);
-            toast({ title: "ลบธุรกรรมสำเร็จ" });
+            toast({ title: "ລຶບທຸລະກຳສຳເລັດ" });
         } catch (error) {
             console.error("Error deleting transaction: ", error);
-            toast({ title: "เกิดข้อผิดพลาด", variant: "destructive" });
+            toast({ title: "ເກີດຂໍ້ຜິດພາດ", variant: "destructive" });
         }
     };
     
@@ -231,19 +218,19 @@ export default function TourAccountancyPage() {
         if (!editingField || !editingValues) return;
         try {
             await updateTourAccountSummary({ [editingField]: editingValues });
-            toast({ title: "บันทึกยอดเงินสำเร็จ" });
+            toast({ title: "ບັນທຶກຍອດເງິນສຳເລັດ" });
             setEditingField(null);
             setEditingValues(null);
         } catch (error) {
              console.error("Error saving summary: ", error);
-             toast({ title: "เกิดข้อผิดพลาด", variant: "destructive" });
+             toast({ title: "ເກີດຂໍ້ຜິດພາດ", variant: "destructive" });
         }
     };
 
     const MonthYearSelector = () => {
         const currentYear = getYear(new Date());
-        const years = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i); // Show current year +/- 2 years
-        years.push(2025); // Ensure 2025 is available
+        const years = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
+        years.push(2025);
         const uniqueYears = [...new Set(years)].sort();
 
         const months = Array.from({ length: 12 }, (_, i) => setMonth(new Date(), i));
@@ -285,15 +272,15 @@ export default function TourAccountancyPage() {
     };
 
     if (!summary) {
-        return <div className="flex items-center justify-center h-screen">กำลังโหลดข้อมูล...</div>;
+        return <div className="flex items-center justify-center h-screen">ກຳລັງໂຫລດຂໍ້ມູນ...</div>;
     }
     
     const getDialogTitle = () => {
         switch(editingField) {
-            case 'capital': return 'แก้ไขเงินทุน';
-            case 'cash': return 'แก้ไขเงินสด';
-            case 'transfer': return 'แก้ไขเงินโอน';
-            default: return 'แก้ไข';
+            case 'capital': return 'ແກ້ໄຂເງິນທຶນ';
+            case 'cash': return 'ແກ້ໄຂເງິນສົດ';
+            case 'transfer': return 'ແກ້ໄຂເງິນໂອນ';
+            default: return 'ແກ້ໄຂ';
         }
     }
 
@@ -304,29 +291,29 @@ export default function TourAccountancyPage() {
                 <Button variant="outline" size="icon" className="h-8 w-8" asChild>
                     <Link href="/tour"><ArrowLeft className="h-4 w-4" /></Link>
                 </Button>
-                <h1 className="text-xl font-bold tracking-tight">จัดการบัญชี (ธุรกิจทัวร์)</h1>
+                <h1 className="text-xl font-bold tracking-tight">ຈັດການບັນຊີ (ທຸລະກິດທ່ອງທ່ຽວ)</h1>
             </header>
             <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4">
-                     <SummaryCard title="เงินทุน" values={summary.capital} icon={<Briefcase className="h-5 w-5 text-primary" />} onClick={() => openEditDialog('capital')} />
-                     <SummaryCard title="เงินสด" values={summary.cash} icon={<Wallet className="h-5 w-5 text-primary" />} onClick={() => openEditDialog('cash')} />
-                     <SummaryCard title="เงินโอน" values={summary.transfer} icon={<Landmark className="h-5 w-5 text-primary" />} onClick={() => openEditDialog('transfer')} />
-                     <SummaryCard title="รวมเงินคงเหลือ" values={totalBalance} icon={<Combine className="h-5 w-5 text-green-600" />} />
+                     <SummaryCard title="ເງິນທຶນ" values={summary.capital} icon={<Briefcase className="h-5 w-5 text-primary" />} onClick={() => openEditDialog('capital')} />
+                     <SummaryCard title="ເງິນສົດ" values={summary.cash} icon={<Wallet className="h-5 w-5 text-primary" />} onClick={() => openEditDialog('cash')} />
+                     <SummaryCard title="ເງິນໂອນ" values={summary.transfer} icon={<Landmark className="h-5 w-5 text-primary" />} onClick={() => openEditDialog('transfer')} />
+                     <SummaryCard title="ລວມເງິນຄົງເຫຼືອ" values={totalBalance} icon={<Combine className="h-5 w-5 text-green-600" />} />
                 </div>
                  <Card>
                     <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                         <div>
-                            <CardTitle>สรุปผลประกอบการ</CardTitle>
-                            <CardDescription>สำหรับเดือนที่เลือก</CardDescription>
+                            <CardTitle>ສະຫຼຸບຜົນປະກອບການ</CardTitle>
+                            <CardDescription>ສຳລັບເດືອນທີ່ເລືອກ</CardDescription>
                         </div>
                         <MonthYearSelector />
                     </CardHeader>
                     <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <SummaryCard title="ยอดยกมา" values={performanceData.broughtForward} icon={<FileText className="h-5 w-5 text-primary" />} />
-                        <SummaryCard title="รายรับ (เดือน)" values={performanceData.income} icon={<ArrowUpCircle className="h-5 w-5 text-green-500" />} />
-                        <SummaryCard title="รายจ่าย (เดือน)" values={performanceData.expense} icon={<ArrowDownCircle className="h-5 w-5 text-red-500" />} />
-                        <SummaryCard title="กำไร/ขาดทุน (เดือน)" values={performanceData.netProfit} icon={<Scale className="h-5 w-5 text-blue-500" />} />
-                        <SummaryCard title="ยอดสิ้นเดือน" values={performanceData.endingBalance} icon={<Banknote className="h-5 w-5 text-indigo-500" />} />
+                        <SummaryCard title="ຍອດຍົກມາ" values={performanceData.broughtForward} icon={<FileText className="h-5 w-5 text-primary" />} />
+                        <SummaryCard title="ລາຍຮັບ (ເດືອນ)" values={performanceData.income} icon={<ArrowUpCircle className="h-5 w-5 text-green-500" />} />
+                        <SummaryCard title="ລາຍຈ່າຍ (ເດືອນ)" values={performanceData.expense} icon={<ArrowDownCircle className="h-5 w-5 text-red-500" />} />
+                        <SummaryCard title="ກຳໄລ/ຂາດທຶນ (ເດືອນ)" values={performanceData.netProfit} icon={<Scale className="h-5 w-5 text-blue-500" />} />
+                        <SummaryCard title="ຍອດທ້າຍເດືອນ" values={performanceData.endingBalance} icon={<Banknote className="h-5 w-5 text-indigo-500" />} />
                     </CardContent>
                 </Card>
 
@@ -335,8 +322,8 @@ export default function TourAccountancyPage() {
                         <Card>
                              <CardHeader className="flex flex-row items-center justify-between cursor-pointer" onClick={() => setFormVisible(!isFormVisible)}>
                                 <div>
-                                    <CardTitle>เพิ่มธุรกรรม</CardTitle>
-                                    <CardDescription>บันทึกรายรับ-รายจ่ายใหม่</CardDescription>
+                                    <CardTitle>ເພີ່ມທຸລະກຳ</CardTitle>
+                                    <CardDescription>ບັນທຶກລາຍຮັບ-ລາຍຈ່າຍໃໝ່</CardDescription>
                                 </div>
                                 <Button variant="ghost" size="icon">
                                     {isFormVisible ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
@@ -346,26 +333,26 @@ export default function TourAccountancyPage() {
                             <CardContent>
                                 <form onSubmit={handleAddTransaction} className="grid gap-4">
                                      <div className="grid gap-2">
-                                        <Label>ประเภท</Label>
+                                        <Label>ປະເພດ</Label>
                                         <RadioGroup value={newTransaction.type} onValueChange={(v) => setNewTransaction(p => ({ ...p, type: v as 'income' | 'expense' }))} className="flex gap-4">
-                                            <div className="flex items-center space-x-2"><RadioGroupItem value="income" id="r-income" /><Label htmlFor="r-income">รายรับ</Label></div>
-                                            <div className="flex items-center space-x-2"><RadioGroupItem value="expense" id="r-expense" /><Label htmlFor="r-expense">รายจ่าย</Label></div>
+                                            <div className="flex items-center space-x-2"><RadioGroupItem value="income" id="r-income" /><Label htmlFor="r-income">ລາຍຮັບ</Label></div>
+                                            <div className="flex items-center space-x-2"><RadioGroupItem value="expense" id="r-expense" /><Label htmlFor="r-expense">ລາຍຈ່າຍ</Label></div>
                                         </RadioGroup>
                                     </div>
                                     <div className="grid gap-2">
-                                        <Label htmlFor="date">วันที่</Label>
+                                        <Label htmlFor="date">ວັນທີ</Label>
                                         <Popover>
                                             <PopoverTrigger asChild>
                                                 <Button variant={"outline"} className="w-full justify-start text-left font-normal">
                                                     <CalendarIcon className="mr-2 h-4 w-4" />
-                                                    {date ? format(date, "PPP", { locale: th }) : <span>เลือกวันที่</span>}
+                                                    {date ? format(date, "PPP", { locale: th }) : <span>ເລືອກວັນທີ</span>}
                                                 </Button>
                                             </PopoverTrigger>
                                             <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={date} onSelect={setDate} initialFocus locale={th} /></PopoverContent>
                                         </Popover>
                                     </div>
                                     <div className="grid gap-2">
-                                        <Label htmlFor="description">คำอธิบาย</Label>
+                                        <Label htmlFor="description">ຄຳອະທິບາຍ</Label>
                                         <Textarea id="description" value={newTransaction.description || ''} onChange={(e) => setNewTransaction(p => ({ ...p, description: e.target.value }))} required />
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
@@ -376,7 +363,7 @@ export default function TourAccountancyPage() {
                                             </div>
                                         ))}
                                     </div>
-                                    <Button type="submit" className="w-full"><PlusCircle className="mr-2 h-4 w-4" />เพิ่มธุรกรรม</Button>
+                                    <Button type="submit" className="w-full"><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມທຸລະກຳ</Button>
                                 </form>
                             </CardContent>
                            )}
@@ -386,8 +373,8 @@ export default function TourAccountancyPage() {
                      <Card className="lg:col-span-2">
                         <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                              <div>
-                                <CardTitle>ประวัติธุรกรรม</CardTitle>
-                                <CardDescription>แสดงรายการสำหรับเดือนที่เลือก</CardDescription>
+                                <CardTitle>ປະຫວັດທຸລະກຳ</CardTitle>
+                                <CardDescription>ສະແດງລາຍການສຳລັບເດືອນທີ່ເລືອກ</CardDescription>
                             </div>
                             <MonthYearSelector />
                         </CardHeader>
@@ -398,10 +385,10 @@ export default function TourAccountancyPage() {
                                 <AccordionItem value={`item-${index}`} key={index}>
                                     <AccordionTrigger>
                                         <div className="flex justify-between w-full pr-4">
-                                            <div className="font-semibold">{`วันที่ ${format(summary.date, "d MMMM yyyy", { locale: th })}`}</div>
+                                            <div className="font-semibold">{`ວັນທີ ${format(summary.date, "d MMMM yyyy", { locale: th })}`}</div>
                                             <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
-                                                <span className="text-green-600">รับ: {currencies.map(c => `${formatCurrency(summary.income[c])} ${c.toUpperCase()}`).join(' / ')}</span>
-                                                <span className="text-red-600">จ่าย: {currencies.map(c => `${formatCurrency(summary.expense[c])} ${c.toUpperCase()}`).join(' / ')}</span>
+                                                <span className="text-green-600">ຮັບ: {currencies.map(c => `${formatCurrency(summary.income[c])} ${c.toUpperCase()}`).join(' / ')}</span>
+                                                <span className="text-red-600">ຈ່າຍ: {currencies.map(c => `${formatCurrency(summary.expense[c])} ${c.toUpperCase()}`).join(' / ')}</span>
                                             </div>
                                         </div>
                                     </AccordionTrigger>
@@ -409,7 +396,7 @@ export default function TourAccountancyPage() {
                                         <Table>
                                             <TableHeader>
                                                 <TableRow>
-                                                    <TableHead>คำอธิบาย</TableHead>
+                                                    <TableHead>ຄຳອະທິບາຍ</TableHead>
                                                     {currencies.map(c => <TableHead key={c} className="text-right uppercase">{c}</TableHead>)}
                                                     <TableHead><span className="sr-only">Actions</span></TableHead>
                                                 </TableRow>
@@ -425,9 +412,9 @@ export default function TourAccountancyPage() {
                                                             <DropdownMenu>
                                                                 <DropdownMenuTrigger asChild><Button variant="ghost" className="h-8 w-8 p-0"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
                                                                 <DropdownMenuContent align="end">
-                                                                    <DropdownMenuLabel>การดำเนินการ</DropdownMenuLabel>
-                                                                    <DropdownMenuItem onClick={() => setEditingTransaction(tx)}>แก้ไข</DropdownMenuItem>
-                                                                    <DropdownMenuItem className="text-red-600" onClick={() => handleDeleteTransaction(tx.id)}>ลบ</DropdownMenuItem>
+                                                                    <DropdownMenuLabel>ການດຳເນີນການ</DropdownMenuLabel>
+                                                                    <DropdownMenuItem onClick={() => setEditingTransaction(tx)}>ແກ້ໄຂ</DropdownMenuItem>
+                                                                    <DropdownMenuItem className="text-red-600" onClick={() => handleDeleteTransaction(tx.id)}>ລຶບ</DropdownMenuItem>
                                                                 </DropdownMenuContent>
                                                             </DropdownMenu>
                                                         </TableCell>
@@ -440,7 +427,7 @@ export default function TourAccountancyPage() {
                                 ))}
                                 </Accordion>
                             ) : (
-                                <div className="text-center py-8 text-muted-foreground">ไม่มีธุรกรรมในเดือนนี้</div>
+                                <div className="text-center py-8 text-muted-foreground">ບໍ່ມີທຸລະກຳໃນເດືອນນີ້</div>
                             )}
                         </CardContent>
                     </Card>
@@ -450,11 +437,11 @@ export default function TourAccountancyPage() {
             {editingTransaction && (
                  <Dialog open={!!editingTransaction} onOpenChange={(isOpen) => !isOpen && setEditingTransaction(null)}>
                     <DialogContent className="sm:max-w-md">
-                        <DialogHeader><DialogTitle>แก้ไขธุรกรรม</DialogTitle></DialogHeader>
+                        <DialogHeader><DialogTitle>ແກ້ໄຂທຸລະກຳ</DialogTitle></DialogHeader>
                         <div className="grid gap-4 py-4">
                            <RadioGroup value={editingTransaction.type} onValueChange={(v) => setEditingTransaction(p => p ? { ...p, type: v as 'income' | 'expense' } : null)} className="flex gap-4">
-                               <div className="flex items-center space-x-2"><RadioGroupItem value="income" id="edit-income" /><Label htmlFor="edit-income">รายรับ</Label></div>
-                               <div className="flex items-center space-x-2"><RadioGroupItem value="expense" id="edit-expense" /><Label htmlFor="edit-expense">รายจ่าย</Label></div>
+                               <div className="flex items-center space-x-2"><RadioGroupItem value="income" id="edit-income" /><Label htmlFor="edit-income">ລາຍຮັບ</Label></div>
+                               <div className="flex items-center space-x-2"><RadioGroupItem value="expense" id="edit-expense" /><Label htmlFor="edit-expense">ລາຍຈ່າຍ</Label></div>
                            </RadioGroup>
                             <Popover>
                                 <PopoverTrigger asChild>
@@ -475,8 +462,8 @@ export default function TourAccountancyPage() {
                             </div>
                         </div>
                         <DialogFooter>
-                            <Button variant="outline" onClick={() => setEditingTransaction(null)}>ยกเลิก</Button>
-                            <Button onClick={handleUpdateTransaction}>บันทึก</Button>
+                            <Button variant="outline" onClick={() => setEditingTransaction(null)}>ຍົກເລີກ</Button>
+                            <Button onClick={handleUpdateTransaction}>ບັນທຶກ</Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
@@ -495,8 +482,8 @@ export default function TourAccountancyPage() {
                             ))}
                         </div>
                         <DialogFooter>
-                            <Button variant="outline" onClick={() => setEditingField(null)}>ยกเลิก</Button>
-                            <Button onClick={handleSaveSummary}>บันทึก</Button>
+                            <Button variant="outline" onClick={() => setEditingField(null)}>ຍົກເລີກ</Button>
+                            <Button onClick={handleSaveSummary}>ບັນທຶກ</Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>

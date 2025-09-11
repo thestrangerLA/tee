@@ -49,7 +49,6 @@ export default function TourProgramsListPage() {
     
     const filteredPrograms = useMemo(() => {
         return allPrograms.filter(p => {
-            // If selectedYear is null, don't filter by year
             const isYearMatch = selectedYear === null || getYear(p.date) === selectedYear;
             const isGroupCodeMatch = !selectedGroupCode || p.tourCode === selectedGroupCode;
             return isYearMatch && isGroupCodeMatch;
@@ -58,7 +57,6 @@ export default function TourProgramsListPage() {
 
     const programsByMonth = useMemo(() => {
         if (selectedYear === null) {
-            // When "All Years" is selected, group by year first, then by month
             return filteredPrograms.reduce((acc, program) => {
                 const year = getYear(program.date);
                 const month = getMonth(program.date);
@@ -70,9 +68,8 @@ export default function TourProgramsListPage() {
                 return acc;
             }, {} as Record<string, { year: number, month: number, programs: TourProgram[] }>);
         }
-        // Original logic: group by month for a selected year
         return filteredPrograms.reduce((acc, program) => {
-            const month = getMonth(program.date); // 0-11
+            const month = getMonth(program.date);
             if (!acc[month]) {
                 acc[month] = [];
             }
@@ -86,25 +83,25 @@ export default function TourProgramsListPage() {
         const codes = allPrograms
             .map(p => p.tourCode)
             .filter((code, index, self) => code && self.indexOf(code) === index);
-        return codes.sort();
+        return ['01-all', ...codes.sort()];
     }, [allPrograms]);
 
 
     const handleDeleteProgram = async (programId: string, programName: string) => {
-        if (!window.confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบโปรแกรม "${programName}"? การกระทำนี้จะลบรายรับและรายจ่ายทั้งหมดที่เกี่ยวข้องด้วยและไม่สามารถย้อนกลับได้`)) {
+        if (!window.confirm(`ເຈົ້າແນ່ໃຈບໍ່ວ່າต้องการลบໂປຣແກຣມ "${programName}"? ການກະທຳນີ້ຈະລົບລາຍຮັບ ແລະ ລາຍຈ່າຍທັງໝົດທີ່ກ່ຽວຂ້ອງ ແລະ ບໍ່ສາມາດย้อนกลับได้`)) {
             return;
         }
         try {
             await deleteTourProgram(programId);
             toast({
-                title: "ลบโปรแกรมสำเร็จ",
-                description: `โปรแกรม "${programName}" ถูกลบแล้ว`,
+                title: "ລົບໂປຣແກຣມສຳເລັດ",
+                description: `ໂປຣແກຣມ "${programName}" ຖືກລົບແລ້ວ`,
             });
         } catch (error) {
             console.error("Error deleting program:", error);
             toast({
-                title: "เกิดข้อผิดพลาด",
-                description: "ไม่สามารถลบโปรแกรมได้",
+                title: "ເກີດຂໍ້ຜິດພາດ",
+                description: "ບໍ່ສາມາດລົບໂປຣແກຣມໄດ້",
                 variant: "destructive",
             });
         }
@@ -115,13 +112,13 @@ export default function TourProgramsListPage() {
         try {
             await updateTourProgram(programId, { date: startOfDay(newDate) });
             toast({
-                title: "อัปเดตวันที่สำเร็จ",
+                title: "ອัปเดตວັນທີສຳເລັດ",
             });
         } catch (error) {
             console.error("Error updating program date:", error);
             toast({
-                title: "เกิดข้อผิดพลาด",
-                description: "ไม่สามารถอัปเดตวันที่ได้",
+                title: "ເກີດຂໍ້ຜິດພາດ",
+                description: "ບໍ່ສາມາດອัปเดตວັນທີໄດ້",
                 variant: "destructive",
             });
         }
@@ -135,18 +132,18 @@ export default function TourProgramsListPage() {
                 <DropdownMenuTrigger asChild>
                     <Button variant="outline" className="flex items-center gap-2">
                         <CalendarIcon className="h-4 w-4" />
-                        <span>{selectedYear ? `ปี ${selectedYear + 543}` : 'ทุกปี'}</span>
+                        <span>{selectedYear ? `ປີ ${selectedYear + 543}` : 'ທຸກໆປີ'}</span>
                         <ChevronDown className="h-4 w-4 opacity-50" />
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                      <DropdownMenuItem onClick={() => setSelectedYear(null)}>
-                        ทุกปี
+                        ທຸກໆປີ
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     {years.map(year => (
                         <DropdownMenuItem key={year} onClick={() => setSelectedYear(year)}>
-                            {`ปี ${year + 543}`}
+                            {`ປີ ${year + 543}`}
                         </DropdownMenuItem>
                     ))}
                 </DropdownMenuContent>
@@ -160,17 +157,17 @@ export default function TourProgramsListPage() {
             <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="flex items-center gap-2">
                     <Filter className="h-4 w-4" />
-                    <span>{selectedGroupCode || 'All Codes'}</span>
+                    <span>{selectedGroupCode || 'ທັງໝົດ'}</span>
                     <ChevronDown className="h-4 w-4 opacity-50" />
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => setSelectedGroupCode(null)}>
-                    All Codes
+                    ທັງໝົດ
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 {allGroupCodes.map(code => (
-                    <DropdownMenuItem key={code} onClick={() => setSelectedGroupCode(code)}>
+                    <DropdownMenuItem key={code} onClick={() => setSelectedGroupCode(code === '01-all' ? null : code)}>
                         {code}
                     </DropdownMenuItem>
                 ))}
@@ -182,12 +179,12 @@ export default function TourProgramsListPage() {
          <Table>
             <TableHeader>
                 <TableRow>
-                    <TableHead>วันที่</TableHead>
-                    <TableHead>Group Code</TableHead>
-                    <TableHead>Tour Program</TableHead>
-                    <TableHead>Nationality</TableHead>
-                    <TableHead>จุดหมาย</TableHead>
-                    <TableHead className="text-right">จำนวนคน</TableHead>
+                    <TableHead>ວັນທີ</TableHead>
+                    <TableHead>ລະຫັດກຸ່ມ</TableHead>
+                    <TableHead>ໂປຣແກຣມທົວ</TableHead>
+                    <TableHead>ສັນຊາດ</TableHead>
+                    <TableHead>ຈຸດໝາຍ</TableHead>
+                    <TableHead className="text-right">จำนวนຄົນ</TableHead>
                     <TableHead><span className="sr-only">Actions</span></TableHead>
                 </TableRow>
             </TableHeader>
@@ -202,7 +199,7 @@ export default function TourProgramsListPage() {
                                     className="w-[150px] justify-start text-left font-normal"
                                 >
                                     <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {program.date ? format(program.date, "dd/MM/yyyy") : <span>เลือกวันที่</span>}
+                                    {program.date ? format(program.date, "dd/MM/yyyy") : <span>ເລືອກວັນທີ</span>}
                                 </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-auto p-0">
@@ -230,9 +227,9 @@ export default function TourProgramsListPage() {
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                                <DropdownMenuLabel>การดำเนินการ</DropdownMenuLabel>
+                                <DropdownMenuLabel>ການດຳເນີນການ</DropdownMenuLabel>
                                 <DropdownMenuItem onClick={() => handleRowClick(program.id)}>
-                                    ดู/แก้ไข
+                                    ເບິ່ງ/ແກ້ໄຂ
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                     className="text-red-600"
@@ -241,7 +238,7 @@ export default function TourProgramsListPage() {
                                         handleDeleteProgram(program.id, program.programName)
                                     }}
                                 >
-                                    ลบ
+                                    ລົບ
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
@@ -259,12 +256,12 @@ export default function TourProgramsListPage() {
                 <Button variant="outline" size="icon" className="h-8 w-8" asChild>
                     <Link href="/tour">
                         <ArrowLeft className="h-4 w-4" />
-                        <span className="sr-only">กลับไปหน้าหลัก</span>
+                        <span className="sr-only">ກັບໄປໜ້າຫຼັກ</span>
                     </Link>
                 </Button>
                 <div className="flex items-center gap-2">
                     <FileText className="h-6 w-6 text-primary" />
-                    <h1 className="text-xl font-bold tracking-tight font-headline">โปรแกรมทัวร์ทั้งหมด</h1>
+                    <h1 className="text-xl font-bold tracking-tight font-headline">ໂປຣແກຣມທົວທັງໝົດ</h1>
                 </div>
                  <div className="ml-auto flex items-center gap-4">
                     <YearSelector />
@@ -272,7 +269,7 @@ export default function TourProgramsListPage() {
                     <Link href="/tour-programs/new">
                         <Button size="sm">
                             <PlusCircle className="mr-2 h-4 w-4" />
-                            เพิ่มโปรแกรมทัวร์
+                            ເພີ່ມໂປຣແກຣມທົວ
                         </Button>
                     </Link>
                 </div>
@@ -280,9 +277,9 @@ export default function TourProgramsListPage() {
             <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
                 <Card>
                     <CardHeader>
-                        <CardTitle>รายการโปรแกรมทัวร์ {selectedYear ? `ปี ${selectedYear + 543}` : 'ทั้งหมด'}</CardTitle>
+                        <CardTitle>ລາຍການໂປຣແກຣມທົວ {selectedYear ? `ປີ ${selectedYear + 543}` : 'ທັງໝົດ'}</CardTitle>
                         <CardDescription>
-                            จัดการ สร้าง และแก้ไขโปรแกรมทัวร์สำหรับลูกค้า
+                            ຈັດການ, ສ້າງ ແລະ ແກ້ໄຂໂປຣແກຣມທົວສຳລັບລູກຄ້າ
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -301,7 +298,7 @@ export default function TourProgramsListPage() {
                                             </AccordionContent>
                                         </AccordionItem>
                                     ))
-                                : // When "All Years" is selected
+                                : 
                                     Object.values(programsByMonth as Record<string, { year: number, month: number, programs: TourProgram[] }>)
                                     .sort((a,b) => (b.year - a.year) || (b.month - a.month))
                                     .map(({year, month, programs}) => (
@@ -320,7 +317,7 @@ export default function TourProgramsListPage() {
                             </Accordion>
                          ) : (
                             <div className="text-center text-muted-foreground py-16">
-                                ไม่มีโปรแกรมทัวร์สำหรับ {selectedYear ? `ปี ${selectedYear + 543}`: 'ตัวกรองที่เลือก'}
+                                ບໍ່ມີໂປຣແກຣມທົວສຳລັບ {selectedYear ? `ປີ ${selectedYear + 543}`: 'ตัวกรองที่เลือก'}
                             </div>
                          )}
                     </CardContent>
@@ -329,5 +326,3 @@ export default function TourProgramsListPage() {
         </div>
     )
 }
-
-    

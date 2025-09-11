@@ -75,7 +75,7 @@ export default function ProgramSummaryPage() {
         }, {} as Record<string, TourIncomeItem[]>);
         
         const filteredPrograms = programs.filter(p => {
-            if (!p.date) return false; // Make sure program has a date
+            if (!p.date) return false;
             if (!startDate || !endDate) return true;
             return isWithinInterval(p.date, { start: startDate, end: endDate });
         });
@@ -123,27 +123,27 @@ export default function ProgramSummaryPage() {
                 <Button variant="outline" size="icon" className="h-8 w-8" asChild>
                     <Link href="/tour/reports">
                         <ArrowLeft className="h-4 w-4" />
-                        <span className="sr-only">กลับไปหน้ารายงาน</span>
+                        <span className="sr-only">ກັບໄປໜ้ารາຍງານ</span>
                     </Link>
                 </Button>
                 <div className="flex items-center gap-2">
                     <FilePieChart className="h-6 w-6 text-primary" />
-                    <h1 className="text-xl font-bold tracking-tight">สรุปผลประกอบการรายโปรแกรม</h1>
+                    <h1 className="text-xl font-bold tracking-tight">ສະຫຼຸບຜົນປະກອບການລາຍໂປຣແກຣມ</h1>
                 </div>
             </header>
             <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
                 <Card>
                     <CardHeader>
-                        <CardTitle>ตัวกรองรายงาน</CardTitle>
+                        <CardTitle>ໂຕກອງລາຍງານ</CardTitle>
                     </CardHeader>
                     <CardContent className="grid md:grid-cols-4 gap-4">
                         <div className="grid gap-2">
-                             <Label htmlFor="start-date">วันที่เริ่มต้น</Label>
+                             <Label htmlFor="start-date">ວັນທີເລີ່ມຕົ້ນ</Label>
                              <Popover>
                                 <PopoverTrigger asChild>
                                     <Button id="start-date" variant={"outline"} className="justify-start text-left font-normal">
                                         <CalendarIcon className="mr-2 h-4 w-4" />
-                                        {startDate ? format(startDate, "dd/MM/yyyy") : <span>เลือกวันที่</span>}
+                                        {startDate ? format(startDate, "dd/MM/yyyy") : <span>ເລືອກວັນທີ</span>}
                                     </Button>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-auto p-0">
@@ -152,12 +152,12 @@ export default function ProgramSummaryPage() {
                             </Popover>
                         </div>
                         <div className="grid gap-2">
-                             <Label htmlFor="end-date">วันที่สิ้นสุด</Label>
+                             <Label htmlFor="end-date">ວັນທີສິ້ນສຸດ</Label>
                              <Popover>
                                 <PopoverTrigger asChild>
                                     <Button id="end-date" variant={"outline"} className="justify-start text-left font-normal">
                                         <CalendarIcon className="mr-2 h-4 w-4" />
-                                        {endDate ? format(endDate, "dd/MM/yyyy") : <span>เลือกวันที่</span>}
+                                        {endDate ? format(endDate, "dd/MM/yyyy") : <span>ເລືອກວັນທີ</span>}
                                     </Button>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-auto p-0">
@@ -171,12 +171,12 @@ export default function ProgramSummaryPage() {
                  {reportsData.map((yearlyReport) => (
                     <Card key={yearlyReport.year}>
                         <CardHeader>
-                            <CardTitle>ภาพรวมปี {yearlyReport.year + 543}</CardTitle>
-                            <CardDescription>ภาพรวมกำไร-ขาดทุน และรายละเอียดของแต่ละโปรแกรม</CardDescription>
+                            <CardTitle>ພາບລວມປີ {yearlyReport.year + 543}</CardTitle>
+                            <CardDescription>ພາບລວມກຳໄລ-ຂາດທຶນ ແລະ ລາຍລະອຽດของແຕ່ລະໂປຣແກຣມ</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="p-4 bg-muted/50 rounded-lg">
-                                <h3 className="text-md font-semibold mb-2">ภาพรวมกำไร/ขาดทุน ประจำปี {yearlyReport.year + 543}</h3>
+                                <h3 className="text-md font-semibold mb-2">ພາບລວມກຳໄລ/ຂາດທຶນ ປະຈຳປີ {yearlyReport.year + 543}</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                                     {currencies.map(c => (
                                         <div key={c} className="p-3 bg-background rounded-lg border">
@@ -190,7 +190,7 @@ export default function ProgramSummaryPage() {
                             </div>
 
                             <div>
-                                <h3 className="text-md font-semibold mb-2 mt-4">รายละเอียดรายโปรแกรม</h3>
+                                <h3 className="text-md font-semibold mb-2 mt-4">ລາຍລະອຽດລາຍໂປຣແກຣມ</h3>
                                 <Accordion type="single" collapsible className="w-full">
                                     {yearlyReport.programs.map((program) => (
                                         <AccordionItem value={program.id} key={program.id}>
@@ -214,10 +214,10 @@ export default function ProgramSummaryPage() {
                                                 <Table>
                                                     <TableHeader>
                                                         <TableRow>
-                                                            <TableHead>สกุลเงิน</TableHead>
-                                                            <TableHead className="text-right">รายรับรวม</TableHead>
-                                                            <TableHead className="text-right">ต้นทุนรวม</TableHead>
-                                                            <TableHead className="text-right">กำไร/ขาดทุน</TableHead>
+                                                            <TableHead>ສະກຸນເງິນ</TableHead>
+                                                            <TableHead className="text-right">ລາຍຮັບລວມ</TableHead>
+                                                            <TableHead className="text-right">ຕົ້ນທຶນລວມ</TableHead>
+                                                            <TableHead className="text-right">ກຳໄລ/ຂາດທຶນ</TableHead>
                                                         </TableRow>
                                                     </TableHeader>
                                                     <TableBody>
@@ -236,7 +236,7 @@ export default function ProgramSummaryPage() {
                                                         <TableRow>
                                                             <TableCell colSpan={4} className="text-right print:hidden">
                                                                 <Button variant="outline" size="sm" asChild>
-                                                                    <Link href={`/tour-programs/${program.id}`}>ไปที่หน้ารายละเอียด</Link>
+                                                                    <Link href={`/tour-programs/${program.id}`}>ໄປທີ່ໜ້າລາຍລະອຽດ</Link>
                                                                 </Button>
                                                             </TableCell>
                                                         </TableRow>
@@ -255,7 +255,7 @@ export default function ProgramSummaryPage() {
                     <Card>
                         <CardContent>
                              <div className="text-center text-muted-foreground py-16">
-                                <p>ไม่มีข้อมูลโปรแกรมสำหรับช่วงวันที่ที่เลือก</p>
+                                <p>ບໍ່ມີຂໍ້ມູນໂປຣແກຣມສຳລັບຊ່ວງວັນທີທີ່ເລືອກ</p>
                             </div>
                         </CardContent>
                     </Card>

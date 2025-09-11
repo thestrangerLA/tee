@@ -12,12 +12,12 @@ export default function TourPage() {
         <Button variant="outline" size="icon" className="h-8 w-8" asChild>
           <Link href="/">
               <ArrowLeft className="h-4 w-4" />
-              <span className="sr-only">กลับไปหน้าหลัก</span>
+              <span className="sr-only">ກັບໄປໜ້າຫຼັກ</span>
           </Link>
         </Button>
         <div className="flex items-center gap-2">
             <Briefcase className="h-6 w-6 text-primary" />
-            <h1 className="text-xl font-bold tracking-tight font-headline">แดชบอร์ดธุรกิจทัวร์</h1>
+            <h1 className="text-xl font-bold tracking-tight font-headline">ແດຊ໌ບອດທຸລະກິດທ່ອງທ່ຽວ</h1>
         </div>
       </header>
       <main className="flex flex-1 flex-col items-center justify-center gap-8 p-4">
@@ -25,12 +25,12 @@ export default function TourPage() {
           <Link href="/tour/accountancy">
             <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-2xl font-bold font-headline">จัดการบัญชี</CardTitle>
+                <CardTitle className="text-2xl font-bold font-headline">ຈັດການບັນຊີ</CardTitle>
                 <Landmark className="h-8 w-8 text-primary" />
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  ติดตามรายรับ-รายจ่าย, จัดการธุรกรรม, และดูสรุปภาพรวมการเงิน
+                  ຕິດຕາມລາຍຮັບ-ລາຍຈ່າຍ, ຈັດການທຸລະກຳ, ແລະເບິ່ງສະຫຼຸບภาพລວມການເງິນ
                 </p>
               </CardContent>
             </Card>
@@ -38,12 +38,12 @@ export default function TourPage() {
            <Link href="/tour-programs">
             <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-2xl font-bold font-headline">โปรแกรมทัวร์</CardTitle>
+                <CardTitle className="text-2xl font-bold font-headline">ໂປຣແກຣມທົວ</CardTitle>
                 <FileText className="h-8 w-8 text-primary" />
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  จัดการ สร้าง และแก้ไขโปรแกรมทัวร์สำหรับลูกค้า
+                  ຈັດການ, ສ້າງ ແລະ ແກ້ໄຂໂປຣແກຣມທົວສຳລັບລູກຄ້າ
                 </p>
               </CardContent>
             </Card>
@@ -51,12 +51,12 @@ export default function TourPage() {
           <Link href="/debtors">
             <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-2xl font-bold font-headline">ลูกหนี้-เจ้าหนี้</CardTitle>
+                <CardTitle className="text-2xl font-bold font-headline">ລູກໜີ້-ເຈົ້າໜີ້</CardTitle>
                 <Users className="h-8 w-8 text-primary" />
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  จัดการและติดตามรายการลูกหนี้และเจ้าหนี้ที่เกี่ยวข้องกับทัวร์
+                  ຈັດການ ແລະ ຕິດຕາມລາຍການລູກໜີ້ ແລະ ເຈົ້າໜີ້ທີ່ກ່ຽວຂ້ອງກັບທົວ
                 </p>
               </CardContent>
             </Card>
@@ -64,12 +64,12 @@ export default function TourPage() {
            <Link href="/tour/reports">
             <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-2xl font-bold font-headline">สรุปยอด</CardTitle>
+                <CardTitle className="text-2xl font-bold font-headline">ສະຫຼຸບຍອດ</CardTitle>
                 <FilePieChart className="h-8 w-8 text-primary" />
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  ดูสรุปผลประกอบการและกำไร-ขาดทุนของแต่ละโปรแกรมทัวร์
+                  ເບິ່ງສະຫຼຸບຜົນປະກອບການ ແລະ ກຳໄລ-ຂາດທຶນຂອງແຕ່ລະໂປຣແກຣມທົວ
                 </p>
               </CardContent>
             </Card>
@@ -77,12 +77,12 @@ export default function TourPage() {
           <Link href="/tour/calculator">
             <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-2xl font-bold font-headline">คำนวณ</CardTitle>
+                <CardTitle className="text-2xl font-bold font-headline">ຄຳນວນ</CardTitle>
                 <Calculator className="h-8 w-8 text-primary" />
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  เครื่องมือคำนวณค่าใช้จ่ายและราคาสำหรับโปรแกรมทัวร์
+                  ເຄື່ອງມືຄຳນວນຄ່າໃຊ້ຈ່າຍ ແລະ ລາຄາສຳລັບໂປຣແກຣມທົວ
                 </p>
               </CardContent>
             </Card>

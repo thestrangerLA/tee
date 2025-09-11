@@ -14,10 +14,10 @@ import { ArrowLeft, Truck, Copy, Trash2, PlusCircle } from "lucide-react";
 type Currency = 'USD' | 'THB' | 'LAK' | 'CNY';
 
 const currencySymbols: Record<Currency, string> = {
-    USD: '$ (ดอลลาร์)',
-    THB: '฿ (บาท)',
-    LAK: '₭ (กีบ)',
-    CNY: '¥ (หยวน)',
+    USD: '$ (ດอลລาร์)',
+    THB: '฿ (ບາດ)',
+    LAK: '₭ (ກີບ)',
+    CNY: '¥ (ຢວນ)',
 };
 
 type Trip = {
@@ -45,7 +45,7 @@ export default function TransportPage() {
             id: uuidv4(),
             location: '',
             route: '',
-            vehicleType: 'รถตู้ทำมะดา',
+            vehicleType: 'ລົດຕູ້ທຳມະດາ',
             numVehicles: 1,
             numDays: 1,
             pricePerVehicle: 0,
@@ -97,12 +97,12 @@ export default function TransportPage() {
                 </Button>
                 <div className="flex items-center gap-2">
                     <Truck className="h-6 w-6 text-primary" />
-                    <h1 className="text-xl font-bold tracking-tight">ค่าขนส่ง</h1>
+                    <h1 className="text-xl font-bold tracking-tight">ຄ່າຂົນສົ່ງ</h1>
                 </div>
                 <div className="ml-auto">
                     <Button onClick={addTrip} className="bg-green-600 hover:bg-green-700">
                         <PlusCircle className="mr-2 h-4 w-4" />
-                        เพิ่มค่าขนส่ง
+                        ເພີ່ມຄ່າຂົນສົ່ງ
                     </Button>
                 </div>
             </header>
@@ -111,7 +111,7 @@ export default function TransportPage() {
                     {trips.map((trip, index) => (
                         <Card key={trip.id}>
                              <CardHeader className="flex flex-row justify-between items-center bg-muted/50 p-4">
-                                <CardTitle className="text-lg">การเดินทาง #{index + 1}</CardTitle>
+                                <CardTitle className="text-lg">ການເດີນທາງ #{index + 1}</CardTitle>
                                 <div className="flex items-center gap-2">
                                      <Button variant="ghost" size="icon" onClick={() => duplicateTrip(trip.id)}>
                                         <Copy className="h-4 w-4" />
@@ -124,33 +124,33 @@ export default function TransportPage() {
                             <CardContent className="p-4 md:p-6 space-y-6">
                                <div className="grid md:grid-cols-2 gap-6">
                                      <div className="space-y-2">
-                                        <Label htmlFor={`location-${trip.id}`}>สถานที่เดินทาง</Label>
-                                        <Input id={`location-${trip.id}`} placeholder="สถานที่เดินทาง" value={trip.location} onChange={e => updateTrip(trip.id, 'location', e.target.value)} />
+                                        <Label htmlFor={`location-${trip.id}`}>ສະຖານທີ່ເດີນທາງ</Label>
+                                        <Input id={`location-${trip.id}`} placeholder="ສະຖານທີ່ເດີນທາງ" value={trip.location} onChange={e => updateTrip(trip.id, 'location', e.target.value)} />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor={`route-${trip.id}`}>เส้นทาง</Label>
-                                        <Input id={`route-${trip.id}`} placeholder="เช่น เวียงจันทน์ - วังเวียง" value={trip.route} onChange={e => updateTrip(trip.id, 'route', e.target.value)} />
+                                        <Label htmlFor={`route-${trip.id}`}>ເສັ້ນທາງ</Label>
+                                        <Input id={`route-${trip.id}`} placeholder="ຕົວຢ່າງ ວຽງຈັນ - ວັງວຽງ" value={trip.route} onChange={e => updateTrip(trip.id, 'route', e.target.value)} />
                                     </div>
                                </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor={`vehicle-type-${trip.id}`}>ประเภทรถ</Label>
-                                    <Input id={`vehicle-type-${trip.id}`} placeholder="รถตู้ทำมะดา" value={trip.vehicleType} onChange={e => updateTrip(trip.id, 'vehicleType', e.target.value)} />
+                                    <Label htmlFor={`vehicle-type-${trip.id}`}>ປະເພດລົດ</Label>
+                                    <Input id={`vehicle-type-${trip.id}`} placeholder="ລົດຕູ້ທຳມະດາ" value={trip.vehicleType} onChange={e => updateTrip(trip.id, 'vehicleType', e.target.value)} />
                                 </div>
                                 <div className="grid md:grid-cols-4 gap-4">
                                     <div className="space-y-2">
-                                        <Label htmlFor={`num-vehicles-${trip.id}`}>จำนวนคัน</Label>
+                                        <Label htmlFor={`num-vehicles-${trip.id}`}>ຈຳນວນຄັນ</Label>
                                         <Input id={`num-vehicles-${trip.id}`} type="number" min="1" value={trip.numVehicles} onChange={e => updateTrip(trip.id, 'numVehicles', parseInt(e.target.value) || 1)} />
                                     </div>
                                      <div className="space-y-2">
-                                        <Label htmlFor={`num-days-${trip.id}`}>จำนวนวัน</Label>
+                                        <Label htmlFor={`num-days-${trip.id}`}>ຈຳນວນວັນ</Label>
                                         <Input id={`num-days-${trip.id}`} type="number" min="1" value={trip.numDays} onChange={e => updateTrip(trip.id, 'numDays', parseInt(e.target.value) || 1)} />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor={`price-${trip.id}`}>ราคา/คัน</Label>
+                                        <Label htmlFor={`price-${trip.id}`}>ລາຄາ/ຄັນ</Label>
                                         <Input id={`price-${trip.id}`} type="number" min="0" value={trip.pricePerVehicle} onChange={e => updateTrip(trip.id, 'pricePerVehicle', parseFloat(e.target.value) || 0)} />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label>สกุลเงิน</Label>
+                                        <Label>ສະກຸນເງິນ</Label>
                                         <Select value={trip.currency} onValueChange={(v) => updateTrip(trip.id, 'currency', v)}>
                                             <SelectTrigger><SelectValue /></SelectTrigger>
                                             <SelectContent>
@@ -162,7 +162,7 @@ export default function TransportPage() {
                                     </div>
                                 </div>
                                 <div className="mt-4 p-4 bg-green-100 rounded-lg flex justify-between items-center">
-                                    <span className="font-bold text-lg text-green-800">รวมค่าขนส่งนี้:</span>
+                                    <span className="font-bold text-lg text-green-800">ລວມຄ່າຂົນສົ່ງນີ້:</span>
                                     <div className="text-right font-bold text-lg text-green-800">
                                        {formatNumber(tripTotals[trip.id], trip.currency)}
                                     </div>
@@ -175,12 +175,12 @@ export default function TransportPage() {
                 {trips.length > 0 && (
                      <Card className="mt-6">
                         <CardHeader>
-                            <CardTitle>สรุปค่าขนส่งทั้งหมด</CardTitle>
+                            <CardTitle>ສະຫຼຸບຄ່າຂົນສົ່ງທັງໝົດ</CardTitle>
                         </CardHeader>
                         <CardContent className="grid md:grid-cols-4 gap-4">
                              {(Object.keys(grandTotal) as Currency[]).filter(c => grandTotal[c] > 0).map(c => (
                                 <div key={c} className="p-4 bg-primary/10 rounded-lg">
-                                    <p className="text-sm text-primary/80">รวม ({c})</p>
+                                    <p className="text-sm text-primary/80">ລວມ ({c})</p>
                                     <p className="text-2xl font-bold text-primary">{formatNumber(grandTotal[c], c as Currency)}</p>
                                 </div>
                             ))}
@@ -191,4 +191,3 @@ export default function TransportPage() {
         </div>
     );
 }
-    

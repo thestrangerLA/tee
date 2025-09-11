@@ -68,7 +68,7 @@ export default function NewTourProgramPage() {
         priceCurrency: 'KIP',
         bankCharge: 0,
         bankChargeCurrency: 'KIP',
-        totalPrice: 0, // This will be handled by service or derived
+        totalPrice: 0,
     });
 
     const handleFormValueChange = (field: keyof typeof formData, value: any) => {
@@ -79,8 +79,8 @@ export default function NewTourProgramPage() {
         e.preventDefault();
         if (!date || !formData.programName) {
             toast({
-                title: "ข้อมูลไม่ครบถ้วน",
-                description: "กรุณาเลือกวันที่และใส่ชื่อโปรแกรม",
+                title: "ຂໍ້ມູນບໍ່ຄົບຖ້ວນ",
+                description: "ກະລຸນາເລືອກວັນທີ ແລະ ໃສ່ຊື່ໂປຣແກຣມ",
                 variant: "destructive"
             });
             return;
@@ -94,15 +94,15 @@ export default function NewTourProgramPage() {
             };
             const newProgramId = await addTourProgram(newProgramData);
             toast({
-                title: "สร้างโปรแกรมทัวร์สำเร็จ",
-                description: `โปรแกรม "${formData.programName}" ถูกสร้างแล้ว`,
+                title: "ສ້າງໂປຣແກຣມທົວສຳເລັດ",
+                description: `ໂປຣແກຣມ "${formData.programName}" ຖືກສ້າງແລ້ວ`,
             });
             router.push(`/tour-programs/${newProgramId}`);
         } catch (error) {
             console.error("Error adding tour program:", error);
             toast({
-                title: "เกิดข้อผิดพลาด",
-                description: "ไม่สามารถสร้างโปรแกรมทัวร์ได้",
+                title: "ເກີດຂໍ້ຜິດພາດ",
+                description: "ບໍ່ສາມາດສ້າງໂປຣແກຣມທົວໄດ້",
                 variant: "destructive"
             });
         }
@@ -115,29 +115,29 @@ export default function NewTourProgramPage() {
                 <Button variant="outline" size="icon" className="h-8 w-8" asChild>
                     <Link href="/tour-programs">
                         <ArrowLeft className="h-4 w-4" />
-                        <span className="sr-only">กลับไปหน้ารายการโปรแกรม</span>
+                        <span className="sr-only">ກັບໄປໜ้ารາຍການໂປຣແກຣມ</span>
                     </Link>
                 </Button>
                 <div className="flex items-center gap-2">
-                    <h1 className="text-xl font-bold tracking-tight font-headline">เพิ่มโปรแกรมทัวร์ใหม่</h1>
+                    <h1 className="text-xl font-bold tracking-tight font-headline">ເພີ່ມໂປຣແກຣມທົວໃໝ່</h1>
                 </div>
             </header>
             <main className="flex flex-1 flex-col items-center justify-center gap-4 p-4">
                 <Card className="w-full max-w-4xl">
                     <CardHeader>
-                        <CardTitle>รายละเอียดโปรแกรมทัวร์</CardTitle>
-                        <CardDescription>กรอกข้อมูลเพื่อสร้างโปรแกรมทัวร์ใหม่</CardDescription>
+                        <CardTitle>ລາຍລະອຽດໂປຣແກຣມທົວ</CardTitle>
+                        <CardDescription>ກອກຂໍ້ມູນເພື່ອສ້າງໂປຣແກຣມທົວໃໝ່</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleSubmit} className="grid gap-6">
                             <div className="grid md:grid-cols-3 gap-6">
                                 <div className="grid gap-2">
-                                    <Label htmlFor="date">วันที่สร้าง</Label>
+                                    <Label htmlFor="date">ວັນທີສ້າງ</Label>
                                     <Popover>
                                         <PopoverTrigger asChild>
                                             <Button variant={"outline"} className="w-full justify-start text-left font-normal">
                                                 <CalendarIcon className="mr-2 h-4 w-4" />
-                                                {date ? format(date, "PPP", { locale: th }) : <span>เลือกวันที่</span>}
+                                                {date ? format(date, "PPP", { locale: th }) : <span>ເລືອກວັນທີ</span>}
                                             </Button>
                                         </PopoverTrigger>
                                         <PopoverContent className="w-auto p-0">
@@ -156,8 +156,8 @@ export default function NewTourProgramPage() {
                             </div>
                             
                             <div className="grid gap-2">
-                                <Label htmlFor="tourDates">วันที่เดินทาง (Tour Dates)</Label>
-                                <Textarea id="tourDates" name="tourDates" value={formData.tourDates} onChange={(e) => handleFormValueChange('tourDates', e.target.value)} placeholder="เช่น 30/08/2025-31/08/2025&#10;06/09/2025-07/09/2025" />
+                                <Label htmlFor="tourDates">ວັນທີເດີນທາງ (Tour Dates)</Label>
+                                <Textarea id="tourDates" name="tourDates" value={formData.tourDates} onChange={(e) => handleFormValueChange('tourDates', e.target.value)} placeholder="ຕົວຢ່າງ 30/08/2025-31/08/2025&#10;06/09/2025-07/09/2025" />
                             </div>
 
                             <div className="grid md:grid-cols-2 gap-6">
@@ -166,18 +166,18 @@ export default function NewTourProgramPage() {
                                     <Input id="groupName" name="groupName" value={formData.groupName} onChange={(e) => handleFormValueChange('groupName', e.target.value)} />
                                 </div>
                                 <div className="grid gap-2">
-                                    <Label htmlFor="pax">จำนวนคน (Pax)</Label>
+                                    <Label htmlFor="pax">ຈຳນວນຄົນ (Pax)</Label>
                                     <Input id="pax" name="pax" type="number" value={formData.pax} onChange={(e) => handleFormValueChange('pax', Number(e.target.value))} />
                                 </div>
                             </div>
                             
                             <div className="grid md:grid-cols-2 gap-6">
                                 <div className="grid gap-2">
-                                    <Label htmlFor="destination">จุดหมาย</Label>
+                                    <Label htmlFor="destination">ຈຸດໝາຍ</Label>
                                     <Input id="destination" name="destination" value={formData.destination} onChange={(e) => handleFormValueChange('destination', e.target.value)} />
                                 </div>
                                 <div className="grid gap-2">
-                                    <Label htmlFor="durationDays">ระยะเวลา (วัน)</Label>
+                                    <Label htmlFor="durationDays">ໄລຍະເວລາ (ວັນ)</Label>
                                     <Input id="durationDays" name="durationDays" type="number" value={formData.durationDays} onChange={(e) => handleFormValueChange('durationDays', Number(e.target.value))} />
                                 </div>
                             </div>
@@ -200,8 +200,8 @@ export default function NewTourProgramPage() {
                             </div>
                             
                             <div className="flex justify-end gap-2">
-                                <Button type="button" variant="outline" onClick={() => router.push('/tour-programs')}>ยกเลิก</Button>
-                                <Button type="submit">บันทึกและไปต่อ</Button>
+                                <Button type="button" variant="outline" onClick={() => router.push('/tour-programs')}>ຍົກເລີກ</Button>
+                                <Button type="submit">ບັນທຶກ ແລະ ໄປຕໍ່</Button>
                             </div>
                         </form>
                     </CardContent>

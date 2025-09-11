@@ -18,10 +18,10 @@ import { format } from 'date-fns';
 type Currency = 'USD' | 'THB' | 'LAK' | 'CNY';
 
 const currencySymbols: Record<Currency, string> = {
-    USD: '$ (ดอลลาร์)',
-    THB: '฿ (บาท)',
-    LAK: '₭ (กีบ)',
-    CNY: '¥ (หยวน)',
+    USD: '$ (ດอลລาร์)',
+    THB: '฿ (ບາດ)',
+    LAK: '₭ (ກີບ)',
+    CNY: '¥ (ຢວນ)',
 };
 
 type Room = {
@@ -145,12 +145,12 @@ export default function AccommodationPage() {
                 </Button>
                 <div className="flex items-center gap-2">
                     <BedDouble className="h-6 w-6 text-primary" />
-                    <h1 className="text-xl font-bold tracking-tight">ค่าที่พัก</h1>
+                    <h1 className="text-xl font-bold tracking-tight">ຄ່າທີ່ພັກ</h1>
                 </div>
                 <div className="ml-auto">
                     <Button onClick={addAccommodation}>
                         <PlusCircle className="mr-2 h-4 w-4" />
-                        เพิ่มค่าที่พัก
+                        ເພີ່ມຄ່າທີ່ພັກ
                     </Button>
                 </div>
             </header>
@@ -159,7 +159,7 @@ export default function AccommodationPage() {
                     {accommodations.map((acc, index) => (
                         <Card key={acc.id}>
                              <CardHeader className="flex flex-row justify-between items-center bg-muted/50 p-4">
-                                <CardTitle className="text-lg">ที่พัก #{index + 1}</CardTitle>
+                                <CardTitle className="text-lg">ທີ່ພັກ #{index + 1}</CardTitle>
                                 <div className="flex items-center gap-2">
                                      <Button variant="ghost" size="icon" onClick={() => duplicateAccommodation(acc.id)}>
                                         <Copy className="h-4 w-4" />
@@ -172,16 +172,16 @@ export default function AccommodationPage() {
                             <CardContent className="p-4 md:p-6 space-y-6">
                                <div className="grid md:grid-cols-2 gap-6">
                                      <div className="space-y-2">
-                                        <Label htmlFor={`acc-name-${acc.id}`}>ชื่อที่พัก</Label>
-                                        <Input id={`acc-name-${acc.id}`} placeholder="ชื่อที่พัก" value={acc.name} onChange={e => updateAccommodation(acc.id, 'name', e.target.value)} />
+                                        <Label htmlFor={`acc-name-${acc.id}`}>ຊື່ທີ່ພັກ</Label>
+                                        <Input id={`acc-name-${acc.id}`} placeholder="ຊື່ທີ່ພັກ" value={acc.name} onChange={e => updateAccommodation(acc.id, 'name', e.target.value)} />
                                     </div>
                                     <div className="grid md:grid-cols-2 gap-6">
                                         <div className="space-y-2">
-                                            <Label>ประเภทที่พัก</Label>
+                                            <Label>ປະເພດທີ່ພັກ</Label>
                                             <RadioGroup value={acc.type} onValueChange={(v) => updateAccommodation(acc.id, 'type', v as 'hotel' | 'guesthouse')} className="flex items-center space-x-4 pt-2">
                                                 <div className="flex items-center space-x-2">
                                                     <RadioGroupItem value="hotel" id={`hotel-${acc.id}`} />
-                                                    <Label htmlFor={`hotel-${acc.id}`}>โรงแรม</Label>
+                                                    <Label htmlFor={`hotel-${acc.id}`}>ໂຮງແຮມ</Label>
                                                 </div>
                                                 <div className="flex items-center space-x-2">
                                                     <RadioGroupItem value="guesthouse" id={`guesthouse-${acc.id}`} />
@@ -190,7 +190,7 @@ export default function AccommodationPage() {
                                             </RadioGroup>
                                         </div>
                                          <div className="space-y-2">
-                                            <Label htmlFor={`checkin-date-${acc.id}`}>วันที่เช็คอิน</Label>
+                                            <Label htmlFor={`checkin-date-${acc.id}`}>ວັນທີເຊັກອິນ</Label>
                                             <Popover>
                                                 <PopoverTrigger asChild>
                                                     <Button variant={"outline"} className="w-full justify-start text-left font-normal">
@@ -208,10 +208,10 @@ export default function AccommodationPage() {
 
                                <Card className="bg-slate-50/50">
                                     <CardHeader className="flex-row items-center justify-between p-4">
-                                        <CardTitle className="text-md">ประเภทห้อง</CardTitle>
+                                        <CardTitle className="text-md">ປະເພດຫ້ອງ</CardTitle>
                                         <Button size="sm" variant="outline" onClick={() => addRoom(acc.id)}>
                                             <PlusCircle className="mr-2 h-4 w-4" />
-                                            เพิ่มห้อง
+                                            ເພີ່ມຫ້ອງ
                                         </Button>
                                     </CardHeader>
                                     <CardContent className="space-y-4 p-4 pt-0">
@@ -219,7 +219,7 @@ export default function AccommodationPage() {
                                             const roomTotal = room.numRooms * room.numNights * room.price;
                                             return (
                                             <div key={room.id} className="p-4 border rounded-lg bg-white relative">
-                                                <h4 className="font-semibold mb-4">ห้องแบบที่ {roomIndex + 1}</h4>
+                                                <h4 className="font-semibold mb-4">ຫ້ອງແບບທີ່ {roomIndex + 1}</h4>
                                                 {acc.rooms.length > 1 && (
                                                     <Button variant="ghost" size="icon" className="absolute top-2 right-2" onClick={() => deleteRoom(acc.id, room.id)}>
                                                         <Trash2 className="h-4 w-4 text-red-400" />
@@ -227,32 +227,32 @@ export default function AccommodationPage() {
                                                 )}
                                                 <div className="grid md:grid-cols-3 gap-4">
                                                      <div className="space-y-2">
-                                                        <Label>ประเภท</Label>
+                                                        <Label>ປະເພດ</Label>
                                                         <Select value={room.type} onValueChange={(v) => updateRoom(acc.id, room.id, 'type', v)}>
                                                             <SelectTrigger><SelectValue /></SelectTrigger>
                                                             <SelectContent>
-                                                                <SelectItem value="เตียงเดี่ยว">เตียงเดี่ยว</SelectItem>
-                                                                <SelectItem value="เตียงคู่">เตียงคู่</SelectItem>
-                                                                <SelectItem value="ห้องสวีท">ห้องสวีท</SelectItem>
+                                                                <SelectItem value="เตียงเดี่ยว">ຕຽງດ່ຽວ</SelectItem>
+                                                                <SelectItem value="เตียงคู่">ຕຽງຄູ່</SelectItem>
+                                                                <SelectItem value="ห้องสวีท">ຫ້ອງສະວີດ</SelectItem>
                                                             </SelectContent>
                                                         </Select>
                                                     </div>
                                                     <div className="space-y-2">
-                                                        <Label>จำนวนห้อง</Label>
+                                                        <Label>ຈຳນວນຫ້ອງ</Label>
                                                         <Input type="number" min="1" value={room.numRooms} onChange={e => updateRoom(acc.id, room.id, 'numRooms', parseInt(e.target.value) || 1)} />
                                                     </div>
                                                      <div className="space-y-2">
-                                                        <Label>จำนวนคืน</Label>
+                                                        <Label>ຈຳນວນຄືນ</Label>
                                                         <Input type="number" min="1" value={room.numNights} onChange={e => updateRoom(acc.id, room.id, 'numNights', parseInt(e.target.value) || 1)} />
                                                     </div>
                                                 </div>
                                                 <div className="grid md:grid-cols-3 gap-4 mt-4">
                                                     <div className="space-y-2">
-                                                        <Label>ราคา/ห้อง/คืน</Label>
+                                                        <Label>ລາຄາ/ຫ້ອງ/ຄືນ</Label>
                                                         <Input type="number" min="0" value={room.price} onChange={e => updateRoom(acc.id, room.id, 'price', parseFloat(e.target.value) || 0)} />
                                                     </div>
                                                     <div className="space-y-2">
-                                                        <Label>สกุลเงิน</Label>
+                                                        <Label>ສະກຸນເງິນ</Label>
                                                         <Select value={room.currency} onValueChange={(v) => updateRoom(acc.id, room.id, 'currency', v)}>
                                                             <SelectTrigger><SelectValue /></SelectTrigger>
                                                             <SelectContent>
@@ -263,7 +263,7 @@ export default function AccommodationPage() {
                                                         </Select>
                                                     </div>
                                                      <div className="space-y-2">
-                                                        <Label>รวม</Label>
+                                                        <Label>ລວມ</Label>
                                                         <div className="h-10 flex items-center px-3 rounded-md border bg-muted">
                                                             {formatNumber(roomTotal)}
                                                         </div>
@@ -274,7 +274,7 @@ export default function AccommodationPage() {
                                     </CardContent>
                                </Card>
                                 <div className="mt-4 p-4 bg-purple-100 rounded-lg flex justify-between items-center">
-                                    <span className="font-bold text-lg text-purple-800">รวมค่าที่พักนี้ทั้งหมด:</span>
+                                    <span className="font-bold text-lg text-purple-800">ລວມຄ່າທີ່ພັກນີ້ທັງໝົດ:</span>
                                     <div className="text-right">
                                         {(Object.keys(accommodationTotals[acc.id]) as Currency[]).filter(c => accommodationTotals[acc.id][c] > 0).map(c => (
                                             <p key={c} className="font-bold text-lg text-purple-800">
@@ -291,12 +291,12 @@ export default function AccommodationPage() {
                 {accommodations.length > 0 && (
                      <Card className="mt-6">
                         <CardHeader>
-                            <CardTitle>สรุปค่าที่พักทั้งหมด</CardTitle>
+                            <CardTitle>ສະຫຼຸບຄ່າທີ່ພັກທັງໝົດ</CardTitle>
                         </CardHeader>
                         <CardContent className="grid md:grid-cols-4 gap-4">
                              {(Object.keys(grandTotal) as Currency[]).filter(c => grandTotal[c] > 0).map(c => (
                                 <div key={c} className="p-4 bg-primary/10 rounded-lg">
-                                    <p className="text-sm text-primary/80">รวม ({c})</p>
+                                    <p className="text-sm text-primary/80">ລວມ ({c})</p>
                                     <p className="text-2xl font-bold text-primary">{formatNumber(grandTotal[c])}</p>
                                 </div>
                             ))}
@@ -307,4 +307,3 @@ export default function AccommodationPage() {
         </div>
     );
 }
-

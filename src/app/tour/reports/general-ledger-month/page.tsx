@@ -81,53 +81,53 @@ export default function GeneralLedgerMonthPage() {
                 <Button variant="outline" size="icon" className="h-8 w-8" asChild>
                     <Link href="/tour/reports/general-ledger">
                         <ArrowLeft className="h-4 w-4" />
-                        <span className="sr-only">กลับไปหน้ารายงานหลัก</span>
+                        <span className="sr-only">ກັບໄປໜ้ารາຍງານຫຼັກ</span>
                     </Link>
                 </Button>
                 <div className="flex items-center gap-2">
                     <BookOpen className="h-6 w-6 text-primary"/>
-                    <h1 className="text-xl font-bold tracking-tight">ประวัติรับ-จ่าย: {headerTitle}</h1>
+                    <h1 className="text-xl font-bold tracking-tight">ປະຫວັດຮັບ-ຈ່າຍ: {headerTitle}</h1>
                 </div>
                  <div className="ml-auto">
                      <Button onClick={() => window.print()} variant="outline" size="sm">
                         <Printer className="mr-2 h-4 w-4" />
-                        พิมพ์
+                        ພິມ
                     </Button>
                 </div>
             </header>
             <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 print:p-2 print:gap-2">
                  <div className="hidden print:block text-center mb-4">
-                    <h1 className="text-xl font-bold">ประวัติรับ-จ่ายทั่วไป</h1>
+                    <h1 className="text-xl font-bold">ປະຫວັດຮັບ-ຈ່າຍທົ່ວໄປ</h1>
                     <p className="text-sm text-muted-foreground">
-                        สำหรับเดือน {headerTitle}
+                        ສຳລັບເດືອນ {headerTitle}
                     </p>
                 </div>
                 
                  <Card className="print:shadow-none print:border-none">
                     <CardHeader className="print:hidden">
-                        <CardTitle>สรุปยอดเดือน {headerTitle}</CardTitle>
+                        <CardTitle>ສະຫຼຸບຍອດເດືອນ {headerTitle}</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4 print:p-0">
                          <div className="p-4 bg-muted/50 rounded-lg space-y-2 print:border print:p-2">
-                            <h3 className="font-semibold">ยอดรวมสำหรับเดือนนี้</h3>
+                            <h3 className="font-semibold">ຍອດລວມສຳລັບເດືອນນີ້</h3>
                             <Table>
                                 <TableHeader>
                                     <TableRow className="text-xs">
-                                        <TableHead>ประเภท</TableHead>
+                                        <TableHead>ປະເພດ</TableHead>
                                         {currencyKeys.map(c => <TableHead key={c} className="text-right uppercase">{c}</TableHead>)}
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     <TableRow>
-                                        <TableCell className="font-medium">รายรับ</TableCell>
+                                        <TableCell className="font-medium">ລາຍຮັບ</TableCell>
                                         {currencyKeys.map(c => <TableCell key={c} className="text-right text-green-600 font-mono">{formatCurrency(reportData.income[c] || 0)}</TableCell>)}
                                     </TableRow>
                                     <TableRow>
-                                        <TableCell className="font-medium">รายจ่าย</TableCell>
+                                        <TableCell className="font-medium">ລາຍຈ່າຍ</TableCell>
                                         {currencyKeys.map(c => <TableCell key={c} className="text-right text-red-600 font-mono">{formatCurrency(reportData.expense[c] || 0)}</TableCell>)}
                                     </TableRow>
                                     <TableRow className="font-bold bg-muted/80">
-                                        <TableCell>กำไร/ขาดทุน</TableCell>
+                                        <TableCell>ກຳໄລ/ຂາດທຶນ</TableCell>
                                          {currencyKeys.map(c => (
                                             <TableCell key={c} className={`text-right font-mono ${(reportData.net[c] || 0) >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
                                                 {formatCurrency(reportData.net[c] || 0)}
@@ -139,13 +139,13 @@ export default function GeneralLedgerMonthPage() {
                         </div>
                         
                         <div>
-                             <h3 className="text-lg font-semibold my-4 print:my-2 print:text-base print:border-b print:pb-1">รายละเอียดธุรกรรม</h3>
+                             <h3 className="text-lg font-semibold my-4 print:my-2 print:text-base print:border-b print:pb-1">ລາຍລະອຽດທຸລະກຳ</h3>
                              <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead>วันที่</TableHead>
-                                        <TableHead>คำอธิบาย</TableHead>
-                                        <TableHead>ประเภท</TableHead>
+                                        <TableHead>ວັນທີ</TableHead>
+                                        <TableHead>ຄຳອະທິບາຍ</TableHead>
+                                        <TableHead>ປະເພດ</TableHead>
                                         {currencyKeys.map(c => <TableHead key={c} className="text-right uppercase">{c}</TableHead>)}
                                     </TableRow>
                                 </TableHeader>
@@ -154,7 +154,7 @@ export default function GeneralLedgerMonthPage() {
                                         <TableRow key={tx.id} className={tx.type === 'income' ? 'bg-green-50/30' : 'bg-red-50/30'}>
                                             <TableCell>{format(tx.date, 'dd/MM/yy')}</TableCell>
                                             <TableCell>{tx.description}</TableCell>
-                                            <TableCell>{tx.type === 'income' ? 'รายรับ' : 'รายจ่าย'}</TableCell>
+                                            <TableCell>{tx.type === 'income' ? 'ລາຍຮັບ' : 'ລາຍຈ່າຍ'}</TableCell>
                                             {currencyKeys.map(c => (
                                                 <TableCell key={c} className={`text-right font-mono ${tx[c] || 0 > 0 ? (tx.type === 'income' ? 'text-green-700' : 'text-red-700') : ''}`}>
                                                     {(tx[c] || 0) > 0 ? formatCurrency(tx[c]!) : '-'}
@@ -168,7 +168,7 @@ export default function GeneralLedgerMonthPage() {
 
                         {reportData.transactions.length === 0 && (
                             <div className="text-center text-muted-foreground py-8">
-                                ไม่มีประวัติรับ-จ่ายทั่วไปในเดือนนี้
+                                ບໍ່ມີປະຫວັດຮັບ-ຈ່າຍທົ່ວໄປໃນເດືອນນີ້
                             </div>
                         )}
                     </CardContent>
@@ -177,4 +177,3 @@ export default function GeneralLedgerMonthPage() {
         </div>
     );
 }
-

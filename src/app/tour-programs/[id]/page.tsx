@@ -107,7 +107,7 @@ const CurrencyEntryTable = ({
                                             <PopoverTrigger asChild className="print:hidden">
                                                 <Button variant="outline" className="w-full justify-start text-left font-normal h-8 text-xs">
                                                      <CalendarIcon className="mr-1 h-3 w-3" />
-                                                    {item.date ? format(item.date, "dd/MM/yy") : <span>เลือกวันที่</span>}
+                                                    {item.date ? format(item.date, "dd/MM/yy") : <span>ເລືອກວັນທີ</span>}
                                                 </Button>
                                             </PopoverTrigger>
                                             <PopoverContent className="w-auto p-0">
@@ -169,7 +169,7 @@ const CurrencyEntryTable = ({
                                 </TableRow>
                             ))}
                         </TableBody>
-                        <TableFooter className="print:hidden">
+                         <TableFooter className="print:hidden">
                             <TableRow className="bg-muted font-bold">
                                 <TableCell colSpan={2} className="text-right print:font-lao">ລວມ (Total)</TableCell>
                                 <TableCell className="text-right">{formatCurrency(totals.kip)}</TableCell>
@@ -303,7 +303,6 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
         
         setIsSaving(true);
         try {
-            // Recalculate total price before saving
             const updatedProgram = { ...localProgram };
              if (updatedProgram.priceCurrency === updatedProgram.bankChargeCurrency) {
                 updatedProgram.totalPrice = (updatedProgram.price || 0) + (updatedProgram.bankCharge || 0);
@@ -314,7 +313,6 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
             const { id, createdAt, date, ...dataToUpdate } = updatedProgram;
             await updateTourProgram(id, dataToUpdate);
             
-            // Re-sync local state with the just saved data to be safe
             setLocalProgram(updatedProgram);
 
             toast({ title: "บันทึกข้อมูลโปรแกรมแล้ว" });
@@ -332,11 +330,9 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
             const newState = { ...prev, [field]: value };
             return newState;
         });
-        // Save automatically when select changes
         setTimeout(handleSaveProgramInfo, 0);
     }, [handleSaveProgramInfo]);
 
-    // --- Cost Item Handlers ---
     const handleAddCostItem = async () => {
         if (!id) return;
         try {
@@ -353,7 +349,6 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
         catch (error) { toast({ title: "เกิดข้อผิดพลาดในการลบต้นทุน", variant: "destructive" }); }
     };
 
-    // --- Income Item Handlers ---
     const handleAddIncomeItem = async () => {
         if (!id) return;
         try {
@@ -424,16 +419,16 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
     if (!localProgram) {
         return (
              <div className="flex min-h-screen w-full flex-col items-center justify-center bg-muted/40">
-                <p>ไม่พบข้อมูลโปรแกรมทัวร์</p>
+                <p>ບໍ່ພົບຂໍ້ມູນໂປຣແກຣມທົວ</p>
              </div>
         )
     }
     
     const PrintHeader = ({ title }: { title: string }) => (
-         <div className="hidden print:block print:space-y-4 pb-4 mb-4">
+        <div className="hidden print:block print:space-y-4 pb-4 mb-4">
             <h2 className="text-lg font-bold mb-2 text-center font-lao">{title}</h2>
-             <div className="grid grid-cols-2 gap-x-8 text-sm border-b-2 border-slate-300 pb-4">
-                 <div className="space-y-1">
+            <div className="grid grid-cols-2 gap-x-8 text-sm border-b-2 border-slate-300 pb-4">
+                <div className="space-y-1">
                     <div className="flex justify-between"><strong className="font-semibold">Tour Program:</strong><span>{localProgram.programName}</span></div>
                     <div className="flex justify-between"><strong className="font-semibold">Tour Dates:</strong><span className="whitespace-pre-wrap text-right">{localProgram.tourDates}</span></div>
                     <div className="flex justify-between"><strong className="font-semibold">Duration:</strong><span>{localProgram.durationDays} days</span></div>
@@ -446,7 +441,7 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                 </div>
             </div>
             {activeTab === 'summary' && (
-                 <div className="hidden print:grid print:grid-cols-2 print:gap-x-8 print:text-sm print:border-b-2 print:border-slate-300 print:pb-4 print:mb-4">
+                <div className="hidden print:grid print:grid-cols-2 print:gap-x-8 print:text-sm print:border-b-2 print:border-slate-300 print:pb-4 print:mb-4">
                     <div>
                         <div className="flex justify-between"><strong className="font-semibold">Price:</strong><span className="font-bold">{`${formatCurrency(localProgram.price)} ${localProgram.priceCurrency}`}</span></div>
                         <div className="flex justify-between"><strong className="font-semibold">Bank Charge:</strong><span className="font-bold">{`${formatCurrency(localProgram.bankCharge)} ${localProgram.bankChargeCurrency}`}</span></div>
@@ -454,18 +449,18 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                     <div>
                         <div className="flex justify-between"><strong className="font-semibold">Total Price:</strong><span className="font-bold">{`${formatCurrency(localProgram.totalPrice)} ${localProgram.priceCurrency}`}</span></div>
                     </div>
-                 </div>
+                </div>
             )}
         </div>
     );
-
+    
     const ProgramInfoCard = () => (
          <Card className="print:hidden">
             <CardHeader>
-                <CardTitle>รายละเอียดโปรแกรมและข้อมูลกลุ่ม</CardTitle>
+                <CardTitle>ລາຍລະອຽດໂປຣແກຣມ ແລະ ຂໍ້ມູນກຸ່ມ</CardTitle>
                 <CardDescription>
-                    วันที่สร้าง: {localProgram.createdAt ? format(localProgram.createdAt, "PPP", {locale: th}) : '-'}
-                     {isSaving && <span className="ml-4 text-blue-500 animate-pulse">กำลังบันทึก...</span>}
+                    ວັນທີສ້າງ: {localProgram.createdAt ? format(localProgram.createdAt, "PPP", {locale: th}) : '-'}
+                     {isSaving && <span className="ml-4 text-blue-500 animate-pulse">ກຳລັງບັນທึก...</span>}
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -483,19 +478,19 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                         <Input id="groupName" value={localProgram.groupName} onChange={(e) => handleProgramChange('groupName', e.target.value)} onBlur={handleSaveProgramInfo} disabled={isSaving} />
                     </div>
                     <div className="grid gap-2 md:col-span-3">
-                        <Label htmlFor="tourDates">วันที่เดินทาง (Tour Dates)</Label>
+                        <Label htmlFor="tourDates">ວັນທີເດີນທາງ (Tour Dates)</Label>
                         <Textarea id="tourDates" value={localProgram.tourDates || ''} onChange={(e) => handleProgramChange('tourDates', e.target.value)} onBlur={handleSaveProgramInfo} disabled={isSaving} />
                     </div>
                     <div className="grid gap-2">
-                        <Label htmlFor="pax">จำนวนคน (Pax)</Label>
+                        <Label htmlFor="pax">ຈຳນວນຄົນ (Pax)</Label>
                         <Input id="pax" type="number" value={localProgram.pax} onChange={(e) => handleProgramChange('pax', Number(e.target.value))} onBlur={handleSaveProgramInfo} disabled={isSaving} />
                     </div>
                      <div className="grid gap-2">
-                        <Label htmlFor="destination">จุดหมาย</Label>
+                        <Label htmlFor="destination">ຈຸດໝາຍ</Label>
                         <Input id="destination" value={localProgram.destination} onChange={(e) => handleProgramChange('destination', e.target.value)} onBlur={handleSaveProgramInfo} disabled={isSaving} />
                     </div>
                      <div className="grid gap-2">
-                        <Label htmlFor="durationDays">ระยะเวลา (วัน)</Label>
+                        <Label htmlFor="durationDays">ໄລຍະເວລາ (ວັນ)</Label>
                         <Input id="durationDays" type="number" value={localProgram.durationDays} onChange={(e) => handleProgramChange('durationDays', Number(e.target.value))} onBlur={handleSaveProgramInfo} disabled={isSaving} />
                     </div>
                 </div>
@@ -530,16 +525,16 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
         <Button variant="outline" size="icon" className="h-8 w-8" asChild>
           <Link href="/tour-programs">
               <ArrowLeft className="h-4 w-4" />
-              <span className="sr-only">กลับไปหน้ารายการ</span>
+              <span className="sr-only">ກັບໄປໜ้ารາຍການ</span>
           </Link>
         </Button>
         <div className="flex items-center gap-2">
             <FileText className="h-6 w-6 text-primary" />
-            <h1 className="text-xl font-bold tracking-tight font-headline">{localProgram.programName || 'รายละเอียดโปรแกรมทัวร์'}</h1>
+            <h1 className="text-xl font-bold tracking-tight font-headline">{localProgram.programName || 'ລາຍລະອຽດໂປຣແກຣມທົວ'}</h1>
         </div>
         <div className="ml-auto flex items-center gap-4">
              <div className="flex items-center space-x-2">
-                <span className="text-sm font-medium">สกุลเงินสำหรับพิมพ์:</span>
+                <span className="text-sm font-medium">ສະກຸນເງິນສຳລັບພິມ:</span>
                 {allCurrencies.map((currency) => (
                 <div key={currency} className="flex items-center space-x-1">
                     <Checkbox
@@ -553,17 +548,17 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
             </div>
             <Button onClick={handlePrint} size="sm" variant="outline">
                 <Printer className="mr-2 h-4 w-4" />
-                พิมพ์
+                ພິມ
             </Button>
         </div>
       </header>
       <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 print:p-2 print:gap-1">
         <Tabs defaultValue="info" onValueChange={(v) => setActiveTab(v as TabValue)} className="mt-4">
           <TabsList className="grid w-full grid-cols-4 print:hidden">
-              <TabsTrigger value="info">ข้อมูลโปรแกรม</TabsTrigger>
-              <TabsTrigger value="income">บันทึกรายรับ</TabsTrigger>
-              <TabsTrigger value="costs">คำนวณต้นทุน</TabsTrigger>
-              <TabsTrigger value="summary">สรุปผล</TabsTrigger>
+              <TabsTrigger value="info">ຂໍ້ມູນໂປຣແກຣມ</TabsTrigger>
+              <TabsTrigger value="income">ບັນທຶກລາຍຮັບ</TabsTrigger>
+              <TabsTrigger value="costs">ຄຳນວນຕົ້ນທຶນ</TabsTrigger>
+              <TabsTrigger value="summary">ສະຫຼຸບຜົນ</TabsTrigger>
           </TabsList>
           <TabsContent value="info" className="mt-4">
               <ProgramInfoCard />
@@ -576,8 +571,8 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                       onAddItem={handleAddIncomeItem}
                       onUpdateItem={handleUpdateIncomeItem as any}
                       onDeleteItem={handleDeleteIncomeItem}
-                      title="ตารางบันทึกรายรับ"
-                      description="บันทึกรายรับทั้งหมด ของโปรแกรมนี้"
+                      title="ຕາຕະລາງບັນທຶກລາຍຮັບ"
+                      description="ບັນທຶກລາຍຮັບທັງໝົດຂອງໂປຣແກຣມນີ້"
                   />
               </div>
           </TabsContent>
@@ -589,8 +584,8 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                       onAddItem={handleAddCostItem}
                       onUpdateItem={handleUpdateCostItem as any}
                       onDeleteItem={handleDeleteCostItem}
-                      title="ตารางคำนวณต้นทุน"
-                      description="บันทึกค่าใช้จ่ายทั้งหมดของโปรแกรมนี้"
+                      title="ຕາຕະລາງຄຳນວນຕົ້ນທຶນ"
+                      description="ບັນທຶກຄ່າໃຊ້ຈ່າຍທັງໝົດຂອງໂປຣແກຣມນີ້"
                   />
               </div>
           </TabsContent>
@@ -648,26 +643,26 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                 </div>
               <Card className="print:hidden">
                   <CardHeader>
-                      <CardTitle>สรุปผลประกอบการ</CardTitle>
-                      <CardDescription>สรุปรายรับ, ต้นทุน, และกำไร/ขาดทุน สำหรับโปรแกรมนี้</CardDescription>
+                      <CardTitle>ສະຫຼຸບຜົນປະກອບການ</CardTitle>
+                      <CardDescription>ສະຫຼຸບລາຍຮັບ, ຕົ້ນທຶນ, และกำไร/ขาดทุน สำหรับໂປຣແກຣມนี้</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6 print:p-0 print:space-y-2">
                        <div>
                           <h3 className="text-lg font-semibold mb-2 print:font-lao print:text-sm print:font-bold print:border-b print:pb-1">ລາຍຮັບ (Total Income)</h3>
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 print:grid-cols-4">
-                              <SummaryCard title="รายรับ" value={summaryData.totalIncomes.kip} currency="KIP" />
-                              <SummaryCard title="รายรับ" value={summaryData.totalIncomes.baht} currency="BAHT" />
-                              <SummaryCard title="รายรับ" value={summaryData.totalIncomes.usd} currency="USD" />
-                              <SummaryCard title="รายรับ" value={summaryData.totalIncomes.cny} currency="CNY" />
+                              <SummaryCard title="ລາຍຮັບ" value={summaryData.totalIncomes.kip} currency="KIP" />
+                              <SummaryCard title="ລາຍຮັບ" value={summaryData.totalIncomes.baht} currency="BAHT" />
+                              <SummaryCard title="ລາຍຮັບ" value={summaryData.totalIncomes.usd} currency="USD" />
+                              <SummaryCard title="ລາຍຮັບ" value={summaryData.totalIncomes.cny} currency="CNY" />
                           </div>
                       </div>
                       <div>
                           <h3 className="text-lg font-semibold mb-2 print:font-lao print:text-sm print:font-bold print:border-b print:pb-1">ລາຍຈ່າຍ (Total Costs)</h3>
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 print:grid-cols-4">
-                              <SummaryCard title="ต้นทุน" value={summaryData.totalCosts.kip} currency="KIP" />
-                              <SummaryCard title="ต้นทุน" value={summaryData.totalCosts.baht} currency="BAHT" />
-                              <SummaryCard title="ต้นทุน" value={summaryData.totalCosts.usd} currency="USD" />
-                              <SummaryCard title="ต้นทุน" value={summaryData.totalCosts.cny} currency="CNY" />
+                              <SummaryCard title="ຕົ້ນທຶນ" value={summaryData.totalCosts.kip} currency="KIP" />
+                              <SummaryCard title="ຕົ້ນທຶນ" value={summaryData.totalCosts.baht} currency="BAHT" />
+                              <SummaryCard title="ຕົ້ນທຶນ" value={summaryData.totalCosts.usd} currency="USD" />
+                              <SummaryCard title="ຕົ້ນທຶນ" value={summaryData.totalCosts.cny} currency="CNY" />
                           </div>
                       </div>
                       <div>

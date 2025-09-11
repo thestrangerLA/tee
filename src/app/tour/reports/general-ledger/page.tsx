@@ -98,46 +98,44 @@ export default function GeneralLedgerPage() {
 
     const handleClosePeriod = async () => {
         if (!endDate) {
-            toast({ title: "ข้อผิดพลาด", description: "กรุณาเลือกวันที่สิ้นสุด", variant: "destructive" });
+            toast({ title: "ຂໍ້ຜິດພາດ", description: "ກະລຸນາເລືອກວັນທີສິ້ນສຸດ", variant: "destructive" });
             return;
         }
 
-        const confirmation = window.confirm(`คุณแน่ใจหรือไม่ว่าต้องการปิดงบการเงิน ณ วันที่ ${format(endDate, "PPP", { locale: th })}? การดำเนินการนี้จะสร้างธุรกรรมสรุปยอดและไม่สามารถย้อนกลับได้ง่าย`);
+        const confirmation = window.confirm(`ເຈົ້າແນ່ໃຈບໍ່ວ່າຕ້ອງການປິດງົບການເງິນ ณ ວັນທີ ${format(endDate, "PPP", { locale: th })}? ການດຳເນີນການນີ້ຈະສ້າງທຸລະກຳສະຫຼຸບຍອດ ແລະ ບໍ່ສາມາດย้อนกลับໄດ້ງ່າຍ`);
         if (!confirmation) return;
 
         const { grandTotals } = reportData;
 
         try {
-            // Create a closing entry for expenses (becomes an income to offset)
             const expenseClosingTransaction: Omit<Transaction, 'id'> = {
                 date: endDate,
                 type: 'income',
-                description: `ปิดงบการเงิน (รายจ่าย) ณ ${format(endDate, "dd/MM/yy")}`,
+                description: `ປິດງົບການເງິນ (ລາຍຈ່າຍ) ณ ${format(endDate, "dd/MM/yy")}`,
                 amount: 0,
                 ...grandTotals.expense
             };
             await addTourTransaction(expenseClosingTransaction);
             
-            // Create a closing entry for incomes (becomes an expense to offset)
             const incomeClosingTransaction: Omit<Transaction, 'id'> = {
                 date: endDate,
                 type: 'expense',
-                description: `ปิดงบการเงิน (รายรับ) ณ ${format(endDate, "dd/MM/yy")}`,
+                description: `ປິດງົບການເງິນ (ລາຍຮັບ) ณ ${format(endDate, "dd/MM/yy")}`,
                 amount: 0,
                 ...grandTotals.income
             };
             await addTourTransaction(incomeClosingTransaction);
 
             toast({
-                title: "ปิดงบการเงินสำเร็จ",
-                description: `สร้างธุรกรรมสรุปยอด ณ วันที่ ${format(endDate, "PPP", { locale: th })} เรียบร้อยแล้ว`,
+                title: "ປິດງົບການເງິນສຳເລັດ",
+                description: `ສ້າງທຸລະກຳສະຫຼຸບຍອດ ณ ວັນທີ ${format(endDate, "PPP", { locale: th })} ຮຽບຮ້ອຍແລ້ວ`,
             });
 
         } catch (error) {
             console.error("Failed to close financial period:", error);
             toast({
-                title: "เกิดข้อผิดพลาด",
-                description: "ไม่สามารถสร้างธุรกรรมปิดงบได้",
+                title: "ເກີດຂໍ້ຜິດພາດ",
+                description: "ບໍ່ສາມາດສ້າງທຸລະກຳປິດງົບໄດ້",
                 variant: "destructive"
             });
         }
@@ -150,46 +148,46 @@ export default function GeneralLedgerPage() {
                 <Button variant="outline" size="icon" className="h-8 w-8" asChild>
                     <Link href="/tour/reports">
                         <ArrowLeft className="h-4 w-4" />
-                        <span className="sr-only">กลับไปหน้ารายงาน</span>
+                        <span className="sr-only">ກັບໄປໜ้ารາຍງານ</span>
                     </Link>
                 </Button>
                 <div className="flex items-center gap-2">
                     <BookOpen className="h-6 w-6 text-primary"/>
-                    <h1 className="text-xl font-bold tracking-tight">ประวัติรับ-จ่ายทั่วไป</h1>
+                    <h1 className="text-xl font-bold tracking-tight">ປະຫວັດຮັບ-ຈ່າຍທົ່ວໄປ</h1>
                 </div>
             </header>
             <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
                  <Card>
                     <CardHeader>
-                        <CardTitle>ตัวกรองรายงาน</CardTitle>
+                        <CardTitle>ໂຕກອງລາຍງານ</CardTitle>
                     </CardHeader>
                     <CardContent className="flex flex-col md:flex-row md:items-end gap-4">
                         <div className="grid gap-2">
-                            <Label htmlFor="start-date">วันที่เริ่มต้น</Label>
+                            <Label htmlFor="start-date">ວັນທີເລີ່ມຕົ້ນ</Label>
                             <Popover>
                                 <PopoverTrigger asChild>
                                     <Button id="start-date" variant={"outline"} className="w-[280px] justify-start text-left font-normal">
                                         <CalendarIcon className="mr-2 h-4 w-4" />
-                                        {startDate ? format(startDate, "PPP", { locale: th }) : <span>เลือกวันที่</span>}
+                                        {startDate ? format(startDate, "PPP", { locale: th }) : <span>ເລືອກວັນທີ</span>}
                                     </Button>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={startDate} onSelect={setStartDate} initialFocus locale={th} /></PopoverContent>
                             </Popover>
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="end-date">วันที่สิ้นสุด</Label>
+                            <Label htmlFor="end-date">ວັນທີສິ້ນສຸດ</Label>
                             <Popover>
                                 <PopoverTrigger asChild>
                                     <Button id="end-date" variant={"outline"} className="w-[280px] justify-start text-left font-normal">
                                         <CalendarIcon className="mr-2 h-4 w-4" />
-                                        {endDate ? format(endDate, "PPP", { locale: th }) : <span>เลือกวันที่</span>}
+                                        {endDate ? format(endDate, "PPP", { locale: th }) : <span>ເລືອກວັນທີ</span>}
                                     </Button>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={endDate} onSelect={setEndDate} initialFocus locale={th} /></PopoverContent>
                             </Popover>
                         </div>
                         <div className="md:ml-auto">
-                            <Button onClick={handleClosePeriod} variant="destructive">ปิดงบการเงิน</Button>
+                            <Button onClick={handleClosePeriod} variant="destructive">ປິດງົບການເງິນ</Button>
                         </div>
                     </CardContent>
                 </Card>
@@ -197,30 +195,30 @@ export default function GeneralLedgerPage() {
                  <Card>
                     <CardHeader>
                          <CardDescription>
-                            แสดงรายการธุรกรรมทั่วไปที่ไม่ผูกกับโปรแกรมทัวร์สำหรับช่วงวันที่ที่เลือก
+                            ສະແດງລາຍການທຸລະກຳທົ່ວໄປທີ່ບໍ່ຜູກກັບໂປຣແກຣມທົວສຳລັບຊ່ວງວັນທີທີ່ເລືອກ
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="p-4 bg-muted/50 rounded-lg space-y-2">
-                            <h3 className="font-semibold">ยอดรวมสำหรับช่วงวันที่ที่เลือก</h3>
+                            <h3 className="font-semibold">ຍອດລວມສຳລັບຊ່ວງວັນທີທີ່ເລືອກ</h3>
                             <Table>
                                 <TableHeader>
                                     <TableRow className="text-xs">
-                                        <TableHead>ประเภท</TableHead>
+                                        <TableHead>ປະເພດ</TableHead>
                                         {currencyKeys.map(c => <TableHead key={c} className="text-right uppercase">{c}</TableHead>)}
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     <TableRow>
-                                        <TableCell className="font-medium">รายรับ</TableCell>
+                                        <TableCell className="font-medium">ລາຍຮັບ</TableCell>
                                         {currencyKeys.map(c => <TableCell key={c} className="text-right text-green-600 font-mono">{formatCurrency(reportData.grandTotals.income[c])}</TableCell>)}
                                     </TableRow>
                                     <TableRow>
-                                        <TableCell className="font-medium">รายจ่าย</TableCell>
+                                        <TableCell className="font-medium">ລາຍຈ່າຍ</TableCell>
                                         {currencyKeys.map(c => <TableCell key={c} className="text-right text-red-600 font-mono">{formatCurrency(reportData.grandTotals.expense[c])}</TableCell>)}
                                     </TableRow>
                                     <TableRow className="font-bold bg-muted/80">
-                                        <TableCell>กำไร/ขาดทุน</TableCell>
+                                        <TableCell>ກຳໄລ/ຂາດທຶນ</TableCell>
                                          {currencyKeys.map(c => (
                                             <TableCell key={c} className={`text-right font-mono ${reportData.grandTotals.net[c] >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
                                                 {formatCurrency(reportData.grandTotals.net[c])}
@@ -262,7 +260,7 @@ export default function GeneralLedgerPage() {
                            </div>
                         ) : (
                             <div className="text-center text-muted-foreground py-8">
-                                ไม่มีประวัติรับ-จ่ายทั่วไปในปีที่เลือก
+                                ບໍ່ມີປະຫວັດຮັບ-ຈ່າຍທົ່ວໄປໃນປີທີ່ເລືອກ
                             </div>
                         )}
                     </CardContent>

@@ -17,10 +17,10 @@ import { format } from 'date-fns';
 type Currency = 'USD' | 'THB' | 'LAK' | 'CNY';
 
 const currencySymbols: Record<Currency, string> = {
-    USD: '$ (ดอลลาร์)',
-    THB: '฿ (บาท)',
-    LAK: '₭ (กีบ)',
-    CNY: '¥ (หยวน)',
+    USD: '$ (ດอลລาร์)',
+    THB: '฿ (ບາດ)',
+    LAK: '₭ (ກີບ)',
+    CNY: '¥ (ຢວນ)',
 };
 
 type Flight = {
@@ -95,12 +95,12 @@ export default function FlightsPage() {
                 </Button>
                 <div className="flex items-center gap-2">
                     <Plane className="h-6 w-6 text-primary" />
-                    <h1 className="text-xl font-bold tracking-tight">ค่าตั๋วเครื่องบิน</h1>
+                    <h1 className="text-xl font-bold tracking-tight">ຄ່າປີ້ຍົນ</h1>
                 </div>
                 <div className="ml-auto">
                     <Button onClick={addFlight} className="bg-orange-600 hover:bg-orange-700">
                         <PlusCircle className="mr-2 h-4 w-4" />
-                        เพิ่มค่าตั๋วเครื่องบิน
+                        ເພີ່ມຄ່າປີ້ຍົນ
                     </Button>
                 </div>
             </header>
@@ -109,7 +109,7 @@ export default function FlightsPage() {
                     {flights.map((flight, index) => (
                         <Card key={flight.id}>
                             <CardHeader className="flex flex-row justify-between items-center bg-muted/50 p-4">
-                                <CardTitle className="text-lg">ตั๋วเครื่องบิน #{index + 1}</CardTitle>
+                                <CardTitle className="text-lg">ປີ້ຍົນ #{index + 1}</CardTitle>
                                 <div className="flex items-center gap-2">
                                     <Button variant="ghost" size="icon" onClick={() => duplicateFlight(flight.id)}>
                                         <Copy className="h-4 w-4" />
@@ -122,15 +122,15 @@ export default function FlightsPage() {
                             <CardContent className="p-4 md:p-6 space-y-6">
                                 <div className="grid md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
-                                        <Label>เส้นทาง</Label>
+                                        <Label>ເສັ້ນທາງ</Label>
                                         <div className="flex items-center gap-2">
-                                            <Input placeholder="จาก" value={flight.from} onChange={e => updateFlight(flight.id, 'from', e.target.value)} />
-                                            <span>ไป</span>
-                                            <Input placeholder="ไป" value={flight.to} onChange={e => updateFlight(flight.id, 'to', e.target.value)} />
+                                            <Input placeholder="ຈາກ" value={flight.from} onChange={e => updateFlight(flight.id, 'from', e.target.value)} />
+                                            <span>ໄປ</span>
+                                            <Input placeholder="ໄປ" value={flight.to} onChange={e => updateFlight(flight.id, 'to', e.target.value)} />
                                         </div>
                                     </div>
                                     <div className="space-y-2">
-                                        <Label>วัน-เวลาเดินทาง</Label>
+                                        <Label>ວັນ-ເວລາເດີນທາງ</Label>
                                         <div className="flex items-center gap-2">
                                             <Popover>
                                                 <PopoverTrigger asChild>
@@ -153,15 +153,15 @@ export default function FlightsPage() {
 
                                 <div className="grid md:grid-cols-3 gap-6">
                                     <div className="space-y-2">
-                                        <Label htmlFor={`price-${flight.id}`}>ราคา/คน</Label>
+                                        <Label htmlFor={`price-${flight.id}`}>ລາຄາ/ຄົນ</Label>
                                         <Input id={`price-${flight.id}`} type="number" min="0" value={flight.pricePerPerson} onChange={e => updateFlight(flight.id, 'pricePerPerson', parseFloat(e.target.value) || 0)} />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor={`people-${flight.id}`}>จำนวนคน</Label>
+                                        <Label htmlFor={`people-${flight.id}`}>ຈຳນວນຄົນ</Label>
                                         <Input id={`people-${flight.id}`} type="number" min="1" value={flight.numPeople} onChange={e => updateFlight(flight.id, 'numPeople', parseInt(e.target.value) || 1)} />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label>สกุลเงิน</Label>
+                                        <Label>ສະກຸນເງິນ</Label>
                                         <Select value={flight.currency} onValueChange={(v) => updateFlight(flight.id, 'currency', v)}>
                                             <SelectTrigger><SelectValue /></SelectTrigger>
                                             <SelectContent>
@@ -174,7 +174,7 @@ export default function FlightsPage() {
                                 </div>
 
                                 <div className="mt-4 p-4 bg-orange-100 rounded-lg flex justify-between items-center">
-                                    <span className="font-bold text-lg text-orange-800">รวมค่าตั๋วนี้:</span>
+                                    <span className="font-bold text-lg text-orange-800">ລວມຄ່າປີ້ຍົນນີ້:</span>
                                     <div className="text-right font-bold text-lg text-orange-800">
                                        {formatNumber(flightTotals[flight.id])} {flight.currency}
                                     </div>
@@ -187,12 +187,12 @@ export default function FlightsPage() {
                 {flights.length > 0 && (
                      <Card className="mt-6">
                         <CardHeader>
-                            <CardTitle>สรุปค่าตั๋วเครื่องบินทั้งหมด</CardTitle>
+                            <CardTitle>ສະຫຼຸບຄ່າປີ້ຍົນທັງໝົດ</CardTitle>
                         </CardHeader>
                         <CardContent className="grid md:grid-cols-4 gap-4">
                              {(Object.keys(grandTotal) as Currency[]).filter(c => grandTotal[c] > 0).map(c => (
                                 <div key={c} className="p-4 bg-primary/10 rounded-lg">
-                                    <p className="text-sm text-primary/80">รวม ({c})</p>
+                                    <p className="text-sm text-primary/80">ລວມ ({c})</p>
                                     <p className="text-2xl font-bold text-primary">{formatNumber(grandTotal[c])}</p>
                                 </div>
                             ))}
