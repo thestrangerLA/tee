@@ -14,7 +14,7 @@ import { ArrowLeft, Calculator, Save, Download, MapPin, Calendar as CalendarIcon
 import { format } from 'date-fns';
 import { th } from 'date-fns/locale';
 
-const CostCategoryCard = ({ title, icon, buttonText, buttonColor, iconColor }: { title: string, icon: React.ReactNode, buttonText: string, buttonColor: string, iconColor: string }) => (
+const CostCategoryCard = ({ title, icon, buttonText, buttonColor, iconColor, href }: { title: string, icon: React.ReactNode, buttonText: string, buttonColor: string, iconColor: string, href: string }) => (
     <Card className="shadow-sm">
         <CardContent className="p-4 flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -23,9 +23,11 @@ const CostCategoryCard = ({ title, icon, buttonText, buttonColor, iconColor }: {
                 </div>
                 <h3 className="text-lg font-semibold">{title}</h3>
             </div>
-            <Button className={`${buttonColor}`}>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                {buttonText}
+            <Button asChild className={`${buttonColor}`}>
+                <Link href={href}>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    {buttonText}
+                </Link>
             </Button>
         </CardContent>
     </Card>
@@ -157,6 +159,7 @@ export default function TourCalculatorPage() {
                     </CardHeader>
                     <CardContent className="grid gap-4">
                         <CostCategoryCard 
+                            href="/tour/accommodation"
                             title="ค่าที่พัก" 
                             icon={<BedDouble className="h-6 w-6 text-purple-600" />} 
                             buttonText="เพิ่มค่าที่พัก"
@@ -164,6 +167,7 @@ export default function TourCalculatorPage() {
                             iconColor="bg-purple-100"
                         />
                         <CostCategoryCard 
+                            href="#"
                             title="ค่าขนส่ง" 
                             icon={<Truck className="h-6 w-6 text-green-600" />} 
                             buttonText="เพิ่มค่าขนส่ง"
@@ -171,6 +175,7 @@ export default function TourCalculatorPage() {
                             iconColor="bg-green-100"
                         />
                          <CostCategoryCard 
+                            href="#"
                             title="ค่าตั๋วเครื่องบิน" 
                             icon={<Plane className="h-6 w-6 text-orange-600" />} 
                             buttonText="เพิ่มค่าตั๋วเครื่องบิน"
@@ -178,6 +183,7 @@ export default function TourCalculatorPage() {
                             iconColor="bg-orange-100"
                         />
                          <CostCategoryCard 
+                            href="#"
                             title="ค่าตั๋วรถไฟ" 
                             icon={<TrainFront className="h-6 w-6 text-red-600" />} 
                             buttonText="เพิ่มค่าตั๋วรถไฟ"
@@ -185,6 +191,7 @@ export default function TourCalculatorPage() {
                             iconColor="bg-red-100"
                         />
                         <CostCategoryCard 
+                            href="#"
                             title="ค่าเข้าชมสถานที่" 
                             icon={<Camera className="h-6 w-6 text-pink-600" />} 
                             buttonText="เพิ่มค่าเข้าชมสถานที่"
@@ -192,6 +199,7 @@ export default function TourCalculatorPage() {
                             iconColor="bg-pink-100"
                         />
                         <CostCategoryCard 
+                            href="#"
                             title="ค่าอาหาร" 
                             icon={<UtensilsCrossed className="h-6 w-6 text-yellow-600" />} 
                             buttonText="เพิ่มค่าอาหาร"
@@ -199,6 +207,7 @@ export default function TourCalculatorPage() {
                             iconColor="bg-yellow-100"
                         />
                         <CostCategoryCard 
+                            href="#"
                             title="ค่าไกด์" 
                             icon={<Users className="h-6 w-6 text-blue-600" />} 
                             buttonText="เพิ่มค่าไกด์"
@@ -206,6 +215,7 @@ export default function TourCalculatorPage() {
                             iconColor="bg-blue-100"
                         />
                         <CostCategoryCard 
+                            href="#"
                             title="ค่าเอกสาร" 
                             icon={<FileText className="h-6 w-6 text-slate-600" />} 
                             buttonText="เพิ่มค่าเอกสาร"
