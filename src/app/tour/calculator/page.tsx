@@ -175,7 +175,7 @@ export default function TourCalculatorPage() {
                             iconColor="bg-green-100"
                         />
                          <CostCategoryCard 
-                            href="#"
+                            href="/tour/flights"
                             title="ค่าตั๋วเครื่องบิน" 
                             icon={<Plane className="h-6 w-6 text-orange-600" />} 
                             buttonText="เพิ่มค่าตั๋วเครื่องบิน"
