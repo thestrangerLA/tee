@@ -144,7 +144,7 @@ export default function GeneralLedgerPage() {
 
     return (
         <div className="flex min-h-screen w-full flex-col bg-muted/40">
-            <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
+            <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 print:hidden">
                 <Button variant="outline" size="icon" className="h-8 w-8" asChild>
                     <Link href="/tour/reports">
                         <ArrowLeft className="h-4 w-4" />
@@ -157,7 +157,7 @@ export default function GeneralLedgerPage() {
                 </div>
             </header>
             <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-                 <Card>
+                 <Card className="print:hidden">
                     <CardHeader>
                         <CardTitle>ໂຕກອງລາຍງານ</CardTitle>
                     </CardHeader>
@@ -197,54 +197,44 @@ export default function GeneralLedgerPage() {
                 </Card>
 
                 <div className="print-container">
-                    <div className="text-center mb-4">
-                        <h1 className="text-xl font-bold">ຍອດລວມສຳລັບຊ່ວງວັນທີທີ່ເລືອກ</h1>
-                         {(startDate && endDate) && (
-                            <p className="text-sm text-muted-foreground">
-                                (ແຕ່ວັນທີ {format(startDate, "dd/MM/yyyy")} ຫາ {format(endDate, "dd/MM/yyyy")})
-                            </p>
-                        )}
-                    </div>
-                     <Card className="print:shadow-none print:border-none">
-                        <CardHeader className="print:hidden">
-                             <CardDescription>
-                                ສະແດງລາຍການທຸລະກຳທົ່ວໄປທີ່ບໍ່ຜູກກັບໂປຣແກຣມທົວສຳລັບຊ່ວງວັນທີທີ່ເລືອກ
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4 print:p-0">
-                            <div className="p-4 bg-muted/50 rounded-lg space-y-2 print:bg-transparent print:p-0">
-                                <h3 className="font-semibold print:hidden">ຍອດລວມສຳລັບຊ່ວງວັນທີທີ່ເລືອກ</h3>
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow className="text-xs">
-                                            <TableHead>ປະເພດ</TableHead>
-                                            {currencyKeys.map(c => <TableHead key={c} className="text-right uppercase">{c}</TableHead>)}
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        <TableRow>
-                                            <TableCell className="font-medium">ລາຍຮັບ</TableCell>
-                                            {currencyKeys.map(c => <TableCell key={c} className="text-right text-green-600 font-mono">{formatCurrency(reportData.grandTotals.income[c])}</TableCell>)}
-                                        </TableRow>
-                                        <TableRow>
-                                            <TableCell className="font-medium">ລາຍຈ່າຍ</TableCell>
-                                            {currencyKeys.map(c => <TableCell key={c} className="text-right text-red-600 font-mono">{formatCurrency(reportData.grandTotals.expense[c])}</TableCell>)}
-                                        </TableRow>
-                                        <TableRow className="font-bold bg-muted/80 print:bg-muted/50">
-                                            <TableCell>ກຳໄລ/ຂາດທຶນ</TableCell>
-                                             {currencyKeys.map(c => (
-                                                <TableCell key={c} className={`text-right font-mono ${reportData.grandTotals.net[c] >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
-                                                    {formatCurrency(reportData.grandTotals.net[c])}
-                                                </TableCell>
-                                            ))}
-                                        </TableRow>
-                                    </TableBody>
-                                </Table>
+                    <div className="space-y-4">
+                        <div className="text-center">
+                            <h1 className="text-xl font-bold font-lao">ຍອດລວມສໍາລັບຊ່ວງວັນທີທີ່ເລືອກ</h1>
+                             {(startDate && endDate) && (
+                                <p className="text-sm text-gray-600 font-lao">
+                                    (ແຕ່ວັນທີ {format(startDate, "dd/MM/yyyy")} ຫາ {format(endDate, "dd/MM/yyyy")})
+                                </p>
+                            )}
+                        </div>
+                        <p className='text-sm text-gray-700 font-lao'>ສະແດງລາຍການທຸລະກຳທົ່ວໄປທີ່ບໍ່ຜູກກັບໂປຣແກຣມທົວສຳລັບຊ່ວງວັນທີທີ່ເລືອກ</p>
+                        
+                        <div className="border rounded-lg p-4 space-y-2 bg-white/50">
+                             <div className="flex font-semibold text-sm font-lao border-b pb-2">
+                                <div className="w-1/5">ປະເພດ</div>
+                                <div className="w-1/5 text-right">KIP</div>
+                                <div className="w-1/5 text-right">BAHT</div>
+                                <div className="w-1/5 text-right">USD</div>
+                                <div className="w-1/5 text-right">CNY</div>
                             </div>
-                        </CardContent>
-                    </Card>
+                            <div className="flex items-center text-sm border-b py-2">
+                                <div className="w-1/5 font-lao">ລາຍຮັບ</div>
+                                {currencyKeys.map(c => <div key={c} className="w-1/5 text-right text-green-600 font-mono">{formatCurrency(reportData.grandTotals.income[c])}</div>)}
+                            </div>
+                             <div className="flex items-center text-sm border-b py-2">
+                                <div className="w-1/5 font-lao">ລາຍຈ່າຍ</div>
+                                {currencyKeys.map(c => <div key={c} className="w-1/5 text-right text-red-600 font-mono">{formatCurrency(reportData.grandTotals.expense[c])}</div>)}
+                            </div>
+                            <div className="flex items-center text-sm font-bold bg-blue-50 -mx-4 px-4 py-2">
+                                <div className="w-1/5 font-lao">ກຳໄລ/ຂາດທຶນ</div>
+                                 {currencyKeys.map(c => (
+                                    <div key={c} className={`w-1/5 text-right font-mono ${reportData.grandTotals.net[c] >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                                        {formatCurrency(reportData.grandTotals.net[c])}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
                 </div>
-
 
                 <Card className="monthly-list-card print:hidden">
                     <CardHeader>

@@ -78,7 +78,8 @@
 }
 
 @page {
-  margin: 0;
+  size: landscape;
+  margin: 0.5in;
 }
 
 @media print {
@@ -86,10 +87,12 @@
     display: none;
   }
   .print-container {
-      display: block;
+      display: block !important;
       padding: 1rem;
-      background-color: white;
+      background-color: #f0fff4 !important;
       color: black;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
   }
   .print\:hidden {
     display: none;
