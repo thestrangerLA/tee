@@ -535,8 +535,8 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
       </header>
       <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 print:p-2 print:gap-1">
         <div>
-            <Tabs defaultValue="info" onValueChange={(v) => setActiveTab(v as TabValue)} className="mt-4 print:hidden">
-                <TabsList className="grid w-full grid-cols-4">
+            <Tabs defaultValue="info" onValueChange={(v) => setActiveTab(v as TabValue)} className="mt-4">
+                <TabsList className="grid w-full grid-cols-4 print:hidden">
                     <TabsTrigger value="info">ข้อมูลโปรแกรม</TabsTrigger>
                     <TabsTrigger value="income">บันทึกรายรับ</TabsTrigger>
                     <TabsTrigger value="costs">คำนวณต้นทุน</TabsTrigger>
