@@ -10,9 +10,27 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { ArrowLeft, Calculator, Save, Download, MapPin, Calendar as CalendarIcon } from "lucide-react";
+import { ArrowLeft, Calculator, Save, Download, MapPin, Calendar as CalendarIcon, BedDouble, Truck, Plane, TrainFront, PlusCircle } from "lucide-react";
 import { format } from 'date-fns';
 import { th } from 'date-fns/locale';
+
+const CostCategoryCard = ({ title, icon, buttonText, buttonColor, iconColor }: { title: string, icon: React.ReactNode, buttonText: string, buttonColor: string, iconColor: string }) => (
+    <Card className="shadow-sm">
+        <CardContent className="p-4 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+                <div className={`p-2 rounded-md ${iconColor} bg-opacity-10`}>
+                    {icon}
+                </div>
+                <h3 className="text-lg font-semibold">{title}</h3>
+            </div>
+            <Button className={`${buttonColor}`}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                {buttonText}
+            </Button>
+        </CardContent>
+    </Card>
+);
+
 
 export default function TourCalculatorPage() {
     const [startDate, setStartDate] = useState<Date | undefined>();
@@ -126,7 +144,46 @@ export default function TourCalculatorPage() {
                                 <Textarea id="traveler-info" placeholder="เช่น กลุ่มครอบครัว, คู่รัก, ผู้สูงอายุ" className="min-h-[40px]" />
                             </div>
                         </div>
+                    </CardContent>
+                 </Card>
 
+                 <Card className="w-full max-w-6xl mx-auto">
+                     <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <Calculator className="h-6 w-6 text-primary" />
+                            คำนวณค่าใช้จ่าย
+                        </CardTitle>
+                        <CardDescription>เพิ่มและจัดการค่าใช้จ่ายต่างๆ สำหรับโปรแกรมทัวร์นี้</CardDescription>
+                    </CardHeader>
+                    <CardContent className="grid gap-4">
+                        <CostCategoryCard 
+                            title="ค่าที่พัก" 
+                            icon={<BedDouble className="h-6 w-6 text-purple-600" />} 
+                            buttonText="เพิ่มค่าที่พัก"
+                            buttonColor="bg-purple-600 hover:bg-purple-700"
+                            iconColor="bg-purple-100"
+                        />
+                        <CostCategoryCard 
+                            title="ค่าขนส่ง" 
+                            icon={<Truck className="h-6 w-6 text-green-600" />} 
+                            buttonText="เพิ่มค่าขนส่ง"
+                            buttonColor="bg-green-600 hover:bg-green-700"
+                            iconColor="bg-green-100"
+                        />
+                         <CostCategoryCard 
+                            title="ค่าตั๋วเครื่องบิน" 
+                            icon={<Plane className="h-6 w-6 text-orange-600" />} 
+                            buttonText="เพิ่มค่าตั๋วเครื่องบิน"
+                            buttonColor="bg-orange-600 hover:bg-orange-700"
+                            iconColor="bg-orange-100"
+                        />
+                         <CostCategoryCard 
+                            title="ค่าตั๋วรถไฟ" 
+                            icon={<TrainFront className="h-6 w-6 text-red-600" />} 
+                            buttonText="เพิ่มค่าตั๋วรถไฟ"
+                            buttonColor="bg-red-600 hover:bg-red-700"
+                            iconColor="bg-red-100"
+                        />
                     </CardContent>
                  </Card>
             </main>
