@@ -143,8 +143,23 @@ export default function GeneralLedgerPage() {
 
 
     return (
-        <div className="flex min-h-screen w-full flex-col bg-muted/40 print:bg-white">
-            <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
+        <div className="flex min-h-screen w-full flex-col bg-muted/40 print:bg-white general-ledger-page">
+             <style jsx global>{`
+                @media print {
+                    .general-ledger-page .print-summary-only {
+                        display: block;
+                    }
+                    .general-ledger-page .print-summary-only .filter-card,
+                    .general-ledger-page .print-summary-only .monthly-list-card,
+                    .general-ledger-page .print-summary-only header {
+                        display: none;
+                    }
+                    .general-ledger-page .print-summary-only .summary-card {
+                        display: block !important;
+                    }
+                }
+            `}</style>
+            <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 print:hidden">
                 <Button variant="outline" size="icon" className="h-8 w-8" asChild>
                     <Link href="/tour/reports">
                         <ArrowLeft className="h-4 w-4" />
@@ -157,7 +172,7 @@ export default function GeneralLedgerPage() {
                 </div>
             </header>
             <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-                 <Card>
+                 <Card className="filter-card">
                     <CardHeader>
                         <CardTitle>ໂຕກອງລາຍງານ</CardTitle>
                     </CardHeader>
@@ -186,13 +201,17 @@ export default function GeneralLedgerPage() {
                                 <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={endDate} onSelect={setEndDate} initialFocus locale={th} /></PopoverContent>
                             </Popover>
                         </div>
-                        <div className="md:ml-auto">
+                        <div className="flex items-center gap-2 md:ml-auto">
                             <Button onClick={handleClosePeriod} variant="destructive">ປິດງົບການເງິນ</Button>
+                             <Button onClick={() => window.print()} variant="outline">
+                                <Printer className="mr-2 h-4 w-4" />
+                                ພິມ
+                            </Button>
                         </div>
                     </CardContent>
                 </Card>
 
-                 <Card>
+                 <Card className="summary-card">
                     <CardHeader>
                          <CardDescription>
                             ສະແດງລາຍການທຸລະກຳທົ່ວໄປທີ່ບໍ່ຜູກກັບໂປຣແກຣມທົວສຳລັບຊ່ວງວັນທີທີ່ເລືອກ
@@ -228,7 +247,14 @@ export default function GeneralLedgerPage() {
                                 </TableBody>
                             </Table>
                         </div>
+                    </CardContent>
+                </Card>
 
+                <Card className="monthly-list-card">
+                    <CardHeader>
+                        <CardTitle>ລາຍລະອຽດລາຍເດືອນ</CardTitle>
+                    </CardHeader>
+                    <CardContent>
                         {reportData.monthlyReports.length > 0 ? (
                            <div className="space-y-2">
                             {reportData.monthlyReports.map(({ year, month, net }) => (
@@ -269,3 +295,5 @@ export default function GeneralLedgerPage() {
         </div>
     );
 }
+
+    
