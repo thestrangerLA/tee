@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, FileText, PlusCircle, MoreHorizontal, ChevronDown, Calendar as CalendarIcon } from "lucide-react";
+import { ArrowLeft, FileText, PlusCircle, MoreHorizontal, ChevronDown, Calendar as CalendarIcon, Filter } from "lucide-react";
 import { listenToTourPrograms, deleteTourProgram, updateTourProgram } from '@/services/tourProgramService';
 import type { TourProgram } from '@/lib/types';
 import { format, getYear, getMonth, startOfDay } from 'date-fns';
@@ -18,6 +18,7 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
+  DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -34,6 +35,7 @@ export default function TourProgramsListPage() {
     const { toast } = useToast();
     const [allPrograms, setAllPrograms] = useState<TourProgram[]>([]);
     const [selectedYear, setSelectedYear] = useState(2025);
+    const [selectedGroupCode, setSelectedGroupCode] = useState<string | null>(null);
     const router = useRouter();
 
     useEffect(() => {
@@ -45,12 +47,16 @@ export default function TourProgramsListPage() {
         router.push(`/tour-programs/${id}`);
     };
     
-    const yearlyPrograms = useMemo(() => {
-        return allPrograms.filter(p => getYear(p.date) === selectedYear);
-    }, [allPrograms, selectedYear]);
+    const filteredPrograms = useMemo(() => {
+        return allPrograms.filter(p => {
+            const isYearMatch = getYear(p.date) === selectedYear;
+            const isGroupCodeMatch = !selectedGroupCode || p.tourCode === selectedGroupCode;
+            return isYearMatch && isGroupCodeMatch;
+        });
+    }, [allPrograms, selectedYear, selectedGroupCode]);
 
     const programsByMonth = useMemo(() => {
-        return yearlyPrograms.reduce((acc, program) => {
+        return filteredPrograms.reduce((acc, program) => {
             const month = getMonth(program.date); // 0-11
             if (!acc[month]) {
                 acc[month] = [];
@@ -58,7 +64,14 @@ export default function TourProgramsListPage() {
             acc[month].push(program);
             return acc;
         }, {} as Record<number, TourProgram[]>);
-    }, [yearlyPrograms]);
+    }, [filteredPrograms]);
+    
+    const allGroupCodes = useMemo(() => {
+        const codes = allPrograms
+            .map(p => p.tourCode)
+            .filter((code, index, self) => code && self.indexOf(code) === index);
+        return codes.sort();
+    }, [allPrograms]);
 
 
     const handleDeleteProgram = async (programId: string, programName: string) => {
@@ -111,8 +124,9 @@ export default function TourProgramsListPage() {
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="outline" className="flex items-center gap-2">
+                        <CalendarIcon className="h-4 w-4" />
                         <span>ปี {selectedYear + 543}</span>
-                        <ChevronDown className="h-4 w-4" />
+                        <ChevronDown className="h-4 w-4 opacity-50" />
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
@@ -125,6 +139,29 @@ export default function TourProgramsListPage() {
             </DropdownMenu>
         );
     };
+
+    const GroupCodeSelector = () => (
+         <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="flex items-center gap-2">
+                    <Filter className="h-4 w-4" />
+                    <span>{selectedGroupCode || 'All Codes'}</span>
+                    <ChevronDown className="h-4 w-4 opacity-50" />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setSelectedGroupCode(null)}>
+                    All Codes
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                {allGroupCodes.map(code => (
+                    <DropdownMenuItem key={code} onClick={() => setSelectedGroupCode(code)}>
+                        {code}
+                    </DropdownMenuItem>
+                ))}
+            </DropdownMenuContent>
+        </DropdownMenu>
+    );
 
 
     return (
@@ -142,6 +179,7 @@ export default function TourProgramsListPage() {
                 </div>
                  <div className="ml-auto flex items-center gap-4">
                     <YearSelector />
+                    <GroupCodeSelector />
                     <Link href="/tour-programs/new">
                         <Button size="sm">
                             <PlusCircle className="mr-2 h-4 w-4" />
