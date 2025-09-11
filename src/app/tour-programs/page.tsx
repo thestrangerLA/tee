@@ -34,7 +34,7 @@ const formatCurrency = (value: number | null | undefined, currency: string) => {
 export default function TourProgramsListPage() {
     const { toast } = useToast();
     const [allPrograms, setAllPrograms] = useState<TourProgram[]>([]);
-    const [selectedYear, setSelectedYear] = useState(2025);
+    const [selectedYear, setSelectedYear] = useState<number | null>(2025);
     const [selectedGroupCode, setSelectedGroupCode] = useState<string | null>(null);
     const router = useRouter();
 
@@ -49,13 +49,28 @@ export default function TourProgramsListPage() {
     
     const filteredPrograms = useMemo(() => {
         return allPrograms.filter(p => {
-            const isYearMatch = getYear(p.date) === selectedYear;
+            // If selectedYear is null, don't filter by year
+            const isYearMatch = selectedYear === null || getYear(p.date) === selectedYear;
             const isGroupCodeMatch = !selectedGroupCode || p.tourCode === selectedGroupCode;
             return isYearMatch && isGroupCodeMatch;
         });
     }, [allPrograms, selectedYear, selectedGroupCode]);
 
     const programsByMonth = useMemo(() => {
+        if (selectedYear === null) {
+            // When "All Years" is selected, group by year first, then by month
+            return filteredPrograms.reduce((acc, program) => {
+                const year = getYear(program.date);
+                const month = getMonth(program.date);
+                const key = `${year}-${month}`;
+                if (!acc[key]) {
+                    acc[key] = { year, month, programs: [] };
+                }
+                acc[key].programs.push(program);
+                return acc;
+            }, {} as Record<string, { year: number, month: number, programs: TourProgram[] }>);
+        }
+        // Original logic: group by month for a selected year
         return filteredPrograms.reduce((acc, program) => {
             const month = getMonth(program.date); // 0-11
             if (!acc[month]) {
@@ -64,7 +79,8 @@ export default function TourProgramsListPage() {
             acc[month].push(program);
             return acc;
         }, {} as Record<number, TourProgram[]>);
-    }, [filteredPrograms]);
+
+    }, [filteredPrograms, selectedYear]);
     
     const allGroupCodes = useMemo(() => {
         const codes = allPrograms
@@ -112,33 +128,32 @@ export default function TourProgramsListPage() {
     };
     
     const YearSelector = () => {
-        const currentYear = getYear(new Date());
-        // Create a list of years, e.g., from 3 years ago to 2 years in the future, plus 2025
-        const years = Array.from({ length: 6 }, (_, i) => currentYear - 3 + i);
-        if (!years.includes(2025)) {
-            years.push(2025);
-        }
-        const uniqueYears = [...new Set(years)].sort((a,b) => a - b);
+        const years = [2025, 2024];
 
         return (
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="outline" className="flex items-center gap-2">
                         <CalendarIcon className="h-4 w-4" />
-                        <span>ปี {selectedYear + 543}</span>
+                        <span>{selectedYear ? `ปี ${selectedYear + 543}` : 'ทุกปี'}</span>
                         <ChevronDown className="h-4 w-4 opacity-50" />
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                    {uniqueYears.map(year => (
+                     <DropdownMenuItem onClick={() => setSelectedYear(null)}>
+                        ทุกปี
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    {years.map(year => (
                         <DropdownMenuItem key={year} onClick={() => setSelectedYear(year)}>
-                            {year + 543}
+                            {`ปี ${year + 543}`}
                         </DropdownMenuItem>
                     ))}
                 </DropdownMenuContent>
             </DropdownMenu>
         );
     };
+
 
     const GroupCodeSelector = () => (
          <DropdownMenu>
@@ -161,6 +176,80 @@ export default function TourProgramsListPage() {
                 ))}
             </DropdownMenuContent>
         </DropdownMenu>
+    );
+    
+    const renderProgramRows = (programs: TourProgram[]) => (
+         <Table>
+            <TableHeader>
+                <TableRow>
+                    <TableHead>วันที่</TableHead>
+                    <TableHead>Group Code</TableHead>
+                    <TableHead>Tour Program</TableHead>
+                    <TableHead>Nationality</TableHead>
+                    <TableHead>จุดหมาย</TableHead>
+                    <TableHead className="text-right">จำนวนคน</TableHead>
+                    <TableHead><span className="sr-only">Actions</span></TableHead>
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+            {programs.map(program => (
+                <TableRow key={program.id} className="group">
+                    <TableCell>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    variant={"outline"}
+                                    className="w-[150px] justify-start text-left font-normal"
+                                >
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {program.date ? format(program.date, "dd/MM/yyyy") : <span>เลือกวันที่</span>}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0">
+                                <Calendar
+                                    mode="single"
+                                    selected={program.date}
+                                    onSelect={(date) => handleUpdateProgramDate(program.id, date)}
+                                    initialFocus
+                                    locale={th}
+                                />
+                            </PopoverContent>
+                        </Popover>
+                    </TableCell>
+                    <TableCell onClick={() => handleRowClick(program.id)} className="cursor-pointer">{program.tourCode}</TableCell>
+                    <TableCell onClick={() => handleRowClick(program.id)} className="cursor-pointer font-medium">{program.programName}</TableCell>
+                    <TableCell onClick={() => handleRowClick(program.id)} className="cursor-pointer">{program.groupName}</TableCell>
+                    <TableCell onClick={() => handleRowClick(program.id)} className="cursor-pointer">{program.destination}</TableCell>
+                    <TableCell onClick={() => handleRowClick(program.id)} className="cursor-pointer text-right">{program.pax}</TableCell>
+                    <TableCell className="text-right">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100">
+                                    <span className="sr-only">Open menu</span>
+                                    <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>การดำเนินการ</DropdownMenuLabel>
+                                <DropdownMenuItem onClick={() => handleRowClick(program.id)}>
+                                    ดู/แก้ไข
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    className="text-red-600"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDeleteProgram(program.id, program.programName)
+                                    }}
+                                >
+                                    ลบ
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </TableCell>
+                </TableRow>
+            ))}
+            </TableBody>
+        </Table>
     );
 
 
@@ -191,100 +280,47 @@ export default function TourProgramsListPage() {
             <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
                 <Card>
                     <CardHeader>
-                        <CardTitle>รายการโปรแกรมทัวร์ปี {selectedYear + 543}</CardTitle>
+                        <CardTitle>รายการโปรแกรมทัวร์ {selectedYear ? `ปี ${selectedYear + 543}` : 'ทั้งหมด'}</CardTitle>
                         <CardDescription>
                             จัดการ สร้าง และแก้ไขโปรแกรมทัวร์สำหรับลูกค้า
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
-                         {Object.keys(programsByMonth).length > 0 ? (
-                             <Accordion type="single" collapsible className="w-full">
-                                {Object.entries(programsByMonth).sort(([a], [b]) => Number(a) - Number(b)).map(([month, programs]) => (
-                                    <AccordionItem value={`month-${month}`} key={month}>
-                                        <AccordionTrigger className="bg-muted/50 px-4 rounded-md text-base font-semibold">
-                                            {format(new Date(selectedYear, Number(month)), 'LLLL', { locale: th })}
-                                        </AccordionTrigger>
-                                        <AccordionContent className="pt-2">
-                                            <div className="overflow-x-auto">
-                                                <Table>
-                                                    <TableHeader>
-                                                        <TableRow>
-                                                            <TableHead>วันที่</TableHead>
-                                                            <TableHead>Group Code</TableHead>
-                                                            <TableHead>Tour Program</TableHead>
-                                                            <TableHead>Nationality</TableHead>
-                                                            <TableHead>จุดหมาย</TableHead>
-                                                            <TableHead className="text-right">จำนวนคน</TableHead>
-                                                            <TableHead><span className="sr-only">Actions</span></TableHead>
-                                                        </TableRow>
-                                                    </TableHeader>
-                                                    <TableBody>
-                                                    {programs.map(program => (
-                                                        <TableRow key={program.id} className="group">
-                                                            <TableCell>
-                                                                <Popover>
-                                                                    <PopoverTrigger asChild>
-                                                                        <Button
-                                                                            variant={"outline"}
-                                                                            className="w-[150px] justify-start text-left font-normal"
-                                                                        >
-                                                                            <CalendarIcon className="mr-2 h-4 w-4" />
-                                                                            {program.date ? format(program.date, "dd/MM/yyyy") : <span>เลือกวันที่</span>}
-                                                                        </Button>
-                                                                    </PopoverTrigger>
-                                                                    <PopoverContent className="w-auto p-0">
-                                                                        <Calendar
-                                                                            mode="single"
-                                                                            selected={program.date}
-                                                                            onSelect={(date) => handleUpdateProgramDate(program.id, date)}
-                                                                            initialFocus
-                                                                            locale={th}
-                                                                        />
-                                                                    </PopoverContent>
-                                                                </Popover>
-                                                            </TableCell>
-                                                            <TableCell onClick={() => handleRowClick(program.id)} className="cursor-pointer">{program.tourCode}</TableCell>
-                                                            <TableCell onClick={() => handleRowClick(program.id)} className="cursor-pointer font-medium">{program.programName}</TableCell>
-                                                            <TableCell onClick={() => handleRowClick(program.id)} className="cursor-pointer">{program.groupName}</TableCell>
-                                                            <TableCell onClick={() => handleRowClick(program.id)} className="cursor-pointer">{program.destination}</TableCell>
-                                                            <TableCell onClick={() => handleRowClick(program.id)} className="cursor-pointer text-right">{program.pax}</TableCell>
-                                                            <TableCell className="text-right">
-                                                                <DropdownMenu>
-                                                                    <DropdownMenuTrigger asChild>
-                                                                        <Button variant="ghost" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100">
-                                                                            <span className="sr-only">Open menu</span>
-                                                                            <MoreHorizontal className="h-4 w-4" />
-                                                                        </Button>
-                                                                    </DropdownMenuTrigger>
-                                                                    <DropdownMenuContent align="end">
-                                                                        <DropdownMenuLabel>การดำเนินการ</DropdownMenuLabel>
-                                                                        <DropdownMenuItem onClick={() => handleRowClick(program.id)}>
-                                                                            ดู/แก้ไข
-                                                                        </DropdownMenuItem>
-                                                                        <DropdownMenuItem
-                                                                            className="text-red-600"
-                                                                            onClick={(e) => {
-                                                                                e.stopPropagation();
-                                                                                handleDeleteProgram(program.id, program.programName)
-                                                                            }}
-                                                                        >
-                                                                            ลบ
-                                                                        </DropdownMenuItem>
-                                                                    </DropdownMenuContent>
-                                                                </DropdownMenu>
-                                                            </TableCell>
-                                                        </TableRow>
-                                                    ))}
-                                                    </TableBody>
-                                                </Table>
-                                            </div>
-                                        </AccordionContent>
-                                    </AccordionItem>
-                                ))}
+                         {filteredPrograms.length > 0 ? (
+                             <Accordion type="single" collapsible className="w-full" defaultValue="item-0">
+                                {selectedYear !== null ? 
+                                    Object.entries(programsByMonth).sort(([a], [b]) => Number(a) - Number(b)).map(([month, programs]) => (
+                                        <AccordionItem value={`month-${month}`} key={month}>
+                                            <AccordionTrigger className="bg-muted/50 px-4 rounded-md text-base font-semibold">
+                                                {format(new Date(selectedYear, Number(month)), 'LLLL', { locale: th })}
+                                            </AccordionTrigger>
+                                            <AccordionContent className="pt-2">
+                                                <div className="overflow-x-auto">
+                                                    {renderProgramRows(programs as TourProgram[])}
+                                                </div>
+                                            </AccordionContent>
+                                        </AccordionItem>
+                                    ))
+                                : // When "All Years" is selected
+                                    Object.values(programsByMonth as Record<string, { year: number, month: number, programs: TourProgram[] }>)
+                                    .sort((a,b) => (b.year - a.year) || (b.month - a.month))
+                                    .map(({year, month, programs}) => (
+                                        <AccordionItem value={`${year}-${month}`} key={`${year}-${month}`}>
+                                            <AccordionTrigger className="bg-muted/50 px-4 rounded-md text-base font-semibold">
+                                                  {format(new Date(year, month), 'LLLL yyyy', { locale: th })}
+                                            </AccordionTrigger>
+                                             <AccordionContent className="pt-2">
+                                                <div className="overflow-x-auto">
+                                                    {renderProgramRows(programs)}
+                                                </div>
+                                            </AccordionContent>
+                                        </AccordionItem>
+                                    ))
+                                }
                             </Accordion>
                          ) : (
                             <div className="text-center text-muted-foreground py-16">
-                                ไม่มีโปรแกรมทัวร์สำหรับปี {selectedYear + 543}
+                                ไม่มีโปรแกรมทัวร์สำหรับ {selectedYear ? `ปี ${selectedYear + 543}`: 'ตัวกรองที่เลือก'}
                             </div>
                          )}
                     </CardContent>
@@ -293,3 +329,5 @@ export default function TourProgramsListPage() {
         </div>
     )
 }
+
+    
