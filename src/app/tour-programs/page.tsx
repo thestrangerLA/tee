@@ -7,10 +7,10 @@ import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, FileText, PlusCircle, MoreHorizontal, ChevronDown } from "lucide-react";
-import { listenToTourPrograms, deleteTourProgram } from '@/services/tourProgramService';
+import { ArrowLeft, FileText, PlusCircle, MoreHorizontal, ChevronDown, Calendar as CalendarIcon } from "lucide-react";
+import { listenToTourPrograms, deleteTourProgram, updateTourProgram } from '@/services/tourProgramService';
 import type { TourProgram } from '@/lib/types';
-import { format, getYear, getMonth } from 'date-fns';
+import { format, getYear, getMonth, startOfDay } from 'date-fns';
 import { th } from 'date-fns/locale';
 import {
   DropdownMenu,
@@ -21,6 +21,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 
 
 const formatCurrency = (value: number | null | undefined, currency: string) => {
@@ -74,6 +76,23 @@ export default function TourProgramsListPage() {
             toast({
                 title: "เกิดข้อผิดพลาด",
                 description: "ไม่สามารถลบโปรแกรมได้",
+                variant: "destructive",
+            });
+        }
+    };
+    
+     const handleUpdateProgramDate = async (programId: string, newDate: Date | undefined) => {
+        if (!newDate) return;
+        try {
+            await updateTourProgram(programId, { date: startOfDay(newDate) });
+            toast({
+                title: "อัปเดตวันที่สำเร็จ",
+            });
+        } catch (error) {
+            console.error("Error updating program date:", error);
+            toast({
+                title: "เกิดข้อผิดพลาด",
+                description: "ไม่สามารถอัปเดตวันที่ได้",
                 variant: "destructive",
             });
         }
@@ -164,7 +183,28 @@ export default function TourProgramsListPage() {
                                                     <TableBody>
                                                     {programs.map(program => (
                                                         <TableRow key={program.id} className="group">
-                                                            <TableCell onClick={() => handleRowClick(program.id)} className="cursor-pointer">{program.date ? format(program.date, 'dd/MM/yyyy') : '-'}</TableCell>
+                                                            <TableCell>
+                                                                <Popover>
+                                                                    <PopoverTrigger asChild>
+                                                                        <Button
+                                                                            variant={"outline"}
+                                                                            className="w-[150px] justify-start text-left font-normal"
+                                                                        >
+                                                                            <CalendarIcon className="mr-2 h-4 w-4" />
+                                                                            {program.date ? format(program.date, "dd/MM/yyyy") : <span>เลือกวันที่</span>}
+                                                                        </Button>
+                                                                    </PopoverTrigger>
+                                                                    <PopoverContent className="w-auto p-0">
+                                                                        <Calendar
+                                                                            mode="single"
+                                                                            selected={program.date}
+                                                                            onSelect={(date) => handleUpdateProgramDate(program.id, date)}
+                                                                            initialFocus
+                                                                            locale={th}
+                                                                        />
+                                                                    </PopoverContent>
+                                                                </Popover>
+                                                            </TableCell>
                                                             <TableCell onClick={() => handleRowClick(program.id)} className="cursor-pointer">{program.tourCode}</TableCell>
                                                             <TableCell onClick={() => handleRowClick(program.id)} className="cursor-pointer font-medium">{program.programName}</TableCell>
                                                             <TableCell onClick={() => handleRowClick(program.id)} className="cursor-pointer">{program.groupName}</TableCell>

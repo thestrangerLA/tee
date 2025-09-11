@@ -71,9 +71,13 @@ export const addTourProgram = async (program: Omit<TourProgram, 'id' | 'createdA
     return docRef.id;
 };
 
-export const updateTourProgram = async (id: string, updatedFields: Partial<Omit<TourProgram, 'id' | 'createdAt' | 'date'>>) => {
+export const updateTourProgram = async (id: string, updatedFields: Partial<Omit<TourProgram, 'id' | 'createdAt'>>) => {
     const programDoc = doc(db, 'tourPrograms', id);
-    await updateDoc(programDoc, updatedFields);
+    const dataToUpdate: any = { ...updatedFields };
+    if (updatedFields.date) {
+        dataToUpdate.date = Timestamp.fromDate(updatedFields.date as Date);
+    }
+    await updateDoc(programDoc, dataToUpdate);
 };
 
 export const deleteTourProgram = async (programId: string) => {
