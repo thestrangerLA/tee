@@ -82,10 +82,14 @@
 }
 
 @media print {
-  body {
-    background-color: white;
-    color: black;
-    margin: 1rem;
+  body > *:not(.print-container) {
+    display: none;
+  }
+  .print-container {
+      display: block;
+      padding: 1rem;
+      background-color: white;
+      color: black;
   }
   .print\:hidden {
     display: none;

@@ -143,80 +143,61 @@ export default function GeneralLedgerPage() {
 
 
     return (
-        <div className="flex min-h-screen w-full flex-col bg-muted/40 print:bg-white general-ledger-page">
-             <style jsx global>{`
-                @media print {
-                    body > *:not(.print-container) {
-                        display: none;
-                    }
-                    .print-container {
-                        display: block;
-                        padding: 1rem;
-                    }
-                    .print-header {
-                        display: block;
-                    }
-                    .summary-card-print {
-                         box-shadow: none;
-                         border: none;
-                    }
-                }
-            `}</style>
-            
-            <div className="print-container">
-                <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 print:hidden">
-                    <Button variant="outline" size="icon" className="h-8 w-8" asChild>
-                        <Link href="/tour/reports">
-                            <ArrowLeft className="h-4 w-4" />
-                            <span className="sr-only">ກັບໄປໜ้ารາຍງານ</span>
-                        </Link>
-                    </Button>
-                    <div className="flex items-center gap-2">
-                        <BookOpen className="h-6 w-6 text-primary"/>
-                        <h1 className="text-xl font-bold tracking-tight">ປະຫວັດຮັບ-ຈ່າຍທົ່ວໄປ</h1>
-                    </div>
-                </header>
-                <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-                     <Card className="filter-card print:hidden">
-                        <CardHeader>
-                            <CardTitle>ໂຕກອງລາຍງານ</CardTitle>
-                        </CardHeader>
-                        <CardContent className="flex flex-col md:flex-row md:items-end gap-4">
-                            <div className="grid gap-2">
-                                <Label htmlFor="start-date">ວັນທີເລີ່ມຕົ້ນ</Label>
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                        <Button id="start-date" variant={"outline"} className="w-[280px] justify-start text-left font-normal">
-                                            <CalendarIcon className="mr-2 h-4 w-4" />
-                                            {startDate ? format(startDate, "PPP", { locale: th }) : <span>ເລືອກວັນທີ</span>}
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={startDate} onSelect={setStartDate} initialFocus locale={th} /></PopoverContent>
-                                </Popover>
-                            </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor="end-date">ວັນທີສິ້ນສຸດ</Label>
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                        <Button id="end-date" variant={"outline"} className="w-[280px] justify-start text-left font-normal">
-                                            <CalendarIcon className="mr-2 h-4 w-4" />
-                                            {endDate ? format(endDate, "PPP", { locale: th }) : <span>ເລືອກວັນທີ</span>}
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={endDate} onSelect={setEndDate} initialFocus locale={th} /></PopoverContent>
-                                </Popover>
-                            </div>
-                            <div className="flex items-center gap-2 md:ml-auto">
-                                <Button onClick={handleClosePeriod} variant="destructive">ປິດງົບການເງິນ</Button>
-                                 <Button onClick={() => window.print()} variant="outline">
-                                    <Printer className="mr-2 h-4 w-4" />
-                                    ພິມ
-                                </Button>
-                            </div>
-                        </CardContent>
-                    </Card>
+        <div className="flex min-h-screen w-full flex-col bg-muted/40">
+            <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
+                <Button variant="outline" size="icon" className="h-8 w-8" asChild>
+                    <Link href="/tour/reports">
+                        <ArrowLeft className="h-4 w-4" />
+                        <span className="sr-only">ກັບໄປໜ้ารາຍງານ</span>
+                    </Link>
+                </Button>
+                <div className="flex items-center gap-2">
+                    <BookOpen className="h-6 w-6 text-primary"/>
+                    <h1 className="text-xl font-bold tracking-tight">ປະຫວັດຮັບ-ຈ່າຍທົ່ວໄປ</h1>
+                </div>
+            </header>
+            <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
+                 <Card>
+                    <CardHeader>
+                        <CardTitle>ໂຕກອງລາຍງານ</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex flex-col md:flex-row md:items-end gap-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="start-date">ວັນທີເລີ່ມຕົ້ນ</Label>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button id="start-date" variant={"outline"} className="w-[280px] justify-start text-left font-normal">
+                                        <CalendarIcon className="mr-2 h-4 w-4" />
+                                        {startDate ? format(startDate, "PPP", { locale: th }) : <span>ເລືอกວັນທີ</span>}
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={startDate} onSelect={setStartDate} initialFocus locale={th} /></PopoverContent>
+                            </Popover>
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="end-date">ວັນທີສິ້ນສຸດ</Label>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button id="end-date" variant={"outline"} className="w-[280px] justify-start text-left font-normal">
+                                        <CalendarIcon className="mr-2 h-4 w-4" />
+                                        {endDate ? format(endDate, "PPP", { locale: th }) : <span>ເລືอกວັນທີ</span>}
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={endDate} onSelect={setEndDate} initialFocus locale={th} /></PopoverContent>
+                            </Popover>
+                        </div>
+                        <div className="flex items-center gap-2 md:ml-auto">
+                            <Button onClick={handleClosePeriod} variant="destructive">ປິດງົບການເງິນ</Button>
+                             <Button onClick={() => window.print()} variant="outline">
+                                <Printer className="mr-2 h-4 w-4" />
+                                ພິມ
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
 
-                    <div className="print-header hidden text-center mb-4">
+                <div className="print-container">
+                    <div className="text-center mb-4">
                         <h1 className="text-xl font-bold">ຍອດລວມສຳລັບຊ່ວງວັນທີທີ່ເລືອກ</h1>
                          {(startDate && endDate) && (
                             <p className="text-sm text-muted-foreground">
@@ -224,7 +205,7 @@ export default function GeneralLedgerPage() {
                             </p>
                         )}
                     </div>
-                     <Card className="summary-card summary-card-print">
+                     <Card className="print:shadow-none print:border-none">
                         <CardHeader className="print:hidden">
                              <CardDescription>
                                 ສະແດງລາຍການທຸລະກຳທົ່ວໄປທີ່ບໍ່ຜູກກັບໂປຣແກຣມທົວສຳລັບຊ່ວງວັນທີທີ່ເລືອກ
@@ -262,50 +243,51 @@ export default function GeneralLedgerPage() {
                             </div>
                         </CardContent>
                     </Card>
+                </div>
 
-                    <Card className="monthly-list-card print:hidden">
-                        <CardHeader>
-                            <CardTitle>ລາຍລະອຽດລາຍເດືອນ</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            {reportData.monthlyReports.length > 0 ? (
-                               <div className="space-y-2">
-                                {reportData.monthlyReports.map(({ year, month, net }) => (
-                                    <Link 
-                                        href={`/tour/reports/general-ledger-month?year=${year}&month=${month}`} 
-                                        key={`${year}-${month}`}
-                                        passHref
-                                    >
-                                        <Card className="hover:bg-muted/50 cursor-pointer">
-                                            <CardContent className="p-4 flex items-center justify-between">
-                                                <div className="font-semibold text-base">
-                                                    {format(setMonth(new Date(year, month), month), 'LLLL yyyy', { locale: th })}
+
+                <Card className="monthly-list-card print:hidden">
+                    <CardHeader>
+                        <CardTitle>ລາຍລະອຽດລາຍເດືອນ</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        {reportData.monthlyReports.length > 0 ? (
+                           <div className="space-y-2">
+                            {reportData.monthlyReports.map(({ year, month, net }) => (
+                                <Link 
+                                    href={`/tour/reports/general-ledger-month?year=${year}&month=${month}`} 
+                                    key={`${year}-${month}`}
+                                    passHref
+                                >
+                                    <Card className="hover:bg-muted/50 cursor-pointer">
+                                        <CardContent className="p-4 flex items-center justify-between">
+                                            <div className="font-semibold text-base">
+                                                {format(setMonth(new Date(year, month), month), 'LLLL yyyy', { locale: th })}
+                                            </div>
+                                            <div className="flex items-center gap-4">
+                                                <div className="hidden sm:grid grid-cols-4 gap-x-4 text-xs">
+                                                    {currencyKeys.map(c => (
+                                                        <div key={c} className="flex items-center justify-end gap-1">
+                                                            <span className="font-bold uppercase text-muted-foreground">{c}:</span>
+                                                            <span className={`font-mono w-20 text-right ${net[c] >= 0 ? 'text-blue-600' : 'text-red-600'}`}>{formatCurrency(net[c])}</span>
+                                                        </div>
+                                                    ))}
                                                 </div>
-                                                <div className="flex items-center gap-4">
-                                                    <div className="hidden sm:grid grid-cols-4 gap-x-4 text-xs">
-                                                        {currencyKeys.map(c => (
-                                                            <div key={c} className="flex items-center justify-end gap-1">
-                                                                <span className="font-bold uppercase text-muted-foreground">{c}:</span>
-                                                                <span className={`font-mono w-20 text-right ${net[c] >= 0 ? 'text-blue-600' : 'text-red-600'}`}>{formatCurrency(net[c])}</span>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                                                </div>
-                                            </CardContent>
-                                        </Card>
-                                    </Link>
-                                ))}
-                               </div>
-                            ) : (
-                                <div className="text-center text-muted-foreground py-8">
-                                    ບໍ່ມີປະຫວັດຮັບ-ຈ່າຍທົ່ວໄປໃນປີທີ່ເລືອກ
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
-                </main>
-            </div>
+                                                <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                </Link>
+                            ))}
+                           </div>
+                        ) : (
+                            <div className="text-center text-muted-foreground py-8">
+                                ບໍ່ມີປະຫວັດຮັບ-ຈ່າຍທົ່ວໄປໃນປີທີ່ເລືອກ
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+            </main>
         </div>
     );
 }
