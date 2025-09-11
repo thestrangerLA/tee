@@ -7,17 +7,19 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { ArrowLeft, ChevronDown, BookOpen } from "lucide-react";
-import { listenToTourTransactions } from '@/services/tourAccountancyService';
+import { ArrowLeft, BookOpen, Calendar as CalendarIcon } from "lucide-react";
+import { listenToTourTransactions, addTourTransaction } from '@/services/tourAccountancyService';
 import type { Transaction, CurrencyValues } from '@/lib/types';
-import { getYear, getMonth, format, setMonth, isWithinInterval, startOfYear, endOfYear } from 'date-fns';
+import { getMonth, format, setMonth, isWithinInterval, startOfYear, endOfYear, getYear } from 'date-fns';
 import { th } from "date-fns/locale";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { Calendar } from "@/components/ui/calendar";
+import { Label } from '@/components/ui/label';
+import { useToast } from "@/hooks/use-toast";
 
 
 const formatCurrency = (value: number) => {
@@ -28,8 +30,10 @@ const currencyKeys: (keyof CurrencyValues)[] = ['kip', 'baht', 'usd', 'cny'];
 
 
 export default function GeneralLedgerPage() {
+    const { toast } = useToast();
     const [transactions, setTransactions] = useState<Transaction[]>([]);
-    const [selectedYear, setSelectedYear] = useState(getYear(new Date()));
+    const [startDate, setStartDate] = useState<Date | undefined>(startOfYear(new Date()));
+    const [endDate, setEndDate] = useState<Date | undefined>(endOfYear(new Date()));
 
     useEffect(() => {
         const unsubscribeTransactions = listenToTourTransactions(setTransactions);
@@ -38,19 +42,19 @@ export default function GeneralLedgerPage() {
         };
     }, []);
     
-    const yearlyTransactionReport = useMemo(() => {
-        const yearDate = new Date(selectedYear, 0, 1);
-        const start = startOfYear(yearDate);
-        const end = endOfYear(yearDate);
-
-        const yearlyTransactions = transactions.filter(tx => isWithinInterval(tx.date, { start, end }));
+    const reportData = useMemo(() => {
+        const filteredTransactions = transactions.filter(tx => {
+            if (!startDate || !endDate) return false;
+            return isWithinInterval(tx.date, { start: startDate, end: endDate });
+        });
         
         const initialTotals = () => ({ kip: 0, baht: 0, usd: 0, cny: 0 });
 
-        const groupedByMonth = yearlyTransactions.reduce((acc, tx) => {
+        const groupedByMonth = filteredTransactions.reduce((acc, tx) => {
             const month = getMonth(tx.date);
             if (!acc[month]) {
                 acc[month] = {
+                    year: getYear(tx.date),
                     transactions: [],
                     income: initialTotals(),
                     expense: initialTotals(),
@@ -67,60 +71,80 @@ export default function GeneralLedgerPage() {
                 acc[month].net[c] = acc[month].income[c] - acc[month].expense[c];
             });
             return acc;
-        }, {} as Record<number, { transactions: Transaction[], income: CurrencyValues, expense: CurrencyValues, net: CurrencyValues }>);
-
-        return Object.entries(groupedByMonth)
+        }, {} as Record<number, { year: number, transactions: Transaction[], income: CurrencyValues, expense: CurrencyValues, net: CurrencyValues }>);
+        
+        const monthlyReports = Object.entries(groupedByMonth)
             .map(([month, data]) => ({ 
                 month: parseInt(month), 
                 ...data
             }))
-            .sort((a, b) => a.month - b.month);
-
-    }, [transactions, selectedYear]);
-
-    const yearlyTransactionTotals = useMemo(() => {
-        const totals = {
-            income: { kip: 0, baht: 0, usd: 0, cny: 0 },
-            expense: { kip: 0, baht: 0, usd: 0, cny: 0 },
-            net: { kip: 0, baht: 0, usd: 0, cny: 0 }
+            .sort((a, b) => (a.year - b.year) || (a.month - b.month));
+        
+        const grandTotals = {
+            income: initialTotals(),
+            expense: initialTotals(),
+            net: initialTotals()
         };
 
-        yearlyTransactionReport.forEach(monthData => {
+        monthlyReports.forEach(monthData => {
             currencyKeys.forEach(c => {
-                totals.income[c] += monthData.income[c];
-                totals.expense[c] += monthData.expense[c];
-                totals.net[c] += monthData.net[c];
+                grandTotals.income[c] += monthData.income[c];
+                grandTotals.expense[c] += monthData.expense[c];
+                grandTotals.net[c] += monthData.net[c];
             });
         });
 
-        return totals;
-    }, [yearlyTransactionReport]);
+        return { monthlyReports, grandTotals };
 
-    const YearSelector = () => {
-        const transactionYears = Array.from(new Set(transactions.map(t => getYear(t.date)))).sort((a,b) => b-a);
-        const years = transactionYears.length > 0 ? transactionYears : [getYear(new Date())];
-        if (!years.includes(selectedYear)) {
-             years.push(selectedYear)
+    }, [transactions, startDate, endDate]);
+
+    const handleClosePeriod = async () => {
+        if (!endDate) {
+            toast({ title: "ข้อผิดพลาด", description: "กรุณาเลือกวันที่สิ้นสุด", variant: "destructive" });
+            return;
         }
-        
-        return (
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="flex items-center gap-2">
-                        <span>ปี {selectedYear + 543}</span>
-                        <ChevronDown className="h-4 w-4" />
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                    {years.map(year => (
-                        <DropdownMenuItem key={year} onClick={() => setSelectedYear(year)}>
-                            {year + 543}
-                        </DropdownMenuItem>
-                    ))}
-                </DropdownMenuContent>
-            </DropdownMenu>
-        );
+
+        const confirmation = window.confirm(`คุณแน่ใจหรือไม่ว่าต้องการปิดงบการเงิน ณ วันที่ ${format(endDate, "PPP", { locale: th })}? การดำเนินการนี้จะสร้างธุรกรรมสรุปยอดและไม่สามารถย้อนกลับได้ง่าย`);
+        if (!confirmation) return;
+
+        const { grandTotals } = reportData;
+
+        try {
+            // Create a closing entry for expenses (becomes an income to offset)
+            const expenseClosingTransaction: Omit<Transaction, 'id'> = {
+                date: endDate,
+                type: 'income',
+                description: `ปิดงบการเงิน (รายจ่าย) ณ ${format(endDate, "dd/MM/yy")}`,
+                amount: 0,
+                ...grandTotals.expense
+            };
+            await addTourTransaction(expenseClosingTransaction);
+            
+            // Create a closing entry for incomes (becomes an expense to offset)
+            const incomeClosingTransaction: Omit<Transaction, 'id'> = {
+                date: endDate,
+                type: 'expense',
+                description: `ปิดงบการเงิน (รายรับ) ณ ${format(endDate, "dd/MM/yy")}`,
+                amount: 0,
+                ...grandTotals.income
+            };
+            await addTourTransaction(incomeClosingTransaction);
+
+            toast({
+                title: "ปิดงบการเงินสำเร็จ",
+                description: `สร้างธุรกรรมสรุปยอด ณ วันที่ ${format(endDate, "PPP", { locale: th })} เรียบร้อยแล้ว`,
+            });
+
+        } catch (error) {
+            console.error("Failed to close financial period:", error);
+            toast({
+                title: "เกิดข้อผิดพลาด",
+                description: "ไม่สามารถสร้างธุรกรรมปิดงบได้",
+                variant: "destructive"
+            });
+        }
     };
+
 
     return (
         <div className="flex min-h-screen w-full flex-col bg-muted/40">
@@ -135,18 +159,52 @@ export default function GeneralLedgerPage() {
                     <BookOpen className="h-6 w-6 text-primary"/>
                     <h1 className="text-xl font-bold tracking-tight">ประวัติรับ-จ่ายทั่วไป</h1>
                 </div>
-                 <div className="ml-auto">
-                    <YearSelector />
-                </div>
             </header>
             <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
                  <Card>
                     <CardHeader>
-                        <CardDescription>แสดงรายการธุรกรรมทั่วไปที่ไม่ผูกกับโปรแกรมทัวร์ในปี {selectedYear + 543}</CardDescription>
+                        <CardTitle>ตัวกรองรายงาน</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex flex-col md:flex-row md:items-end gap-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="start-date">วันที่เริ่มต้น</Label>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button id="start-date" variant={"outline"} className="w-[280px] justify-start text-left font-normal">
+                                        <CalendarIcon className="mr-2 h-4 w-4" />
+                                        {startDate ? format(startDate, "PPP", { locale: th }) : <span>เลือกวันที่</span>}
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={startDate} onSelect={setStartDate} initialFocus locale={th} /></PopoverContent>
+                            </Popover>
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="end-date">วันที่สิ้นสุด</Label>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button id="end-date" variant={"outline"} className="w-[280px] justify-start text-left font-normal">
+                                        <CalendarIcon className="mr-2 h-4 w-4" />
+                                        {endDate ? format(endDate, "PPP", { locale: th }) : <span>เลือกวันที่</span>}
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={endDate} onSelect={setEndDate} initialFocus locale={th} /></PopoverContent>
+                            </Popover>
+                        </div>
+                        <div className="md:ml-auto">
+                            <Button onClick={handleClosePeriod} variant="destructive">ปิดงบการเงิน</Button>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                 <Card>
+                    <CardHeader>
+                         <CardDescription>
+                            แสดงรายการธุรกรรมทั่วไปที่ไม่ผูกกับโปรแกรมทัวร์สำหรับช่วงวันที่ที่เลือก
+                        </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="p-4 bg-muted/50 rounded-lg space-y-2">
-                            <h3 className="font-semibold">ยอดรวมปี {selectedYear + 543}</h3>
+                            <h3 className="font-semibold">ยอดรวมสำหรับช่วงวันที่ที่เลือก</h3>
                             <Table>
                                 <TableHeader>
                                     <TableRow className="text-xs">
@@ -157,17 +215,17 @@ export default function GeneralLedgerPage() {
                                 <TableBody>
                                     <TableRow>
                                         <TableCell className="font-medium">รายรับ</TableCell>
-                                        {currencyKeys.map(c => <TableCell key={c} className="text-right text-green-600 font-mono">{formatCurrency(yearlyTransactionTotals.income[c])}</TableCell>)}
+                                        {currencyKeys.map(c => <TableCell key={c} className="text-right text-green-600 font-mono">{formatCurrency(reportData.grandTotals.income[c])}</TableCell>)}
                                     </TableRow>
                                     <TableRow>
                                         <TableCell className="font-medium">รายจ่าย</TableCell>
-                                        {currencyKeys.map(c => <TableCell key={c} className="text-right text-red-600 font-mono">{formatCurrency(yearlyTransactionTotals.expense[c])}</TableCell>)}
+                                        {currencyKeys.map(c => <TableCell key={c} className="text-right text-red-600 font-mono">{formatCurrency(reportData.grandTotals.expense[c])}</TableCell>)}
                                     </TableRow>
                                     <TableRow className="font-bold bg-muted/80">
                                         <TableCell>กำไร/ขาดทุน</TableCell>
                                          {currencyKeys.map(c => (
-                                            <TableCell key={c} className={`text-right font-mono ${yearlyTransactionTotals.net[c] >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
-                                                {formatCurrency(yearlyTransactionTotals.net[c])}
+                                            <TableCell key={c} className={`text-right font-mono ${reportData.grandTotals.net[c] >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                                                {formatCurrency(reportData.grandTotals.net[c])}
                                             </TableCell>
                                         ))}
                                     </TableRow>
@@ -175,13 +233,13 @@ export default function GeneralLedgerPage() {
                             </Table>
                         </div>
 
-                        {yearlyTransactionReport.length > 0 ? (
+                        {reportData.monthlyReports.length > 0 ? (
                             <Accordion type="single" collapsible className="w-full">
-                                {yearlyTransactionReport.map(({ month, income, expense, net, transactions }) => (
-                                    <AccordionItem value={`month-${month}`} key={month}>
+                                {reportData.monthlyReports.map(({ year, month, transactions, net }) => (
+                                    <AccordionItem value={`month-${year}-${month}`} key={`${year}-${month}`}>
                                         <AccordionTrigger>
                                         <div className="flex flex-col md:flex-row justify-between w-full pr-4 text-sm">
-                                            <div className="font-semibold text-base mb-2 md:mb-0">{format(setMonth(new Date(), month), 'LLLL yyyy', { locale: th })}</div>
+                                            <div className="font-semibold text-base mb-2 md:mb-0">{format(setMonth(new Date(year, month), month), 'LLLL yyyy', { locale: th })}</div>
                                              <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-x-4">
                                                 {currencyKeys.map(c => (
                                                     <div key={c} className="flex items-center justify-end gap-1">
@@ -223,7 +281,7 @@ export default function GeneralLedgerPage() {
                             </Accordion>
                         ) : (
                             <div className="text-center text-muted-foreground py-8">
-                                ไม่มีประวัติรับ-จ่ายทั่วไปในปี {selectedYear + 543}
+                                ไม่มีประวัติรับ-จ่ายทั่วไปในปีที่เลือก
                             </div>
                         )}
                     </CardContent>
@@ -233,3 +291,5 @@ export default function GeneralLedgerPage() {
     );
 }
 
+
+    
