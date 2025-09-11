@@ -53,7 +53,8 @@ export default function GeneralLedgerPage() {
                 acc[month] = {
                     transactions: [],
                     income: initialTotals(),
-                    expense: initialTotals()
+                    expense: initialTotals(),
+                    net: initialTotals()
                 };
             }
             acc[month].transactions.push(tx);
@@ -63,16 +64,15 @@ export default function GeneralLedgerPage() {
                 } else {
                     acc[month].expense[c] += tx[c] || 0;
                 }
+                acc[month].net[c] = acc[month].income[c] - acc[month].expense[c];
             });
             return acc;
-        }, {} as Record<number, { transactions: Transaction[], income: CurrencyValues, expense: CurrencyValues }>);
+        }, {} as Record<number, { transactions: Transaction[], income: CurrencyValues, expense: CurrencyValues, net: CurrencyValues }>);
 
         return Object.entries(groupedByMonth)
             .map(([month, data]) => ({ 
                 month: parseInt(month), 
-                transactions: data.transactions,
-                income: data.income,
-                expense: data.expense
+                ...data
             }))
             .sort((a, b) => a.month - b.month);
 
@@ -81,13 +81,15 @@ export default function GeneralLedgerPage() {
     const yearlyTransactionTotals = useMemo(() => {
         const totals = {
             income: { kip: 0, baht: 0, usd: 0, cny: 0 },
-            expense: { kip: 0, baht: 0, usd: 0, cny: 0 }
+            expense: { kip: 0, baht: 0, usd: 0, cny: 0 },
+            net: { kip: 0, baht: 0, usd: 0, cny: 0 }
         };
 
         yearlyTransactionReport.forEach(monthData => {
             currencyKeys.forEach(c => {
                 totals.income[c] += monthData.income[c];
                 totals.expense[c] += monthData.expense[c];
+                totals.net[c] += monthData.net[c];
             });
         });
 
@@ -161,23 +163,30 @@ export default function GeneralLedgerPage() {
                                         <TableCell className="font-medium">รายจ่าย</TableCell>
                                         {currencyKeys.map(c => <TableCell key={c} className="text-right text-red-600 font-mono">{formatCurrency(yearlyTransactionTotals.expense[c])}</TableCell>)}
                                     </TableRow>
+                                    <TableRow className="font-bold bg-muted/80">
+                                        <TableCell>กำไร/ขาดทุน</TableCell>
+                                         {currencyKeys.map(c => (
+                                            <TableCell key={c} className={`text-right font-mono ${yearlyTransactionTotals.net[c] >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                                                {formatCurrency(yearlyTransactionTotals.net[c])}
+                                            </TableCell>
+                                        ))}
+                                    </TableRow>
                                 </TableBody>
                             </Table>
                         </div>
 
                         {yearlyTransactionReport.length > 0 ? (
                             <Accordion type="single" collapsible className="w-full">
-                                {yearlyTransactionReport.map(({ month, income, expense, transactions }) => (
+                                {yearlyTransactionReport.map(({ month, income, expense, net, transactions }) => (
                                     <AccordionItem value={`month-${month}`} key={month}>
                                         <AccordionTrigger>
                                         <div className="flex flex-col md:flex-row justify-between w-full pr-4 text-sm">
                                             <div className="font-semibold text-base mb-2 md:mb-0">{format(setMonth(new Date(), month), 'LLLL yyyy', { locale: th })}</div>
-                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4">
+                                             <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-x-4">
                                                 {currencyKeys.map(c => (
                                                     <div key={c} className="flex items-center justify-end gap-1">
                                                         <span className="font-bold uppercase text-xs">{c}:</span>
-                                                        <span className="text-green-600 font-mono">{formatCurrency(income[c])}</span>/
-                                                        <span className="text-red-600 font-mono">{formatCurrency(expense[c])}</span>
+                                                        <span className={`font-mono text-xs ${net[c] >= 0 ? 'text-blue-600' : 'text-red-600'}`}>{formatCurrency(net[c])}</span>
                                                     </div>
                                                 ))}
                                             </div>
