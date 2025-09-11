@@ -1,6 +1,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, Landmark, Users, BarChart, FileText, Briefcase, FilePieChart } from "lucide-react"
+import { ArrowLeft, Landmark, Users, BarChart, FileText, Briefcase, FilePieChart, Calculator } from "lucide-react"
 import Link from 'next/link'
 import { Button } from "@/components/ui/button"
 
@@ -70,6 +70,19 @@ export default function TourPage() {
               <CardContent>
                 <p className="text-muted-foreground">
                   ดูสรุปผลประกอบการและกำไร-ขาดทุนของแต่ละโปรแกรมทัวร์
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+          <Link href="/tour/calculator">
+            <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-2xl font-bold font-headline">คำนวณ</CardTitle>
+                <Calculator className="h-8 w-8 text-primary" />
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  เครื่องมือคำนวณค่าใช้จ่ายและราคาสำหรับโปรแกรมทัวร์
                 </p>
               </CardContent>
             </Card>
