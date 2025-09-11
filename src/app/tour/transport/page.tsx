@@ -36,7 +36,7 @@ const formatNumber = (num: number, currency: Currency) => {
     return `${symbols[currency]}${new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(num)}`;
 };
 
-const LOCAL_STORAGE_KEY = 'tour-transport';
+const LOCAL_STORAGE_KEY = 'tour-trips';
 
 export default function TransportPage() {
     const [trips, setTrips] = useState<Trip[]>([]);

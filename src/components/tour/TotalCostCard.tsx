@@ -22,8 +22,8 @@ const formatNumber = (num: number) => {
 };
 
 const costCategories = [
-    'accommodations', 'trips', 'flights', 'trainTickets',
-    'entranceFees', 'meals', 'guides', 'documents'
+    'tour-accommodations', 'tour-trips', 'tour-flights', 'tour-train-tickets',
+    'tour-entrance-fees', 'tour-meals', 'tour-guides', 'tour-documents'
 ];
 
 export function TotalCostCard() {
@@ -48,21 +48,21 @@ export function TotalCostCard() {
                         items.forEach((item: any) => {
                             const currency = item.currency as Currency;
                             let itemTotal = 0;
-                            if (category === 'accommodations' && item.rooms) {
+                            if (category === 'tour-accommodations' && item.rooms) {
                                 itemTotal = item.rooms.reduce((acc: number, room: any) => acc + (room.numRooms * room.numNights * room.price), 0);
-                            } else if (category === 'trips' && item.numVehicles) {
+                            } else if (category === 'tour-trips' && item.numVehicles) {
                                 itemTotal = item.numVehicles * item.numDays * item.pricePerVehicle;
-                            } else if (category === 'flights' && item.pricePerPerson) {
+                            } else if (category === 'tour-flights' && item.pricePerPerson) {
                                 itemTotal = item.pricePerPerson * item.numPeople;
-                            } else if (category === 'trainTickets' && item.pricePerTicket) {
+                            } else if (category === 'tour-train-tickets' && item.pricePerTicket) {
                                 itemTotal = item.pricePerTicket * item.numTickets;
-                            } else if (category === 'entranceFees' && item.price) {
+                            } else if (category === 'tour-entrance-fees' && item.price) {
                                 itemTotal = item.pax * item.numLocations * item.price;
-                            } else if (category === 'meals' && item.pricePerMeal) {
+                            } else if (category === 'tour-meals' && item.pricePerMeal) {
                                 itemTotal = (item.breakfast + item.lunch + item.dinner) * item.pricePerMeal;
-                            } else if (category === 'guides' && item.pricePerDay) {
+                            } else if (category === 'tour-guides' && item.pricePerDay) {
                                 itemTotal = item.numGuides * item.numDays * item.pricePerDay;
-                            } else if (category === 'documents' && item.price) {
+                            } else if (category === 'tour-documents' && item.price) {
                                 itemTotal = item.pax * item.price;
                             }
 
@@ -81,21 +81,33 @@ export function TotalCostCard() {
 
         calculateTotal();
 
-        const handleStorageChange = () => {
+        const handleStorageChange = (e: StorageEvent | CustomEvent) => {
+            if ((e as StorageEvent).key && !costCategories.includes((e as StorageEvent).key!)) return;
             calculateTotal();
         };
         
         window.addEventListener('storage', handleStorageChange);
         
-        costCategories.forEach(category => {
-             window.addEventListener(`${category}Update`, handleStorageChange);
-        });
+        window.addEventListener('accommodationsUpdate', handleStorageChange);
+        window.addEventListener('tripsUpdate', handleStorageChange);
+        window.addEventListener('flightsUpdate', handleStorageChange);
+        window.addEventListener('trainTicketsUpdate', handleStorageChange);
+        window.addEventListener('entranceFeesUpdate', handleStorageChange);
+        window.addEventListener('mealsUpdate', handleStorageChange);
+        window.addEventListener('guidesUpdate', handleStorageChange);
+        window.addEventListener('documentsUpdate', handleStorageChange);
+
 
         return () => {
             window.removeEventListener('storage', handleStorageChange);
-            costCategories.forEach(category => {
-                window.removeEventListener(`${category}Update`, handleStorageChange);
-            });
+            window.removeEventListener('accommodationsUpdate', handleStorageChange);
+            window.removeEventListener('tripsUpdate', handleStorageChange);
+            window.removeEventListener('flightsUpdate', handleStorageChange);
+            window.removeEventListener('trainTicketsUpdate', handleStorageChange);
+            window.removeEventListener('entranceFeesUpdate', handleStorageChange);
+            window.removeEventListener('mealsUpdate', handleStorageChange);
+            window.removeEventListener('guidesUpdate', handleStorageChange);
+            window.removeEventListener('documentsUpdate', handleStorageChange);
         };
 
     }, []);
