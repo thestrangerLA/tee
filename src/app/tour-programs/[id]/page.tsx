@@ -598,30 +598,30 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                 <div className={activeTab === 'summary' ? 'block' : 'hidden'}>
                     <PrintHeader title="ສະຫຼຸບໂປຣແກມທົວ (Tour Program Summary)" />
                     <div className="hidden print:block space-y-4">
-                         <div className="space-y-2">
-                            <h3 className="text-base font-semibold border-b pb-1 font-lao">ລາຍຮັບ (Total Income)</h3>
-                             <div className="flex justify-between text-sm pr-4">
-                                <span className="font-lao">ລວມ (Total)</span>
-                                <div className='flex gap-4 font-semibold'>
-                                     {printCurrencies.map(c => <span key={c}>{`${formatCurrency((summaryData.totalIncomes as any)[c.toLowerCase()])} ${c}`}</span>)}
-                                </div>
-                            </div>
-                        </div>
                         <div className="space-y-2">
-                             <h3 className="text-base font-semibold border-b pb-1 font-lao">ລາຍຈ່າຍ (Total Costs)</h3>
-                             <div className="flex justify-between text-sm pr-4">
-                                <span className="font-lao">ລວມ (Total)</span>
-                                <div className='flex gap-4 font-semibold'>
-                                    {printCurrencies.map(c => <span key={c}>{`${formatCurrency((summaryData.totalCosts as any)[c.toLowerCase()])} ${c}`}</span>)}
-                                </div>
-                            </div>
-                        </div>
+                           <h3 className="text-base font-semibold border-b pb-1 font-lao">ລາຍຮັບ (Total Income)</h3>
+                           <div className="flex justify-between text-sm pr-4">
+                               <span className="font-lao">ລວມ (Total)</span>
+                               <div className='flex gap-4 font-semibold'>
+                                   {printCurrencies.map(c => <span key={c}>{`${formatCurrency((summaryData.totalIncomes as any)[c.toLowerCase()])} ${c}`}</span>)}
+                               </div>
+                           </div>
+                       </div>
+                       <div className="space-y-2">
+                           <h3 className="text-base font-semibold border-b pb-1 font-lao">ລາຍຈ່າຍ (Total Costs)</h3>
+                           <div className="flex justify-between text-sm pr-4">
+                               <span className="font-lao">ລວມ (Total)</span>
+                               <div className='flex gap-4 font-semibold'>
+                                   {printCurrencies.map(c => <span key={c}>{`${formatCurrency((summaryData.totalCosts as any)[c.toLowerCase()])} ${c}`}</span>)}
+                               </div>
+                           </div>
+                       </div>
                         <div className="space-y-2">
                              <h3 className="text-base font-semibold border-b pb-1 font-lao">ກໍາໄລ/ຂາດທຶນ (Profit/Loss Summary)</h3>
-                             <Table>
+                            <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead>สกุลเงิน (Currency)</TableHead>
+                                        <TableHead className="font-lao">ສະກຸນເງິນ (Currency)</TableHead>
                                         <TableHead className="text-right">ລາຍຮັບ (Income)</TableHead>
                                         <TableHead className="text-right">ລາຍຈ່າຍ (Costs)</TableHead>
                                         <TableHead className="text-right">ກໍາໄລ/ຂາດທຶນ (Profit/Loss)</TableHead>
