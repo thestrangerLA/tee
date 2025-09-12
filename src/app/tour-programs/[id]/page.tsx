@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, FileText, Trash2, PlusCircle, Calendar as CalendarIcon, Printer } from "lucide-react";
+import { ArrowLeft, FileText, Trash2, PlusCircle, Calendar as CalendarIcon, Printer, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { 
     listenToTourCostItemsForProgram, 
@@ -47,13 +47,24 @@ const parseFormattedNumber = (value: string): number => {
 
 const allCurrencies: Currency[] = ['KIP', 'BAHT', 'USD', 'CNY'];
 
+const dividendStructure = [
+    { name: 'ບໍລິສັດ', percentage: 0.30 },
+    { name: 'xiuge', percentage: 0.10 },
+    { name: 'wenyan', percentage: 0.10 },
+    { name: 'ການຕະຫຼາດ', percentage: 0.15 },
+    { name: 'CEO', percentage: 0.30 },
+    { name: 'ບັນຊີ', percentage: 0.05 },
+];
+
 const CurrencyEntryTable = ({ 
     items, 
     onAddItem,
     onUpdateItem,
     onDeleteItem,
     title,
-    description
+    description,
+    itemVisibility,
+    toggleItemVisibility
 }: { 
     items: (TourCostItem[] | TourIncomeItem[]),
     onAddItem: () => Promise<void>,
@@ -61,6 +72,8 @@ const CurrencyEntryTable = ({
     onDeleteItem: (id: string) => Promise<void>,
     title: string,
     description: string,
+    itemVisibility: Record<string, boolean>;
+    toggleItemVisibility: (itemId: string) => void;
 }) => {
     
     const totals = useMemo(() => {
@@ -263,6 +276,11 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [activeTab, setActiveTab] = useState<TabValue>('info');
+    const [itemVisibility, setItemVisibility] = useState<Record<string, boolean>>({});
+
+    const toggleItemVisibility = (itemId: string) => {
+        setItemVisibility(prev => ({ ...prev, [itemId]: !prev[itemId] }));
+    };
 
     useEffect(() => {
         if (!id) return;
@@ -574,6 +592,8 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                       onDeleteItem={handleDeleteIncomeItem}
                       title="ຕາຕະລາງບັນທຶກລາຍຮັບ"
                       description="ບັນທຶກລາຍຮັບທັງໝົດຂອງໂປຣແກຣມນີ້"
+                      itemVisibility={itemVisibility}
+                      toggleItemVisibility={toggleItemVisibility}
                   />
               </div>
           </TabsContent>
@@ -587,6 +607,8 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                       onDeleteItem={handleDeleteCostItem}
                       title="ຕາຕະລາງຄຳນວນຕົ້ນທຶນ"
                       description="ບັນທຶກຄ່າໃຊ້ຈ່າຍທັງໝົດຂອງໂປຣແກຣມນີ້"
+                      itemVisibility={itemVisibility}
+                      toggleItemVisibility={toggleItemVisibility}
                   />
               </div>
           </TabsContent>
@@ -681,15 +703,46 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
            <TabsContent value="dividend" className="mt-4">
               <Card>
                   <CardHeader>
-                      <CardTitle>ປັັນຜົນ</CardTitle>
+                      <CardTitle>ການແບ່ງປັນຜົນກຳໄລ (Dividend)</CardTitle>
                       <CardDescription>
                           ຄຳນວນ ແລະ ຈັດການການປັັນຜົນຂອງໂປຣແກຣມນີ້.
                       </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6">
-                      <div className="text-center text-muted-foreground py-16">
-                          <p>ໜ້ານີ້ກຳລັງຢູ່ໃນການພັດທະນາ</p>
-                      </div>
+                      <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="w-1/4">ຜູ້ຮັບຜົນປະໂຫຍດ</TableHead>
+                                <TableHead className="w-[100px] text-center">ເປີເຊັນ</TableHead>
+                                <TableHead className="text-right">KIP</TableHead>
+                                <TableHead className="text-right">BAHT</TableHead>
+                                <TableHead className="text-right">USD</TableHead>
+                                <TableHead className="text-right">CNY</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {dividendStructure.map((item, index) => (
+                                <TableRow key={index}>
+                                    <TableCell className="font-medium">{item.name}</TableCell>
+                                    <TableCell className="text-center">{item.percentage * 100}%</TableCell>
+                                    <TableCell className="text-right font-mono">{formatCurrency(summaryData.profit.kip * item.percentage)}</TableCell>
+                                    <TableCell className="text-right font-mono">{formatCurrency(summaryData.profit.baht * item.percentage)}</TableCell>
+                                    <TableCell className="text-right font-mono">{formatCurrency(summaryData.profit.usd * item.percentage)}</TableCell>
+                                    <TableCell className="text-right font-mono">{formatCurrency(summaryData.profit.cny * item.percentage)}</TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                        <TableFooter>
+                            <TableRow className="bg-muted font-bold">
+                                <TableCell>ລວມທັງໝົດ</TableCell>
+                                <TableCell className="text-center">100%</TableCell>
+                                <TableCell className="text-right font-mono">{formatCurrency(summaryData.profit.kip)}</TableCell>
+                                <TableCell className="text-right font-mono">{formatCurrency(summaryData.profit.baht)}</TableCell>
+                                <TableCell className="text-right font-mono">{formatCurrency(summaryData.profit.usd)}</TableCell>
+                                <TableCell className="text-right font-mono">{formatCurrency(summaryData.profit.cny)}</TableCell>
+                            </TableRow>
+                        </TableFooter>
+                      </Table>
                   </CardContent>
               </Card>
           </TabsContent>
