@@ -91,30 +91,6 @@ const CostCategoryContent = ({ title, icon, children }: { title: string, icon: R
     </AccordionItem>
 );
 
-const TourInfoDisplayCard = ({ tourInfo }: { tourInfo: any }) => (
-    <Card>
-        <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-                <MapPin className="h-6 w-6 text-primary" />
-                ຂໍ້ມູນທົວ
-            </CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4 text-sm">
-            <div className="grid grid-cols-2 gap-4 border-b pb-4">
-                <div><span className="font-semibold">MOU Contact:</span> {tourInfo.mouContact || '-'}</div>
-                <div><span className="font-semibold">Group Code:</span> {tourInfo.groupCode || '-'}</div>
-                 <div><span className="font-semibold">ປະເທດປາຍທາງ:</span> {tourInfo.destinationCountry || '-'}</div>
-                <div><span className="font-semibold">ໂປຣແກຣມ:</span> {tourInfo.program || '-'}</div>
-            </div>
-             <div className="grid grid-cols-3 gap-4">
-                <div><span className="font-semibold">ຈຳນວນຄົນ:</span> {tourInfo.numPeople || 0}</div>
-                <div><span className="font-semibold">ຈຳນວນວັນ:</span> {tourInfo.numDays || 0}</div>
-                <div><span className="font-semibold">ຈຳນວນຄືນ:</span> {tourInfo.numNights || 0}</div>
-            </div>
-        </CardContent>
-    </Card>
-);
-
 
 export default function TourCalculatorPage() {
     const [tourInfo, setTourInfo] = useState({
@@ -473,8 +449,6 @@ export default function TourCalculatorPage() {
                         </CardContent>
                     </Card>
 
-                    <TourInfoDisplayCard tourInfo={tourInfo} />
-                    
                     <Card>
                         <CardHeader>
                             <CardTitle>ຄຳນວນຄ່າໃຊ້ຈ່າຍ</CardTitle>
@@ -909,7 +883,7 @@ export default function TourCalculatorPage() {
                                           {allCosts.guides.map((guide, index) => (
                                               <Card key={guide.id} className="bg-muted/30">
                                                   <CardHeader className="flex-row items-center justify-between p-3 bg-muted/50">
-                                                      <CardTitle className="text-base">ລາຍການໄກด์ #{index + 1}</CardTitle>
+                                                      <CardTitle className="text-base">ລາຍການໄກ້ #{index + 1}</CardTitle>
                                                       <div>
                                                           <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(guide.id)}>
                                                               {itemVisibility[guide.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
@@ -921,13 +895,13 @@ export default function TourCalculatorPage() {
                                                    <CardContent className="p-4 space-y-4">
                                                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                            <div className="space-y-2">
-                                                              <Label>ຊື່ໄກด์/ບໍລິສັດ</Label>
-                                                              <Input value={guide.guideName} onChange={e => updateItem('guides', guide.id, 'guideName', e.target.value)} placeholder="ชื่อไกด์" />
+                                                              <Label>ຊື່ໄກ້/ບໍລິສັດ</Label>
+                                                              <Input value={guide.guideName} onChange={e => updateItem('guides', guide.id, 'guideName', e.target.value)} placeholder="ຊື່ໄກ້" />
                                                           </div>
                                                       </div>
                                                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                                           <div className="space-y-2">
-                                                              <Label>ຈຳນວນໄກด์</Label>
+                                                              <Label>ຈຳນວນໄກ້</Label>
                                                               <Input type="number" min="1" value={guide.numGuides} onChange={e => updateItem('guides', guide.id, 'numGuides', parseInt(e.target.value) || 1)} />
                                                           </div>
                                                            <div className="space-y-2">
@@ -948,7 +922,7 @@ export default function TourCalculatorPage() {
                                                       </div>
                                                   </CardContent>
                                                   )}
-                                                   <SummaryFooter title="ລວມຄ່າໄກด์ທັງໝົດ" totals={guideTotals} />
+                                                   <SummaryFooter title="ລວມຄ່າໄກ້ທັງໝົດ" totals={guideTotals} />
                                               </Card>
                                           ))}
                                           <div className="flex gap-2 mt-2">
