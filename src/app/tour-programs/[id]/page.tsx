@@ -606,7 +606,7 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
               <TabsTrigger value="income">ບັນທຶກລາຍຮັບ</TabsTrigger>
               <TabsTrigger value="costs">ຄຳນວນຕົ້ນທຶນ</TabsTrigger>
               <TabsTrigger value="summary">ສະຫຼຸບຜົນ</TabsTrigger>
-              <TabsTrigger value="dividend">ປັັນຜົນ</TabsTrigger>
+              <TabsTrigger value="dividend">ປັນຜົນ</TabsTrigger>
           </TabsList>
           <TabsContent value="info" className="mt-4">
               <ProgramInfoCard />
@@ -734,8 +734,17 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                   <CardHeader>
                       <CardTitle>ການແບ່ງປັນຜົນກຳໄລ (Dividend)</CardTitle>
                       <CardDescription>
-                          ຄຳນວນ ແລະ ຈັດການການປັັນຜົນຂອງໂປຣແກຣມນີ້.
+                          ຄຳນວນ ແລະ ຈັດການການປັນຜົນຂອງໂປຣແກຣມນີ້.
                       </CardDescription>
+                        <div className="pt-2 text-sm text-muted-foreground space-y-1">
+                            <p><span className="font-semibold">Group Code:</span> {localProgram.tourCode}</p>
+                            <div className="flex flex-wrap gap-x-4">
+                                <span className="font-semibold">Profit:</span>
+                                {Object.entries(summaryData.profit).map(([currency, value]) => (
+                                    (value !== 0) && <span key={currency}>{`${formatCurrency(value)} ${currency.toUpperCase()}`}</span>
+                                ))}
+                            </div>
+                        </div>
                   </CardHeader>
                   <CardContent className="space-y-6">
                       <Table>
@@ -792,7 +801,7 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                             </TableRow>
                         </TableFooter>
                       </Table>
-                      <div className="flex justify-start">
+                      <div className="flex justify-start print:hidden">
                           <Button onClick={addDividendRow} variant="outline">
                               <PlusCircle className="mr-2 h-4 w-4" />
                               ເພີ່ມລາຍການ
