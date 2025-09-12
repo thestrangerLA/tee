@@ -430,9 +430,11 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
             if (item.id === id) {
                 if (field === 'percentage') {
                     // Convert to a value between 0 and 1
-                    return { ...item, [field]: Number(value) / 100 };
+                    return { ...item, percentage: Number(value) / 100 };
                 }
-                return { ...item, [field]: value };
+                if (field === 'name') {
+                    return { ...item, name: String(value) };
+                }
             }
             return item;
         }));
