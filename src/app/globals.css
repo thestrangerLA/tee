@@ -78,18 +78,14 @@
 }
 
 @page {
-  size: landscape;
+  size: A4 portrait;
   margin: 0.5in;
 }
 
 @media print {
   .print-container {
       display: block !important;
-      padding: 1rem;
-      background-color: #f0fff4 !important;
-      color: black;
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
+      padding: 0;
   }
   .print\:hidden {
     display: none;
@@ -119,6 +115,10 @@
     margin-top: 0.25rem;
     margin-bottom: 0.25rem;
   }
+  .print\:space-y-2 {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
   .print\:shadow-none {
     box-shadow: none;
   }
@@ -127,6 +127,32 @@
   }
    .print\:border {
     border-width: 1px;
+  }
+  .print\:text-base {
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+  .print\:text-sm {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+  .print\:text-xs {
+    font-size: 0.75rem;
+    line-height: 1rem;
+  }
+  .print\:font-bold {
+    font-weight: 700;
+  }
+  .print\:p-4 {
+    padding: 1rem;
+  }
+  .print\:py-2 {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+  .print\:px-2 {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
   }
   main {
     margin: 0;

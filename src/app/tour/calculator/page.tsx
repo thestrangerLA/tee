@@ -401,10 +401,10 @@ export default function TourCalculatorPage() {
             <main className="flex w-full flex-1 flex-col gap-8 p-4 sm:px-6 sm:py-4 bg-muted/40 print:p-0 print:bg-white print:gap-4">
                 <div className="w-full max-w-screen-xl mx-auto flex flex-col gap-8">
                     
-                    <div id="print-content">
-                        <div className="hidden print:block p-4 space-y-4">
-                            <h1 className="text-2xl font-bold text-center">ຂໍ້ມູນທົວ</h1>
-                             <div className="grid grid-cols-2 gap-x-8 text-sm border-y py-4">
+                    <div id="print-content" className="print-container">
+                        <div className="hidden print:block print:space-y-2">
+                            <h1 className="print:text-xl print:font-bold text-center">ຂໍ້ມູນທົວ</h1>
+                             <div className="grid grid-cols-2 gap-x-8 print:text-xs print:border-y print:py-2">
                                 <div className="space-y-1">
                                     <div className="flex justify-between"><strong className="font-semibold">MOU Contact:</strong><span>{tourInfo.mouContact}</span></div>
                                     <div className="flex justify-between"><strong className="font-semibold">Group Code:</strong><span>{tourInfo.groupCode}</span></div>
@@ -1049,22 +1049,24 @@ export default function TourCalculatorPage() {
                             </CardContent>
                         </Card>
                         
-                        <div className="hidden print:block"><TotalCostCard totalsByCategory={totalsByCategory} /></div>
+                        <div className="hidden print:block print:space-y-2 print:pt-4">
+                            <TotalCostCard totalsByCategory={totalsByCategory} />
+                        </div>
                         <div className="print:hidden"><TotalCostCard totalsByCategory={totalsByCategory} /></div>
 
-                        <div className="hidden print:block">
+                        <div className="hidden print:block print:space-y-2 print:pt-4">
                             <Card>
-                                <CardHeader>
-                                    <CardTitle>ຄ່າໃຊ້ຈ່າຍລວມທັງໝົດ</CardTitle>
+                                <CardHeader className="print:px-2 print:py-1">
+                                    <CardTitle className="print:text-base print:font-bold">ຄ່າໃຊ້ຈ່າຍລວມທັງໝົດ</CardTitle>
                                 </CardHeader>
-                                <CardContent className="grid grid-cols-4 gap-4">
+                                <CardContent className="grid grid-cols-4 gap-4 print:p-2">
                                     {(Object.keys(grandTotals) as Currency[]).map(currency => (
-                                        <Card key={currency}>
-                                            <CardHeader className="pb-2">
-                                                <CardTitle className="text-lg">{currency}</CardTitle>
+                                        <Card key={currency} className="print:shadow-none print:border">
+                                            <CardHeader className="pb-2 print:p-1">
+                                                <CardTitle className="print:text-sm">{currency}</CardTitle>
                                             </CardHeader>
-                                            <CardContent>
-                                                <p className="text-2xl font-bold">{formatNumber(grandTotals[currency])}</p>
+                                            <CardContent className="print:p-1">
+                                                <p className="print:text-base font-bold">{formatNumber(grandTotals[currency])}</p>
                                             </CardContent>
                                         </Card>
                                     ))}
