@@ -339,6 +339,16 @@ export default function TourCalculatorPage() {
         'ຄ່າເອກະສານ': documentTotals
     };
 
+    const grandTotals = useMemo(() => {
+        const totals: Record<Currency, number> = { USD: 0, THB: 0, LAK: 0, CNY: 0 };
+        Object.values(totalsByCategory).forEach(categoryTotals => {
+            (Object.keys(totals) as Currency[]).forEach(currency => {
+                totals[currency] += categoryTotals[currency];
+            });
+        });
+        return totals;
+    }, [totalsByCategory]);
+
     const SummaryFooter = ({ title, totals }: { title: string; totals: Record<Currency, number> }) => {
         const filteredTotals = Object.entries(totals).filter(([, value]) => value > 0);
         if (filteredTotals.length === 0) return null;
@@ -463,15 +473,14 @@ export default function TourCalculatorPage() {
                         </CardContent>
                     </Card>
                     
-                    <TotalCostCard totalsByCategory={totalsByCategory} />
-
                     <Card>
                         <CardHeader>
                             <CardTitle>ຄຳນວນຄ່າໃຊ້ຈ່າຍ</CardTitle>
                             <CardDescription>ເພີ່ມ ແລະ ຈັດການຄ່າໃຊ້ຈ່າຍຕ່າງໆ</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <Accordion type="multiple" className="w-full space-y-2">
+                             <TourInfoDisplayCard tourInfo={tourInfo} />
+                            <Accordion type="multiple" className="w-full space-y-2 mt-4">
                                 {/* Accommodation */}
                                 <CostCategoryContent title="ຄ່າທີ່ພັກ" icon={<BedDouble className="h-5 w-5" />}>
                                       <div className="space-y-4 pt-2">
@@ -996,6 +1005,25 @@ export default function TourCalculatorPage() {
                                     </div>
                                 </CostCategoryContent>
                             </Accordion>
+                        </CardContent>
+                    </Card>
+                    <TotalCostCard totalsByCategory={totalsByCategory} />
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>ຄ່າໃຊ້ຈ່າຍລວມທັງໝົດ</CardTitle>
+                            <CardDescription>ສະຫຼຸບລວມຍອດຄ່າໃຊ້ຈ່າຍທັງໝົດແຍກຕາມສະກຸນເງິນ</CardDescription>
+                        </CardHeader>
+                        <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            {(Object.keys(grandTotals) as Currency[]).map(currency => (
+                                <Card key={currency}>
+                                    <CardHeader className="pb-2">
+                                        <CardTitle className="text-lg">{currency}</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <p className="text-2xl font-bold">{formatNumber(grandTotals[currency])}</p>
+                                    </CardContent>
+                                </Card>
+                            ))}
                         </CardContent>
                     </Card>
                  </div>
