@@ -249,7 +249,7 @@ const CurrencyInput = ({ label, amount, currency, onAmountChange, onCurrencyChan
     </div>
 );
 
-type TabValue = 'info' | 'income' | 'costs' | 'summary';
+type TabValue = 'info' | 'income' | 'costs' | 'summary' | 'dividend';
 
 export default function TourProgramDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
@@ -554,11 +554,12 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
       </header>
       <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 print:p-2 print:gap-1">
         <Tabs defaultValue="info" onValueChange={(v) => setActiveTab(v as TabValue)} className="mt-4">
-          <TabsList className="grid w-full grid-cols-4 print:hidden">
+          <TabsList className="grid w-full grid-cols-5 print:hidden">
               <TabsTrigger value="info">ຂໍ້ມູນໂປຣແກຣມ</TabsTrigger>
               <TabsTrigger value="income">ບັນທຶກລາຍຮັບ</TabsTrigger>
               <TabsTrigger value="costs">ຄຳນວນຕົ້ນທຶນ</TabsTrigger>
               <TabsTrigger value="summary">ສະຫຼຸບຜົນ</TabsTrigger>
+              <TabsTrigger value="dividend">ປັັນຜົນ</TabsTrigger>
           </TabsList>
           <TabsContent value="info" className="mt-4">
               <ProgramInfoCard />
@@ -644,7 +645,7 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
               <Card className="print:hidden">
                   <CardHeader>
                       <CardTitle>ສະຫຼຸບຜົນປະກອບການ</CardTitle>
-                      <CardDescription>ສະຫຼຸບລາຍຮັບ, ຕົ້ນທຶນ, และกำไร/ขาดทุน สำหรับໂປຣແກຣມนี้</CardDescription>
+                      <CardDescription>ສະຫຼຸບລາຍຮັບ, ຕົ້ນທຶນ, ແລະกำไร/ขาดทุน สำหรับໂປຣແກຣມนี้</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6 print:p-0 print:space-y-2">
                        <div>
@@ -673,6 +674,21 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                               {printCurrencies.includes('USD') && <SummaryCard title="ກຳໄລ/ຂາດທຶນ" value={summaryData.profit.usd} currency="USD" isProfit />}
                               {printCurrencies.includes('CNY') && <SummaryCard title="ກຳໄລ/ຂາດທຶນ" value={summaryData.profit.cny} currency="CNY" isProfit />}
                           </div>
+                      </div>
+                  </CardContent>
+              </Card>
+          </TabsContent>
+           <TabsContent value="dividend" className="mt-4">
+              <Card>
+                  <CardHeader>
+                      <CardTitle>ປັັນຜົນ</CardTitle>
+                      <CardDescription>
+                          ຄຳນວນ ແລະ ຈັດການການປັັນຜົນຂອງໂປຣແກຣມນີ້.
+                      </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                      <div className="text-center text-muted-foreground py-16">
+                          <p>ໜ້ານີ້ກຳລັງຢູ່ໃນການພັດທະນາ</p>
                       </div>
                   </CardContent>
               </Card>
