@@ -2,7 +2,7 @@
 
 "use client"
 
-import { useState, useMemo, useEffect, useCallback, use } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
@@ -265,8 +265,8 @@ const CurrencyInput = ({ label, amount, currency, onAmountChange, onCurrencyChan
 type TabValue = 'info' | 'income' | 'costs' | 'summary' | 'dividend';
 type DividendItem = { id: string; name: string; percentage: number };
 
-export default function TourProgramDetailPage({ params }: { params: Promise<{ id: string }> }) {
-    const { id } = use(params);
+export default function TourProgramDetailPage({ params }: { params: { id: string } }) {
+    const { id } = params;
     const { toast } = useToast();
     
     const [localProgram, setLocalProgram] = useState<TourProgram | null>(null);
@@ -428,12 +428,11 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
     const handleDividendChange = (id: string, field: 'name' | 'percentage', value: string | number) => {
         setDividendStructure(prev => prev.map(item => {
             if (item.id === id) {
-                if (field === 'percentage') {
-                    // Convert to a value between 0 and 1
+                if (field === 'percentage' && (typeof value === 'string' || typeof value === 'number')) {
                     return { ...item, percentage: Number(value) / 100 };
                 }
-                if (field === 'name') {
-                    return { ...item, name: String(value) };
+                if (field === 'name' && typeof value === 'string') {
+                    return { ...item, name: value };
                 }
             }
             return item;
