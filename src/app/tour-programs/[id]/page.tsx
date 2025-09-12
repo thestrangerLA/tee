@@ -47,13 +47,13 @@ const parseFormattedNumber = (value: string): number => {
 
 const allCurrencies: Currency[] = ['KIP', 'BAHT', 'USD', 'CNY'];
 
-const dividendStructure = [
-    { name: 'ບໍລິສັດ', percentage: 0.30 },
-    { name: 'xiuge', percentage: 0.10 },
-    { name: 'wenyan', percentage: 0.10 },
-    { name: 'ການຕະຫຼາດ', percentage: 0.15 },
-    { name: 'CEO', percentage: 0.30 },
-    { name: 'ບັນຊີ', percentage: 0.05 },
+const initialDividendStructure = [
+    { id: '1', name: 'ບໍລິສັດ', percentage: 0.30 },
+    { id: '2', name: 'xiuge', percentage: 0.10 },
+    { id: '3', name: 'wenyan', percentage: 0.10 },
+    { id: '4', name: 'ການຕະຫຼາດ', percentage: 0.15 },
+    { id: '5', name: 'CEO', percentage: 0.30 },
+    { id: '6', name: 'ບັນຊີ', percentage: 0.05 },
 ];
 
 const CurrencyEntryTable = ({ 
@@ -263,6 +263,7 @@ const CurrencyInput = ({ label, amount, currency, onAmountChange, onCurrencyChan
 );
 
 type TabValue = 'info' | 'income' | 'costs' | 'summary' | 'dividend';
+type DividendItem = { id: string; name: string; percentage: number };
 
 export default function TourProgramDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
@@ -277,6 +278,7 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
     const [isSaving, setIsSaving] = useState(false);
     const [activeTab, setActiveTab] = useState<TabValue>('info');
     const [itemVisibility, setItemVisibility] = useState<Record<string, boolean>>({});
+    const [dividendStructure, setDividendStructure] = useState<DividendItem[]>(initialDividendStructure);
 
     const toggleItemVisibility = (itemId: string) => {
         setItemVisibility(prev => ({ ...prev, [itemId]: !prev[itemId] }));
@@ -421,6 +423,33 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                 : [...prev, currency]
         );
     };
+
+    // Dividend functions
+    const handleDividendChange = (id: string, field: 'name' | 'percentage', value: string | number) => {
+        setDividendStructure(prev => prev.map(item => {
+            if (item.id === id) {
+                if (field === 'percentage') {
+                    // Convert to a value between 0 and 1
+                    return { ...item, [field]: Number(value) / 100 };
+                }
+                return { ...item, [field]: value };
+            }
+            return item;
+        }));
+    };
+
+    const addDividendRow = () => {
+        setDividendStructure(prev => [...prev, { id: Date.now().toString(), name: '', percentage: 0 }]);
+    };
+
+    const removeDividendRow = (id: string) => {
+        setDividendStructure(prev => prev.filter(item => item.id !== id));
+    };
+    
+    const totalPercentage = useMemo(() => {
+        return dividendStructure.reduce((sum, item) => sum + (item.percentage || 0), 0);
+    }, [dividendStructure]);
+
 
     if (isLoading) {
         return (
@@ -712,37 +741,63 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                       <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead className="w-1/4">ຜູ້ຮັບຜົນປະໂຫຍດ</TableHead>
-                                <TableHead className="w-[100px] text-center">ເປີເຊັນ</TableHead>
+                                <TableHead className="w-1/3">ຜູ້ຮັບຜົນປະໂຫຍດ</TableHead>
+                                <TableHead className="w-[120px] text-center">ເປີເຊັນ (%)</TableHead>
                                 <TableHead className="text-right">KIP</TableHead>
                                 <TableHead className="text-right">BAHT</TableHead>
                                 <TableHead className="text-right">USD</TableHead>
                                 <TableHead className="text-right">CNY</TableHead>
+                                <TableHead className="w-[50px]"><span className="sr-only">Actions</span></TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {dividendStructure.map((item, index) => (
-                                <TableRow key={index}>
-                                    <TableCell className="font-medium">{item.name}</TableCell>
-                                    <TableCell className="text-center">{item.percentage * 100}%</TableCell>
-                                    <TableCell className="text-right font-mono">{formatCurrency(summaryData.profit.kip * item.percentage)}</TableCell>
-                                    <TableCell className="text-right font-mono">{formatCurrency(summaryData.profit.baht * item.percentage)}</TableCell>
-                                    <TableCell className="text-right font-mono">{formatCurrency(summaryData.profit.usd * item.percentage)}</TableCell>
-                                    <TableCell className="text-right font-mono">{formatCurrency(summaryData.profit.cny * item.percentage)}</TableCell>
+                            {dividendStructure.map((item) => (
+                                <TableRow key={item.id}>
+                                    <TableCell className="font-medium p-1">
+                                        <Input 
+                                            value={item.name} 
+                                            onChange={(e) => handleDividendChange(item.id, 'name', e.target.value)}
+                                            className="h-8"
+                                        />
+                                    </TableCell>
+                                    <TableCell className="text-center p-1">
+                                         <Input 
+                                            type="number"
+                                            value={item.percentage * 100} 
+                                            onChange={(e) => handleDividendChange(item.id, 'percentage', e.target.value)}
+                                            className="h-8 text-center"
+                                        />
+                                    </TableCell>
+                                    <TableCell className="text-right font-mono p-1">{formatCurrency(summaryData.profit.kip * item.percentage)}</TableCell>
+                                    <TableCell className="text-right font-mono p-1">{formatCurrency(summaryData.profit.baht * item.percentage)}</TableCell>
+                                    <TableCell className="text-right font-mono p-1">{formatCurrency(summaryData.profit.usd * item.percentage)}</TableCell>
+                                    <TableCell className="text-right font-mono p-1">{formatCurrency(summaryData.profit.cny * item.percentage)}</TableCell>
+                                    <TableCell className="p-1">
+                                        <Button variant="ghost" size="icon" onClick={() => removeDividendRow(item.id)}>
+                                            <Trash2 className="h-4 w-4 text-red-500" />
+                                        </Button>
+                                    </TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
                         <TableFooter>
                             <TableRow className="bg-muted font-bold">
                                 <TableCell>ລວມທັງໝົດ</TableCell>
-                                <TableCell className="text-center">100%</TableCell>
-                                <TableCell className="text-right font-mono">{formatCurrency(summaryData.profit.kip)}</TableCell>
-                                <TableCell className="text-right font-mono">{formatCurrency(summaryData.profit.baht)}</TableCell>
-                                <TableCell className="text-right font-mono">{formatCurrency(summaryData.profit.usd)}</TableCell>
-                                <TableCell className="text-right font-mono">{formatCurrency(summaryData.profit.cny)}</TableCell>
+                                <TableCell className="text-center">{formatCurrency(totalPercentage * 100)}%</TableCell>
+                                <TableCell className="text-right font-mono">{formatCurrency(summaryData.profit.kip * totalPercentage)}</TableCell>
+                                <TableCell className="text-right font-mono">{formatCurrency(summaryData.profit.baht * totalPercentage)}</TableCell>
+                                <TableCell className="text-right font-mono">{formatCurrency(summaryData.profit.usd * totalPercentage)}</TableCell>
+                                <TableCell className="text-right font-mono">{formatCurrency(summaryData.profit.cny * totalPercentage)}</TableCell>
+                                <TableCell></TableCell>
                             </TableRow>
                         </TableFooter>
                       </Table>
+                      <div className="flex justify-start">
+                          <Button onClick={addDividendRow} variant="outline">
+                              <PlusCircle className="mr-2 h-4 w-4" />
+                              ເພີ່ມລາຍການ
+                          </Button>
+                      </div>
                   </CardContent>
               </Card>
           </TabsContent>
