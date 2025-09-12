@@ -123,10 +123,10 @@ export default function TourCalculatorPage() {
         setItemVisibility(prev => ({ ...prev, [itemId]: !prev[itemId] }));
     };
 
-    const updateCosts = useCallback(<T extends keyof TourCosts>(category: T, data: TourCosts[T]) => {
+     const updateCosts = useCallback((category: keyof TourCosts, data: any) => {
         setAllCosts(prev => ({ ...prev, [category]: data }));
     }, []);
-    
+
     useEffect(() => {
         costCategories.forEach(category => {
             try {
@@ -234,6 +234,102 @@ export default function TourCalculatorPage() {
     const addMealCost = () => addItem('meals', { id: uuidv4(), name: '', pax: 1, breakfast: 0, lunch: 0, dinner: 0, pricePerMeal: 0, currency: 'LAK' });
     const addGuideFee = () => addItem('guides', { id: uuidv4(), guideName: '', numGuides: 1, numDays: 1, pricePerDay: 0, currency: 'LAK' });
     const addDocumentFee = () => addItem('documents', { id: uuidv4(), documentName: '', pax: 1, price: 0, currency: 'LAK' });
+    
+    // --- Total Calculation Memos ---
+    const accommodationTotals = useMemo(() => {
+        const totals: Record<Currency, number> = { USD: 0, THB: 0, LAK: 0, CNY: 0 };
+        allCosts.accommodations.forEach(acc => {
+            acc.rooms.forEach(room => {
+                totals[room.currency] += (room.numRooms || 0) * (room.numNights || 0) * (room.price || 0);
+            });
+        });
+        return totals;
+    }, [allCosts.accommodations]);
+
+    const tripTotals = useMemo(() => {
+        const totals: Record<Currency, number> = { USD: 0, THB: 0, LAK: 0, CNY: 0 };
+        allCosts.trips.forEach(trip => {
+            totals[trip.currency] += (trip.numVehicles || 0) * (trip.numDays || 0) * (trip.pricePerVehicle || 0);
+        });
+        return totals;
+    }, [allCosts.trips]);
+
+    const flightTotals = useMemo(() => {
+        const totals: Record<Currency, number> = { USD: 0, THB: 0, LAK: 0, CNY: 0 };
+        allCosts.flights.forEach(flight => {
+            totals[flight.currency] += (flight.pricePerPerson || 0) * (flight.numPeople || 0);
+        });
+        return totals;
+    }, [allCosts.flights]);
+    
+    const trainTotals = useMemo(() => {
+        const totals: Record<Currency, number> = { USD: 0, THB: 0, LAK: 0, CNY: 0 };
+        allCosts.trainTickets.forEach(ticket => {
+            totals[ticket.currency] += (ticket.pricePerTicket || 0) * (ticket.numTickets || 0);
+        });
+        return totals;
+    }, [allCosts.trainTickets]);
+
+    const entranceFeeTotals = useMemo(() => {
+        const totals: Record<Currency, number> = { USD: 0, THB: 0, LAK: 0, CNY: 0 };
+        allCosts.entranceFees.forEach(fee => {
+            totals[fee.currency] += (fee.pax || 0) * (fee.numLocations || 0) * (fee.price || 0);
+        });
+        return totals;
+    }, [allCosts.entranceFees]);
+
+    const mealTotals = useMemo(() => {
+        const totals: Record<Currency, number> = { USD: 0, THB: 0, LAK: 0, CNY: 0 };
+        allCosts.meals.forEach(meal => {
+            totals[meal.currency] += ((meal.breakfast || 0) + (meal.lunch || 0) + (meal.dinner || 0)) * (meal.pricePerMeal || 0);
+        });
+        return totals;
+    }, [allCosts.meals]);
+
+    const guideTotals = useMemo(() => {
+        const totals: Record<Currency, number> = { USD: 0, THB: 0, LAK: 0, CNY: 0 };
+        allCosts.guides.forEach(guide => {
+            totals[guide.currency] += (guide.numGuides || 0) * (guide.numDays || 0) * (guide.pricePerDay || 0);
+        });
+        return totals;
+    }, [allCosts.guides]);
+
+    const documentTotals = useMemo(() => {
+        const totals: Record<Currency, number> = { USD: 0, THB: 0, LAK: 0, CNY: 0 };
+        allCosts.documents.forEach(doc => {
+            totals[doc.currency] += (doc.pax || 0) * (doc.price || 0);
+        });
+        return totals;
+    }, [allCosts.documents]);
+    
+    const totalsByCategory: Record<string, Record<Currency, number>> = {
+        'ຄ່າທີ່ພັກ': accommodationTotals,
+        'ຄ່າຂົນສົ່ງ': tripTotals,
+        'ຄ່າປີ້ຍົນ': flightTotals,
+        'ຄ່າປີ້ລົດໄຟ': trainTotals,
+        'ຄ່າເຂົ້າຊົມສະຖານທີ່': entranceFeeTotals,
+        'ຄ່າອາຫານ': mealTotals,
+        'ຄ່າໄກด์': guideTotals,
+        'ຄ່າເອກະສານ': documentTotals
+    };
+
+    const SummaryFooter = ({ title, totals }: { title: string; totals: Record<Currency, number> }) => {
+        const filteredTotals = Object.entries(totals).filter(([, value]) => value > 0);
+        if (filteredTotals.length === 0) return null;
+
+        return (
+            <div className="mt-4 rounded-lg bg-purple-100 p-3">
+                <div className="flex items-center justify-between font-semibold text-purple-800">
+                    <span>{title}:</span>
+                    <div className="flex items-center gap-4">
+                        {filteredTotals.map(([currency, value]) => (
+                            <span key={currency}>{`${currencySymbols[currency as Currency].split(' ')[0]} ${formatNumber(value)}`}</span>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        );
+    };
 
 
     return (
@@ -359,7 +455,7 @@ export default function TourCalculatorPage() {
                                                       <CardTitle className="text-base">ທີ່ພັກ #{index + 1}</CardTitle>
                                                       <div>
                                                           <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(acc.id)}>
-                                                              {itemVisibility[acc.id] ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
+                                                              {itemVisibility[acc.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
                                                           </Button>
                                                           <Button variant="ghost" size="icon" onClick={() => deleteItem('accommodations', acc.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
                                                       </div>
@@ -438,6 +534,7 @@ export default function TourCalculatorPage() {
                                           <div className="flex gap-2 mt-2">
                                               <Button onClick={addAccommodation} className="flex-1"><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າທີ່ພັກ</Button>
                                           </div>
+                                          <SummaryFooter title="ລວມຄ່າທີ່ພັກທັງໝົດ" totals={accommodationTotals} />
                                         </div>
                                   </CostCategoryContent>
                                   
@@ -450,7 +547,7 @@ export default function TourCalculatorPage() {
                                                       <CardTitle className="text-base">ການເດີນທາງ #{index + 1}</CardTitle>
                                                       <div>
                                                           <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(trip.id)}>
-                                                              {itemVisibility[trip.id] ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
+                                                              {itemVisibility[trip.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
                                                           </Button>
                                                           <Button variant="ghost" size="icon" onClick={() => deleteItem('trips', trip.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
                                                       </div>
@@ -501,6 +598,7 @@ export default function TourCalculatorPage() {
                                           <div className="flex gap-2 mt-2">
                                               <Button onClick={addTrip} className="flex-1"><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າຂົນສົ່ງ</Button>
                                           </div>
+                                          <SummaryFooter title="ລວມຄ່າຂົນສົ່ງທັງໝົດ" totals={tripTotals} />
                                       </div>
                                   </CostCategoryContent>
                                     {/* Flights */}
@@ -512,7 +610,7 @@ export default function TourCalculatorPage() {
                                                       <CardTitle className="text-base">ປີ້ຍົນ #{index + 1}</CardTitle>
                                                       <div>
                                                           <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(flight.id)}>
-                                                              {itemVisibility[flight.id] ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
+                                                              {itemVisibility[flight.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
                                                           </Button>
                                                           <Button variant="ghost" size="icon" onClick={() => deleteItem('flights', flight.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
                                                       </div>
@@ -573,6 +671,7 @@ export default function TourCalculatorPage() {
                                           <div className="flex gap-2 mt-2">
                                               <Button onClick={addFlight} className="flex-1"><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າປີ້ຍົນ</Button>
                                           </div>
+                                          <SummaryFooter title="ລວມຄ່າປີ້ຍົນທັງໝົດ" totals={flightTotals} />
                                         </div>
                                   </CostCategoryContent>
                                    {/* Train Tickets */}
@@ -584,7 +683,7 @@ export default function TourCalculatorPage() {
                                                         <CardTitle className="text-base">ປີ້ລົດໄຟ #{index + 1}</CardTitle>
                                                         <div>
                                                             <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(ticket.id)}>
-                                                                {itemVisibility[ticket.id] ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
+                                                                {itemVisibility[ticket.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
                                                             </Button>
                                                             <Button variant="ghost" size="icon" onClick={() => deleteItem('trainTickets', ticket.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
                                                         </div>
@@ -649,6 +748,7 @@ export default function TourCalculatorPage() {
                                             <div className="flex gap-2 mt-2">
                                                 <Button onClick={addTrainTicket} className="flex-1"><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າປີ້ລົດໄຟ</Button>
                                             </div>
+                                            <SummaryFooter title="ລວມຄ່າປີ້ລົດໄຟທັງໝົດ" totals={trainTotals} />
                                       </div>
                                   </CostCategoryContent>
                                    {/* Entrance Fees */}
@@ -660,7 +760,7 @@ export default function TourCalculatorPage() {
                                                         <CardTitle className="text-base">ຄ່າເຂົ້າຊົມ #{index + 1}</CardTitle>
                                                         <div>
                                                             <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(fee.id)}>
-                                                                {itemVisibility[fee.id] ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
+                                                                {itemVisibility[fee.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
                                                             </Button>
                                                             <Button variant="ghost" size="icon" onClick={() => deleteItem('entranceFees', fee.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
                                                         </div>
@@ -701,6 +801,7 @@ export default function TourCalculatorPage() {
                                             <div className="flex gap-2 mt-2">
                                                 <Button onClick={addEntranceFee} className="flex-1"><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າເຂົ້າຊົມ</Button>
                                             </div>
+                                            <SummaryFooter title="ລວມຄ່າເຂົ້າຊົມທັງໝົດ" totals={entranceFeeTotals} />
                                       </div>
                                   </CostCategoryContent>
                                    {/* Meals */}
@@ -712,7 +813,7 @@ export default function TourCalculatorPage() {
                                                         <CardTitle className="text-base">ລາຍການອາຫານ #{index + 1}</CardTitle>
                                                         <div>
                                                             <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(meal.id)}>
-                                                                {itemVisibility[meal.id] ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
+                                                                {itemVisibility[meal.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
                                                             </Button>
                                                             <Button variant="ghost" size="icon" onClick={() => deleteItem('meals', meal.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
                                                         </div>
@@ -763,6 +864,7 @@ export default function TourCalculatorPage() {
                                             <div className="flex gap-2 mt-2">
                                                 <Button onClick={addMealCost} className="flex-1"><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າອາຫານ</Button>
                                             </div>
+                                            <SummaryFooter title="ລວມຄ່າອາຫານທັງໝົດ" totals={mealTotals} />
                                      </div>
                                   </CostCategoryContent>
                                     {/* Guide */}
@@ -774,7 +876,7 @@ export default function TourCalculatorPage() {
                                                         <CardTitle className="text-base">ລາຍການໄກด์ #{index + 1}</CardTitle>
                                                         <div>
                                                             <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(guide.id)}>
-                                                                {itemVisibility[guide.id] ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
+                                                                {itemVisibility[guide.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
                                                             </Button>
                                                             <Button variant="ghost" size="icon" onClick={() => deleteItem('guides', guide.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
                                                         </div>
@@ -815,6 +917,7 @@ export default function TourCalculatorPage() {
                                             <div className="flex gap-2 mt-2">
                                                 <Button onClick={addGuideFee} className="flex-1"><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າໄກด์</Button>
                                             </div>
+                                            <SummaryFooter title="ລວມຄ່າໄກด์ທັງໝົດ" totals={guideTotals} />
                                      </div>
                                   </CostCategoryContent>
                                     {/* Documents */}
@@ -826,7 +929,7 @@ export default function TourCalculatorPage() {
                                                         <CardTitle className="text-base">ລາຍການເອກະສານ #{index + 1}</CardTitle>
                                                         <div>
                                                             <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(doc.id)}>
-                                                                {itemVisibility[doc.id] ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
+                                                                {itemVisibility[doc.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
                                                             </Button>
                                                             <Button variant="ghost" size="icon" onClick={() => deleteItem('documents', doc.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
                                                         </div>
@@ -863,6 +966,7 @@ export default function TourCalculatorPage() {
                                             <div className="flex gap-2 mt-2">
                                                 <Button onClick={addDocumentFee} className="flex-1"><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າເອກະສານ</Button>
                                             </div>
+                                            <SummaryFooter title="ລວມຄ່າເອກະສານທັງໝົດ" totals={documentTotals} />
                                       </div>
                                   </CostCategoryContent>
                               </Accordion>
