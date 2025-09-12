@@ -732,7 +732,7 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
            <TabsContent value="dividend" className="mt-4">
               <Card>
                   <CardHeader>
-                      <CardTitle>ການແບ່ງປັນຜົນກຳໄລ (Dividend)</CardTitle>
+                      <CardTitle>ການແບ່ງປັນຜົນກຳໄລ (ປັນຜົນ)</CardTitle>
                       <CardDescription>
                           ຄຳນວນ ແລະ ຈັດການການປັນຜົນຂອງໂປຣແກຣມນີ້.
                       </CardDescription>
@@ -756,7 +756,7 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                                 <TableHead className="text-right">BAHT</TableHead>
                                 <TableHead className="text-right">USD</TableHead>
                                 <TableHead className="text-right">CNY</TableHead>
-                                <TableHead className="w-[50px]"><span className="sr-only">Actions</span></TableHead>
+                                <TableHead className="w-[50px] print:hidden"><span className="sr-only">Actions</span></TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -781,7 +781,7 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                                     <TableCell className="text-right font-mono p-1">{formatCurrency(summaryData.profit.baht * item.percentage)}</TableCell>
                                     <TableCell className="text-right font-mono p-1">{formatCurrency(summaryData.profit.usd * item.percentage)}</TableCell>
                                     <TableCell className="text-right font-mono p-1">{formatCurrency(summaryData.profit.cny * item.percentage)}</TableCell>
-                                    <TableCell className="p-1">
+                                    <TableCell className="p-1 print:hidden">
                                         <Button variant="ghost" size="icon" onClick={() => removeDividendRow(item.id)}>
                                             <Trash2 className="h-4 w-4 text-red-500" />
                                         </Button>
@@ -797,7 +797,7 @@ export default function TourProgramDetailPage({ params }: { params: Promise<{ id
                                 <TableCell className="text-right font-mono">{formatCurrency(summaryData.profit.baht * totalPercentage)}</TableCell>
                                 <TableCell className="text-right font-mono">{formatCurrency(summaryData.profit.usd * totalPercentage)}</TableCell>
                                 <TableCell className="text-right font-mono">{formatCurrency(summaryData.profit.cny * totalPercentage)}</TableCell>
-                                <TableCell></TableCell>
+                                <TableCell className="print:hidden"></TableCell>
                             </TableRow>
                         </TableFooter>
                       </Table>
