@@ -335,7 +335,7 @@ export default function TourCalculatorPage() {
         'ຄ່າປີ້ລົດໄຟ': trainTotals,
         'ຄ່າເຂົ້າຊົມສະຖານທີ່': entranceFeeTotals,
         'ຄ່າອາຫານ': mealTotals,
-        'ຄ່າໄກด์': guideTotals,
+        'ຄ່າໄກ້': guideTotals,
         'ຄ່າເອກະສານ': documentTotals
     };
 
@@ -472,6 +472,8 @@ export default function TourCalculatorPage() {
                             </div>
                         </CardContent>
                     </Card>
+
+                    <TourInfoDisplayCard tourInfo={tourInfo} />
                     
                     <Card>
                         <CardHeader>
@@ -479,7 +481,6 @@ export default function TourCalculatorPage() {
                             <CardDescription>ເພີ່ມ ແລະ ຈັດການຄ່າໃຊ້ຈ່າຍຕ່າງໆ</CardDescription>
                         </CardHeader>
                         <CardContent>
-                             <TourInfoDisplayCard tourInfo={tourInfo} />
                             <Accordion type="multiple" className="w-full space-y-2 mt-4">
                                 {/* Accommodation */}
                                 <CostCategoryContent title="ຄ່າທີ່ພັກ" icon={<BedDouble className="h-5 w-5" />}>
@@ -903,7 +904,7 @@ export default function TourCalculatorPage() {
                                    </div>
                                 </CostCategoryContent>
                                   {/* Guide */}
-                                <CostCategoryContent title="ຄ່າໄກด์" icon={<Users className="h-5 w-5" />}>
+                                <CostCategoryContent title="ຄ່າໄກ້" icon={<Users className="h-5 w-5" />}>
                                    <div className="space-y-4 pt-2">
                                           {allCosts.guides.map((guide, index) => (
                                               <Card key={guide.id} className="bg-muted/30">
@@ -951,7 +952,7 @@ export default function TourCalculatorPage() {
                                               </Card>
                                           ))}
                                           <div className="flex gap-2 mt-2">
-                                              <Button onClick={addGuideFee} className="flex-1"><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າໄກด์</Button>
+                                              <Button onClick={addGuideFee} className="flex-1"><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າໄກ້</Button>
                                           </div>
                                    </div>
                                 </CostCategoryContent>

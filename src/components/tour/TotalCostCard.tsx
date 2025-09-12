@@ -35,7 +35,7 @@ const categoryIcons: { [key: string]: React.ReactNode } = {
     'ຄ່າປີ້ລົດໄຟ': <TrainFront className="h-6 w-6 text-orange-500" />,
     'ຄ່າເຂົ້າຊົມສະຖານທີ່': <Camera className="h-6 w-6 text-red-500" />,
     'ຄ່າອາຫານ': <UtensilsCrossed className="h-6 w-6 text-yellow-500" />,
-    'ຄ່າໄກด์': <Users className="h-6 w-6 text-indigo-500" />,
+    'ຄ່າໄກ້': <Users className="h-6 w-6 text-indigo-500" />,
     'ຄ່າເອກະສານ': <FileText className="h-6 w-6 text-pink-500" />,
 };
 
@@ -59,7 +59,7 @@ export function TotalCostCard({ totalsByCategory }: TotalCostCardProps) {
         <Card className="w-full max-w-7xl mx-auto shadow-md">
             <CardHeader className="flex flex-row items-center gap-3 bg-muted/50 rounded-t-lg">
                 <Calculator className="h-6 w-6 text-primary" />
-                <CardTitle className="text-xl">สรุปตามหมวดหมู่</CardTitle>
+                <CardTitle className="text-xl">ສະຫຼຸບຕາມໝວດໝູ່</CardTitle>
             </CardHeader>
             <CardContent className="p-6">
                 {hasData ? (
