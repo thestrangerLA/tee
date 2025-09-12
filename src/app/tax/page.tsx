@@ -47,7 +47,7 @@ export default function TaxCalculatorPage() {
     const [totalTax, setTotalTax] = useState(0);
 
     useEffect(() => {
-        const unsubscribe = listenToTransactions(setAllTransactions);
+        const unsubscribe = listenToTransactions('agriculture', setAllTransactions);
         return () => unsubscribe();
     }, []);
 
@@ -249,6 +249,8 @@ export default function TaxCalculatorPage() {
         </div>
     );
 }
+
+    
 
     
 
