@@ -56,14 +56,14 @@ export function TotalCostCard({ totalsByCategory }: TotalCostCardProps) {
     );
 
     return (
-        <Card className="w-full max-w-7xl mx-auto shadow-md">
+        <Card className="w-full shadow-md">
             <CardHeader className="flex flex-row items-center gap-3 bg-muted/50 rounded-t-lg">
                 <Calculator className="h-6 w-6 text-primary" />
                 <CardTitle className="text-xl">ສະຫຼຸບຕາມໝວດໝູ່</CardTitle>
             </CardHeader>
             <CardContent className="p-6">
                 {hasData ? (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {Object.entries(totalsByCategory).map(([category, totals]) => {
                             const filteredTotals = Object.entries(totals).filter(([, value]) => value > 0);
                             if (filteredTotals.length === 0) return null;
