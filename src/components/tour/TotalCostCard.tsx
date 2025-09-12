@@ -2,11 +2,19 @@
 
 "use client"
 
-import { useState, useEffect, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Calculator } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Calculator, BedDouble, Truck, Plane, TrainFront, Camera, UtensilsCrossed, Users, FileText } from 'lucide-react';
 
 type Currency = 'USD' | 'THB' | 'LAK' | 'CNY';
+
+type TotalsByCategory = {
+    [key: string]: Record<Currency, number>;
+};
+
+type TotalCostCardProps = {
+    totalsByCategory: TotalsByCategory;
+};
 
 const currencySymbols: Record<Currency, string> = {
     USD: '$',
@@ -16,126 +24,75 @@ const currencySymbols: Record<Currency, string> = {
 };
 
 const formatNumber = (num: number) => {
+    if (isNaN(num)) return '0';
     return new Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(num);
 };
 
-const costCategories = [
-    'tour-accommodations', 'tour-trips', 'tour-flights', 'tour-trainTickets',
-    'tour-entrance-fees', 'tour-meals', 'tour-guides', 'tour-documents'
-];
+const categoryIcons: { [key: string]: React.ReactNode } = {
+    'ຄ່າທີ່ພັກ': <BedDouble className="h-6 w-6 text-purple-500" />,
+    'ຄ່າຂົນສົ່ງ': <Truck className="h-6 w-6 text-green-500" />,
+    'ຄ່າປີ້ຍົນ': <Plane className="h-6 w-6 text-blue-500" />,
+    'ຄ່າປີ້ລົດໄຟ': <TrainFront className="h-6 w-6 text-orange-500" />,
+    'ຄ່າເຂົ້າຊົມສະຖານທີ່': <Camera className="h-6 w-6 text-red-500" />,
+    'ຄ່າອາຫານ': <UtensilsCrossed className="h-6 w-6 text-yellow-500" />,
+    'ຄ່າໄກด์': <Users className="h-6 w-6 text-indigo-500" />,
+    'ຄ່າເອກະສານ': <FileText className="h-6 w-6 text-pink-500" />,
+};
 
-export function TotalCostCard() {
-    const [totalCosts, setTotalCosts] = useState<Record<Currency, number>>({ USD: 0, THB: 0, LAK: 0, CNY: 0 });
+
+export function TotalCostCard({ totalsByCategory }: TotalCostCardProps) {
+    const [isClient, setIsClient] = useState(false);
 
     useEffect(() => {
-        const calculateTotal = () => {
-            let totals: Record<Currency, number> = { USD: 0, THB: 0, LAK: 0, CNY: 0 };
-            
-            costCategories.forEach(category => {
-                try {
-                    const storedData = localStorage.getItem(category);
-                    if (storedData) {
-                        const items = JSON.parse(storedData);
-                        items.forEach((item: any) => {
-                            let itemCurrency: Currency | undefined;
-                            let itemTotal = 0;
-
-                            if (category === 'tour-accommodations' && item.rooms) {
-                                 item.rooms.forEach((room: any) => {
-                                    const roomTotal = (room.numRooms || 0) * (room.numNights || 0) * (room.price || 0);
-                                    if (room.currency && totals.hasOwnProperty(room.currency)) {
-                                        totals[room.currency as Currency] += roomTotal;
-                                    }
-                                });
-                                return; // Continue to next item
-                            } else if (category === 'tour-trips' && item.numVehicles) {
-                                itemTotal = (item.numVehicles || 0) * (item.numDays || 0) * (item.pricePerVehicle || 0);
-                                itemCurrency = item.currency;
-                            } else if (category === 'tour-flights' && item.pricePerPerson) {
-                                itemTotal = (item.pricePerPerson || 0) * (item.numPeople || 0);
-                                itemCurrency = item.currency;
-                            } else if (category === 'tour-train-tickets' && item.pricePerTicket) {
-                                itemTotal = (item.pricePerTicket || 0) * (item.numTickets || 0);
-                                itemCurrency = item.currency;
-                            } else if (category === 'tour-entrance-fees' && item.price) {
-                                itemTotal = (item.pax || 0) * (item.numLocations || 0) * (item.price || 0);
-                                itemCurrency = item.currency;
-                            } else if (category === 'tour-meals' && item.pricePerMeal) {
-                                itemTotal = ((item.breakfast || 0) + (item.lunch || 0) + (item.dinner || 0)) * (item.pricePerMeal || 0);
-                                itemCurrency = item.currency;
-                            } else if (category === 'tour-guides' && item.pricePerDay) {
-                                itemTotal = (item.numGuides || 0) * (item.numDays || 0) * (item.pricePerDay || 0);
-                                itemCurrency = item.currency;
-                            } else if (category === 'tour-documents' && item.price) {
-                                itemTotal = (item.pax || 0) * (item.price || 0);
-                                itemCurrency = item.currency;
-                            }
-
-                            if (itemCurrency && totals.hasOwnProperty(itemCurrency)) {
-                                totals[itemCurrency] += itemTotal;
-                            }
-                        });
-                    }
-                } catch (error) {
-                    console.error(`Error processing category ${category}:`, error);
-                }
-            });
-
-            setTotalCosts(totals);
-        };
-
-        calculateTotal();
-
-        const handleStorageChange = (e: StorageEvent | CustomEvent) => {
-            if ('key' in e && e.key && !costCategories.includes(e.key)) return;
-            calculateTotal();
-        };
-        
-        window.addEventListener('storage', handleStorageChange);
-        
-        costCategories.forEach(category => {
-            const eventName = category.replace('tour-', '') + 'Update';
-            window.addEventListener(eventName, handleStorageChange);
-        });
-
-
-        return () => {
-            window.removeEventListener('storage', handleStorageChange);
-            costCategories.forEach(category => {
-                const eventName = category.replace('tour-', '') + 'Update';
-                window.removeEventListener(eventName, handleStorageChange);
-            });
-        };
-
+        setIsClient(true);
     }, []);
-    
+
+    if (!isClient) {
+        return null; 
+    }
+
+    const hasData = Object.values(totalsByCategory).some(categoryTotals =>
+        Object.values(categoryTotals).some(value => value > 0)
+    );
+
     return (
-        <Card className="w-full max-w-7xl mx-auto bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg">
-            <CardHeader className="flex flex-row items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <Calculator className="h-6 w-6" />
-                    <CardTitle className="text-xl">ຄ່າໃຊ້ຈ່າຍລວມທັງໝົດ</CardTitle>
-                </div>
+        <Card className="w-full max-w-7xl mx-auto shadow-md">
+            <CardHeader className="flex flex-row items-center gap-3 bg-muted/50 rounded-t-lg">
+                <Calculator className="h-6 w-6 text-primary" />
+                <CardTitle className="text-xl">สรุปตามหมวดหมู่</CardTitle>
             </CardHeader>
             <CardContent className="p-6">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                    <div>
-                        <p className="text-sm opacity-80">ກີບ (LAK)</p>
-                        <p className="text-2xl font-semibold">{currencySymbols.LAK}{formatNumber(totalCosts.LAK)}</p>
+                {hasData ? (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                        {Object.entries(totalsByCategory).map(([category, totals]) => {
+                            const filteredTotals = Object.entries(totals).filter(([, value]) => value > 0);
+                            if (filteredTotals.length === 0) return null;
+
+                            return (
+                                <Card key={category} className="bg-background shadow-sm hover:shadow-md transition-shadow">
+                                    <CardContent className="p-4 flex items-start gap-4">
+                                        <div className="bg-muted p-3 rounded-full">
+                                            {categoryIcons[category] || <Calculator className="h-6 w-6" />}
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-semibold text-muted-foreground">{category}</p>
+                                            {filteredTotals.map(([currency, value]) => (
+                                                <p key={currency} className="text-lg font-bold">
+                                                   {currencySymbols[currency as Currency]}{formatNumber(value)}
+                                                </p>
+                                            ))}
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            );
+                        })}
                     </div>
-                     <div>
-                        <p className="text-sm opacity-80">ບາດ (THB)</p>
-                        <p className="text-2xl font-semibold">{currencySymbols.THB}{formatNumber(totalCosts.THB)}</p>
+                ) : (
+                    <div className="text-center text-muted-foreground py-8">
+                        <p>ยังไม่มีข้อมูลค่าใช้จ่าย</p>
+                        <p className="text-sm">กรอกข้อมูลในหมวดหมู่ต่างๆ เพื่อดูสรุปที่นี่</p>
                     </div>
-                    <div>
-                        <p className="text-sm opacity-80">ດອນລ້າ (USD)</p>
-                        <p className="text-2xl font-semibold">{currencySymbols.USD}{formatNumber(totalCosts.USD)}</p>
-                    </div>
-                    <div>
-                        <p className="text-sm opacity-80">ຢວນ (CNY)</p>
-                        <p className="text-2xl font-semibold">{currencySymbols.CNY}{formatNumber(totalCosts.CNY)}</p>
-                    </div>
-                </div>
+                )}
             </CardContent>
         </Card>
     );

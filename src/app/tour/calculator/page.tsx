@@ -44,7 +44,7 @@ type Trip = { id: string; location: string; route: string; vehicleType: string; 
 type Flight = { id: string; from: string; to: string; departureDate?: Date; departureTime: string; pricePerPerson: number; numPeople: number; currency: Currency; };
 
 // --- Train Types ---
-type TrainTicket = { id: string; from: string; to: string; departureDate?: Date; departureTime: string; ticketClass: string; numTickets: number; pricePerTicket: number; currency: Currency; };
+type TrainTicket = { id:string; from: string; to: string; departureDate?: Date; departureTime: string; ticketClass: string; numTickets: number; pricePerTicket: number; currency: Currency; };
 
 // --- Entrance Fee Types ---
 type EntranceFee = { id: string; locationName: string; pax: number; numLocations: number; price: number; currency: Currency; };
@@ -123,7 +123,7 @@ export default function TourCalculatorPage() {
         setItemVisibility(prev => ({ ...prev, [itemId]: !prev[itemId] }));
     };
 
-     const updateCosts = useCallback((category: keyof TourCosts, data: any) => {
+    const updateCosts = useCallback((category: keyof TourCosts, data: any) => {
         setAllCosts(prev => ({ ...prev, [category]: data }));
     }, []);
 
@@ -131,7 +131,7 @@ export default function TourCalculatorPage() {
         costCategories.forEach(category => {
             try {
                 localStorage.setItem(`${LOCAL_STORAGE_KEY_PREFIX}${category}`, JSON.stringify(allCosts[category]));
-                window.dispatchEvent(new CustomEvent(`${category.replace(/-/g, '')}Update`));
+                window.dispatchEvent(new CustomEvent('storage-update'));
             } catch (error) {
                 console.error(`Failed to save ${category} to localStorage`, error);
             }
@@ -302,7 +302,7 @@ export default function TourCalculatorPage() {
         return totals;
     }, [allCosts.documents]);
     
-    const totalsByCategory: Record<string, Record<Currency, number>> = {
+    const totalsByCategory = {
         'ຄ່າທີ່ພັກ': accommodationTotals,
         'ຄ່າຂົນສົ່ງ': tripTotals,
         'ຄ່າປີ້ຍົນ': flightTotals,
@@ -353,7 +353,7 @@ export default function TourCalculatorPage() {
                 </div>
             </header>
             <main className="flex w-full flex-1 flex-col items-center gap-4 p-4 sm:px-6 sm:py-4 md:gap-8 bg-muted/40">
-                 <TotalCostCard />
+                 <TotalCostCard totalsByCategory={totalsByCategory} />
 
                  <div className="w-full max-w-7xl mx-auto flex flex-col gap-8">
                     <Card>
@@ -529,12 +529,12 @@ export default function TourCalculatorPage() {
                                                       <Button size="sm" variant="outline" onClick={() => addRoom(acc.id)}><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຫ້ອງ</Button>
                                                   </CardContent>
                                                   )}
+                                                  <SummaryFooter title="ລວມຄ່າທີ່ພັກທັງໝົດ" totals={accommodationTotals} />
                                               </Card>
                                           ))}
                                           <div className="flex gap-2 mt-2">
                                               <Button onClick={addAccommodation} className="flex-1"><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າທີ່ພັກ</Button>
                                           </div>
-                                          <SummaryFooter title="ລວມຄ່າທີ່ພັກທັງໝົດ" totals={accommodationTotals} />
                                         </div>
                                   </CostCategoryContent>
                                   
@@ -593,12 +593,12 @@ export default function TourCalculatorPage() {
                                                       </div>
                                                   </CardContent>
                                                   )}
+                                                  <SummaryFooter title="ລວມຄ່າຂົນສົ່ງທັງໝົດ" totals={tripTotals} />
                                               </Card>
                                           ))}
                                           <div className="flex gap-2 mt-2">
                                               <Button onClick={addTrip} className="flex-1"><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າຂົນສົ່ງ</Button>
                                           </div>
-                                          <SummaryFooter title="ລວມຄ່າຂົນສົ່ງທັງໝົດ" totals={tripTotals} />
                                       </div>
                                   </CostCategoryContent>
                                     {/* Flights */}
@@ -666,12 +666,12 @@ export default function TourCalculatorPage() {
                                                       </div>
                                                   </CardContent>
                                                   )}
+                                                  <SummaryFooter title="ລວມຄ່າປີ້ຍົນທັງໝົດ" totals={flightTotals} />
                                                 </Card>
                                             ))}
                                           <div className="flex gap-2 mt-2">
                                               <Button onClick={addFlight} className="flex-1"><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າປີ້ຍົນ</Button>
                                           </div>
-                                          <SummaryFooter title="ລວມຄ່າປີ້ຍົນທັງໝົດ" totals={flightTotals} />
                                         </div>
                                   </CostCategoryContent>
                                    {/* Train Tickets */}
@@ -743,12 +743,12 @@ export default function TourCalculatorPage() {
                                                       </div>
                                                     </CardContent>
                                                     )}
+                                                     <SummaryFooter title="ລວມຄ່າປີ້ລົດໄຟທັງໝົດ" totals={trainTotals} />
                                                 </Card>
                                             ))}
                                             <div className="flex gap-2 mt-2">
                                                 <Button onClick={addTrainTicket} className="flex-1"><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າປີ້ລົດໄຟ</Button>
                                             </div>
-                                            <SummaryFooter title="ລວມຄ່າປີ້ລົດໄຟທັງໝົດ" totals={trainTotals} />
                                       </div>
                                   </CostCategoryContent>
                                    {/* Entrance Fees */}
@@ -796,12 +796,12 @@ export default function TourCalculatorPage() {
                                                         </div>
                                                     </CardContent>
                                                     )}
+                                                     <SummaryFooter title="ລວມຄ່າເຂົ້າຊົມທັງໝົດ" totals={entranceFeeTotals} />
                                                  </Card>
                                             ))}
                                             <div className="flex gap-2 mt-2">
                                                 <Button onClick={addEntranceFee} className="flex-1"><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າເຂົ້າຊົມ</Button>
                                             </div>
-                                            <SummaryFooter title="ລວມຄ່າເຂົ້າຊົມທັງໝົດ" totals={entranceFeeTotals} />
                                       </div>
                                   </CostCategoryContent>
                                    {/* Meals */}
@@ -859,12 +859,12 @@ export default function TourCalculatorPage() {
                                                         </div>
                                                     </CardContent>
                                                     )}
+                                                    <SummaryFooter title="ລວມຄ່າອາຫານທັງໝົດ" totals={mealTotals} />
                                                 </Card>
                                             ))}
                                             <div className="flex gap-2 mt-2">
                                                 <Button onClick={addMealCost} className="flex-1"><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າອາຫານ</Button>
                                             </div>
-                                            <SummaryFooter title="ລວມຄ່າອາຫານທັງໝົດ" totals={mealTotals} />
                                      </div>
                                   </CostCategoryContent>
                                     {/* Guide */}
@@ -912,12 +912,12 @@ export default function TourCalculatorPage() {
                                                         </div>
                                                     </CardContent>
                                                     )}
+                                                     <SummaryFooter title="ລວມຄ່າໄກด์ທັງໝົດ" totals={guideTotals} />
                                                 </Card>
                                             ))}
                                             <div className="flex gap-2 mt-2">
                                                 <Button onClick={addGuideFee} className="flex-1"><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າໄກด์</Button>
                                             </div>
-                                            <SummaryFooter title="ລວມຄ່າໄກด์ທັງໝົດ" totals={guideTotals} />
                                      </div>
                                   </CostCategoryContent>
                                     {/* Documents */}
@@ -961,12 +961,12 @@ export default function TourCalculatorPage() {
                                                         </div>
                                                     </CardContent>
                                                     )}
+                                                     <SummaryFooter title="ລວມຄ່າເອກະສານທັງໝົດ" totals={documentTotals} />
                                                 </Card>
                                             ))}
                                             <div className="flex gap-2 mt-2">
                                                 <Button onClick={addDocumentFee} className="flex-1"><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າເອກະສານ</Button>
                                             </div>
-                                            <SummaryFooter title="ລວມຄ່າເອກະສານທັງໝົດ" totals={documentTotals} />
                                       </div>
                                   </CostCategoryContent>
                               </Accordion>
