@@ -306,7 +306,7 @@ export default function TourCalculatorPage() {
     const mealTotals = useMemo(() => {
         const totals: Record<Currency, number> = { USD: 0, THB: 0, LAK: 0, CNY: 0 };
         allCosts.meals.forEach(meal => {
-            totals[meal.currency] += ((meal.breakfast || 0) + (meal.lunch || 0) + (meal.dinner || 0)) * (meal.pricePerMeal || 0);
+            totals[meal.currency] += ((meal.breakfast || 0) + (meal.lunch || 0) + (meal.dinner || 0)) * (meal.pricePerMeal || 0) * (meal.pax || 0);
         });
         return totals;
     }, [allCosts.meals]);
