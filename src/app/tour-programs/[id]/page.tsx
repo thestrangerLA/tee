@@ -137,40 +137,40 @@ const CurrencyEntryTable = ({
                                     </TableCell>
                                      <TableCell className="p-1">
                                         <Input 
-                                            defaultValue={item.detail || ''} 
-                                            onBlur={(e) => onUpdateItem(item.id, 'detail', e.target.value)}
+                                            value={item.detail || ''} 
+                                            onChange={(e) => onUpdateItem(item.id, 'detail', e.target.value)}
                                             className="h-8 print:border-none print:pl-0 print:font-lao print:text-sm"
                                         />
                                     </TableCell>
                                     <TableCell className="p-1">
                                         <Input
                                             type="text"
-                                            defaultValue={formatCurrency(item.kip)}
-                                            onBlur={(e) => onUpdateItem(item.id, 'kip', parseFormattedNumber(e.target.value))}
+                                            value={formatCurrency(item.kip)}
+                                            onChange={(e) => onUpdateItem(item.id, 'kip', parseFormattedNumber(e.target.value))}
                                             className="h-8 text-right print:border-none print:text-sm"
                                         />
                                     </TableCell>
                                      <TableCell className="p-1">
                                         <Input
                                             type="text"
-                                            defaultValue={formatCurrency(item.baht)}
-                                            onBlur={(e) => onUpdateItem(item.id, 'baht', parseFormattedNumber(e.target.value))}
+                                            value={formatCurrency(item.baht)}
+                                            onChange={(e) => onUpdateItem(item.id, 'baht', parseFormattedNumber(e.target.value))}
                                             className="h-8 text-right print:border-none print:text-sm"
                                         />
                                     </TableCell>
                                      <TableCell className="p-1">
                                         <Input
                                             type="text"
-                                            defaultValue={formatCurrency(item.usd)}
-                                            onBlur={(e) => onUpdateItem(item.id, 'usd', parseFormattedNumber(e.target.value))}
+                                            value={formatCurrency(item.usd)}
+                                            onChange={(e) => onUpdateItem(item.id, 'usd', parseFormattedNumber(e.target.value))}
                                             className="h-8 text-right print:border-none print:text-sm"
                                         />
                                     </TableCell>
                                      <TableCell className="p-1">
                                         <Input
                                             type="text"
-                                            defaultValue={formatCurrency(item.cny)}
-                                            onBlur={(e) => onUpdateItem(item.id, 'cny', parseFormattedNumber(e.target.value))}
+                                            value={formatCurrency(item.cny)}
+                                            onChange={(e) => onUpdateItem(item.id, 'cny', parseFormattedNumber(e.target.value))}
                                             className="h-8 text-right print:border-none print:text-sm"
                                         />
                                     </TableCell>

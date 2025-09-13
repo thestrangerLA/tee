@@ -2,7 +2,6 @@
 
 "use client"
 
-import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calculator, BedDouble, Truck, Plane, TrainFront, Camera, UtensilsCrossed, Users, FileText } from 'lucide-react';
 
@@ -41,16 +40,6 @@ const categoryIcons: { [key: string]: React.ReactNode } = {
 
 
 export function TotalCostCard({ totalsByCategory }: TotalCostCardProps) {
-    const [isClient, setIsClient] = useState(false);
-
-    useEffect(() => {
-        setIsClient(true);
-    }, []);
-
-    if (!isClient) {
-        return null; 
-    }
-
     const hasData = Object.values(totalsByCategory).some(categoryTotals =>
         Object.values(categoryTotals).some(value => value > 0)
     );
