@@ -43,6 +43,22 @@ export const listenToTourPrograms = (callback: (items: TourProgram[]) => void) =
     return unsubscribe;
 };
 
+export const getAllTourPrograms = async (): Promise<TourProgram[]> => {
+    const q = query(programsCollectionRef);
+    const querySnapshot = await getDocs(q);
+    const programs: TourProgram[] = [];
+    querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        programs.push({
+             id: doc.id,
+            ...data,
+            date: (data.date as Timestamp).toDate(),
+            createdAt: (data.createdAt as Timestamp).toDate(),
+        } as TourProgram)
+    });
+    return programs;
+}
+
 export const getTourProgram = async (id: string): Promise<TourProgram | null> => {
     const docRef = doc(db, 'tourPrograms', id);
     const docSnap = await getDoc(docRef);

@@ -22,7 +22,8 @@ import {
     addTourIncomeItem,
     updateTourIncomeItem,
     deleteTourIncomeItem,
-    updateTourProgram
+    updateTourProgram,
+    getAllTourPrograms
 } from '@/services/tourProgramService';
 import type { TourCostItem, TourIncomeItem, TourProgram, Currency } from '@/lib/types';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -34,6 +35,15 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from '@/components/ui/skeleton';
 
+export const dynamic = 'force-static';
+
+export async function generateStaticParams() {
+  const programs = await getAllTourPrograms();
+ 
+  return programs.map((program) => ({
+    id: program.id,
+  }))
+}
 
 const formatCurrency = (value: number | null | undefined, includeSymbol = false) => {
     if (value === null || value === undefined || isNaN(value)) return includeSymbol ? '0' : '';
