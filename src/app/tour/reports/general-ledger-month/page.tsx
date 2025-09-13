@@ -18,6 +18,7 @@ const formatCurrency = (value: number) => {
 };
 
 const currencyKeys: (keyof CurrencyValues)[] = ['kip', 'baht', 'usd', 'cny'];
+const initialCurrencyValues: CurrencyValues = { kip: 0, baht: 0, usd: 0, cny: 0 };
 
 
 export default function GeneralLedgerMonthPage() {
@@ -42,14 +43,14 @@ export default function GeneralLedgerMonthPage() {
     }, []);
     
     const reportData = useMemo(() => {
-        if (!year || !month) return { transactions: [], income: {}, expense: {}, net: {} };
+        if (!year || !month) return { transactions: [], income: { ...initialCurrencyValues }, expense: { ...initialCurrencyValues }, net: { ...initialCurrencyValues } };
         
         const startDate = startOfMonth(displayDate);
         const endDate = endOfMonth(displayDate);
 
         const monthlyTransactions = transactions.filter(tx => isWithinInterval(tx.date, { start: startDate, end: endDate }));
         
-        const initialTotals = () => ({ kip: 0, baht: 0, usd: 0, cny: 0 });
+        const initialTotals = (): CurrencyValues => ({ kip: 0, baht: 0, usd: 0, cny: 0 });
         
         const income = initialTotals();
         const expense = initialTotals();
