@@ -62,7 +62,7 @@ interface TourCosts {
     trips: Trip[];
     flights: Flight[];
     trainTickets: TrainTicket[];
-    entranceFees: MealCost[];
+    entranceFees: EntranceFee[];
     meals: MealCost[];
     guides: GuideFee[];
     documents: DocumentFee[];
@@ -257,7 +257,7 @@ export default function TourCalculatorPage() {
     const addFlight = () => addItem('flights', { id: uuidv4(), from: '', to: '', departureTime: '08:00', pricePerPerson: 0, numPeople: 1, currency: 'USD' });
     const addTrainTicket = () => addItem('trainTickets', { id: uuidv4(), from: '', to: '', departureTime: '08:00', ticketClass: '', numTickets: 1, pricePerTicket: 0, currency: 'LAK' });
     const addEntranceFee = () => addItem('entranceFees', { id: uuidv4(), locationName: '', pax: 1, numLocations: 1, price: 0, currency: 'LAK' });
-    const addMealCost = () => addItem('meals', { id: uuidv4(), name: '', pax: 1, breakfast: 0, lunch: 0, dinner: 0, pricePerMeal: 0, currency: 'LAK' });
+    const addMealCost = () => addItem('meals', { id: uuidv4(), name: '', pax: 1, breakfast: 0, lunch: 0, pricePerMeal: 0, currency: 'LAK' });
     const addGuideFee = () => addItem('guides', { id: uuidv4(), guideName: '', numGuides: 1, numDays: 1, pricePerDay: 0, currency: 'LAK' });
     const addDocumentFee = () => addItem('documents', { id: uuidv4(), documentName: '', pax: 1, price: 0, currency: 'LAK' });
     
@@ -299,7 +299,7 @@ export default function TourCalculatorPage() {
     const entranceFeeTotals = useMemo(() => {
         const totals: Record<Currency, number> = { USD: 0, THB: 0, LAK: 0, CNY: 0 };
         allCosts.entranceFees.forEach(fee => {
-            totals[fee.currency] += (fee.pax || 0) * (fee.price || 0);
+            totals[fee.currency] += (fee.pax || 0) * (fee.price || 0) * (fee.numLocations || 0);
         });
         return totals;
     }, [allCosts.entranceFees]);
@@ -877,7 +877,7 @@ export default function TourCalculatorPage() {
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                         <div className="space-y-2">
                                                             <Label>ຊື່ສະຖານທີ່</Label>
-                                                            <Input value={fee.name} onChange={e => updateItem('entranceFees', fee.id, 'name', e.target.value)} placeholder="เช่น พระธาตุหลวง, ประตูชัย" />
+                                                            <Input value={fee.locationName} onChange={e => updateItem('entranceFees', fee.id, 'locationName', e.target.value)} placeholder="ເຊັ່ນ: ພະທາດຫຼວງ, ປະຕູໄຊ" />
                                                         </div>
                                                     </div>
                                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -887,11 +887,11 @@ export default function TourCalculatorPage() {
                                                         </div>
                                                         <div className="space-y-2">
                                                             <Label>ຈຳນວນສະຖານທີ່</Label>
-                                                            <Input type="number" min="1" value={fee.breakfast} onChange={e => updateItem('entranceFees', fee.id, 'breakfast', parseInt(e.target.value) || 1)} />
+                                                            <Input type="number" min="1" value={fee.numLocations} onChange={e => updateItem('entranceFees', fee.id, 'numLocations', parseInt(e.target.value) || 1)} />
                                                         </div>
                                                         <div className="space-y-2">
                                                             <Label>ລາຄາ</Label>
-                                                            <Input type="number" min="0" value={fee.pricePerMeal} onChange={e => updateItem('entranceFees', fee.id, 'pricePerMeal', parseFloat(e.target.value) || 0)} />
+                                                            <Input type="number" min="0" value={fee.price} onChange={e => updateItem('entranceFees', fee.id, 'price', parseFloat(e.target.value) || 0)} />
                                                         </div>
                                                         <div className="space-y-2">
                                                             <Label>ສະກຸນເງິນ</Label>
@@ -1096,3 +1096,5 @@ export default function TourCalculatorPage() {
     );
 
 }
+
+    
