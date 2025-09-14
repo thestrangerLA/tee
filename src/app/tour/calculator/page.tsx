@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { ArrowLeft, Save, Trash2, MapPin, Calendar as CalendarIcon, BedDouble, Truck, Plane, TrainFront, PlusCircle, Camera, UtensilsCrossed, Users, FileText, Copy, Clock, Eye, EyeOff, Download, History, Printer, ChevronsRight } from "lucide-react";
+import { ArrowLeft, Save, Trash2, MapPin, Calendar as CalendarIcon, BedDouble, Truck, Plane, TrainFront, PlusCircle, Camera, UtensilsCrossed, Users, FileText, Copy, Clock, Eye, EyeOff, Download, History, Printer, ChevronsRight, Percent } from "lucide-react";
 import { format } from 'date-fns';
 import { th } from 'date-fns/locale';
 import { TotalCostCard } from '@/components/tour/TotalCostCard';
@@ -133,6 +133,7 @@ export default function TourCalculatorPage() {
         CNY: { USD: 1 / 7.25, THB: 5.1, LAK: 3000 },
     });
     const [targetCurrency, setTargetCurrency] = useState<Currency>('LAK');
+    const [sellingPricePercentage, setSellingPricePercentage] = useState(20);
 
 
     useEffect(() => {
@@ -243,7 +244,7 @@ export default function TourCalculatorPage() {
         });
         updateCosts('accommodations', accommodations);
     };
-    const updateRoom = (accId: string, roomId: string, field: keyof Room, value: any) => {
+   const updateRoom = (accId: string, roomId: string, field: keyof Room, value: any) => {
         const updatedAccommodations = allCosts.accommodations.map(acc => {
             if (acc.id === accId) {
                 const updatedRooms = acc.rooms.map(room => 
@@ -373,6 +374,10 @@ export default function TourCalculatorPage() {
         });
         return total;
     }, [grandTotals, exchangeRates, targetCurrency]);
+
+    const sellingPrice = useMemo(() => {
+        return convertedTotal * (1 + (sellingPricePercentage || 0) / 100);
+    }, [convertedTotal, sellingPricePercentage]);
 
     const handleRateChange = (from: Currency, to: Currency, value: string) => {
         const rate = parseFloat(value) || 0;
@@ -1182,6 +1187,34 @@ export default function TourCalculatorPage() {
                                     </div>
                                 </CardContent>
                             </Card>
+
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>ລາຄາຂາຍ</CardTitle>
+                                    <CardDescription>ຄຳນວນລາຄາຂາຍໂດຍອີງໃສ່ເປີເຊັນທີ່ເພີ່ມຂຶ້ນ</CardDescription>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="selling-percentage">ຍອດລວມ x %</Label>
+                                        <div className="relative">
+                                            <Percent className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                            <Input
+                                                id="selling-percentage"
+                                                type="number"
+                                                value={sellingPricePercentage}
+                                                onChange={(e) => setSellingPricePercentage(Number(e.target.value))}
+                                                placeholder="20"
+                                                className="pl-10"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="border bg-background rounded-lg p-4 text-center">
+                                        <p className="text-sm text-muted-foreground">ລາຄາຂາຍສຸດທິ</p>
+                                        <p className="text-3xl font-bold text-primary">{formatNumber(sellingPrice, {maximumFractionDigits: 2})}</p>
+                                        <p className="font-semibold">{targetCurrency}</p>
+                                    </div>
+                                </CardContent>
+                            </Card>
                         </div>
                     </div>
                 </div>
@@ -1190,5 +1223,3 @@ export default function TourCalculatorPage() {
     );
 
 }
-
-
