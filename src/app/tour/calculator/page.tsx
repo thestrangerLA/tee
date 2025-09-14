@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { ArrowLeft, Save, Trash2, MapPin, Calendar as CalendarIcon, BedDouble, Truck, Plane, TrainFront, PlusCircle, Camera, UtensilsCrossed, Users, FileText, Copy, Clock, Eye, EyeOff, Download, History, Printer } from "lucide-react";
+import { ArrowLeft, Save, Trash2, MapPin, Calendar as CalendarIcon, BedDouble, Truck, Plane, TrainFront, PlusCircle, Camera, UtensilsCrossed, Users, FileText, Copy, Clock, Eye, EyeOff, Download, History, Printer, ChevronsRight } from "lucide-react";
 import { format } from 'date-fns';
 import { th } from 'date-fns/locale';
 import { TotalCostCard } from '@/components/tour/TotalCostCard';
@@ -125,6 +125,15 @@ export default function TourCalculatorPage() {
     
     const [itemVisibility, setItemVisibility] = useState<Record<string, boolean>>({});
     const [savedCalculations, setSavedCalculations] = useState<SavedCalculation[]>([]);
+    
+    const [exchangeRates, setExchangeRates] = useState({
+        USD: { THB: 36.7, LAK: 21800, CNY: 7.25 },
+        THB: { USD: 1 / 36.7, LAK: 605, CNY: 0.19 },
+        LAK: { USD: 1 / 21800, THB: 1 / 605, CNY: 1 / 3000 },
+        CNY: { USD: 1 / 7.25, THB: 5.1, LAK: 3000 },
+    });
+    const [targetCurrency, setTargetCurrency] = useState<Currency>('LAK');
+
 
     useEffect(() => {
         const saved = localStorage.getItem(SAVED_CALCULATIONS_KEY);
@@ -348,6 +357,27 @@ export default function TourCalculatorPage() {
         });
         return totals;
     }, [totalsByCategory]);
+    
+     const convertedTotal = useMemo(() => {
+        let total = 0;
+        (Object.keys(grandTotals) as Currency[]).forEach(fromCurrency => {
+            const amount = grandTotals[fromCurrency];
+            if (fromCurrency === targetCurrency) {
+                total += amount;
+            } else {
+                total += amount * (exchangeRates[fromCurrency]?.[targetCurrency] || 0);
+            }
+        });
+        return total;
+    }, [grandTotals, exchangeRates, targetCurrency]);
+
+    const handleRateChange = (from: Currency, to: Currency, value: string) => {
+        const rate = parseFloat(value) || 0;
+        setExchangeRates(prev => ({
+            ...prev,
+            [from]: { ...prev[from], [to]: rate }
+        }));
+    };
     
     const handlePrint = () => {
         window.print();
@@ -1070,13 +1100,13 @@ export default function TourCalculatorPage() {
                     
                     <div className="print:hidden"><TotalCostCard totalsByCategory={totalsByCategory} /></div>
 
-                    <div className="print:hidden">
-                         <Card>
+                    <div className="grid md:grid-cols-2 gap-8 print:hidden">
+                        <Card>
                             <CardHeader>
                                 <CardTitle>ຄ່າໃຊ້ຈ່າຍລວມທັງໝົດ</CardTitle>
                                 <CardDescription>ສະຫຼຸບລວມຍອດຄ່າໃຊ້ຈ່າຍທັງໝົດແຍກຕາມສະກຸນເງິນ</CardDescription>
                             </CardHeader>
-                            <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <CardContent className="grid grid-cols-2 gap-4">
                                 {(Object.keys(grandTotals) as Currency[]).map(currency => (
                                     <Card key={currency}>
                                         <CardHeader className="pb-2">
@@ -1089,6 +1119,59 @@ export default function TourCalculatorPage() {
                                 ))}
                             </CardContent>
                         </Card>
+                        
+                        <div className="space-y-4">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>ອັດຕາແລກປ່ຽນ</CardTitle>
+                                    <CardDescription>ໃສ່ອັດຕາແລກປ່ຽນເພື່ອຄຳນວນຍອດລວມ</CardDescription>
+                                </CardHeader>
+                                <CardContent className="grid grid-cols-2 gap-4">
+                                    {(Object.keys(exchangeRates) as Currency[]).map(from => (
+                                        <div key={from} className="space-y-2">
+                                            <Label className="font-semibold">1 {from}</Label>
+                                            {(Object.keys(exchangeRates[from]) as Currency[]).map(to => (
+                                                <div key={to} className="flex items-center gap-2">
+                                                    <ChevronsRight className="h-4 w-4 text-muted-foreground" />
+                                                    <Input
+                                                        type="number"
+                                                        value={exchangeRates[from][to]}
+                                                        onChange={(e) => handleRateChange(from, to as Currency, e.target.value)}
+                                                        className="h-8"
+                                                    />
+                                                    <Label htmlFor={`${from}-to-${to}`} className="text-sm">{to}</Label>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ))}
+                                </CardContent>
+                            </Card>
+
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>ຍອດລວມທີ່ແປງແລ້ວ</CardTitle>
+                                    <CardDescription>ຍອດລວມທັງໝົດໃນສະກຸນເງິນດຽວ</CardDescription>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    <div>
+                                        <Label htmlFor="target-currency">ເລືອກສະກຸນເງິນ</Label>
+                                        <Select value={targetCurrency} onValueChange={v => setTargetCurrency(v as Currency)}>
+                                            <SelectTrigger id="target-currency">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {(Object.keys(currencySymbols) as Currency[]).map(c => <SelectItem key={c} value={c}>{currencySymbols[c]}</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="border bg-background rounded-lg p-4 text-center">
+                                        <p className="text-sm text-muted-foreground">ຍອດລວມ</p>
+                                        <p className="text-3xl font-bold text-primary">{formatNumber(convertedTotal, {maximumFractionDigits: 2})}</p>
+                                        <p className="font-semibold">{targetCurrency}</p>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
                     </div>
                 </div>
             </main>
@@ -1096,3 +1179,4 @@ export default function TourCalculatorPage() {
     );
 
 }
+
