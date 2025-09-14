@@ -11,7 +11,7 @@ import { ArrowLeft, FileText, PlusCircle, MoreHorizontal, ChevronDown, Calendar 
 import { listenToTourPrograms, deleteTourProgram, updateTourProgram } from '@/services/tourProgramService';
 import type { TourProgram } from '@/lib/types';
 import { format, getYear, getMonth, startOfDay } from 'date-fns';
-import { th } from 'date-fns/locale';
+import { lo } from 'date-fns/locale';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -208,7 +208,7 @@ export default function TourProgramsListPage() {
                                     selected={program.date}
                                     onSelect={(date) => handleUpdateProgramDate(program.id, date)}
                                     initialFocus
-                                    locale={th}
+                                    locale={lo}
                                 />
                             </PopoverContent>
                         </Popover>
@@ -289,7 +289,7 @@ export default function TourProgramsListPage() {
                                     Object.entries(programsByMonth).sort(([a], [b]) => Number(a) - Number(b)).map(([month, programs]) => (
                                         <AccordionItem value={`month-${month}`} key={month}>
                                             <AccordionTrigger className="bg-muted/50 px-4 rounded-md text-base font-semibold">
-                                                {format(new Date(selectedYear, Number(month)), 'LLLL', { locale: th })}
+                                                {format(new Date(selectedYear, Number(month)), 'LLLL', { locale: lo })}
                                             </AccordionTrigger>
                                             <AccordionContent className="pt-2">
                                                 <div className="overflow-x-auto">
@@ -304,7 +304,7 @@ export default function TourProgramsListPage() {
                                     .map(({year, month, programs}) => (
                                         <AccordionItem value={`${year}-${month}`} key={`${year}-${month}`}>
                                             <AccordionTrigger className="bg-muted/50 px-4 rounded-md text-base font-semibold">
-                                                  {format(new Date(year, month), 'LLLL yyyy', { locale: th })}
+                                                  {format(new Date(year, month), 'LLLL yyyy', { locale: lo })}
                                             </AccordionTrigger>
                                              <AccordionContent className="pt-2">
                                                 <div className="overflow-x-auto">
@@ -326,3 +326,5 @@ export default function TourProgramsListPage() {
         </div>
     )
 }
+
+    

@@ -15,7 +15,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { format, startOfDay, isWithinInterval, startOfMonth, endOfMonth, getYear, getMonth, setMonth } from "date-fns";
-import { th } from "date-fns/locale";
+import { lo } from "date-fns/locale";
 import { ArrowLeft, Users, Calendar as CalendarIcon, Trash2, PlusCircle, ChevronDown } from "lucide-react";
 import { DebtorCreditorEntry } from '@/lib/types';
 import { listenToDebtorCreditorEntries, addDebtorCreditorEntry, updateDebtorCreditorEntry, deleteDebtorCreditorEntry } from '@/services/debtorCreditorService';
@@ -108,11 +108,11 @@ const AddEntryForm = ({ onAddEntry, defaultDate }: { onAddEntry: (entry: Omit<De
                             <PopoverTrigger asChild>
                                 <Button variant={"outline"} className="w-full justify-start text-left font-normal">
                                     <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {date ? format(date, "PPP", { locale: th }) : <span>เลือกวันที่</span>}
+                                    {date ? format(date, "PPP", { locale: lo }) : <span>เลือกวันที่</span>}
                                 </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-auto p-0">
-                                <Calendar mode="single" selected={date} onSelect={setDate} initialFocus locale={th} />
+                                <Calendar mode="single" selected={date} onSelect={setDate} initialFocus locale={lo} />
                             </PopoverContent>
                         </Popover>
                     </div>
@@ -218,7 +218,7 @@ export default function DebtorsPage() {
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="outline" className="flex items-center gap-2">
-                        {format(displayMonth, "LLLL yyyy", { locale: th })}
+                        {format(displayMonth, "LLLL yyyy", { locale: lo })}
                         <ChevronDown className="h-4 w-4" />
                     </Button>
                 </DropdownMenuTrigger>
@@ -238,7 +238,7 @@ export default function DebtorsPage() {
                                                 setDisplayMonth(newDate);
                                             }}
                                         >
-                                            {format(month, "LLLL", { locale: th })}
+                                            {format(month, "LLLL", { locale: lo })}
                                         </DropdownMenuItem>
                                     ))}
                                 </DropdownMenuSubContent>
@@ -291,7 +291,7 @@ export default function DebtorsPage() {
                          <Card>
                             <CardHeader>
                                 <CardTitle>รายการประจำเดือน</CardTitle>
-                                <CardDescription>แสดงรายการทั้งหมดในเดือน {format(displayMonth, "LLLL yyyy", { locale: th })}</CardDescription>
+                                <CardDescription>แสดงรายการทั้งหมดในเดือน {format(displayMonth, "LLLL yyyy", { locale: lo })}</CardDescription>
                             </CardHeader>
                             <CardContent>
                                 {dailySummaries.length > 0 ? (
@@ -366,3 +366,5 @@ export default function DebtorsPage() {
         </div>
     );
 }
+
+    

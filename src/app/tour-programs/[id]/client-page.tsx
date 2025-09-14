@@ -26,7 +26,7 @@ import type { TourCostItem, TourIncomeItem, TourProgram, Currency } from '@/lib/
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from 'date-fns';
-import { th } from 'date-fns/locale';
+import { lo } from 'date-fns/locale';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -126,7 +126,7 @@ const CurrencyEntryTable = ({
                                                     selected={item.date || undefined}
                                                     onSelect={(date) => onUpdateItem(item.id, 'date', date || new Date())}
                                                     initialFocus
-                                                    locale={th}
+                                                    locale={lo}
                                                 />
                                             </PopoverContent>
                                         </Popover>
@@ -468,7 +468,7 @@ export default function TourProgramClientPage({ initialProgram }: { initialProgr
             <CardHeader>
                 <CardTitle>ລາຍລະອຽດໂປຣແກຣມ ແລະ ຂໍ້ມູນກຸ່ມ</CardTitle>
                 <CardDescription>
-                    ວັນທີສ້າງ: {localProgram.createdAt ? format(localProgram.createdAt, "PPP", {locale: th}) : '-'}
+                    ວັນທີສ້າງ: {localProgram.createdAt ? format(localProgram.createdAt, "PPP", {locale: lo}) : '-'}
                      {isSaving && <span className="ml-4 text-blue-500 animate-pulse">ກຳລັງບັນທึก...</span>}
                 </CardDescription>
             </CardHeader>
@@ -658,7 +658,7 @@ export default function TourProgramClientPage({ initialProgram }: { initialProgr
               <Card className="print:hidden">
                   <CardHeader>
                       <CardTitle>ສະຫຼຸບຜົນປະກອບການ</CardTitle>
-                      <CardDescription>ສະຫຼຸບລາຍຮັບ, ຕົ້ນທຶນ, ແລະกำไร/ขาดทุน สำหรับໂປຣແກຣມนี้</CardDescription>
+                      <CardDescription>ສະຫຼຸບລາຍຮັບ, ຕົ້ນທຶນ, ແລະกำไร/ขาดทุน สำหรับໂປຣແກຣມນີ້</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6 print:p-0 print:space-y-2">
                        <div>
@@ -725,10 +725,10 @@ export default function TourProgramClientPage({ initialProgram }: { initialProgr
                             {dividendStructure.map((item) => (
                                 <TableRow key={item.id}>
                                     <TableCell className="font-medium p-1">
-                                        <Input 
+                                        <Textarea 
                                             value={item.name} 
                                             onChange={(e) => handleDividendChange(item.id, 'name', e.target.value)}
-                                            className="h-8"
+                                            className="h-8 min-h-[32px]"
                                         />
                                     </TableCell>
                                     <TableCell className="text-center p-1">
@@ -777,3 +777,5 @@ export default function TourProgramClientPage({ initialProgram }: { initialProgr
     </div>
   )
 }
+
+    

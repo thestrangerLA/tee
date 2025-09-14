@@ -16,7 +16,7 @@ import type { TourProgram, Currency } from '@/lib/types';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format, startOfDay } from 'date-fns';
-import { th } from 'date-fns/locale';
+import { lo } from 'date-fns/locale';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 
@@ -137,11 +137,11 @@ export default function NewTourProgramPage() {
                                         <PopoverTrigger asChild>
                                             <Button variant={"outline"} className="w-full justify-start text-left font-normal">
                                                 <CalendarIcon className="mr-2 h-4 w-4" />
-                                                {date ? format(date, "PPP", { locale: th }) : <span>ເລືອກວັນທີ</span>}
+                                                {date ? format(date, "PPP", { locale: lo }) : <span>ເລືອກວັນທີ</span>}
                                             </Button>
                                         </PopoverTrigger>
                                         <PopoverContent className="w-auto p-0">
-                                            <Calendar mode="single" selected={date} onSelect={setDate} initialFocus locale={th} />
+                                            <Calendar mode="single" selected={date} onSelect={setDate} initialFocus locale={lo} />
                                         </PopoverContent>
                                     </Popover>
                                 </div>
@@ -210,3 +210,5 @@ export default function NewTourProgramPage() {
         </div>
     );
 }
+
+    

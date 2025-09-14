@@ -11,7 +11,7 @@ import { ArrowLeft, FilePieChart, Calendar as CalendarIcon } from "lucide-react"
 import { listenToAllTourPrograms, listenToAllTourCostItems, listenToAllTourIncomeItems } from '@/services/tourReportService';
 import type { TourProgram, TourCostItem, TourIncomeItem, Currency } from '@/lib/types';
 import { getYear, format, startOfYear, endOfYear, isWithinInterval } from 'date-fns';
-import { th } from "date-fns/locale";
+import { lo } from "date-fns/locale";
 import {
   Popover,
   PopoverContent,
@@ -147,7 +147,7 @@ export default function ProgramSummaryPage() {
                                     </Button>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-auto p-0">
-                                    <Calendar mode="single" selected={startDate} onSelect={setStartDate} initialFocus locale={th} />
+                                    <Calendar mode="single" selected={startDate} onSelect={setStartDate} initialFocus locale={lo} />
                                 </PopoverContent>
                             </Popover>
                         </div>
@@ -161,7 +161,7 @@ export default function ProgramSummaryPage() {
                                     </Button>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-auto p-0">
-                                    <Calendar mode="single" selected={endDate} onSelect={setEndDate} initialFocus locale={th} />
+                                    <Calendar mode="single" selected={endDate} onSelect={setEndDate} initialFocus locale={lo} />
                                 </PopoverContent>
                             </Popover>
                         </div>
@@ -198,7 +198,7 @@ export default function ProgramSummaryPage() {
                                                 <div className="flex justify-between w-full pr-4 items-center">
                                                     <div className="text-left">
                                                         <p className="font-bold">{program.programName}</p>
-                                                        <p className="text-sm text-muted-foreground">{program.tourCode} | {program.date ? format(program.date, "dd MMM yyyy", { locale: th }) : ''}</p>
+                                                        <p className="text-sm text-muted-foreground">{program.tourCode} | {program.date ? format(program.date, "dd MMM yyyy", { locale: lo }) : ''}</p>
                                                     </div>
                                                     <div className="flex gap-4 text-xs font-mono text-right">
                                                         {currencies.map(c => (
@@ -264,3 +264,5 @@ export default function ProgramSummaryPage() {
         </div>
     );
 }
+
+    

@@ -48,19 +48,6 @@ export default function TourPage() {
               </CardContent>
             </Card>
           </Link>
-          <Link href="/debtors">
-            <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-2xl font-bold font-headline">ລູກໜີ້-ເຈົ້າໜີ້</CardTitle>
-                <Users className="h-8 w-8 text-primary" />
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  ຈັດການ ແລະ ຕິດຕາມລາຍການລູກໜີ້ ແລະ ເຈົ້າໜີ້ທີ່ກ່ຽວຂ້ອງກັບທົວ
-                </p>
-              </CardContent>
-            </Card>
-          </Link>
            <Link href="/tour/reports">
             <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -92,3 +79,5 @@ export default function TourPage() {
     </div>
   )
 }
+
+    

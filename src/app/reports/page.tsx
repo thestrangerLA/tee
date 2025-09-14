@@ -11,7 +11,7 @@ import { ArrowLeft, BarChart, ArrowUpCircle, ArrowDownCircle, Scale, Minus } fro
 import { listenToAllTransactions } from '@/services/accountancyService';
 import type { Transaction } from '@/lib/types';
 import { getYear, getMonth, format } from 'date-fns';
-import { th } from "date-fns/locale";
+import { lo } from "date-fns/locale";
 
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'LAK', currencyDisplay: 'code', minimumFractionDigits: 0 }).format(value).replace('LAK', 'KIP');
@@ -192,7 +192,7 @@ export default function ReportsPage() {
                                                     {yearSummary.months.map(monthSummary => (
                                                          <TableRow key={monthSummary.month}>
                                                             <TableCell className="font-medium">
-                                                                {format(new Date(yearSummary.year, monthSummary.month), "LLLL", { locale: th })}
+                                                                {format(new Date(yearSummary.year, monthSummary.month), "LLLL", { locale: lo })}
                                                             </TableCell>
                                                             <TableCell className="text-right">{formatCurrency(monthSummary.income)}</TableCell>
                                                             <TableCell className="text-right">{formatCurrency(monthSummary.expense)}</TableCell>
@@ -216,3 +216,5 @@ export default function ReportsPage() {
         </div>
     );
 }
+
+    

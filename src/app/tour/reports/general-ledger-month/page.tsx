@@ -11,7 +11,7 @@ import { ArrowLeft, BookOpen, Printer } from "lucide-react";
 import { listenToTourTransactions } from '@/services/tourAccountancyService';
 import type { Transaction, CurrencyValues } from '@/lib/types';
 import { getMonth, format, setMonth, isWithinInterval, startOfMonth, endOfMonth, getYear } from 'date-fns';
-import { th } from "date-fns/locale";
+import { lo } from "date-fns/locale";
 
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('th-TH', { minimumFractionDigits: 0 }).format(value);
@@ -74,7 +74,7 @@ export default function GeneralLedgerMonthPage() {
 
     }, [transactions, displayDate, year, month]);
 
-    const headerTitle = format(displayDate, 'LLLL yyyy', { locale: th });
+    const headerTitle = format(displayDate, 'LLLL yyyy', { locale: lo });
     
     return (
         <div className="flex min-h-screen w-full flex-col bg-muted/40 print:bg-white">
@@ -178,3 +178,5 @@ export default function GeneralLedgerMonthPage() {
         </div>
     );
 }
+
+    

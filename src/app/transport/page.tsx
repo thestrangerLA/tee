@@ -16,7 +16,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format, startOfDay, isWithinInterval, startOfMonth, endOfMonth, getMonth, setMonth, getYear, isSameDay } from 'date-fns';
-import { th } from 'date-fns/locale';
+import { lo } from 'date-fns/locale';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuPortal, DropdownMenuSubTrigger, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 
@@ -227,7 +227,7 @@ export default function TransportPage() {
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="outline" className="flex items-center gap-2">
-                        {format(displayMonth, "LLLL yyyy", { locale: th })}
+                        {format(displayMonth, "LLLL yyyy", { locale: lo })}
                         <ChevronDown className="h-4 w-4" />
                     </Button>
                 </DropdownMenuTrigger>
@@ -247,7 +247,7 @@ export default function TransportPage() {
                                                 setDisplayMonth(newDate);
                                             }}
                                         >
-                                            {format(month, "LLLL", { locale: th })}
+                                            {format(month, "LLLL", { locale: lo })}
                                         </DropdownMenuItem>
                                     ))}
                                 </DropdownMenuSubContent>
@@ -350,3 +350,5 @@ export default function TransportPage() {
         </div>
     );
 }
+
+    
