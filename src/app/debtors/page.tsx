@@ -34,7 +34,7 @@ import { Badge } from '@/components/ui/badge';
 
 
 const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('th-TH', { minimumFractionDigits: 0 }).format(value);
+    return new Intl.NumberFormat('lo-LA', { minimumFractionDigits: 0 }).format(value);
 };
 
 const AddEntryForm = ({ onAddEntry, defaultDate }: { onAddEntry: (entry: Omit<DebtorCreditorEntry, 'id' | 'createdAt'>) => Promise<void>, defaultDate: Date }) => {
@@ -52,8 +52,8 @@ const AddEntryForm = ({ onAddEntry, defaultDate }: { onAddEntry: (entry: Omit<De
         e.preventDefault();
         if (!date || !amount || !description) {
             toast({
-                title: "ข้อผิดพลาด",
-                description: "กรุณากรอกข้อมูลให้ครบถ้วน",
+                title: "ຂໍ້ຜິດພາດ",
+                description: "ກະລຸນາປ້ອນຂໍ້ມູນໃຫ້ຄົບຖ້ວນ",
                 variant: "destructive",
             });
             return;
@@ -67,7 +67,7 @@ const AddEntryForm = ({ onAddEntry, defaultDate }: { onAddEntry: (entry: Omit<De
                 description,
                 isPaid: false
             });
-            toast({ title: "เพิ่มรายการสำเร็จ" });
+            toast({ title: "ເພີ່ມລາຍການສຳເລັດ" });
             // Reset form
             setType('debtor');
             setDate(defaultDate);
@@ -76,8 +76,8 @@ const AddEntryForm = ({ onAddEntry, defaultDate }: { onAddEntry: (entry: Omit<De
         } catch (error) {
             console.error("Error adding entry: ", error);
             toast({
-                title: "เกิดข้อผิดพลาด",
-                description: "ไม่สามารถเพิ่มรายการได้",
+                title: "ເກີດຂໍ້ຜິດພາດ",
+                description: "ບໍ່ສາມາດເພີ່ມລາຍການໄດ້",
                 variant: "destructive",
             });
         }
@@ -86,7 +86,7 @@ const AddEntryForm = ({ onAddEntry, defaultDate }: { onAddEntry: (entry: Omit<De
     return (
         <Card>
             <CardHeader>
-                <CardTitle>เพิ่มรายการลูกหนี้/เจ้าหนี้ทั่วไป</CardTitle>
+                <CardTitle>ເພີ່ມລາຍການລູກໜີ້/ເຈົ້າໜີ້ທົ່ວໄປ</CardTitle>
             </CardHeader>
             <CardContent>
                 <form onSubmit={handleSubmit} className="grid gap-6">
@@ -94,21 +94,21 @@ const AddEntryForm = ({ onAddEntry, defaultDate }: { onAddEntry: (entry: Omit<De
                         <RadioGroup value={type} onValueChange={(v) => setType(v as 'debtor' | 'creditor')} className="flex gap-4">
                             <div className="flex items-center space-x-2">
                                 <RadioGroupItem value="debtor" id="r-debtor" />
-                                <Label htmlFor="r-debtor">ลูกหนี้ (ต้องรับเงิน)</Label>
+                                <Label htmlFor="r-debtor">ລູກໜີ້ (ຕ້ອງຮັບເງິນ)</Label>
                             </div>
                             <div className="flex items-center space-x-2">
                                 <RadioGroupItem value="creditor" id="r-creditor" />
-                                <Label htmlFor="r-creditor">เจ้าหนี้ (ต้องจ่ายเงิน)</Label>
+                                <Label htmlFor="r-creditor">ເຈົ້າໜີ້ (ຕ້ອງຈ່າຍເງິນ)</Label>
                             </div>
                         </RadioGroup>
                     </div>
                     <div className="grid gap-3">
-                        <Label htmlFor="date">วันที่</Label>
+                        <Label htmlFor="date">ວັນທີ</Label>
                         <Popover>
                             <PopoverTrigger asChild>
                                 <Button variant={"outline"} className="w-full justify-start text-left font-normal">
                                     <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {date ? format(date, "PPP", { locale: lo }) : <span>เลือกวันที่</span>}
+                                    {date ? format(date, "PPP", { locale: lo }) : <span>ເລືອກວັນທີ</span>}
                                 </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-auto p-0">
@@ -117,16 +117,16 @@ const AddEntryForm = ({ onAddEntry, defaultDate }: { onAddEntry: (entry: Omit<De
                         </Popover>
                     </div>
                     <div className="grid gap-3">
-                        <Label htmlFor="amount">จำนวนเงิน</Label>
+                        <Label htmlFor="amount">ຈຳນວນເງິນ</Label>
                         <Input id="amount" type="number" placeholder="0" value={amount || ''} onChange={(e) => setAmount(Number(e.target.value))} required />
                     </div>
                     <div className="grid gap-3">
-                        <Label htmlFor="description">รายละเอียด/ชื่อ</Label>
-                        <Textarea id="description" placeholder="เช่น ค่าปุ๋ย, นาย ก." value={description} onChange={(e) => setDescription(e.target.value)} required />
+                        <Label htmlFor="description">ລາຍລະອຽດ/ຊື່</Label>
+                        <Textarea id="description" placeholder="ເຊັ່ນ: ຄ່າຝຸ່ນ, ນາຍ ກ." value={description} onChange={(e) => setDescription(e.target.value)} required />
                     </div>
                     <Button type="submit" className="w-full">
                         <PlusCircle className="mr-2 h-4 w-4" />
-                        เพิ่มรายการ
+                        ເພີ່ມລາຍການ
                     </Button>
                 </form>
             </CardContent>
@@ -195,18 +195,18 @@ export default function DebtorsPage() {
             // No toast for inline edits to avoid being noisy
         } catch (error) {
             console.error("Error updating entry: ", error);
-            toast({ title: "เกิดข้อผิดพลาด", variant: "destructive" });
+            toast({ title: "ເກີດຂໍ້ຜິດພາດ", variant: "destructive" });
         }
     };
 
     const handleDeleteEntry = async (id: string) => {
-        if (!window.confirm("คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?")) return;
+        if (!window.confirm("ເຈົ້າແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບລາຍການນີ້?")) return;
         try {
             await deleteDebtorCreditorEntry(id);
-            toast({ title: "ลบรายการสำเร็จ" });
+            toast({ title: "ລຶບລາຍການສຳເລັດ" });
         } catch (error) {
             console.error("Error deleting entry: ", error);
-            toast({ title: "เกิดข้อผิดพลาด", variant: "destructive" });
+            toast({ title: "ເກີດຂໍ້ຜິດພາດ", variant: "destructive" });
         }
     };
 
@@ -254,14 +254,14 @@ export default function DebtorsPage() {
         <div className="flex min-h-screen w-full flex-col bg-muted/40">
             <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
                 <Button variant="outline" size="icon" className="h-8 w-8" asChild>
-                    <Link href="/">
+                    <Link href="/agriculture">
                         <ArrowLeft className="h-4 w-4" />
-                        <span className="sr-only">กลับไปหน้าหลัก</span>
+                        <span className="sr-only">ກັບໄປໜ້າຫຼັກ</span>
                     </Link>
                 </Button>
                 <div className="flex items-center gap-2">
                     <Users className="h-6 w-6 text-primary" />
-                    <h1 className="text-xl font-bold tracking-tight">ลูกหนี้/เจ้าหนี้ทั่วไป</h1>
+                    <h1 className="text-xl font-bold tracking-tight">ລູກໜີ້/ເຈົ້າໜີ້ທົ່ວໄປ</h1>
                 </div>
                 <div className="ml-auto">
                     <MonthYearSelector />
@@ -273,15 +273,15 @@ export default function DebtorsPage() {
                         <AddEntryForm onAddEntry={handleAddEntry} defaultDate={displayMonth} />
                          <Card>
                             <CardHeader>
-                                <CardTitle>สรุปยอด (เดือนที่เลือก)</CardTitle>
+                                <CardTitle>ສະຫຼຸບຍອດ (ເດືອນທີ່ເລືອກ)</CardTitle>
                             </CardHeader>
                             <CardContent className="grid gap-4">
                                 <div className="flex items-center justify-between rounded-lg border p-4">
-                                    <h3 className="text-lg font-semibold">ลูกหนี้คงค้าง</h3>
+                                    <h3 className="text-lg font-semibold">ລູກໜີ້ຄົງຄ້າງ</h3>
                                     <p className="text-xl font-bold text-red-600">{formatCurrency(summaryTotals.totalDebtors)}</p>
                                 </div>
                                 <div className="flex items-center justify-between rounded-lg border p-4">
-                                    <h3 className="text-lg font-semibold">เจ้าหนี้คงค้าง</h3>
+                                    <h3 className="text-lg font-semibold">ເຈົ້າໜີ້ຄົງຄ້າງ</h3>
                                     <p className="text-xl font-bold text-yellow-600">{formatCurrency(summaryTotals.totalCreditors)}</p>
                                 </div>
                             </CardContent>
@@ -290,8 +290,8 @@ export default function DebtorsPage() {
                     <div className="lg:col-span-2">
                          <Card>
                             <CardHeader>
-                                <CardTitle>รายการประจำเดือน</CardTitle>
-                                <CardDescription>แสดงรายการทั้งหมดในเดือน {format(displayMonth, "LLLL yyyy", { locale: lo })}</CardDescription>
+                                <CardTitle>ລາຍການປະຈຳເດືອນ</CardTitle>
+                                <CardDescription>ສະແດງລາຍການທັງໝົດໃນເດືອນ {format(displayMonth, "LLLL yyyy", { locale: lo })}</CardDescription>
                             </CardHeader>
                             <CardContent>
                                 {dailySummaries.length > 0 ? (
@@ -300,18 +300,18 @@ export default function DebtorsPage() {
                                             <AccordionItem value={`item-${index}`} key={index}>
                                                 <AccordionTrigger>
                                                     <div className="flex justify-between w-full pr-4">
-                                                        <div className="font-semibold">{`วันที่ ${format(summary.date, "d")}`}</div>
+                                                        <div className="font-semibold">{`ວັນທີ ${format(summary.date, "d")}`}</div>
                                                     </div>
                                                 </AccordionTrigger>
                                                 <AccordionContent>
                                                     <Table>
                                                         <TableHeader>
                                                             <TableRow>
-                                                                <TableHead>ประเภท</TableHead>
-                                                                <TableHead>รายละเอียด</TableHead>
-                                                                <TableHead className="text-right">จำนวนเงิน</TableHead>
-                                                                <TableHead className="text-center">ชำระแล้ว</TableHead>
-                                                                <TableHead><span className="sr-only">ลบ</span></TableHead>
+                                                                <TableHead>ປະເພດ</TableHead>
+                                                                <TableHead>ລາຍລະອຽດ</TableHead>
+                                                                <TableHead className="text-right">ຈຳນວນເງິນ</TableHead>
+                                                                <TableHead className="text-center">ຊຳລະແລ້ວ</TableHead>
+                                                                <TableHead><span className="sr-only">ລຶບ</span></TableHead>
                                                             </TableRow>
                                                         </TableHeader>
                                                         <TableBody>
@@ -319,7 +319,7 @@ export default function DebtorsPage() {
                                                             <TableRow key={entry.id} className={entry.isPaid ? 'bg-green-50/50 text-muted-foreground' : (entry.type === 'debtor' ? 'bg-red-50/50' : 'bg-yellow-50/50')}>
                                                                 <TableCell className="p-2">
                                                                      <Badge variant={entry.type === 'debtor' ? 'destructive' : 'secondary'} className="w-[60px] justify-center">
-                                                                        {entry.type === 'debtor' ? 'ลูกหนี้' : 'เจ้าหนี้'}
+                                                                        {entry.type === 'debtor' ? 'ລູກໜີ້' : 'ເຈົ້າໜີ້'}
                                                                     </Badge>
                                                                 </TableCell>
                                                                 <TableCell className="font-medium p-2">
@@ -355,7 +355,7 @@ export default function DebtorsPage() {
                                     </Accordion>
                                 ) : (
                                     <div className="text-center text-muted-foreground py-8">
-                                        ไม่มีรายการในเดือนที่เลือก
+                                        ບໍ່ມີລາຍການໃນເດືອນທີ່ເລືອກ
                                     </div>
                                 )}
                             </CardContent>
@@ -366,5 +366,3 @@ export default function DebtorsPage() {
         </div>
     );
 }
-
-    

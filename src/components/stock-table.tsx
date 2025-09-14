@@ -33,19 +33,19 @@ import { Input } from "./ui/input"
 import { cn } from "@/lib/utils"
 
 function formatCurrency(amount: number, currency: 'Kip' | 'Baht') {
-    const currencySymbol = currency === 'Kip' ? ' กีบ' : ' บาท';
-    return new Intl.NumberFormat('th-TH', { minimumFractionDigits: 0 }).format(amount) + currencySymbol;
+    const currencySymbol = currency === 'Kip' ? ' ກີບ' : ' ບາດ';
+    return new Intl.NumberFormat('lo-LA', { minimumFractionDigits: 0 }).format(amount) + currencySymbol;
 }
 
 const categoryColors: Record<string, string> = {
-    'ปุ๋ย': 'bg-green-100',
-    'เมล็ดพันธุ์': 'bg-yellow-100',
-    'ยาพืช': 'bg-red-100',
-    'ยาสัตว์': 'bg-rose-100',
-    'อุปกรณ์': 'bg-blue-100',
-    'ข้าว': 'bg-amber-100',
-    'หัวอาหาร': 'bg-orange-100',
-    'วิตามิน': 'bg-purple-100',
+    'ຝຸ່ນ': 'bg-green-100',
+    'ແນວພັນ': 'bg-yellow-100',
+    'ຢາພືດ': 'bg-red-100',
+    'ຢາສັດ': 'bg-rose-100',
+    'ອຸປະກອນ': 'bg-blue-100',
+    'ເຂົ້າ': 'bg-amber-100',
+    'ຫົວອາຫານ': 'bg-orange-100',
+    'ວິຕາມິນ': 'bg-purple-100',
 };
 
 const getCategoryColor = (category: string) => categoryColors[category] || 'bg-gray-100';
@@ -88,9 +88,9 @@ export function StockTable({ data, categories, onAddItem, onUpdateItem, onDelete
         <CardHeader>
             <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                 <div>
-                    <CardTitle>สินค้าคงคลัง</CardTitle>
+                    <CardTitle>ສິນຄ້າໃນຄັງ</CardTitle>
                     <CardDescription>
-                    จัดการสินค้าและดูระดับสต็อกของคุณ
+                    ຈັດການສິນຄ້າ ແລະ ເບິ່ງລະດັບສະຕັອກຂອງທ່ານ
                     </CardDescription>
                 </div>
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full md:w-auto">
@@ -98,7 +98,7 @@ export function StockTable({ data, categories, onAddItem, onUpdateItem, onDelete
                         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                         <Input
                           type="search"
-                          placeholder="ค้นหาสินค้า..."
+                          placeholder="ຄົ້ນຫາສິນຄ້າ..."
                           className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[320px]"
                           value={searchQuery}
                           onChange={(e) => onSearchQueryChange(e.target.value)}
@@ -108,13 +108,13 @@ export function StockTable({ data, categories, onAddItem, onUpdateItem, onDelete
                         <Button size="sm" variant="outline" className="h-9 gap-1 shrink-0">
                             <File className="h-3.5 w-3.5" />
                             <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                            ส่งออก
+                            ສົ່ງອອກ
                             </span>
                         </Button>
                         <Button size="sm" className="h-9 gap-1 shrink-0" onClick={() => setAddItemOpen(true)}>
                             <PlusCircle className="h-3.5 w-3.5" />
                             <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                            เพิ่มสินค้า
+                            ເພີ່ມສິນຄ້າ
                             </span>
                         </Button>
                     </div>
@@ -126,15 +126,15 @@ export function StockTable({ data, categories, onAddItem, onUpdateItem, onDelete
             <Table>
             <TableHeader>
                 <TableRow>
-                <TableHead className="w-[250px] text-blue-600">ชื่อสินค้า</TableHead>
-                <TableHead className="text-right text-red-600">ราคาต้นทุน (กีบ)</TableHead>
-                <TableHead className="text-right text-red-600">ราคาต้นทุน (บาท)</TableHead>
-                <TableHead className="text-right text-green-600">ราคาขายส่ง</TableHead>
-                <TableHead className="text-right text-purple-600">ราคาขายปลีก</TableHead>
-                <TableHead className="text-right w-[120px] text-cyan-600">สต็อกปัจจุบัน</TableHead>
-                <TableHead className="text-right text-fuchsia-600">มูลค่า (กีบ)</TableHead>
+                <TableHead className="w-[250px] text-blue-600">ຊື່ສິນຄ້າ</TableHead>
+                <TableHead className="text-right text-red-600">ລາຄາຕົ້ນທຶນ (ກີບ)</TableHead>
+                <TableHead className="text-right text-red-600">ລາຄາຕົ້ນທຶນ (ບາດ)</TableHead>
+                <TableHead className="text-right text-green-600">ລາຄາຂາຍສົ່ງ</TableHead>
+                <TableHead className="text-right text-purple-600">ລາຄາຂາຍຍ່ອຍ</TableHead>
+                <TableHead className="text-right w-[120px] text-cyan-600">ສະຕັອກປັດຈຸບັນ</TableHead>
+                <TableHead className="text-right text-fuchsia-600">ມູນຄ່າ (ກີບ)</TableHead>
                 <TableHead>
-                    <span className="sr-only">การดำเนินการ</span>
+                    <span className="sr-only">ການດຳເນີນການ</span>
                 </TableHead>
                 </TableRow>
             </TableHeader>
@@ -216,12 +216,12 @@ export function StockTable({ data, categories, onAddItem, onUpdateItem, onDelete
                                             variant="ghost"
                                         >
                                             <MoreHorizontal className="h-4 w-4" />
-                                            <span className="sr-only">สลับเมนู</span>
+                                            <span className="sr-only">Toggle menu</span>
                                         </Button>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end">
-                                        <DropdownMenuLabel>การดำเนินการ</DropdownMenuLabel>
-                                        <DropdownMenuItem onClick={() => onDeleteItem(item.id)}>ลบ</DropdownMenuItem>
+                                        <DropdownMenuLabel>ການດຳເນີນການ</DropdownMenuLabel>
+                                        <DropdownMenuItem onClick={() => onDeleteItem(item.id)}>ລົບ</DropdownMenuItem>
                                         </DropdownMenuContent>
                                     </DropdownMenu>
                                 </TableCell>
@@ -236,7 +236,7 @@ export function StockTable({ data, categories, onAddItem, onUpdateItem, onDelete
       </CardContent>
       <CardFooter className="px-4 py-2 md:px-6 md:py-3">
         <div className="text-xs text-muted-foreground">
-          แสดง <strong>{data.length}</strong> จาก <strong>{data.length}</strong> สินค้า
+          ສະແດງ <strong>{data.length}</strong> ຈາກ <strong>{data.length}</strong> ສິນຄ້າ
         </div>
       </CardFooter>
     </Card>

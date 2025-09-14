@@ -62,55 +62,55 @@ export default function StockPage() {
   }, {} as Record<string, number>);
 
   const formatCurrency = (value: number, currency: 'Kip' | 'Baht') => {
-    const currencySymbol = currency === 'Kip' ? ' กีบ' : ' บาท';
-    return new Intl.NumberFormat('th-TH', { minimumFractionDigits: 0 }).format(value) + currencySymbol;
+    const currencySymbol = currency === 'Kip' ? ' ກີບ' : ' ບາດ';
+    return new Intl.NumberFormat('lo-LA', { minimumFractionDigits: 0 }).format(value) + currencySymbol;
   }
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
         <Button variant="outline" size="icon" className="h-8 w-8" asChild>
-            <Link href="/">
+            <Link href="/agriculture">
                 <ArrowLeft className="h-4 w-4" />
-                <span className="sr-only">กลับไปหน้าหลัก</span>
+                <span className="sr-only">ກັບໄປໜ້າຫຼັກ</span>
             </Link>
         </Button>
         <div className="flex items-center gap-2">
             <Leaf className="h-6 w-6 text-primary" />
-            <h1 className="text-xl font-bold tracking-tight font-headline">Work</h1>
+            <h1 className="text-xl font-bold tracking-tight font-headline">ຈັດການສະຕັອກສິນຄ້າ</h1>
         </div>
       </header>
       <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
         <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
             <StatCard 
-                title="มูลค่าสต็อกทั้งหมด (กีบ)"
+                title="ມູນຄ່າສະຕັອກທັງໝົດ (ກີບ)"
                 value={formatCurrency(totalValueKip, 'Kip')}
                 icon={<DollarSign className="h-4 w-4 text-muted-foreground" />}
-                description="มูลค่าโดยประมาณของสินค้าทั้งหมดในสกุลเงินกีบ"
+                description="ມູນຄ່າໂດຍປະມານຂອງສິນຄ້າທັງໝົດໃນສະກຸນເງິນກີບ"
             />
             <StatCard
-                title="มูลค่าสต็อกทั้งหมด (บาท)"
+                title="ມູນຄ່າສະຕັອກທັງໝົດ (ບາດ)"
                 value={formatCurrency(totalValueBaht, 'Baht')}
                 icon={<DollarSign className="h-4 w-4 text-muted-foreground" />}
-                description="มูลค่าโดยประมาณของสินค้าทั้งหมดในสกุลเงินบาท"
+                description="ມູນຄ່າໂດຍປະມານຂອງສິນຄ້າທັງໝົດໃນສະກຸນເງິນບາດ"
             />
              <StatCard 
-                title="สินค้าทั้งหมด"
+                title="ສິນຄ້າທັງໝົດ"
                 value={stockItems.length.toString()}
                 icon={<Package className="h-4 w-4 text-muted-foreground" />}
-                description="จำนวนรายการสินค้าในสต็อก"
+                description="ຈຳນວນລາຍການສິນຄ້າໃນສະຕັອກ"
             />
              <StatCard 
-                title="หมวดหมู่ทั้งหมด"
+                title="ໝວດໝູ່ທັງໝົດ"
                 value={categories.length.toString()}
                 icon={<Tags className="h-4 w-4 text-muted-foreground" />}
-                description="จำนวนหมวดหมู่สินค้าทั้งหมด"
+                description="ຈຳນວນໝວດໝູ່ສິນຄ້າທັງໝົດ"
             />
         </div>
         <Card>
             <CardHeader>
-                <CardTitle>มูลค่าตามหมวดหมู่ (กีบ)</CardTitle>
-                <CardDescription>มูลค่ารวมของสินค้าในแต่ละหมวดหมู่</CardDescription>
+                <CardTitle>ມູນຄ່າຕາມໝວດໝູ່ (ກີບ)</CardTitle>
+                <CardDescription>ມູນຄ່າລວມຂອງສິນຄ້າໃນແຕ່ລະໝວດໝູ່</CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 {Object.entries(valuePerCategory).sort(([a], [b]) => a.localeCompare(b)).map(([category, value]) => (
@@ -119,7 +119,7 @@ export default function StockPage() {
                         title={category}
                         value={formatCurrency(value, 'Kip')}
                         icon={<Tags className="h-4 w-4 text-muted-foreground" />}
-                        description={`มูลค่ารวมในหมวดหมู่ ${category}`}
+                        description={`ມູນຄ່າລວມໃນໝວດໝູ່ ${category}`}
                     />
                 ))}
             </CardContent>

@@ -44,8 +44,8 @@ export function AddItemDialog({ open, onOpenChange, onAddItem, categories }: Add
 
         if (!newItem.category) {
             toast({
-                title: "ข้อผิดพลาด",
-                description: "กรุณาเลือกหมวดหมู่",
+                title: "ຂໍ້ຜິດພາດ",
+                description: "ກະລຸນາເລືອກໝວດໝູ່",
                 variant: "destructive",
             });
             return;
@@ -54,8 +54,8 @@ export function AddItemDialog({ open, onOpenChange, onAddItem, categories }: Add
         try {
             await onAddItem(newItem);
             toast({
-                title: "สำเร็จ!",
-                description: "เพิ่มรายการใหม่ในสต็อกเรียบร้อยแล้ว",
+                title: "ສຳເລັດ!",
+                description: "ເພີ່ມລາຍການໃໝ່ໃນສະຕັອກສຳເລັດແລ້ວ",
                 variant: "default",
             });
             onOpenChange(false);
@@ -63,8 +63,8 @@ export function AddItemDialog({ open, onOpenChange, onAddItem, categories }: Add
             setSelectedCategory("");
         } catch (error) {
             toast({
-                title: "เกิดข้อผิดพลาด",
-                description: "ไม่สามารถเพิ่มรายการได้ กรุณาลองใหม่อีกครั้ง",
+                title: "ເກີດຂໍ້ຜິດພາດ",
+                description: "ບໍ່ສາມາດເພີ່ມລາຍການໄດ້, ກະລຸນາລອງໃໝ່ອີກຄັ້ງ",
                 variant: "destructive",
             });
             console.error("Error adding item: ", error);
@@ -76,53 +76,53 @@ export function AddItemDialog({ open, onOpenChange, onAddItem, categories }: Add
       <DialogContent className="sm:max-w-[480px]">
         <form onSubmit={handleSubmit}>
             <DialogHeader>
-                <DialogTitle>เพิ่มรายการใหม่</DialogTitle>
+                <DialogTitle>ເພີ່ມລາຍການໃໝ່</DialogTitle>
                 <DialogDescription>
-                    กรอกรายละเอียดด้านล่างเพื่อเพิ่มสินค้าใหม่ลงในสต็อกของคุณ
+                    ປ້ອນລາຍລະອຽດດ້ານລຸ່ມເພື່ອເພີ່ມສິນຄ້າໃໝ່ເຂົ້າໃນສະຕັອກຂອງທ່ານ
                 </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
                 <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="name" className="text-right">ชื่อ</Label>
-                    <Input id="name" name="name" placeholder="เช่น ปุ๋ยยี่ห้อ A" className="col-span-3" required />
+                    <Label htmlFor="name" className="text-right">ຊື່</Label>
+                    <Input id="name" name="name" placeholder="ເຊັ່ນ: ຝຸ່ນຍີ່ຫໍ້ A" className="col-span-3" required />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="category" className="text-right">หมวดหมู่</Label>
+                    <Label htmlFor="category" className="text-right">ໝວດໝູ່</Label>
                     <Select onValueChange={setSelectedCategory} value={selectedCategory}>
                         <SelectTrigger className="col-span-3">
-                            <SelectValue placeholder="เลือกหมวดหมู่" />
+                            <SelectValue placeholder="ເລືອກໝວດໝູ່" />
                         </SelectTrigger>
                         <SelectContent>
-                            {[...categories, "ปุ๋ย", "เมล็ดพันธุ์", "ยาพืช", "ยาสัตว์", "อุปกรณ์", "ข้าว", "หัวอาหาร", "วิตามิน"].filter((v, i, a) => a.indexOf(v) === i).sort().map((category) => (
+                            {[...categories, "ຝຸ່ນ", "ແນວພັນ", "ຢາພືດ", "ຢາສັດ", "ອຸປະກອນ", "ເຂົ້າ", "ຫົວອາຫານ", "ວິຕາມິນ"].filter((v, i, a) => a.indexOf(v) === i).sort().map((category) => (
                                 <SelectItem key={category} value={category}>{category}</SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="currentStock" className="text-right">สต็อกปัจจุบัน</Label>
+                    <Label htmlFor="currentStock" className="text-right">ສະຕັອກປັດຈຸບັນ</Label>
                     <Input id="currentStock" name="currentStock" type="number" placeholder="0" className="col-span-3" required />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="costPrice" className="text-right">ราคาต้นทุน (กีบ)</Label>
+                    <Label htmlFor="costPrice" className="text-right">ລາຄາຕົ້ນທຶນ (ກີບ)</Label>
                     <Input id="costPrice" name="costPrice" type="number" placeholder="0.00" step="0.01" className="col-span-3" required />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="costPriceBaht" className="text-right">ราคาต้นทุน (บาท)</Label>
+                    <Label htmlFor="costPriceBaht" className="text-right">ລາຄາຕົ້ນທຶນ (ບາດ)</Label>
                     <Input id="costPriceBaht" name="costPriceBaht" type="number" placeholder="0.00" step="0.01" className="col-span-3" required />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="wholesalePrice" className="text-right">ราคาขายส่ง</Label>
+                    <Label htmlFor="wholesalePrice" className="text-right">ລາຄາຂາຍສົ່ງ</Label>
                     <Input id="wholesalePrice" name="wholesalePrice" type="number" placeholder="0.00" step="0.01" className="col-span-3" required />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="sellingPrice" className="text-right">ราคาขายปลีก</Label>
+                    <Label htmlFor="sellingPrice" className="text-right">ລາຄາຂາຍຍ່ອຍ</Label>
                     <Input id="sellingPrice" name="sellingPrice" type="number" placeholder="0.00" step="0.01" className="col-span-3" required />
                 </div>
             </div>
             <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>ยกเลิก</Button>
-                <Button type="submit">บันทึกรายการ</Button>
+                <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>ຍົກເລີກ</Button>
+                <Button type="submit">ບັນທຶກລາຍການ</Button>
             </DialogFooter>
         </form>
       </DialogContent>

@@ -21,7 +21,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSub, D
 
 
 const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('th-TH', { minimumFractionDigits: 0 }).format(value);
+    return new Intl.NumberFormat('lo-LA', { minimumFractionDigits: 0 }).format(value);
 }
 
 const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddRow }: { 
@@ -72,16 +72,16 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
                 <div>
                     <CardTitle>{title}</CardTitle>
                     <CardDescription className="flex flex-wrap items-center gap-x-2">
-                        <span>รวม: {formatCurrency(totalAmount)}</span>
-                        <span className="text-red-600">คงเหลือ: {formatCurrency(totalRemaining)}</span>
+                        <span>ລວມ: {formatCurrency(totalAmount)}</span>
+                        <span className="text-red-600">ຄົງເຫຼືອ: {formatCurrency(totalRemaining)}</span>
                         {totalEntries > 0 && (
-                             <span className="font-semibold">| ค้าง {unfinishedEntriesCount}/{totalEntries} รายการ</span>
+                             <span className="font-semibold">| ຄ້າງ {unfinishedEntriesCount}/{totalEntries} ລາຍການ</span>
                         )}
                     </CardDescription>
                 </div>
                 <Button size="sm" onClick={() => onAddRow(type)}>
                     <PlusCircle className="mr-2 h-4 w-4"/>
-                    เพิ่มแถว
+                    ເພີ່ມແຖວ
                 </Button>
             </CardHeader>
             <CardContent>
@@ -92,16 +92,16 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
                                 <AccordionItem value={`item-${index}`} key={index}>
                                     <AccordionTrigger>
                                         <div className="flex justify-between w-full pr-4">
-                                            <div className="font-semibold">{`วันที่ ${format(summary.date, "d")}`}</div>
+                                            <div className="font-semibold">{`ວັນທີ ${format(summary.date, "d")}`}</div>
                                             <div className="flex gap-4 items-center text-sm">
                                                  <span className={`font-medium ${summary.unfinishedCount > 0 ? 'text-red-500' : 'text-green-500'}`}>
-                                                    ค้าง {summary.unfinishedCount}/{summary.orderCount}
+                                                    ຄ້າງ {summary.unfinishedCount}/{summary.orderCount}
                                                  </span>
                                                  {summary.unfinishedCount > 0 && (
-                                                    <span className="text-red-600">เหลือ: {formatCurrency(summary.remainingAmount)}</span>
+                                                    <span className="text-red-600">ເຫຼືອ: {formatCurrency(summary.remainingAmount)}</span>
                                                  )}
                                                 <span className={summary.profit >= 0 ? 'text-green-600' : 'text-red-600'}>
-                                                    กำไร: {formatCurrency(summary.profit)}
+                                                    ກຳໄລ: {formatCurrency(summary.profit)}
                                                 </span>
                                             </div>
                                         </div>
@@ -110,12 +110,12 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
                                         <Table>
                                             <TableHeader>
                                                 <TableRow>
-                                                    <TableHead className="w-[40%]">รายละเอียด</TableHead>
-                                                    <TableHead className="w-[150px] text-right">ต้นทุน</TableHead>
-                                                    <TableHead className="w-[150px] text-right">จำนวนเงิน</TableHead>
-                                                    <TableHead className="w-[120px] text-right">กำไร</TableHead>
-                                                    <TableHead className="w-[80px] text-center">เสร็จสิ้น</TableHead>
-                                                    <TableHead className="w-[50px] text-center">ลบ</TableHead>
+                                                    <TableHead className="w-[40%]">ລາຍລະອຽດ</TableHead>
+                                                    <TableHead className="w-[150px] text-right">ຕົ້ນທຶນ</TableHead>
+                                                    <TableHead className="w-[150px] text-right">ຈຳນວນເງິນ</TableHead>
+                                                    <TableHead className="w-[120px] text-right">ກຳໄລ</TableHead>
+                                                    <TableHead className="w-[80px] text-center">ສຳເລັດ</TableHead>
+                                                    <TableHead className="w-[50px] text-center">ລົບ</TableHead>
                                                 </TableRow>
                                             </TableHeader>
                                             <TableBody>
@@ -124,13 +124,13 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
                                                     return (
                                                     <TableRow key={row.id}>
                                                         <TableCell className="p-2">
-                                                            <Input value={row.detail || ''} onChange={(e) => onRowChange(row.id, 'detail', e.target.value)} placeholder="รายละเอียด" className="h-8" />
+                                                            <Input value={row.detail || ''} onChange={(e) => onRowChange(row.id, 'detail', e.target.value)} placeholder="ລາຍລະອຽດ" className="h-8" />
                                                         </TableCell>
                                                         <TableCell className="p-2">
-                                                            <Input type="number" value={row.cost || ''} onChange={(e) => onRowChange(row.id, 'cost', parseFloat(e.target.value) || 0)} placeholder="ต้นทุน" className="h-8 text-right" />
+                                                            <Input type="number" value={row.cost || ''} onChange={(e) => onRowChange(row.id, 'cost', parseFloat(e.target.value) || 0)} placeholder="ຕົ້ນທຶນ" className="h-8 text-right" />
                                                         </TableCell>
                                                         <TableCell className="p-2">
-                                                            <Input type="number" value={row.amount || ''} onChange={(e) => onRowChange(row.id, 'amount', parseFloat(e.target.value) || 0)} placeholder="จำนวนเงิน" className="h-8 text-right" />
+                                                            <Input type="number" value={row.amount || ''} onChange={(e) => onRowChange(row.id, 'amount', parseFloat(e.target.value) || 0)} placeholder="ຈຳນວນເງິນ" className="h-8 text-right" />
                                                         </TableCell>
                                                         <TableCell className={`p-2 text-right font-medium ${profit >= 0 ? '' : 'text-red-600'}`}>
                                                             {formatCurrency(profit)}
@@ -152,7 +152,7 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
                             ))}
                          </Accordion>
                     ) : (
-                         <div className="text-center text-muted-foreground py-4">ไม่มีรายการในเดือนที่เลือก</div>
+                         <div className="text-center text-muted-foreground py-4">ບໍ່ມີລາຍການໃນເດືອນທີ່ເລືອກ</div>
                     )}
                 </div>
             </CardContent>
@@ -191,10 +191,10 @@ export default function TransportPage() {
     const handleAddTransportRow = async (type: 'ANS' | 'HAL' | 'MX') => {
         try {
             await addTransportEntry(type, displayMonth);
-            toast({ title: "เพิ่มแถวใหม่สำเร็จ" });
+            toast({ title: "ເພີ່ມແຖວໃໝ່ສຳເລັດ" });
         } catch (error) {
             console.error("Error adding row: ", error);
-            toast({ title: "เกิดข้อผิดพลาด", description: "ไม่สามารถเพิ่มแถวได้", variant: "destructive" });
+            toast({ title: "ເກີດຂໍ້ຜິດພາດ", description: "ບໍ່ສາມາດເພີ່ມແຖວໄດ້", variant: "destructive" });
         }
     };
 
@@ -204,18 +204,18 @@ export default function TransportPage() {
             // No toast needed for real-time updates to avoid being noisy
         } catch (error) {
             console.error("Error updating row: ", error);
-            toast({ title: "เกิดข้อผิดพลาด", description: "ไม่สามารถอัปเดตข้อมูลได้", variant: "destructive" });
+            toast({ title: "ເກີດຂໍ້ຜິດພາດ", description: "ບໍ່ສາມາດອັບເດດຂໍ້ມູນໄດ້", variant: "destructive" });
         }
     };
 
     const handleTransportRowDelete = async (id: string) => {
-        if (!window.confirm("คุณแน่ใจหรือไม่ว่าต้องการลบแถวนี้?")) return;
+        if (!window.confirm("ເຈົ້າແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບແຖວນີ້?")) return;
         try {
             await deleteTransportEntry(id);
-            toast({ title: "ลบแถวสำเร็จ" });
+            toast({ title: "ລຶບແຖວສຳເລັດ" });
         } catch (error) {
             console.error("Error deleting row: ", error);
-            toast({ title: "เกิดข้อผิดพลาด", description: "ไม่สามารถลบแถวได้", variant: "destructive" });
+            toast({ title: "ເກີດຂໍ້ຜິດພາດ", description: "ບໍ່ສາມາດລຶບແຖວໄດ້", variant: "destructive" });
         }
     };
 
@@ -264,14 +264,14 @@ export default function TransportPage() {
         <div className="flex min-h-screen w-full flex-col bg-muted/40">
             <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
                 <Button variant="outline" size="icon" className="h-8 w-8" asChild>
-                    <Link href="/">
+                    <Link href="/agriculture">
                         <ArrowLeft className="h-4 w-4" />
-                        <span className="sr-only">กลับไปหน้าหลัก</span>
+                        <span className="sr-only">ກັບໄປໜ້າຫຼັກ</span>
                     </Link>
                 </Button>
                 <div className="flex items-center gap-2">
                     <Truck className="h-6 w-6 text-primary" />
-                    <h1 className="text-xl font-bold tracking-tight">บัญชีขนส่ง</h1>
+                    <h1 className="text-xl font-bold tracking-tight">ບັນຊີຂົນສົ່ງ</h1>
                 </div>
                  <div className="ml-auto">
                     <MonthYearSelector />
@@ -285,7 +285,7 @@ export default function TransportPage() {
                             <AccordionContent className="p-1">
                                  <TransportTable 
                                     type="ANS"
-                                    title="รายการ ANS"
+                                    title="ລາຍການ ANS"
                                     entries={ansEntries}
                                     onAddRow={handleAddTransportRow}
                                     onRowChange={handleTransportRowChange}
@@ -298,7 +298,7 @@ export default function TransportPage() {
                             <AccordionContent className="p-1">
                                 <TransportTable 
                                     type="HAL"
-                                    title="รายการ HAL"
+                                    title="ລາຍການ HAL"
                                     entries={halEntries}
                                     onAddRow={handleAddTransportRow}
                                     onRowChange={handleTransportRowChange}
@@ -311,7 +311,7 @@ export default function TransportPage() {
                             <AccordionContent className="p-1">
                                 <TransportTable 
                                     type="MX"
-                                    title="รายการ MX"
+                                    title="ລາຍການ MX"
                                     entries={mxEntries}
                                     onAddRow={handleAddTransportRow}
                                     onRowChange={handleTransportRowChange}
@@ -324,23 +324,23 @@ export default function TransportPage() {
                 <div className="md:col-span-1 mt-4 md:mt-0 flex flex-col gap-4">
                      <Card>
                         <CardHeader>
-                            <CardTitle>สรุปยอดรวม (เดือนที่เลือก)</CardTitle>
+                            <CardTitle>ສະຫຼຸບຍອດລວມ (ເດືອນທີ່ເລືອກ)</CardTitle>
                         </CardHeader>
                         <CardContent className="flex flex-col gap-4">
                              <div className="flex justify-between items-center p-4 bg-muted rounded-md">
-                                <span className="font-semibold text-lg">รวมจำนวนเงิน</span>
+                                <span className="font-semibold text-lg">ລວມຈຳນວນເງິນ</span>
                                 <span className="font-bold text-lg text-blue-600">{formatCurrency(transportTotalAmount)}</span>
                             </div>
                              <div className="flex justify-between items-center p-4 bg-muted rounded-md">
-                                <span className="font-semibold text-lg">รวมต้นทุน</span>
+                                <span className="font-semibold text-lg">ລວມຕົ້ນທຶນ</span>
                                 <span className="font-bold text-lg text-orange-600">{formatCurrency(transportTotalCost)}</span>
                             </div>
                             <div className="flex justify-between items-center p-4 bg-muted rounded-md">
-                                <span className="font-semibold text-lg">กำไร</span>
+                                <span className="font-semibold text-lg">ກຳໄລ</span>
                                 <span className={`font-bold text-lg ${transportProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>{formatCurrency(transportProfit)}</span>
                             </div>
                              <div className="flex justify-between items-center p-4 bg-muted rounded-md">
-                                <span className="font-semibold text-lg">คงเหลือ</span>
+                                <span className="font-semibold text-lg">ຄົງເຫຼືອ</span>
                                 <span className="font-bold text-lg text-red-600">{formatCurrency(transportRemaining)}</span>
                             </div>
                         </CardContent>
@@ -350,5 +350,3 @@ export default function TransportPage() {
         </div>
     );
 }
-
-    

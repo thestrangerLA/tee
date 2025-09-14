@@ -14,7 +14,7 @@ import { getYear, getMonth, format } from 'date-fns';
 import { lo } from "date-fns/locale";
 
 const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'LAK', currencyDisplay: 'code', minimumFractionDigits: 0 }).format(value).replace('LAK', 'KIP');
+    return new Intl.NumberFormat('lo-LA', { style: 'currency', currency: 'LAK', currencyDisplay: 'code', minimumFractionDigits: 0 }).format(value).replace('LAK', 'KIP');
 };
 
 const SummaryCard = ({ title, value, icon, className }: { title: string, value: string, icon: React.ReactNode, className?: string }) => (
@@ -120,35 +120,35 @@ export default function ReportsPage() {
         <div className="flex min-h-screen w-full flex-col bg-muted/40">
             <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
                 <Button variant="outline" size="icon" className="h-8 w-8" asChild>
-                    <Link href="/">
+                    <Link href="/agriculture">
                         <ArrowLeft className="h-4 w-4" />
-                        <span className="sr-only">กลับไปหน้าหลัก</span>
+                        <span className="sr-only">ກັບໄປໜ້າຫຼັກ</span>
                     </Link>
                 </Button>
                 <div className="flex items-center gap-2">
                     <BarChart className="h-6 w-6 text-primary" />
-                    <h1 className="text-xl font-bold tracking-tight">สรุปยอดรายปี/รายเดือน</h1>
+                    <h1 className="text-xl font-bold tracking-tight">ສະຫຼຸບຍອດລາຍປີ/ລາຍເດືອນ</h1>
                 </div>
             </header>
             <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
                  <Card>
                     <CardHeader>
-                        <CardTitle>ภาพรวมทั้งหมด</CardTitle>
-                        <CardDescription>สรุปรายรับ, รายจ่าย และกำไร/ขาดทุนทั้งหมดตั้งแต่เริ่มต้น</CardDescription>
+                        <CardTitle>ພາບລວມທັງໝົດ</CardTitle>
+                        <CardDescription>ສະຫຼຸບລາຍຮັບ, ລາຍຈ່າຍ ແລະ กำไร/ขาดทุนທັງໝົດຕັ້ງແຕ່ເລີ່ມຕົ້ນ</CardDescription>
                     </CardHeader>
                     <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <SummaryCard 
-                            title="รวมรายรับทั้งหมด" 
+                            title="ລວມລາຍຮັບທັງໝົດ" 
                             value={formatCurrency(grandTotalIncome)}
                             icon={<ArrowUpCircle className="h-5 w-5 text-green-500" />}
                         />
                         <SummaryCard 
-                            title="รวมรายจ่ายทั้งหมด" 
+                            title="ລວມລາຍຈ່າຍທັງໝົດ" 
                             value={formatCurrency(grandTotalExpense)}
                             icon={<ArrowDownCircle className="h-5 w-5 text-red-500" />}
                         />
                         <SummaryCard 
-                            title="กำไร/ขาดทุนสะสม" 
+                            title="ກຳໄລ/ຂາດທຶນສະສົມ" 
                             value={formatCurrency(grandTotalNet)}
                             icon={grandTotalNet >= 0 ? <Scale className="h-5 w-5 text-blue-500" /> : <Minus className="h-5 w-5 text-red-500" />}
                             className={grandTotalNet >= 0 ? 'text-blue-600' : 'text-red-600'}
@@ -158,8 +158,8 @@ export default function ReportsPage() {
 
                  <Card>
                     <CardHeader>
-                        <CardTitle>สรุปผลประกอบการรายปี</CardTitle>
-                        <CardDescription>แสดงรายรับ, รายจ่าย และกำไรสุทธิ แยกตามปีและเดือน</CardDescription>
+                        <CardTitle>ສະຫຼຸບຜົນປະກອບການລາຍປີ</CardTitle>
+                        <CardDescription>ສະແດງລາຍຮັບ, ລາຍຈ່າຍ ແລະ ກຳໄລສຸດທິ ແຍກຕາມປີ ແລະ ເດືອນ</CardDescription>
                     </CardHeader>
                     <CardContent>
                         {reportsData.length > 0 ? (
@@ -168,12 +168,12 @@ export default function ReportsPage() {
                                     <AccordionItem value={`item-${index}`} key={yearSummary.year}>
                                         <AccordionTrigger className="bg-muted/50 px-4 rounded-md">
                                             <div className="flex justify-between w-full pr-4 text-lg font-bold">
-                                                <span>ปี {yearSummary.year + 543}</span>
+                                                <span>ປີ {yearSummary.year + 543}</span>
                                                 <div className="flex gap-4">
-                                                    <span className="text-green-600">รับ: {formatCurrency(yearSummary.income)}</span>
-                                                    <span className="text-red-600">จ่าย: {formatCurrency(yearSummary.expense)}</span>
+                                                    <span className="text-green-600">ຮັບ: {formatCurrency(yearSummary.income)}</span>
+                                                    <span className="text-red-600">ຈ່າຍ: {formatCurrency(yearSummary.expense)}</span>
                                                     <span className={yearSummary.net >= 0 ? 'text-blue-600' : 'text-red-600'}>
-                                                        กำไร: {formatCurrency(yearSummary.net)}
+                                                        ກຳໄລ: {formatCurrency(yearSummary.net)}
                                                     </span>
                                                 </div>
                                             </div>
@@ -182,10 +182,10 @@ export default function ReportsPage() {
                                             <Table>
                                                 <TableHeader>
                                                     <TableRow>
-                                                        <TableHead className="w-1/4">เดือน</TableHead>
-                                                        <TableHead className="text-right text-green-600">รายรับ</TableHead>
-                                                        <TableHead className="text-right text-red-600">รายจ่าย</TableHead>
-                                                        <TableHead className="text-right">กำไร/ขาดทุนสุทธิ</TableHead>
+                                                        <TableHead className="w-1/4">ເດືອນ</TableHead>
+                                                        <TableHead className="text-right text-green-600">ລາຍຮັບ</TableHead>
+                                                        <TableHead className="text-right text-red-600">ລາຍຈ່າຍ</TableHead>
+                                                        <TableHead className="text-right">ກຳໄລ/ຂາດທຶນສຸດທິ</TableHead>
                                                     </TableRow>
                                                 </TableHeader>
                                                 <TableBody>
@@ -207,7 +207,7 @@ export default function ReportsPage() {
                              </Accordion>
                         ) : (
                             <div className="text-center text-muted-foreground py-8">
-                                ไม่มีข้อมูลธุรกรรม
+                                ບໍ່ມີຂໍ້ມູນທຸລະກຳ
                             </div>
                         )}
                     </CardContent>
@@ -216,5 +216,3 @@ export default function ReportsPage() {
         </div>
     );
 }
-
-    

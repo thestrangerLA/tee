@@ -18,9 +18,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { lo } from 'date-fns/locale';
 
 const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'LAK', currencyDisplay: 'code', minimumFractionDigits: 0 }).format(value).replace('LAK', 'KIP');
+    return new Intl.NumberFormat('lo-LA', { style: 'currency', currency: 'LAK', currencyDisplay: 'code', minimumFractionDigits: 0 }).format(value).replace('LAK', 'KIP');
 };
 
 const taxBrackets = [
@@ -29,7 +30,7 @@ const taxBrackets = [
     { range: "5,000,001 - 15,000,000", from: 5000000, to: 15000000, rate: 10, maxAmount: 1000000 },
     { range: "15,000,001 - 25,000,000", from: 15000000, to: 25000000, rate: 15, maxAmount: 1500000 },
     { range: "25,000,001 - 50,000,000", from: 25000000, to: 50000000, rate: 20, maxAmount: 5000000 },
-    { range: "มากกว่า 50,000,000", from: 50000000, to: Infinity, rate: 25, maxAmount: Infinity },
+    { range: "ຫຼາຍກວ່າ 50,000,000", from: 50000000, to: Infinity, rate: 25, maxAmount: Infinity },
 ];
 
 interface TaxCalculationResult {
@@ -123,7 +124,7 @@ export default function TaxCalculatorPage() {
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="outline" className="flex items-center gap-2">
-                        <span>ปี {selectedYear + 543}</span>
+                        <span>ປີ {selectedYear + 543}</span>
                         <ChevronDown className="h-4 w-4" />
                     </Button>
                 </DropdownMenuTrigger>
@@ -142,54 +143,54 @@ export default function TaxCalculatorPage() {
         <div className="flex min-h-screen w-full flex-col bg-muted/40">
             <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
                 <Button variant="outline" size="icon" className="h-8 w-8" asChild>
-                    <Link href="/">
+                    <Link href="/agriculture">
                         <ArrowLeft className="h-4 w-4" />
-                        <span className="sr-only">กลับไปหน้าหลัก</span>
+                        <span className="sr-only">ກັບໄປໜ້າຫຼັກ</span>
                     </Link>
                 </Button>
                 <div className="flex items-center gap-2">
                     <Calculator className="h-6 w-6 text-primary" />
-                    <h1 className="text-xl font-bold tracking-tight">คำนวณภาษีเงินได้บุคคลธรรมดา</h1>
+                    <h1 className="text-xl font-bold tracking-tight">ຄິດໄລ່ພາສີເງິນໄດ້ບຸກຄົນທຳມະດາ</h1>
                 </div>
             </header>
             <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
                 <div className="grid gap-4 md:gap-8 lg:grid-cols-2">
                     <Card className="lg:col-span-1">
                         <CardHeader>
-                            <CardTitle>เครื่องมือคำนวณภาษี</CardTitle>
-                            <CardDescription>เลือกปีที่ต้องการคำนวณ จากนั้นกดปุ่มเพื่อดึงข้อมูลและคำนวณภาษี</CardDescription>
+                            <CardTitle>ເຄື່ອງມືຄິດໄລ່ພາສີ</CardTitle>
+                            <CardDescription>ເລືອກປີທີ່ຕ້ອງການຄິດໄລ່, ຈາກນັ້ນກົດປຸ່ມເພື່ອດຶງຂໍ້ມູນ ແລະ ຄິດໄລ່ພາສີ</CardDescription>
                         </CardHeader>
                         <CardContent className="grid gap-6">
                              <div className="grid gap-3">
-                                <Label>เลือกปีที่คำนวณ</Label>
+                                <Label>ເລືອກປີຄິດໄລ່</Label>
                                 <YearSelector />
                              </div>
                              <div className="grid gap-3">
-                                <Label htmlFor="annual-income">รายได้สุทธิประจำปี (KIP)</Label>
+                                <Label htmlFor="annual-income">ລາຍໄດ້ສຸດທິປະຈຳປີ (KIP)</Label>
                                 <Input 
                                     id="annual-income" 
                                     type="number" 
-                                    placeholder="กดปุ่มด้านล่างเพื่อคำนวณ"
+                                    placeholder="ກົດປຸ່ມດ້ານລຸ່ມເພື່ອຄິດໄລ່"
                                     value={annualIncome || ''}
                                     onChange={(e) => setAnnualIncome(Number(e.target.value))}
                                 />
-                                <p className="text-xs text-muted-foreground">ระบบจะคำนวณจาก (รายรับ - รายจ่าย) ในปีที่เลือก หรือคุณสามารถกรอกเองได้</p>
+                                <p className="text-xs text-muted-foreground">ລະບົບຈະຄິດໄລ່ຈາກ (ລາຍຮັບ - ລາຍຈ່າຍ) ໃນປີທີ່ເລືອກ ຫຼື ທ່ານສາມາດປ້ອນເອງໄດ້</p>
                             </div>
-                            <Button onClick={handleCalculateClick}>ดึงข้อมูล & คำนวณภาษี</Button>
+                            <Button onClick={handleCalculateClick}>ດຶງຂໍ້ມູນ & ຄິດໄລ່ພາສີ</Button>
                         </CardContent>
                     </Card>
 
                     <Card className="lg:col-span-1">
                         <CardHeader>
-                            <CardTitle>อัตราภาษีเงินได้ (อ้างอิง)</CardTitle>
-                             <CardDescription>อัตราภาษีเงินได้บุคคลธรรมดาตามกฎหมาย สปป. ลาว</CardDescription>
+                            <CardTitle>ອັດຕາພາສີເງິນໄດ້ (ອ້າງອີງ)</CardTitle>
+                             <CardDescription>ອັດຕາພາສີເງິນໄດ້ບຸກຄົນທຳມະດາຕາມກົດໝາຍ ສປປ. ລາວ</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead>ขั้นเงินได้ (KIP)</TableHead>
-                                        <TableHead className="text-right">อัตราภาษี (%)</TableHead>
+                                        <TableHead>ຂັ້ນເງິນໄດ້ (KIP)</TableHead>
+                                        <TableHead className="text-right">ອັດຕາພາສີ (%)</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -208,19 +209,19 @@ export default function TaxCalculatorPage() {
                 {taxResults.length > 0 && (
                     <Card>
                         <CardHeader>
-                            <CardTitle>ผลการคำนวณภาษี</CardTitle>
+                            <CardTitle>ຜົນການຄິດໄລ່ພາສີ</CardTitle>
                             <CardDescription>
-                                จากรายได้สุทธิประจำปี: {formatCurrency(annualIncome)}
+                                ຈາກລາຍໄດ້ສຸດທິປະຈຳປີ: {formatCurrency(annualIncome)}
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
                              <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead>ขั้นเงินได้ (KIP)</TableHead>
-                                        <TableHead className="text-right">รายได้ที่ต้องเสียภาษี</TableHead>
-                                        <TableHead className="text-right">อัตราภาษี (%)</TableHead>
-                                        <TableHead className="text-right">ภาษีที่ต้องชำระ</TableHead>
+                                        <TableHead>ຂັ້ນເງິນໄດ້ (KIP)</TableHead>
+                                        <TableHead className="text-right">ລາຍໄດ້ທີ່ຕ້ອງເສຍພາສີ</TableHead>
+                                        <TableHead className="text-right">ອັດຕາພາສີ (%)</TableHead>
+                                        <TableHead className="text-right">ພາສີທີ່ຕ້ອງຊຳລະ</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -237,7 +238,7 @@ export default function TaxCalculatorPage() {
                             <div className="mt-6 flex justify-end">
                                 <Card className="w-full max-w-sm p-4 bg-muted">
                                     <div className="flex justify-between items-center">
-                                        <CardTitle className="text-lg">รวมภาษีที่ต้องชำระทั้งหมด</CardTitle>
+                                        <CardTitle className="text-lg">ລວມພາສີທີ່ຕ້ອງຊຳລະທັງໝົດ</CardTitle>
                                         <p className="text-2xl font-bold text-primary">{formatCurrency(totalTax)}</p>
                                     </div>
                                 </Card>
@@ -249,11 +250,3 @@ export default function TaxCalculatorPage() {
         </div>
     );
 }
-
-    
-
-    
-
-    
-
-    

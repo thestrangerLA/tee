@@ -21,7 +21,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSub, D
 
 const formatCurrency = (value: number) => {
     if (isNaN(value)) return '0';
-    return new Intl.NumberFormat('th-TH', { minimumFractionDigits: 0 }).format(value);
+    return new Intl.NumberFormat('lo-LA', { minimumFractionDigits: 0 }).format(value);
 };
 
 
@@ -37,8 +37,8 @@ const AddEntryForm = ({ onAddEntry, defaultDate }: { onAddEntry: (entry: Omit<Dr
         e.preventDefault();
         if (!order || !description) {
             toast({
-                title: "ข้อผิดพลาด",
-                description: "กรุณากรอกลำดับและรายละเอียด",
+                title: "ຂໍ້ຜິດພາດ",
+                description: "ກະລຸນາປ້ອນລຳດັບ ແລະ ລາຍລະອຽດ",
                 variant: "destructive",
             });
             return;
@@ -51,7 +51,7 @@ const AddEntryForm = ({ onAddEntry, defaultDate }: { onAddEntry: (entry: Omit<Dr
                 cost,
                 sellingPrice,
             }, defaultDate);
-            toast({ title: "เพิ่มรายการสำเร็จ" });
+            toast({ title: "ເພີ່ມລາຍການສຳເລັດ" });
             // Reset form
             setOrder(0);
             setDescription('');
@@ -60,8 +60,8 @@ const AddEntryForm = ({ onAddEntry, defaultDate }: { onAddEntry: (entry: Omit<Dr
         } catch (error) {
             console.error("Error adding entry: ", error);
             toast({
-                title: "เกิดข้อผิดพลาด",
-                description: "ไม่สามารถเพิ่มรายการได้",
+                title: "ເກີດຂໍ້ຜິດພາດ",
+                description: "ບໍ່ສາມາດເພີ່ມລາຍການໄດ້",
                 variant: "destructive",
             });
         }
@@ -70,31 +70,31 @@ const AddEntryForm = ({ onAddEntry, defaultDate }: { onAddEntry: (entry: Omit<Dr
     return (
         <Card>
             <CardHeader>
-                <CardTitle>เพิ่มรายการยาใหม่</CardTitle>
+                <CardTitle>ເພີ່ມລາຍການຢາໃໝ່</CardTitle>
             </CardHeader>
             <CardContent>
                 <form onSubmit={handleSubmit} className="grid gap-4">
                      <div className="grid grid-cols-2 gap-4">
                         <div className="grid gap-2">
-                             <Label htmlFor="order">Order</Label>
+                             <Label htmlFor="order">ລຳດັບ</Label>
                              <Input id="order" type="number" placeholder="1" value={order || ''} onChange={(e) => setOrder(Number(e.target.value))} required />
                         </div>
                         <div className="grid gap-2">
-                             <Label htmlFor="description">รายการ</Label>
-                             <Input id="description" placeholder="ชื่อยา" value={description} onChange={(e) => setDescription(e.target.value)} required />
+                             <Label htmlFor="description">ລາຍການ</Label>
+                             <Input id="description" placeholder="ຊື່ຢາ" value={description} onChange={(e) => setDescription(e.target.value)} required />
                         </div>
                          <div className="grid gap-2">
-                             <Label htmlFor="cost">ต้นทุน</Label>
+                             <Label htmlFor="cost">ຕົ້ນທຶນ</Label>
                              <Input id="cost" type="number" placeholder="0" value={cost || ''} onChange={(e) => setCost(Number(e.target.value))} />
                         </div>
                          <div className="grid gap-2">
-                             <Label htmlFor="sellingPrice">ราคาขาย</Label>
+                             <Label htmlFor="sellingPrice">ລາຄາຂາຍ</Label>
                              <Input id="sellingPrice" type="number" placeholder="0" value={sellingPrice || ''} onChange={(e) => setSellingPrice(Number(e.target.value))} />
                         </div>
                     </div>
                     <Button type="submit" className="w-full">
                         <PlusCircle className="mr-2 h-4 w-4" />
-                        เพิ่มรายการ
+                        ເພີ່ມລາຍການ
                     </Button>
                 </form>
             </CardContent>
@@ -125,7 +125,7 @@ export default function DrugCreditorsPage() {
             await addDrugCreditorEntry(newEntry, selectedDateForEntry);
         } catch (error) {
             console.error('Error adding entry:', error);
-            toast({ title: 'เกิดข้อผิดพลาด', variant: 'destructive' });
+            toast({ title: 'ເກີດຂໍ້ຜິດພາດ', variant: 'destructive' });
         }
     };
     
@@ -134,18 +134,18 @@ export default function DrugCreditorsPage() {
             await updateDrugCreditorEntry(id, { [field]: value });
         } catch (error) {
             console.error('Error updating entry:', error);
-            toast({ title: 'เกิดข้อผิดพลาดในการอัปเดต', variant: 'destructive' });
+            toast({ title: 'ເກີດຂໍ້ຜິດພາດໃນການອັບເດດ', variant: 'destructive' });
         }
     };
     
     const handleDeleteEntry = async (id: string) => {
-        if (!window.confirm("คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?")) return;
+        if (!window.confirm("ເຈົ້າແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບລາຍການນີ້?")) return;
         try {
             await deleteDrugCreditorEntry(id);
-            toast({ title: "ลบรายการสำเร็จ" });
+            toast({ title: "ລຶບລາຍການສຳເລັດ" });
         } catch (error) {
             console.error("Error deleting entry: ", error);
-            toast({ title: "เกิดข้อผิดพลาด", variant: "destructive" });
+            toast({ title: "ເກີດຂໍ້ຜິດພາດ", variant: "destructive" });
         }
     };
     
@@ -153,12 +153,12 @@ export default function DrugCreditorsPage() {
         try {
             await updateOrderStatus(date, order, isPaid);
             toast({
-                title: `อัปเดต Order ${order} สำเร็จ`,
-                description: `เปลี่ยนสถานะเป็น ${isPaid ? 'จ่ายแล้ว' : 'ยังไม่ได้จ่าย'}`,
+                title: `ອັບເດດລຳດັບ ${order} ສຳເລັດ`,
+                description: `ປ່ຽນສະຖານະເປັນ ${isPaid ? 'ຈ່າຍແລ້ວ' : 'ຍັງບໍ່ໄດ້ຈ່າຍ'}`,
             });
         } catch (error) {
             console.error("Error updating order status: ", error);
-            toast({ title: "เกิดข้อผิดพลาด", variant: "destructive" });
+            toast({ title: "ເກີດຂໍ້ຜິດພາດ", variant: "destructive" });
         }
     };
 
@@ -267,14 +267,14 @@ export default function DrugCreditorsPage() {
         <div className="flex min-h-screen w-full flex-col bg-muted/40">
             <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
                 <Button variant="outline" size="icon" className="h-8 w-8" asChild>
-                    <Link href="/">
+                    <Link href="/agriculture">
                         <ArrowLeft className="h-4 w-4" />
-                        <span className="sr-only">กลับไปหน้าหลัก</span>
+                        <span className="sr-only">ກັບໄປໜ້າຫຼັກ</span>
                     </Link>
                 </Button>
                 <div className="flex items-center gap-2">
                     <Users className="h-6 w-6 text-rose-500" />
-                    <h1 className="text-xl font-bold tracking-tight">ลูกหนี้ค่ายา</h1>
+                    <h1 className="text-xl font-bold tracking-tight">ລູກໜີ້ຄ່າຢາ</h1>
                 </div>
                  <div className="ml-auto flex items-center gap-4">
                      <MonthYearSelector />
@@ -285,23 +285,23 @@ export default function DrugCreditorsPage() {
                     <AddEntryForm onAddEntry={handleAddEntry} defaultDate={displayMonth} />
                     <Card>
                         <CardHeader>
-                            <CardTitle>สรุปยอดรวม (เดือนที่เลือก)</CardTitle>
+                            <CardTitle>ສະຫຼຸບຍອດລວມ (ເດືອນທີ່ເລືອກ)</CardTitle>
                         </CardHeader>
                         <CardContent className="grid gap-4">
                             <div className="flex items-center justify-between rounded-lg border p-3">
-                                <h3 className="text-base font-semibold">ต้นทุนรวม</h3>
+                                <h3 className="text-base font-semibold">ຕົ້ນທຶນລວມ</h3>
                                 <p className="text-lg font-bold">{formatCurrency(pageTotals.cost)}</p>
                             </div>
                             <div className="flex items-center justify-between rounded-lg border p-3">
-                                <h3 className="text-base font-semibold">ราคาขายรวม</h3>
+                                <h3 className="text-base font-semibold">ລາຄາຂາຍລວມ</h3>
                                 <p className="text-lg font-bold">{formatCurrency(pageTotals.sellingPrice)}</p>
                             </div>
                             <div className="flex items-center justify-between rounded-lg border p-3">
-                                <h3 className="text-base font-semibold">กำไร (40%)</h3>
+                                <h3 className="text-base font-semibold">ກຳໄລ (40%)</h3>
                                 <p className="text-lg font-bold text-green-600">{formatCurrency(pageTotals.profit)}</p>
                             </div>
                              <div className="flex items-center justify-between rounded-lg border p-3 bg-red-50">
-                                <h3 className="text-base font-semibold text-red-700">รวมลูกหนี้คงเหลือ</h3>
+                                <h3 className="text-base font-semibold text-red-700">ລວມລູກໜີ້ຄົງເຫຼືອ</h3>
                                 <p className="text-lg font-bold text-red-600">{formatCurrency(pageTotals.remainingCreditorPayable)}</p>
                             </div>
                         </CardContent>
@@ -310,8 +310,8 @@ export default function DrugCreditorsPage() {
                 <div className="lg:col-span-2">
                     <Card>
                         <CardHeader>
-                            <CardTitle>ตารางคำนวณส่วนแบ่ง</CardTitle>
-                             <CardDescription>ข้อมูลสำหรับเดือน {format(displayMonth, "LLLL yyyy", { locale: lo })}</CardDescription>
+                            <CardTitle>ຕາຕະລາງຄິດໄລ່ສ່ວນແບ່ງ</CardTitle>
+                             <CardDescription>ຂໍ້ມູນສຳລັບເດືອນ {format(displayMonth, "LLLL yyyy", { locale: lo })}</CardDescription>
                         </CardHeader>
                         <CardContent>
                             {dailySummaries.length > 0 ? (
@@ -328,9 +328,9 @@ export default function DrugCreditorsPage() {
                                         <AccordionItem value={`day-${index}`} key={index}>
                                             <AccordionTrigger>
                                                  <div className="flex justify-between w-full pr-4">
-                                                    <div className="font-semibold text-lg">{`วันที่ ${format(summary.date, "d")}`}</div>
+                                                    <div className="font-semibold text-lg">{`ວັນທີ ${format(summary.date, "d")}`}</div>
                                                      <div className="flex gap-4 items-center">
-                                                        <span className={`text-sm font-semibold ${summary.remainingOrders > 0 ? 'text-red-500' : 'text-green-500'}`}>{summary.remainingOrders}/{summary.totalOrders} Orders</span>
+                                                        <span className={`text-sm font-semibold ${summary.remainingOrders > 0 ? 'text-red-500' : 'text-green-500'}`}>{summary.remainingOrders}/{summary.totalOrders} ລຳດັບ</span>
                                                     </div>
                                                 </div>
                                             </AccordionTrigger>
@@ -359,11 +359,11 @@ export default function DrugCreditorsPage() {
                                                           <div className="flex w-full items-center pr-4 pl-2">
                                                               <AccordionTrigger className="flex-1 py-2">
                                                                   <div className="flex justify-between w-full items-center">
-                                                                      <div className="font-semibold">Order: {order}</div>
+                                                                      <div className="font-semibold">ລຳດັບ: {order}</div>
                                                                       <div className="flex gap-4 items-center text-sm">
-                                                                          <span className="text-blue-600">จ่าย (คงเหลือ): {formatCurrency(orderTotals.payable)}</span>
-                                                                          <span className="text-green-600">กำไร (40%): {formatCurrency(orderTotals.share40)}</span>
-                                                                          <span className="text-yellow-600">กำไร (60%): {formatCurrency(orderTotals.share60)}</span>
+                                                                          <span className="text-blue-600">ຈ່າຍ (ຄົງເຫຼືອ): {formatCurrency(orderTotals.payable)}</span>
+                                                                          <span className="text-green-600">ກຳໄລ (40%): {formatCurrency(orderTotals.share40)}</span>
+                                                                          <span className="text-yellow-600">ກຳໄລ (60%): {formatCurrency(orderTotals.share60)}</span>
                                                                       </div>
                                                                   </div>
                                                               </AccordionTrigger>
@@ -374,7 +374,7 @@ export default function DrugCreditorsPage() {
                                                                       onCheckedChange={(checked) => handleOrderStatusChange(summary.date, Number(order), !!checked)}
                                                                   />
                                                                   <Label htmlFor={`order-paid-${order}-${summary.date.toISOString()}`} className="text-sm font-medium whitespace-nowrap">
-                                                                      เสร็จสิ้น
+                                                                      ສຳເລັດ
                                                                   </Label>
                                                               </div>
                                                           </div>
@@ -382,10 +382,10 @@ export default function DrugCreditorsPage() {
                                                                 <Table>
                                                                     <TableHeader>
                                                                         <TableRow>
-                                                                            <TableHead>รายการ</TableHead>
-                                                                            <TableHead className="w-[100px] text-right">ต้นทุน</TableHead>
-                                                                            <TableHead className="w-[100px] text-right">ราคาขาย</TableHead>
-                                                                            <TableHead className="w-[100px] text-right">กำไร</TableHead>
+                                                                            <TableHead>ລາຍການ</TableHead>
+                                                                            <TableHead className="w-[100px] text-right">ຕົ້ນທຶນ</TableHead>
+                                                                            <TableHead className="w-[100px] text-right">ລາຄາຂາຍ</TableHead>
+                                                                            <TableHead className="w-[100px] text-right">ກຳໄລ</TableHead>
                                                                             <TableHead className="w-[100px] text-right">40%</TableHead>
                                                                             <TableHead className="w-[100px] text-right">60%</TableHead>
                                                                             <TableHead className="w-[50px]"><span className="sr-only">Delete</span></TableHead>
@@ -419,7 +419,7 @@ export default function DrugCreditorsPage() {
                                                                     </TableBody>
                                                                     <tfoot className="bg-muted/50 font-medium">
                                                                         <TableRow>
-                                                                            <TableCell className="p-2 text-right">รวม</TableCell>
+                                                                            <TableCell className="p-2 text-right">ລວມ</TableCell>
                                                                             <TableCell className="p-2 text-right">{formatCurrency(orderTotals.cost)}</TableCell>
                                                                             <TableCell className="p-2 text-right">{formatCurrency(orderTotals.sellingPrice)}</TableCell>
                                                                             <TableCell className="p-2 text-right">{formatCurrency(orderTotals.profit)}</TableCell>
@@ -440,7 +440,7 @@ export default function DrugCreditorsPage() {
                                 </Accordion>
                             ) : (
                                  <div className="text-center text-muted-foreground py-8">
-                                    ไม่มีรายการในเดือนที่เลือก
+                                    ບໍ່ມີລາຍການໃນເດືອນທີ່ເລືອກ
                                 </div>
                             )}
                         </CardContent>
@@ -450,5 +450,3 @@ export default function DrugCreditorsPage() {
         </div>
     );
 }
-
-    

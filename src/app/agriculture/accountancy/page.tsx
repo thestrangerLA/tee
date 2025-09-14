@@ -55,7 +55,7 @@ import { listenToAllDrugCreditorEntries } from '@/services/drugCreditorService';
 const businessType = 'agriculture';
 
 const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('th-TH', { minimumFractionDigits: 0 }).format(value);
+    return new Intl.NumberFormat('lo-LA', { minimumFractionDigits: 0 }).format(value);
 }
 
 const SummaryCard = ({ title, value, icon, onClick, className }: { title: string, value: string, icon: React.ReactNode, onClick?: () => void, className?: string }) => (
@@ -108,7 +108,7 @@ const CashCalculatorCard = ({ onTotalChange }: { onTotalChange: (total: number) 
         <Card>
             <CardHeader className="cursor-pointer" onClick={() => setCalculatorVisible(!isCalculatorVisible)}>
                 <div className="flex justify-between items-center">
-                    <CardTitle>เครื่องคำนวณเงินสด</CardTitle>
+                    <CardTitle>ເຄື່ອງຄິດໄລ່ເງິນສົດ</CardTitle>
                     <Button variant="ghost" size="icon">
                         {isCalculatorVisible ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
                         <span className="sr-only">Toggle Calculator</span>
@@ -120,9 +120,9 @@ const CashCalculatorCard = ({ onTotalChange }: { onTotalChange: (total: number) 
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>ธนบัตร (KIP)</TableHead>
-                                <TableHead>จำนวน (ใบ)</TableHead>
-                                <TableHead className="text-right">รวม (KIP)</TableHead>
+                                <TableHead>ທະນະບັດ (KIP)</TableHead>
+                                <TableHead>ຈຳນວນ (ໃບ)</TableHead>
+                                <TableHead className="text-right">ລວມ (KIP)</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -145,12 +145,12 @@ const CashCalculatorCard = ({ onTotalChange }: { onTotalChange: (total: number) 
                                 <TableCell><Input type="number" value={calculatorState.counts.rate || ''} onChange={e => handleCountChange('rate', e.target.value)} className="w-24 h-8" /></TableCell>
                             </TableRow>
                              <TableRow className="bg-muted/50 font-bold">
-                                <TableCell colSpan={2}>รวมทั้งหมด (KIP)</TableCell>
+                                <TableCell colSpan={2}>ລວມທັງໝົດ (KIP)</TableCell>
                                 <TableCell className="text-right text-lg">{totalKip.toLocaleString()}</TableCell>
                             </TableRow>
                         </TableBody>
                     </Table>
-                    <Button onClick={handleReset} variant="outline" className="mt-4 w-full">รีเซ็ต</Button>
+                    <Button onClick={handleReset} variant="outline" className="mt-4 w-full">ຣີເຊັດ</Button>
                 </CardContent>
             )}
         </Card>
@@ -307,8 +307,8 @@ export default function AgricultureAccountancyPage() {
         e.preventDefault();
         if (!date || !newTransaction.amount) {
             toast({
-                title: "ข้อผิดพลาด",
-                description: "กรุณากรอกวันที่และจำนวนเงิน",
+                title: "ຂໍ້ຜິດພາດ",
+                description: "ກະລຸນາປ້ອນວັນທີ ແລະ ຈຳນວນເງິນ",
                 variant: "destructive",
             });
             return;
@@ -320,8 +320,8 @@ export default function AgricultureAccountancyPage() {
             await addTransaction(businessType, newTxData);
             
             toast({
-                title: "เพิ่มธุรกรรมใหม่สำเร็จ",
-                description: `เพิ่มรายการใหม่จำนวน ${formatCurrency(newTransaction.amount)}`,
+                title: "ເພີ່ມທຸລະກຳໃໝ່ສຳເລັດ",
+                description: `ເພີ່ມລາຍການໃໝ່ຈຳນວນ ${formatCurrency(newTransaction.amount)}`,
             });
     
             setNewTransaction({ type: 'expense', amount: 0, description: '' });
@@ -330,26 +330,26 @@ export default function AgricultureAccountancyPage() {
         } catch (error) {
              console.error("Error adding transaction: ", error);
              toast({
-                title: "เกิดข้อผิดพลาด",
-                description: "ไม่สามารถเพิ่มธุรกรรมได้",
+                title: "ເກີດຂໍ້ຜິດພາດ",
+                description: "ບໍ່ສາມາດເພີ່ມທຸລະກຳໄດ້",
                 variant: "destructive",
             });
         }
     }
     
     const handleDeleteTransaction = async (txToDelete: Transaction) => {
-        if (!window.confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบรายการ "${txToDelete.description || 'ไม่มีชื่อ'}"?`)) return;
+        if (!window.confirm(`ເຈົ້າແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບລາຍການ "${txToDelete.description || 'ບໍ່ມີຊື່'}"?`)) return;
 
         try {
             await deleteTransaction(businessType, txToDelete.id);
             toast({
-                title: "ลบธุรกรรมสำเร็จ",
+                title: "ລຶບທຸລະກຳສຳເລັດ",
             });
         } catch (error) {
             console.error("Error deleting transaction: ", error);
             toast({
-                title: "เกิดข้อผิดพลาด",
-                description: "ไม่สามารถลบธุรกรรมได้",
+                title: "ເກີດຂໍ້ຜິດພາດ",
+                description: "ບໍ່ສາມາດລຶບທຸລະກຳໄດ້",
                 variant: "destructive",
             });
         }
@@ -365,14 +365,14 @@ export default function AgricultureAccountancyPage() {
             });
 
             toast({
-                title: "อัปเดตธุรกรรมสำเร็จ",
+                title: "ອັບເດດທຸລະກຳສຳເລັດ",
             });
             setEditingTransaction(null);
         } catch (error) {
             console.error("Error updating transaction: ", error);
             toast({
-                title: "เกิดข้อผิดพลาด",
-                description: "ไม่สามารถอัปเดตธุรกรรมได้",
+                title: "ເກີດຂໍ້ຜິດພາດ",
+                description: "ບໍ່ສາມາດອັບເດດທຸລະກຳໄດ້",
                 variant: "destructive",
             });
         }
@@ -399,14 +399,14 @@ export default function AgricultureAccountancyPage() {
             await updateAccountSummary(businessType, { [editingSummaryField]: editingSummaryValue });
 
             toast({
-                title: "อัปเดตยอดเงินสำเร็จ",
+                title: "ອັບເດດຍອດເງິນສຳເລັດ",
             });
             setEditingSummaryField(null);
         } catch (error) {
             console.error("Error updating summary: ", error);
             toast({
-                title: "เกิดข้อผิดพลาด",
-                description: "ไม่สามารถอัปเดตยอดเงินได้",
+                title: "ເກີດຂໍ້ຜິດພາດ",
+                description: "ບໍ່ສາມາດອັບເດດຍອດເງິນໄດ້",
                 variant: "destructive",
             });
         }
@@ -457,10 +457,10 @@ export default function AgricultureAccountancyPage() {
     
     const getDialogTitle = () => {
         switch(editingSummaryField) {
-            case 'transfer': return 'แก้ไขยอดเงินโอน';
-            case 'capital': return 'แก้ไขยอดเงินทุน';
-            case 'workingCapital': return 'แก้ไขเงินหมุน';
-            default: return 'แก้ไข';
+            case 'transfer': return 'ແກ້ໄຂຍອດເງິນໂອນ';
+            case 'capital': return 'ແກ້ໄຂຍອດເງິນທຶນ';
+            case 'workingCapital': return 'ແກ້ໄຂເງິນໝູນວຽນ';
+            default: return 'ແກ້ໄຂ';
         }
     }
 
@@ -471,43 +471,43 @@ export default function AgricultureAccountancyPage() {
                 <Button variant="outline" size="icon" className="h-8 w-8" asChild>
                     <Link href="/agriculture">
                         <ArrowLeft className="h-4 w-4" />
-                        <span className="sr-only">กลับไปหน้าหลัก</span>
+                        <span className="sr-only">ກັບໄປໜ້າຫຼັກ</span>
                     </Link>
                 </Button>
                 <div className="flex items-center gap-2">
-                    <h1 className="text-xl font-bold tracking-tight">จัดการบัญชี (ร้านค้าเกษตร)</h1>
+                    <h1 className="text-xl font-bold tracking-tight">ຈັດການບັນຊີ (ຮ້ານຄ້າກະສິກຳ)</h1>
                 </div>
             </header>
             <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
                 <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4 xl:grid-cols-9">
-                     <SummaryCard title="เงินทุน" value={formatCurrency(accountSummary.capital)} icon={<Briefcase className="h-5 w-5 text-primary" />} onClick={() => openEditSummaryDialog('capital')} />
-                     <SummaryCard title="เงินสด" value={formatCurrency(accountSummary.cash)} icon={<Wallet className="h-5 w-5 text-primary" />} />
-                     <SummaryCard title="เงินโอน" value={formatCurrency(accountSummary.transfer)} icon={<Landmark className="h-5 w-5 text-primary" />} onClick={() => openEditSummaryDialog('transfer')} />
-                     <SummaryCard title="รวมเงิน" value={formatCurrency(totalMoney)} icon={<Combine className="h-5 w-5 text-green-600" />} />
-                     <SummaryCard title="ลูกหนี้ทั่วไป" value={formatCurrency(totalDebtors)} icon={<Users className="h-5 w-5 text-yellow-600" />} />
-                     <SummaryCard title="ค่าขนส่งคงเหลือ" value={formatCurrency(transportRemaining)} icon={<Truck className="h-5 w-5 text-red-600" />} />
-                     <SummaryCard title="ลูกหนี้ค่ายา" value={formatCurrency(drugCreditorsPayable)} icon={<UserMinus className="h-5 w-5 text-rose-500" />} />
-                     <SummaryCard title="รวมเงินทั้งหมด" value={formatCurrency(grandTotalMoney)} icon={<PiggyBank className="h-5 w-5 text-blue-600" />} />
-                     <SummaryCard title="ส่วนต่าง" value={formatCurrency(differenceAmount)} icon={<MinusCircle className="h-5 w-5 text-indigo-500" />} />
+                     <SummaryCard title="ເງິນທຶນ" value={formatCurrency(accountSummary.capital)} icon={<Briefcase className="h-5 w-5 text-primary" />} onClick={() => openEditSummaryDialog('capital')} />
+                     <SummaryCard title="ເງິນສົດ" value={formatCurrency(accountSummary.cash)} icon={<Wallet className="h-5 w-5 text-primary" />} />
+                     <SummaryCard title="ເງິນໂອນ" value={formatCurrency(accountSummary.transfer)} icon={<Landmark className="h-5 w-5 text-primary" />} onClick={() => openEditSummaryDialog('transfer')} />
+                     <SummaryCard title="ລວມເງິນ" value={formatCurrency(totalMoney)} icon={<Combine className="h-5 w-5 text-green-600" />} />
+                     <SummaryCard title="ລູກໜີ້ທົ່ວໄປ" value={formatCurrency(totalDebtors)} icon={<Users className="h-5 w-5 text-yellow-600" />} />
+                     <SummaryCard title="ຄ່າຂົນສົ່ງຄົງເຫຼືອ" value={formatCurrency(transportRemaining)} icon={<Truck className="h-5 w-5 text-red-600" />} />
+                     <SummaryCard title="ລູກໜີ້ຄ່າຢາ" value={formatCurrency(drugCreditorsPayable)} icon={<UserMinus className="h-5 w-5 text-rose-500" />} />
+                     <SummaryCard title="ລວມເງິນທັງໝົດ" value={formatCurrency(grandTotalMoney)} icon={<PiggyBank className="h-5 w-5 text-blue-600" />} />
+                     <SummaryCard title="ສ່ວນຕ່າງ" value={formatCurrency(differenceAmount)} icon={<MinusCircle className="h-5 w-5 text-indigo-500" />} />
                 </div>
 
                  <Card>
                     <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                         <div>
-                            <CardTitle>สรุปผลประกอบการ</CardTitle>
-                            <CardDescription>สำหรับเดือนที่เลือก</CardDescription>
+                            <CardTitle>ສະຫຼຸບຜົນປະກອບການ</CardTitle>
+                            <CardDescription>ສຳລັບເດືອນທີ່ເລືອກ</CardDescription>
                         </div>
                         <MonthYearSelector />
                     </CardHeader>
                     <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-4">
-                        <SummaryCard title="เงินหมุน" value={formatCurrency(workingCapital)} icon={<Combine className="h-5 w-5 text-purple-500" />} onClick={() => openEditSummaryDialog('workingCapital')} />
-                        <SummaryCard title="ยอดยกมา" value={formatCurrency(performanceData.broughtForward)} icon={<FileText className="h-5 w-5 text-primary" />} />
-                        <SummaryCard title="รายรับ" value={formatCurrency(performanceData.income)} icon={<ArrowUpCircle className="h-5 w-5 text-green-500" />} />
-                        <SummaryCard title="รวม" value={formatCurrency(performanceData.totalWithWorkingCapital)} icon={<PlusCircle className="h-5 w-5 text-orange-500" />} />
-                        <SummaryCard title="รายจ่าย" value={formatCurrency(performanceData.expense)} icon={<ArrowDownCircle className="h-5 w-5 text-red-500" />} />
-                        <SummaryCard title="คงเหลือ" value={formatCurrency(performanceData.remainingWithWorkingCapital)} icon={<Wallet className="h-5 w-5 text-teal-500" />} />
-                        <SummaryCard title="กำไร (เดือน)" value={formatCurrency(performanceData.netProfitMonthly)} icon={performanceData.netProfitMonthly >= 0 ? <Equal className="h-5 w-5 text-indigo-500" /> : <Minus className="h-5 w-5 text-red-500" />} />
-                        <SummaryCard title="ยอดสิ้นเดือน" value={formatCurrency(performanceData.endingBalance)} icon={<Banknote className="h-5 w-5 text-blue-500" />} />
+                        <SummaryCard title="ເງິນໝູນວຽນ" value={formatCurrency(workingCapital)} icon={<Combine className="h-5 w-5 text-purple-500" />} onClick={() => openEditSummaryDialog('workingCapital')} />
+                        <SummaryCard title="ຍອດຍົກມາ" value={formatCurrency(performanceData.broughtForward)} icon={<FileText className="h-5 w-5 text-primary" />} />
+                        <SummaryCard title="ລາຍຮັບ" value={formatCurrency(performanceData.income)} icon={<ArrowUpCircle className="h-5 w-5 text-green-500" />} />
+                        <SummaryCard title="ລວມ" value={formatCurrency(performanceData.totalWithWorkingCapital)} icon={<PlusCircle className="h-5 w-5 text-orange-500" />} />
+                        <SummaryCard title="ລາຍຈ່າຍ" value={formatCurrency(performanceData.expense)} icon={<ArrowDownCircle className="h-5 w-5 text-red-500" />} />
+                        <SummaryCard title="ຄົງເຫຼືອ" value={formatCurrency(performanceData.remainingWithWorkingCapital)} icon={<Wallet className="h-5 w-5 text-teal-500" />} />
+                        <SummaryCard title="ກຳໄລ (ເດືອນ)" value={formatCurrency(performanceData.netProfitMonthly)} icon={performanceData.netProfitMonthly >= 0 ? <Equal className="h-5 w-5 text-indigo-500" /> : <Minus className="h-5 w-5 text-red-500" />} />
+                        <SummaryCard title="ຍອດທ້າຍເດືອນ" value={formatCurrency(performanceData.endingBalance)} icon={<Banknote className="h-5 w-5 text-blue-500" />} />
                     </CardContent>
                 </Card>
 
@@ -517,8 +517,8 @@ export default function AgricultureAccountancyPage() {
                             <CardHeader>
                                 <div className="flex justify-between items-center cursor-pointer" onClick={() => setTransactionFormVisible(!isTransactionFormVisible)}>
                                     <div>
-                                        <CardTitle>เพิ่มธุรกรรม</CardTitle>
-                                        <CardDescription>บันทึกรายรับ-รายจ่ายใหม่ของคุณ</CardDescription>
+                                        <CardTitle>ເພີ່ມທຸລະກຳ</CardTitle>
+                                        <CardDescription>ບັນທຶກລາຍຮັບ-ລາຍຈ່າຍໃໝ່ຂອງທ່ານ</CardDescription>
                                     </div>
                                     <Button variant="ghost" size="icon">
                                         {isTransactionFormVisible ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
@@ -531,7 +531,7 @@ export default function AgricultureAccountancyPage() {
                                 <form onSubmit={handleAddTransaction}>
                                     <div className="grid gap-6">
                                         <div className="grid gap-3">
-                                            <Label>ประเภทธุรกรรม</Label>
+                                            <Label>ປະເພດທຸລະກຳ</Label>
                                             <RadioGroup
                                                 value={newTransaction.type}
                                                 onValueChange={(value) => setNewTransaction({ ...newTransaction, type: value as 'income' | 'expense' })}
@@ -539,17 +539,17 @@ export default function AgricultureAccountancyPage() {
                                             >
                                                 <div className="flex items-center space-x-2">
                                                     <RadioGroupItem value="income" id="r-income" />
-                                                    <Label htmlFor="r-income">รายรับ</Label>
+                                                    <Label htmlFor="r-income">ລາຍຮັບ</Label>
                                                 </div>
                                                 <div className="flex items-center space-x-2">
                                                     <RadioGroupItem value="expense" id="r-expense" />
-                                                    <Label htmlFor="r-expense">รายจ่าย</Label>
+                                                    <Label htmlFor="r-expense">ລາຍຈ່າຍ</Label>
                                                 </div>
                                             </RadioGroup>
                                         </div>
 
                                         <div className="grid gap-3">
-                                            <Label htmlFor="date">วันที่</Label>
+                                            <Label htmlFor="date">ວັນທີ</Label>
                                             <Popover>
                                                 <PopoverTrigger asChild>
                                                     <Button
@@ -557,7 +557,7 @@ export default function AgricultureAccountancyPage() {
                                                         className="w-full justify-start text-left font-normal"
                                                     >
                                                         <CalendarIcon className="mr-2 h-4 w-4" />
-                                                        {date ? format(date, "PPP", { locale: lo }) : <span>เลือกวันที่</span>}
+                                                        {date ? format(date, "PPP", { locale: lo }) : <span>ເລືອກວັນທີ</span>}
                                                     </Button>
                                                 </PopoverTrigger>
                                                 <PopoverContent className="w-auto p-0">
@@ -573,18 +573,18 @@ export default function AgricultureAccountancyPage() {
                                         </div>
                                         
                                         <div className="grid gap-3">
-                                            <Label htmlFor="amount">จำนวนเงิน</Label>
+                                            <Label htmlFor="amount">ຈຳນວນເງິນ</Label>
                                             <Input id="amount" type="number" placeholder="0" value={newTransaction.amount || ''} onChange={(e) => setNewTransaction({ ...newTransaction, amount: Number(e.target.value)})} required />
                                         </div>
 
                                         <div className="grid gap-3">
-                                            <Label htmlFor="description">คำอธิบาย</Label>
-                                            <Textarea id="description" placeholder="อธิบายรายการ" value={newTransaction.description} onChange={(e) => setNewTransaction({ ...newTransaction, description: e.target.value})} />
+                                            <Label htmlFor="description">ຄຳອະທິບາຍ</Label>
+                                            <Textarea id="description" placeholder="ອະທິບາຍລາຍການ" value={newTransaction.description} onChange={(e) => setNewTransaction({ ...newTransaction, description: e.target.value})} />
                                         </div>
 
                                         <Button type="submit" className="w-full">
                                             <PlusCircle className="mr-2 h-4 w-4" />
-                                            เพิ่มธุรกรรม
+                                            ເພີ່ມທຸລະກຳ
                                         </Button>
                                     </div>
                                 </form>
@@ -598,9 +598,9 @@ export default function AgricultureAccountancyPage() {
                          <CardHeader>
                              <div className="flex justify-between items-center cursor-pointer" onClick={() => setHistoryVisible(!isHistoryVisible)}>
                                 <div>
-                                    <CardTitle>ประวัติธุรกรรม</CardTitle>
+                                    <CardTitle>ປະຫວັດທຸລະກຳ</CardTitle>
                                     <CardDescription>
-                                       สรุปธุรกรรมรายวันสำหรับเดือน {format(historyDisplayMonth, "LLLL yyyy", { locale: lo })}
+                                       ສະຫຼຸບທຸລະກຳລາຍວັນສຳລັບເດືອນ {format(historyDisplayMonth, "LLLL yyyy", { locale: lo })}
                                     </CardDescription>
                                 </div>
                                  <Button variant="ghost" size="icon">
@@ -617,10 +617,10 @@ export default function AgricultureAccountancyPage() {
                                         <AccordionItem value={`item-${index}`} key={index}>
                                             <AccordionTrigger>
                                                 <div className="flex justify-between w-full pr-4">
-                                                    <div className="font-semibold">{`วันที่ ${format(summary.date, "d")}`}</div>
+                                                    <div className="font-semibold">{`ວັນທີ ${format(summary.date, "d")}`}</div>
                                                     <div className="flex gap-4">
-                                                        <span className="text-green-600">รับ: {formatCurrency(summary.income)}</span>
-                                                        <span className="text-red-600">จ่าย: {formatCurrency(summary.expense)}</span>
+                                                        <span className="text-green-600">ຮັບ: {formatCurrency(summary.income)}</span>
+                                                        <span className="text-red-600">ຈ່າຍ: {formatCurrency(summary.expense)}</span>
                                                     </div>
                                                 </div>
                                             </AccordionTrigger>
@@ -628,8 +628,8 @@ export default function AgricultureAccountancyPage() {
                                                 <Table>
                                                     <TableHeader>
                                                         <TableRow>
-                                                            <TableHead>คำอธิบาย</TableHead>
-                                                            <TableHead className="text-right">จำนวนเงิน</TableHead>
+                                                            <TableHead>ຄຳອະທິບາຍ</TableHead>
+                                                            <TableHead className="text-right">ຈຳນວນເງິນ</TableHead>
                                                             <TableHead><span className="sr-only">Actions</span></TableHead>
                                                         </TableRow>
                                                     </TableHeader>
@@ -649,15 +649,15 @@ export default function AgricultureAccountancyPage() {
                                                                         </Button>
                                                                     </DropdownMenuTrigger>
                                                                     <DropdownMenuContent align="end">
-                                                                        <DropdownMenuLabel>การดำเนินการ</DropdownMenuLabel>
+                                                                        <DropdownMenuLabel>ການດຳເນີນການ</DropdownMenuLabel>
                                                                         <DropdownMenuItem onClick={() => openEditDialog(tx)}>
-                                                                            แก้ไข
+                                                                            ແກ້ໄຂ
                                                                         </DropdownMenuItem>
                                                                         <DropdownMenuItem
                                                                             className="text-red-600"
                                                                             onClick={() => handleDeleteTransaction(tx)}
                                                                         >
-                                                                            ลบ
+                                                                            ລົບ
                                                                         </DropdownMenuItem>
                                                                     </DropdownMenuContent>
                                                                 </DropdownMenu>
@@ -672,7 +672,7 @@ export default function AgricultureAccountancyPage() {
                                 </Accordion>
                             ) : (
                                 <div className="text-center text-muted-foreground py-8">
-                                    ไม่มีธุรกรรมในเดือนที่เลือก
+                                    ບໍ່ມີທຸລະກຳໃນເດືອນທີ່ເລືອກ
                                 </div>
                             )}
                         </CardContent>
@@ -685,14 +685,14 @@ export default function AgricultureAccountancyPage() {
                  <Dialog open={!!editingTransaction} onOpenChange={(isOpen) => !isOpen && setEditingTransaction(null)}>
                     <DialogContent>
                         <DialogHeader>
-                            <DialogTitle>แก้ไขธุรกรรม</DialogTitle>
+                            <DialogTitle>ແກ້ໄຂທຸລະກຳ</DialogTitle>
                             <DialogDescription>
-                                อัปเดตรายละเอียดธุรกรรมของคุณด้านล่าง
+                                ອັບເດດລາຍລະອຽດທຸລະກຳຂອງທ່ານຂ້າງລຸ່ມນີ້
                             </DialogDescription>
                         </DialogHeader>
                         <div className="grid gap-6 py-4">
                             <div className="grid gap-3">
-                                <Label>ประเภทธุรกรรม</Label>
+                                <Label>ປະເພດທຸລະກຳ</Label>
                                 <RadioGroup
                                     value={editingTransaction.type}
                                     onValueChange={(value) => setEditingTransaction({ ...editingTransaction, type: value as 'income' | 'expense' })}
@@ -700,21 +700,21 @@ export default function AgricultureAccountancyPage() {
                                 >
                                     <div className="flex items-center space-x-2">
                                         <RadioGroupItem value="income" id="edit-r-income" />
-                                        <Label htmlFor="edit-r-income">รายรับ</Label>
+                                        <Label htmlFor="edit-r-income">ລາຍຮັບ</Label>
                                     </div>
                                     <div className="flex items-center space-x-2">
                                         <RadioGroupItem value="expense" id="edit-r-expense" />
-                                        <Label htmlFor="edit-r-expense">รายจ่าย</Label>
+                                        <Label htmlFor="edit-r-expense">ລາຍຈ່າຍ</Label>
                                     </div>
                                 </RadioGroup>
                             </div>
                             <div className="grid gap-3">
-                                <Label htmlFor="edit-date">วันที่</Label>
+                                <Label htmlFor="edit-date">ວັນທີ</Label>
                                 <Popover>
                                     <PopoverTrigger asChild>
                                         <Button variant={"outline"} className="w-full justify-start text-left font-normal">
                                             <CalendarIcon className="mr-2 h-4 w-4" />
-                                            {editingTransaction.date ? format(editingTransaction.date, "PPP", { locale: lo }) : <span>เลือกวันที่</span>}
+                                            {editingTransaction.date ? format(editingTransaction.date, "PPP", { locale: lo }) : <span>ເລືອກວັນທີ</span>}
                                         </Button>
                                     </PopoverTrigger>
                                     <PopoverContent className="w-auto p-0">
@@ -729,17 +729,17 @@ export default function AgricultureAccountancyPage() {
                                 </Popover>
                             </div>
                             <div className="grid gap-3">
-                                <Label htmlFor="edit-amount">จำนวนเงิน</Label>
+                                <Label htmlFor="edit-amount">ຈຳນວນເງິນ</Label>
                                 <Input id="edit-amount" type="number" value={editingTransaction.amount} onChange={(e) => setEditingTransaction({ ...editingTransaction, amount: Number(e.target.value)})} required />
                             </div>
                             <div className="grid gap-3">
-                                <Label htmlFor="edit-description">คำอธิบาย</Label>
+                                <Label htmlFor="edit-description">ຄຳອະທິບາຍ</Label>
                                 <Textarea id="edit-description" value={editingTransaction.description} onChange={(e) => setEditingTransaction({ ...editingTransaction, description: e.target.value})} />
                             </div>
                         </div>
                         <DialogFooter>
-                            <Button variant="outline" onClick={() => setEditingTransaction(null)}>ยกเลิก</Button>
-                            <Button onClick={handleUpdateTransaction}>บันทึกการเปลี่ยนแปลง</Button>
+                            <Button variant="outline" onClick={() => setEditingTransaction(null)}>ຍົກເລີກ</Button>
+                            <Button onClick={handleUpdateTransaction}>ບັນທຶກການປ່ຽນແປງ</Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
@@ -751,12 +751,12 @@ export default function AgricultureAccountancyPage() {
                         <DialogHeader>
                             <DialogTitle>{getDialogTitle()}</DialogTitle>
                              <DialogDescription>
-                                ป้อนยอดเงินปัจจุบัน
+                                ປ້ອນຍອດເງິນປັດຈຸບັນ
                             </DialogDescription>
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
                             <div className="grid gap-3">
-                                 <Label htmlFor="edit-summary-amount">จำนวนเงิน</Label>
+                                 <Label htmlFor="edit-summary-amount">ຈຳນວນເງິນ</Label>
                                 <Input 
                                     id="edit-summary-amount" 
                                     type="number" 
@@ -767,8 +767,8 @@ export default function AgricultureAccountancyPage() {
                             </div>
                         </div>
                         <DialogFooter>
-                            <Button variant="outline" onClick={() => setEditingSummaryField(null)}>ยกเลิก</Button>
-                            <Button onClick={handleUpdateSummaryField}>บันทึก</Button>
+                            <Button variant="outline" onClick={() => setEditingSummaryField(null)}>ຍົກເລີກ</Button>
+                            <Button onClick={handleUpdateSummaryField}>ບັນທຶກ</Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
@@ -776,11 +776,3 @@ export default function AgricultureAccountancyPage() {
         </div>
     );
 }
-
-    
-
-    
-
-    
-
-    
