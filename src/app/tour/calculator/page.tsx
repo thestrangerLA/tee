@@ -440,7 +440,7 @@ export default function TourCalculatorPage() {
                 </div>
             </header>
             <main className="flex w-full flex-1 flex-col gap-8 p-4 sm:px-6 sm:py-4 bg-muted/40 print:p-0 print:bg-white print:gap-4">
-                <div id="print-content" className="print-container hidden">
+                <div id="print-content" className="print-container">
                     <div className="hidden print:block print:space-y-2 print:p-2">
                         <h1 className="print:text-xl print:font-bold text-center">ຂໍ້ມູນທົວ</h1>
                          <div className="grid grid-cols-2 gap-x-8 print:text-xs print:border-y print:py-2">
@@ -526,8 +526,8 @@ export default function TourCalculatorPage() {
                     </div>
                 </div>
 
-                <div className="w-full max-w-screen-xl mx-auto flex flex-col gap-8">
-                     <Card className="print:hidden">
+                <div className="w-full max-w-screen-xl mx-auto flex flex-col gap-8 print:hidden">
+                     <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                                 <MapPin className="h-6 w-6 text-primary" />
@@ -610,7 +610,7 @@ export default function TourCalculatorPage() {
                         </CardContent>
                     </Card>
                     
-                    <Card className="print:hidden">
+                    <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                                 <History className="h-6 w-6 text-primary" />
@@ -644,13 +644,13 @@ export default function TourCalculatorPage() {
                         </CardContent>
                     </Card>
 
-                    <Card>
+                    <Card className="print:hidden">
                         <CardHeader>
                             <CardTitle>ຄຳນວນຄ່າໃຊ້ຈ່າຍ</CardTitle>
                             <CardDescription>ເພີ່ມ ແລະ ຈັດການຄ່າໃຊ້ຈ່າຍຕ່າງໆ</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <Accordion type="multiple" className="w-full space-y-4 md:space-y-0 md:columns-2 md:gap-8 print:columns-1 print:space-y-4">
+                            <Accordion type="multiple" className="w-full space-y-4 md:space-y-0 md:columns-2 md:gap-8">
                                 {/* Accommodation */}
                                 <CostCategoryContent title="ຄ່າທີ່ພັກ" icon={<BedDouble className="h-5 w-5" />}>
                                     <div className="space-y-4 pt-2">
@@ -1162,45 +1162,47 @@ export default function TourCalculatorPage() {
                         </CardContent>
                     </Card>
                     
-                    <div className="print:hidden"><TotalCostCard totalsByCategory={totalsByCategory} /></div>
+                    <div><TotalCostCard totalsByCategory={totalsByCategory} /></div>
 
-                    <div className="space-y-4 print:hidden">
+                    <div className="space-y-4">
                         <Card>
                             <CardHeader>
                                 <CardTitle>ຄ່າໃຊ້ຈ່າຍລວມທັງໝົດ ແລະ ອັດຕາແລກປ່ຽນ</CardTitle>
                                 <CardDescription>ສະຫຼຸບລວມຍອດຄ່າໃຊ້ຈ່າຍທັງໝົດ ແລະ ໃສ່ອັດຕາແລກປ່ຽນ</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-6">
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                    {(Object.keys(grandTotals) as Currency[]).map(currency => (
-                                        <Card key={currency}>
-                                            <CardHeader className="pb-2">
-                                                <CardTitle className="text-lg">{currency}</CardTitle>
-                                            </CardHeader>
-                                            <CardContent>
-                                                <p className="text-2xl font-bold">{formatNumber(grandTotals[currency])}</p>
-                                            </CardContent>
-                                        </Card>
-                                    ))}
-                                </div>
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                    {(Object.keys(exchangeRates) as Currency[]).map(from => (
-                                        <div key={from} className="space-y-2">
-                                            <Label className="font-semibold">1 {from}</Label>
-                                            {(Object.keys(exchangeRates[from]) as Currency[]).map(to => (
-                                                <div key={to} className="flex items-center gap-2">
-                                                    <ChevronsRight className="h-4 w-4 text-muted-foreground" />
-                                                    <Input
-                                                        type="number"
-                                                        value={exchangeRates[from][to]}
-                                                        onChange={(e) => handleRateChange(from, to as Currency, e.target.value)}
-                                                        className="h-8"
-                                                    />
-                                                    <Label htmlFor={`${from}-to-${to}`} className="text-sm">{to}</Label>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    ))}
+                                <div className="grid grid-cols-1 gap-4">
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                        {(Object.keys(grandTotals) as Currency[]).map(currency => (
+                                            <Card key={currency}>
+                                                <CardHeader className="pb-2">
+                                                    <CardTitle className="text-lg">{currency}</CardTitle>
+                                                </CardHeader>
+                                                <CardContent>
+                                                    <p className="text-2xl font-bold">{formatNumber(grandTotals[currency])}</p>
+                                                </CardContent>
+                                            </Card>
+                                        ))}
+                                    </div>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                        {(Object.keys(exchangeRates) as Currency[]).map(from => (
+                                            <div key={from} className="space-y-2">
+                                                <Label className="font-semibold">1 {from}</Label>
+                                                {(Object.keys(exchangeRates[from]) as Currency[]).map(to => (
+                                                    <div key={to} className="flex items-center gap-2">
+                                                        <ChevronsRight className="h-4 w-4 text-muted-foreground" />
+                                                        <Input
+                                                            type="number"
+                                                            value={exchangeRates[from][to]}
+                                                            onChange={(e) => handleRateChange(from, to as Currency, e.target.value)}
+                                                            className="h-8"
+                                                        />
+                                                        <Label htmlFor={`${from}-to-${to}`} className="text-sm">{to}</Label>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
                             </CardContent>
                         </Card>
@@ -1234,7 +1236,7 @@ export default function TourCalculatorPage() {
                                 <Card>
                                     <CardHeader>
                                         <CardTitle>ລາຄາຂາຍ</CardTitle>
-                                        <CardDescription>ຄຳນວນລາຄາຂາຍໂດຍອີງໃສ່ເປີເຊັນທີ່ເພີ່ມຂຶ້ນ</CardDescription>
+                                        <CardDescription>ຄຳນວນລາຄາຂາຍโดยອີງໃສ່ເປີເຊັນທີ່ເພີ່ມຂຶ້ນ</CardDescription>
                                     </CardHeader>
                                     <CardContent className="space-y-4">
                                         <div className="grid gap-2">
