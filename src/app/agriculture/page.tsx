@@ -1,4 +1,8 @@
 
+"use client";
+
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Leaf, Package, Calculator, Truck, Users, Landmark, BarChart, ArrowLeft } from "lucide-react"
 import Link from 'next/link'
@@ -6,6 +10,22 @@ import { Button } from "@/components/ui/button"
 
 
 export default function AgriculturePage() {
+    const router = useRouter();
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        setIsMounted(true);
+        const isAuthenticated = sessionStorage.getItem('agriculture-auth');
+        if (!isAuthenticated) {
+            router.replace('/agriculture/login');
+        }
+    }, [router]);
+
+    if (!isMounted) {
+        return null; 
+    }
+
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">

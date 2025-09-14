@@ -27,7 +27,7 @@ export default function Home() {
               </CardContent>
             </Card>
           </Link>
-          <Link href="/agriculture">
+          <Link href="/agriculture/login">
             <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-2xl font-bold font-headline">ທຸລະກິດກະສິກຳ</CardTitle>
@@ -45,5 +45,3 @@ export default function Home() {
     </div>
   )
 }
-
-    
