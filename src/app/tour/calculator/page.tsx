@@ -244,13 +244,16 @@ export default function TourCalculatorPage() {
         updateCosts('accommodations', accommodations);
     };
     const updateRoom = (accId: string, roomId: string, field: keyof Room, value: any) => {
-         const accommodations = allCosts.accommodations.map(acc => {
+        const updatedAccommodations = allCosts.accommodations.map(acc => {
             if (acc.id === accId) {
-                const updatedRooms = acc.rooms.map(room => room.id === roomId ? { ...room, [field]: value } : room);
-                 updateCosts('accommodations', accommodations);
+                const updatedRooms = acc.rooms.map(room => 
+                    room.id === roomId ? { ...room, [field]: value } : room
+                );
+                return { ...acc, rooms: updatedRooms };
             }
             return acc;
         });
+        updateCosts('accommodations', updatedAccommodations);
     };
     const deleteRoom = (accId: string, roomId: string) => {
          const accommodations = allCosts.accommodations.map(acc => {
@@ -588,13 +591,13 @@ export default function TourCalculatorPage() {
                         </CardContent>
                     </Card>
 
-                    <Card className="print:hidden">
+                    <Card>
                         <CardHeader>
                             <CardTitle>ຄຳນວນຄ່າໃຊ້ຈ່າຍ</CardTitle>
                             <CardDescription>ເພີ່ມ ແລະ ຈັດການຄ່າໃຊ້ຈ່າຍຕ່າງໆ</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <Accordion type="multiple" className="w-full space-y-2 mt-4 columns-1 md:columns-2 md:gap-4">
+                            <Accordion type="multiple" className="w-full space-y-4 md:space-y-0 md:columns-2 md:gap-8 print:columns-1 print:space-y-4">
                                 {/* Accommodation */}
                                 <CostCategoryContent title="ຄ່າທີ່ພັກ" icon={<BedDouble className="h-5 w-5" />}>
                                     <div className="space-y-4 pt-2">
@@ -602,7 +605,7 @@ export default function TourCalculatorPage() {
                                             <Card key={acc.id} className="bg-muted/30">
                                                 <CardHeader className="flex-row items-center justify-between p-3 bg-muted/50">
                                                     <CardTitle className="text-base">ທີ່ພັກ #{index + 1}</CardTitle>
-                                                    <div>
+                                                    <div className="print:hidden">
                                                         <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(acc.id)}>
                                                             {itemVisibility[acc.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
                                                         </Button>
@@ -682,6 +685,7 @@ export default function TourCalculatorPage() {
                                         ))}
                                         <Button onClick={addAccommodation}><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າທີ່ພັກ</Button>
                                     </div>
+                                    <SummaryFooter title="ລວມຄ່າທີ່ພັກ" totals={accommodationTotals} />
                                 </CostCategoryContent>
                                 
                                 {/* Transport */}
@@ -691,7 +695,7 @@ export default function TourCalculatorPage() {
                                             <Card key={trip.id} className="bg-muted/30">
                                                 <CardHeader className="flex-row items-center justify-between p-3 bg-muted/50">
                                                     <CardTitle className="text-base">ການເດີນທາງ #{index + 1}</CardTitle>
-                                                    <div>
+                                                    <div className="print:hidden">
                                                         <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(trip.id)}>
                                                             {itemVisibility[trip.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
                                                         </Button>
@@ -743,6 +747,7 @@ export default function TourCalculatorPage() {
                                         ))}
                                         <Button onClick={addTrip}><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າຂົນສົ່ງ</Button>
                                     </div>
+                                    <SummaryFooter title="ລວມຄ່າຂົນສົ່ງ" totals={tripTotals} />
                                 </CostCategoryContent>
                                 {/* Flights */}
                                 <CostCategoryContent title="ຄ່າປີ້ຍົນ" icon={<Plane className="h-5 w-5" />}>
@@ -751,7 +756,7 @@ export default function TourCalculatorPage() {
                                             <Card key={flight.id} className="bg-muted/30">
                                                 <CardHeader className="flex-row items-center justify-between p-3 bg-muted/50">
                                                     <CardTitle className="text-base">ປີ້ຍົນ #{index + 1}</CardTitle>
-                                                    <div>
+                                                    <div className="print:hidden">
                                                         <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(flight.id)}>
                                                             {itemVisibility[flight.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
                                                         </Button>
@@ -813,6 +818,7 @@ export default function TourCalculatorPage() {
                                         ))}
                                         <Button onClick={addFlight}><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າປີ້ຍົນ</Button>
                                     </div>
+                                    <SummaryFooter title="ລວມຄ່າປີ້ຍົນ" totals={flightTotals} />
                                 </CostCategoryContent>
                                 {/* Train Tickets */}
                                 <CostCategoryContent title="ຄ່າປີ້ລົດໄຟ" icon={<TrainFront className="h-5 w-5" />}>
@@ -821,7 +827,7 @@ export default function TourCalculatorPage() {
                                             <Card key={ticket.id} className="bg-muted/30">
                                                 <CardHeader className="flex-row items-center justify-between p-3 bg-muted/50">
                                                     <CardTitle className="text-base">ປີ້ລົດໄຟ #{index + 1}</CardTitle>
-                                                    <div>
+                                                    <div className="print:hidden">
                                                         <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(ticket.id)}>
                                                             {itemVisibility[ticket.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
                                                         </Button>
@@ -887,6 +893,7 @@ export default function TourCalculatorPage() {
                                         ))}
                                         <Button onClick={addTrainTicket}><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າປີ້ລົດໄຟ</Button>
                                     </div>
+                                    <SummaryFooter title="ລວມຄ່າປີ້ລົດໄຟ" totals={trainTotals} />
                                 </CostCategoryContent>
                                 {/* Entrance Fees */}
                                 <CostCategoryContent title="ຄ່າເຂົ້າຊົມສະຖານທີ່" icon={<Camera className="h-5 w-5" />}>
@@ -895,7 +902,7 @@ export default function TourCalculatorPage() {
                                             <Card key={fee.id} className="bg-muted/30">
                                                 <CardHeader className="flex-row items-center justify-between p-3 bg-muted/50">
                                                     <CardTitle className="text-base">ຄ່າເຂົ້າຊົມ #{index + 1}</CardTitle>
-                                                    <div>
+                                                    <div className="print:hidden">
                                                         <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(fee.id)}>
                                                             {itemVisibility[fee.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
                                                         </Button>
@@ -937,6 +944,7 @@ export default function TourCalculatorPage() {
                                         ))}
                                         <Button onClick={addEntranceFee}><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າເຂົ້າຊົມ</Button>
                                     </div>
+                                    <SummaryFooter title="ລວມຄ່າເຂົ້າຊົມ" totals={entranceFeeTotals} />
                                 </CostCategoryContent>
                                 {/* Meals */}
                                 <CostCategoryContent title="ຄ່າອາຫານ" icon={<UtensilsCrossed className="h-5 w-5" />}>
@@ -945,7 +953,7 @@ export default function TourCalculatorPage() {
                                             <Card key={meal.id} className="bg-muted/30">
                                                 <CardHeader className="flex-row items-center justify-between p-3 bg-muted/50">
                                                     <CardTitle className="text-base">ລາຍການອາຫານ #{index + 1}</CardTitle>
-                                                    <div>
+                                                    <div className="print:hidden">
                                                         <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(meal.id)}>
                                                             {itemVisibility[meal.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
                                                         </Button>
@@ -997,6 +1005,7 @@ export default function TourCalculatorPage() {
                                         ))}
                                         <Button onClick={addMealCost}><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າອາຫານ</Button>
                                 </div>
+                                <SummaryFooter title="ລວມຄ່າອາຫານ" totals={mealTotals} />
                                 </CostCategoryContent>
                                 {/* Guide */}
                                 <CostCategoryContent title="ຄ່າໄກ້" icon={<Users className="h-5 w-5" />}>
@@ -1005,7 +1014,7 @@ export default function TourCalculatorPage() {
                                             <Card key={guide.id} className="bg-muted/30">
                                                 <CardHeader className="flex-row items-center justify-between p-3 bg-muted/50">
                                                     <CardTitle className="text-base">ລາຍການໄກ້ #{index + 1}</CardTitle>
-                                                    <div>
+                                                    <div className="print:hidden">
                                                         <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(guide.id)}>
                                                             {itemVisibility[guide.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
                                                         </Button>
@@ -1047,6 +1056,7 @@ export default function TourCalculatorPage() {
                                         ))}
                                         <Button onClick={addGuideFee}><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າໄກ້</Button>
                                 </div>
+                                <SummaryFooter title="ລວມຄ່າໄກ້" totals={guideTotals} />
                                 </CostCategoryContent>
                                 {/* Documents */}
                                 <CostCategoryContent title="ຄ່າເອກະສານ" icon={<FileText className="h-5 w-5" />}>
@@ -1055,7 +1065,7 @@ export default function TourCalculatorPage() {
                                             <Card key={doc.id} className="bg-muted/30">
                                                 <CardHeader className="flex-row items-center justify-between p-3 bg-muted/50">
                                                     <CardTitle className="text-base">ລາຍການເອກະສານ #{index + 1}</CardTitle>
-                                                    <div>
+                                                    <div className="print:hidden">
                                                         <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(doc.id)}>
                                                             {itemVisibility[doc.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
                                                         </Button>
@@ -1093,6 +1103,7 @@ export default function TourCalculatorPage() {
                                         ))}
                                         <Button onClick={addDocumentFee}><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າເອກະສານ</Button>
                                     </div>
+                                    <SummaryFooter title="ລວມຄ່າເອກະສານ" totals={documentTotals} />
                                 </CostCategoryContent>
                             </Accordion>
                         </CardContent>
@@ -1154,7 +1165,7 @@ export default function TourCalculatorPage() {
                                 </CardHeader>
                                 <CardContent className="space-y-4">
                                     <div>
-                                        <Label htmlFor="target-currency">ເລືອກສະກຸນເງິນ</Label>
+                                        <Label htmlFor="target-currency">ເລືอกສະກຸນເງິນ</Label>
                                         <Select value={targetCurrency} onValueChange={v => setTargetCurrency(v as Currency)}>
                                             <SelectTrigger id="target-currency">
                                                 <SelectValue />
@@ -1179,4 +1190,5 @@ export default function TourCalculatorPage() {
     );
 
 }
+
 
