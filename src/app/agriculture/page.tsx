@@ -32,12 +32,12 @@ export default function AgriculturePage() {
         <Button variant="outline" size="icon" className="h-8 w-8" asChild>
           <Link href="/">
               <ArrowLeft className="h-4 w-4" />
-              <span className="sr-only">กลับไปหน้าหลัก</span>
+              <span className="sr-only">ກັບໄປໜ້າຫຼັກ</span>
           </Link>
         </Button>
         <div className="flex items-center gap-2">
             <Leaf className="h-6 w-6 text-primary" />
-            <h1 className="text-xl font-bold tracking-tight font-headline">แดชบอร์ดร้านค้าเกษตร</h1>
+            <h1 className="text-xl font-bold tracking-tight font-headline">ແດຊ໌ບອດທຸລະກິດກະສິກຳ</h1>
         </div>
       </header>
       <main className="flex flex-1 flex-col items-center justify-center gap-8 p-4">

@@ -47,13 +47,13 @@ export default function AgricultureLoginPage() {
                     <div className="flex justify-center mb-4">
                          <Leaf className="h-10 w-10 text-primary" />
                     </div>
-                    <CardTitle>เข้าสู่ระบบธุรกิจเกษตร</CardTitle>
-                    <CardDescription>กรุณาป้อนรหัสผ่านเพื่อเข้าใช้งาน</CardDescription>
+                    <CardTitle className="font-headline">ເຂົ້າສູ່ລະບົບທຸລະກິດກະສິກຳ</CardTitle>
+                    <CardDescription>ກະລຸນາປ້ອນລະຫັດຜ່ານເພື່ອເຂົ້າໃຊ້ງານ</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={handleLogin} className="grid gap-4">
                         <div className="grid gap-2">
-                            <Label htmlFor="password">รหัสผ่าน</Label>
+                            <Label htmlFor="password">ລະຫັດຜ່ານ</Label>
                             <Input
                                 id="password"
                                 type="password"
@@ -63,7 +63,7 @@ export default function AgricultureLoginPage() {
                             />
                         </div>
                         <Button type="submit" className="w-full">
-                            เข้าสู่ระบบ
+                            ເຂົ້າສູ່ລະບົບ
                         </Button>
                     </form>
                 </CardContent>
