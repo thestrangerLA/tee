@@ -244,7 +244,7 @@ export default function TourCalculatorPage() {
         });
         updateCosts('accommodations', accommodations);
     };
-   const updateRoom = (accId: string, roomId: string, field: keyof Room, value: any) => {
+    const updateRoom = (accId: string, roomId: string, field: keyof Room, value: any) => {
         const updatedAccommodations = allCosts.accommodations.map(acc => {
             if (acc.id === accId) {
                 const updatedRooms = acc.rooms.map(room => 
@@ -461,7 +461,7 @@ export default function TourCalculatorPage() {
                      <div className="hidden print:block print:space-y-2 print:p-2">
                         <TotalCostCard totalsByCategory={totalsByCategory} />
                     </div>
-                    <div className="hidden print:block print:space-y-2 print:p-2">
+                    <div className="hidden print:block print:space-y-2 print:p-2 print-page-break-before">
                         <Card>
                             <CardHeader className="print:px-2 print:py-1">
                                 <CardTitle className="print:text-base print:font-bold">ຄ່າໃຊ້ຈ່າຍລວມທັງໝົດ</CardTitle>
@@ -650,7 +650,7 @@ export default function TourCalculatorPage() {
                             <CardDescription>ເພີ່ມ ແລະ ຈັດການຄ່າໃຊ້ຈ່າຍຕ່າງໆ</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <Accordion type="multiple" className="w-full space-y-4 md:space-y-0 md:columns-2 md:gap-8">
+                            <Accordion type="multiple" className="w-full space-y-4 md:columns-2 md:gap-8">
                                 {/* Accommodation */}
                                 <CostCategoryContent title="ຄ່າທີ່ພັກ" icon={<BedDouble className="h-5 w-5" />}>
                                     <div className="space-y-4 pt-2">
@@ -1162,9 +1162,9 @@ export default function TourCalculatorPage() {
                         </CardContent>
                     </Card>
                     
-                    <div><TotalCostCard totalsByCategory={totalsByCategory} /></div>
+                    <div className="print:hidden"><TotalCostCard totalsByCategory={totalsByCategory} /></div>
 
-                    <div className="space-y-4">
+                    <div className="space-y-4 print:hidden">
                         <Card>
                             <CardHeader>
                                 <CardTitle>ຄ່າໃຊ້ຈ່າຍລວມທັງໝົດ ແລະ ອັດຕາແລກປ່ຽນ</CardTitle>

@@ -85,6 +85,7 @@
 @media print {
   html, body {
     background-color: #fff !important;
+    font-size: 10px; /* Smaller base font for print */
   }
   .print-container {
       display: block !important;
@@ -134,6 +135,9 @@
   .print\:text-sm { font-size: 0.875rem !important; line-height: 1.25rem !important; }
   .print\:text-xs { font-size: 0.75rem !important; line-height: 1rem !important; }
   .print\:font-bold { font-weight: 700 !important; }
+  .print-page-break-before {
+    break-before: page;
+  }
   main {
     margin: 0;
     padding: 0;
