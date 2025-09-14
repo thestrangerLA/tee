@@ -84,7 +84,7 @@ const costCategories: Array<keyof TourCosts> = [
 
 
 const CostCategoryContent = ({ title, icon, children }: { title: string, icon: React.ReactNode, children: React.ReactNode }) => (
-     <AccordionItem value={title.toLowerCase().replace(/\s/g, '-')}>
+     <AccordionItem value={title.toLowerCase().replace(/\s/g, '-')} className="break-inside-avoid">
         <AccordionTrigger className="text-lg font-semibold">
           <div className="flex items-center gap-3">
             {icon} {title}
@@ -257,7 +257,7 @@ export default function TourCalculatorPage() {
     const addFlight = () => addItem('flights', { id: uuidv4(), from: '', to: '', departureTime: '08:00', pricePerPerson: 0, numPeople: 1, currency: 'USD' });
     const addTrainTicket = () => addItem('trainTickets', { id: uuidv4(), from: '', to: '', departureTime: '08:00', ticketClass: '', numTickets: 1, pricePerTicket: 0, currency: 'LAK' });
     const addEntranceFee = () => addItem('entranceFees', { id: uuidv4(), locationName: '', pax: 1, numLocations: 1, price: 0, currency: 'LAK' });
-    const addMealCost = () => addItem('meals', { id: uuidv4(), name: '', pax: 1, breakfast: 0, lunch: 0, pricePerMeal: 0, currency: 'LAK' });
+    const addMealCost = () => addItem('meals', { id: uuidv4(), name: '', pax: 1, breakfast: 0, lunch: 0, dinner: 0, pricePerMeal: 0, currency: 'LAK' });
     const addGuideFee = () => addItem('guides', { id: uuidv4(), guideName: '', numGuides: 1, numDays: 1, pricePerDay: 0, currency: 'LAK' });
     const addDocumentFee = () => addItem('documents', { id: uuidv4(), documentName: '', pax: 1, price: 0, currency: 'LAK' });
     
@@ -564,7 +564,7 @@ export default function TourCalculatorPage() {
                             <CardDescription>ເພີ່ມ ແລະ ຈັດການຄ່າໃຊ້ຈ່າຍຕ່າງໆ</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <Accordion type="multiple" className="w-full space-y-2 mt-4">
+                            <Accordion type="multiple" className="w-full space-y-2 mt-4 columns-1 md:columns-2 md:gap-4">
                                 {/* Accommodation */}
                                 <CostCategoryContent title="ຄ່າທີ່ພັກ" icon={<BedDouble className="h-5 w-5" />}>
                                     <div className="space-y-4 pt-2">
@@ -1096,5 +1096,3 @@ export default function TourCalculatorPage() {
     );
 
 }
-
-    
