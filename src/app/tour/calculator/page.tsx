@@ -1162,59 +1162,60 @@ export default function TourCalculatorPage() {
                                     ))}
                                 </CardContent>
                             </Card>
-
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>ຍອດລວມທີ່ແປງແລ້ວ</CardTitle>
-                                    <CardDescription>ຍອດລວມທັງໝົດໃນສະກຸນເງິນດຽວ</CardDescription>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    <div>
-                                        <Label htmlFor="target-currency">ເລືอกສະກຸນເງິນ</Label>
-                                        <Select value={targetCurrency} onValueChange={v => setTargetCurrency(v as Currency)}>
-                                            <SelectTrigger id="target-currency">
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {(Object.keys(currencySymbols) as Currency[]).map(c => <SelectItem key={c} value={c}>{currencySymbols[c]}</SelectItem>)}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <div className="border bg-background rounded-lg p-4 text-center">
-                                        <p className="text-sm text-muted-foreground">ຍອດລວມ</p>
-                                        <p className="text-3xl font-bold text-primary">{formatNumber(convertedTotal, {maximumFractionDigits: 2})}</p>
-                                        <p className="font-semibold">{targetCurrency}</p>
-                                    </div>
-                                </CardContent>
-                            </Card>
-
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>ລາຄາຂາຍ</CardTitle>
-                                    <CardDescription>ຄຳນວນລາຄາຂາຍໂດຍອີງໃສ່ເປີເຊັນທີ່ເພີ່ມຂຶ້ນ</CardDescription>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="selling-percentage">ຍອດລວມ x %</Label>
-                                        <div className="relative">
-                                            <Percent className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                            <Input
-                                                id="selling-percentage"
-                                                type="number"
-                                                value={sellingPricePercentage}
-                                                onChange={(e) => setSellingPricePercentage(Number(e.target.value))}
-                                                placeholder="20"
-                                                className="pl-10"
-                                            />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle>ຍອດລວມທີ່ແປງແລ້ວ</CardTitle>
+                                        <CardDescription>ຍອດລວມທັງໝົດໃນສະກຸນເງິນດຽວ</CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        <div>
+                                            <Label htmlFor="target-currency">ເລືอกສະກຸນເງິນ</Label>
+                                            <Select value={targetCurrency} onValueChange={v => setTargetCurrency(v as Currency)}>
+                                                <SelectTrigger id="target-currency">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {(Object.keys(currencySymbols) as Currency[]).map(c => <SelectItem key={c} value={c}>{currencySymbols[c]}</SelectItem>)}
+                                                </SelectContent>
+                                            </Select>
                                         </div>
-                                    </div>
-                                    <div className="border bg-background rounded-lg p-4 text-center">
-                                        <p className="text-sm text-muted-foreground">ລາຄາຂາຍສຸດທິ</p>
-                                        <p className="text-3xl font-bold text-primary">{formatNumber(sellingPrice, {maximumFractionDigits: 2})}</p>
-                                        <p className="font-semibold">{targetCurrency}</p>
-                                    </div>
-                                </CardContent>
-                            </Card>
+                                        <div className="border bg-background rounded-lg p-4 text-center">
+                                            <p className="text-sm text-muted-foreground">ຍອດລວມ</p>
+                                            <p className="text-3xl font-bold text-primary">{formatNumber(convertedTotal, {maximumFractionDigits: 2})}</p>
+                                            <p className="font-semibold">{targetCurrency}</p>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle>ລາຄາຂາຍ</CardTitle>
+                                        <CardDescription>ຄຳນວນລາຄາຂາຍໂດຍອີງໃສ່ເປີເຊັນທີ່ເພີ່ມຂຶ້ນ</CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="selling-percentage">ຍອດລວມ x %</Label>
+                                            <div className="relative">
+                                                <Percent className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                                <Input
+                                                    id="selling-percentage"
+                                                    type="number"
+                                                    value={sellingPricePercentage}
+                                                    onChange={(e) => setSellingPricePercentage(Number(e.target.value))}
+                                                    placeholder="20"
+                                                    className="pl-10"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="border bg-background rounded-lg p-4 text-center">
+                                            <p className="text-sm text-muted-foreground">ລາຄາຂາຍສຸດທິ</p>
+                                            <p className="text-3xl font-bold text-primary">{formatNumber(sellingPrice, {maximumFractionDigits: 2})}</p>
+                                            <p className="font-semibold">{targetCurrency}</p>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </div>
                         </div>
                     </div>
                 </div>
