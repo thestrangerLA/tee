@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { ArrowLeft, Save, Trash2, MapPin, Calendar as CalendarIcon, BedDouble, Truck, Plane, TrainFront, PlusCircle, Camera, UtensilsCrossed, Users, FileText, Copy, Clock, Eye, EyeOff, Download, History, Printer, ChevronsRight, Percent } from "lucide-react";
+import { ArrowLeft, Save, Trash2, MapPin, Calendar as CalendarIcon, BedDouble, Truck, Plane, TrainFront, PlusCircle, Camera, UtensilsCrossed, Users, FileText, Copy, Clock, Eye, EyeOff, Download, History, Printer, ChevronsRight, Percent, TrendingUp } from "lucide-react";
 import { format } from 'date-fns';
 import { th } from 'date-fns/locale';
 import { TotalCostCard } from '@/components/tour/TotalCostCard';
@@ -378,6 +378,10 @@ export default function TourCalculatorPage() {
     const sellingPrice = useMemo(() => {
         return convertedTotal * (1 + (sellingPricePercentage || 0) / 100);
     }, [convertedTotal, sellingPricePercentage]);
+    
+    const profit = useMemo(() => {
+        return sellingPrice - convertedTotal;
+    }, [sellingPrice, convertedTotal]);
 
     const handleRateChange = (from: Currency, to: Currency, value: string) => {
         const rate = parseFloat(value) || 0;
@@ -1116,13 +1120,13 @@ export default function TourCalculatorPage() {
                     
                     <div className="print:hidden"><TotalCostCard totalsByCategory={totalsByCategory} /></div>
 
-                    <div className="grid md:grid-cols-2 gap-8 print:hidden">
-                        <Card>
+                    <div className="grid grid-cols-1 gap-8 print:hidden">
+                         <Card>
                             <CardHeader>
                                 <CardTitle>ຄ່າໃຊ້ຈ່າຍລວມທັງໝົດ</CardTitle>
                                 <CardDescription>ສະຫຼຸບລວມຍອດຄ່າໃຊ້ຈ່າຍທັງໝົດແຍກຕາມສະກຸນເງິນ</CardDescription>
                             </CardHeader>
-                            <CardContent className="grid grid-cols-2 gap-4">
+                            <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 {(Object.keys(grandTotals) as Currency[]).map(currency => (
                                     <Card key={currency}>
                                         <CardHeader className="pb-2">
@@ -1142,7 +1146,7 @@ export default function TourCalculatorPage() {
                                     <CardTitle>ອັດຕາແລກປ່ຽນ</CardTitle>
                                     <CardDescription>ໃສ່ອັດຕາແລກປ່ຽນເພື່ອຄຳນວນຍອດລວມ</CardDescription>
                                 </CardHeader>
-                                <CardContent className="grid grid-cols-2 gap-4">
+                                <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                     {(Object.keys(exchangeRates) as Currency[]).map(from => (
                                         <div key={from} className="space-y-2">
                                             <Label className="font-semibold">1 {from}</Label>
@@ -1162,7 +1166,7 @@ export default function TourCalculatorPage() {
                                     ))}
                                 </CardContent>
                             </Card>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <Card>
                                     <CardHeader>
                                         <CardTitle>ຍອດລວມທີ່ແປງແລ້ວ</CardTitle>
@@ -1211,6 +1215,19 @@ export default function TourCalculatorPage() {
                                         <div className="border bg-background rounded-lg p-4 text-center">
                                             <p className="text-sm text-muted-foreground">ລາຄາຂາຍສຸດທິ</p>
                                             <p className="text-3xl font-bold text-primary">{formatNumber(sellingPrice, {maximumFractionDigits: 2})}</p>
+                                            <p className="font-semibold">{targetCurrency}</p>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                                 <Card>
+                                    <CardHeader>
+                                        <CardTitle className="flex items-center gap-2"><TrendingUp/>ກຳໄລ</CardTitle>
+                                        <CardDescription>ກຳໄລຈາກເປີເຊັນທີ່ເພີ່ມຂຶ້ນ</CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        <div className="border bg-background rounded-lg p-4 text-center h-full flex flex-col justify-center">
+                                            <p className="text-sm text-muted-foreground">ກຳໄລ</p>
+                                            <p className="text-3xl font-bold text-green-600">{formatNumber(profit, {maximumFractionDigits: 2})}</p>
                                             <p className="font-semibold">{targetCurrency}</p>
                                         </div>
                                     </CardContent>
