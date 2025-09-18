@@ -577,7 +577,7 @@ export default function TourCalculatorPage() {
                                         <div>
                                             <p className="font-semibold">{calc.tourInfo.groupCode || 'ບໍ່ມີລະຫັດ'}</p>
                                             <p className="text-xs text-muted-foreground">{calc.tourInfo.program}</p>
-                                            <p className="text-xs text-muted-foreground">ບັນທຶກເມື່ອ: {format(calc.savedAt, 'dd/MM/yy HH:mm')}</p>
+                                            <p className="text-xs text-muted-foreground">ບັນທຶກເມື່ອ: {calc.savedAt instanceof Date && !isNaN(calc.savedAt.getTime()) ? format(calc.savedAt, 'dd/MM/yy HH:mm') : '...'}</p>
                                         </div>
                                         <div className="flex gap-1">
                                             <Button size="sm" variant="outline" onClick={() => handleLoadCalculation(calc.id)}>
@@ -1190,7 +1190,7 @@ export default function TourCalculatorPage() {
                                 <Card>
                                     <CardHeader>
                                         <CardTitle>ລາຄາຂາຍ</CardTitle>
-                                        <CardDescription>ຄຳນວນລາຄາຂາຍโดยອີງໃສ່ເປີເຊັນທີ່ເພີ່ມຂຶ້ນ</CardDescription>
+                                        <CardDescription>ຄຳນວນລາຄາຂາຍໂດຍອີງໃສ່ເປີເຊັນທີ່ເພີ່ມຂຶ້ນ</CardDescription>
                                     </CardHeader>
                                     <CardContent className="space-y-4">
                                         <div className="grid gap-2">
@@ -1235,3 +1235,5 @@ export default function TourCalculatorPage() {
     );
 
 }
+
+    
