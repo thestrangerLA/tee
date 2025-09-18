@@ -19,10 +19,11 @@ import { TotalCostCard } from '@/components/tour/TotalCostCard';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import type { TourInfo, TourCosts, SavedCalculation, Accommodation, Room, Trip, Flight, TrainTicket, EntranceFee, MealCost, GuideFee, DocumentFee, Currency } from '@/lib/types';
+import { listenToSavedCalculations, saveCalculation, deleteCalculation, getCalculation } from '@/services/tourCalculatorService';
 
 
 // Types
-type Currency = 'USD' | 'THB' | 'LAK' | 'CNY';
 
 const currencySymbols: Record<Currency, string> = {
     USD: '$ (ດอลລár)',
@@ -32,50 +33,6 @@ const currencySymbols: Record<Currency, string> = {
 };
 
 const formatNumber = (num: number, options?: Intl.NumberFormatOptions) => new Intl.NumberFormat('en-US', options).format(num);
-
-// --- Component Prop Types ---
-type Accommodation = { id: string; name: string; type: 'hotel' | 'guesthouse'; checkInDate?: Date; rooms: Room[]; };
-type Room = { id: string; type: string; numRooms: number; numNights: number; price: number; currency: Currency; };
-type Trip = { id: string; location: string; route: string; vehicleType: string; numVehicles: number; numDays: number; pricePerVehicle: number; currency: Currency; };
-type Flight = { id: string; from: string; to: string; departureDate?: Date; departureTime: string; pricePerPerson: number; numPeople: number; currency: Currency; };
-type TrainTicket = { id: string; from: string; to: string; departureDate?: Date; departureTime: string; ticketClass: string; numTickets: number; pricePerTicket: number; currency: Currency; };
-type EntranceFee = { id: string; locationName: string; pax: number; numLocations: number; price: number; currency: Currency; };
-type MealCost = { id: string; name: string; pax: number; breakfast: number; lunch: number; dinner: number; pricePerMeal: number; currency: Currency; };
-type GuideFee = { id: string; guideName: string; numGuides: number; numDays: number; pricePerDay: number; currency: Currency; };
-type DocumentFee = { id: string; documentName: string; pax: number; price: number; currency: Currency; };
-
-interface TourInfo {
-    mouContact: string;
-    groupCode: string;
-    destinationCountry: string;
-    program: string;
-    startDate?: Date;
-    endDate?: Date;
-    numDays: number;
-    numNights: number;
-    numPeople: number;
-    travelerInfo: string;
-}
-
-interface TourCosts {
-    accommodations: Accommodation[];
-    trips: Trip[];
-    flights: Flight[];
-    trainTickets: TrainTicket[];
-    entranceFees: EntranceFee[];
-    meals: MealCost[];
-    guides: GuideFee[];
-    documents: DocumentFee[];
-}
-
-interface SavedCalculation {
-    id: string;
-    savedAt: Date;
-    tourInfo: TourInfo;
-    allCosts: TourCosts;
-}
-
-const SAVED_CALCULATIONS_KEY = 'tour-savedCalculations';
 
 const costCategories: Array<keyof TourCosts> = [
     'accommodations', 'trips', 'flights', 'trainTickets',
@@ -137,20 +94,9 @@ export default function TourCalculatorPage() {
 
 
     useEffect(() => {
-        const saved = localStorage.getItem(SAVED_CALCULATIONS_KEY);
-        if (saved) {
-            setSavedCalculations(JSON.parse(saved, (key, value) => {
-                 if (key === 'savedAt' || key === 'startDate' || key === 'endDate' || key === 'checkInDate' || key === 'departureDate') {
-                    return value ? new Date(value) : undefined;
-                 }
-                 return value;
-            }));
-        }
+        const unsubscribe = listenToSavedCalculations(setSavedCalculations);
+        return () => unsubscribe();
     }, []);
-
-    const saveCalculationsToLocalStorage = (calculations: SavedCalculation[]) => {
-        localStorage.setItem(SAVED_CALCULATIONS_KEY, JSON.stringify(calculations));
-    };
 
 
     const toggleItemVisibility = (itemId: string) => {
@@ -161,57 +107,63 @@ export default function TourCalculatorPage() {
         setAllCosts(prev => ({ ...prev, [category]: data }));
     }, []);
     
-    const handleSaveCalculation = () => {
-        const newCalculation: SavedCalculation = {
-            id: uuidv4(),
-            savedAt: new Date(),
-            tourInfo: JSON.parse(JSON.stringify(tourInfo)), // Deep copy
-            allCosts: JSON.parse(JSON.stringify(allCosts)), // Deep copy
-        };
-        const updatedSaved = [...savedCalculations, newCalculation];
-        setSavedCalculations(updatedSaved);
-        saveCalculationsToLocalStorage(updatedSaved);
-        toast({
-            title: "ບັນທຶກການຄຳນວນສຳເລັດ",
-            description: `ຂໍ້ມູນ ${tourInfo.groupCode || 'ບໍ່ມີຊື່'} ໄດ້ຖືກບັນທຶກແລ້ວ.`,
-        });
+    const handleSaveCalculation = async () => {
+        try {
+            await saveCalculation({ tourInfo, allCosts });
+            toast({
+                title: "ບັນທຶກການຄຳນວນສຳເລັດ",
+                description: `ຂໍ້ມູນ ${tourInfo.groupCode || 'ບໍ່ມີຊື່'} ໄດ້ຖືກບັນທຶກແລ້ວ.`,
+            });
+        } catch (error) {
+            console.error("Error saving calculation:", error);
+            toast({
+                title: "ເກີດຂໍ້ຜິດພາດ",
+                description: "ບໍ່ສາມາດບັນທຶກການຄຳນວນໄດ້.",
+                variant: "destructive"
+            });
+        }
     };
 
-    const handleLoadCalculation = (id: string) => {
-        const calculationToLoad = savedCalculations.find(c => c.id === id);
-        if (calculationToLoad) {
-            // Need to parse dates correctly from JSON string
-            const parsedTourInfo = JSON.parse(JSON.stringify(calculationToLoad.tourInfo), (key, value) => {
-                if (key === 'startDate' || key === 'endDate') {
-                    return value ? new Date(value) : undefined;
-                }
-                return value;
-            });
-            const parsedAllCosts = JSON.parse(JSON.stringify(calculationToLoad.allCosts), (key, value) => {
-                 if ((key === 'checkInDate' || key === 'departureDate') && typeof value === 'string') {
-                    return new Date(value);
-                }
-                return value;
-            });
-            
-            setTourInfo(parsedTourInfo);
-            setAllCosts(parsedAllCosts);
-            toast({
-                title: "ໂຫຼດຂໍ້ມູນສຳເລັດ",
-                description: `ຂໍ້ມູນ ${calculationToLoad.tourInfo.groupCode} ໄດ້ຖືກໂຫຼດແລ້ວ.`,
+    const handleLoadCalculation = async (id: string) => {
+        try {
+            const calculationToLoad = await getCalculation(id);
+            if (calculationToLoad) {
+                setTourInfo(calculationToLoad.tourInfo);
+                setAllCosts(calculationToLoad.allCosts);
+                toast({
+                    title: "ໂຫຼດຂໍ້ມູນສຳເລັດ",
+                    description: `ຂໍ້ມູນ ${calculationToLoad.tourInfo.groupCode} ໄດ້ຖືກໂຫຼດແລ້ວ.`,
+                });
+            } else {
+                 toast({
+                    title: "ບໍ່ພົບຂໍ້ມູນ",
+                    variant: "destructive"
+                });
+            }
+        } catch (error) {
+             console.error("Error loading calculation:", error);
+             toast({
+                title: "ເກີດຂໍ້ຜິດພາດໃນການໂຫລດ",
+                variant: "destructive"
             });
         }
     };
     
-    const handleDeleteCalculation = (id: string) => {
+    const handleDeleteCalculation = async (id: string) => {
         if (window.confirm("ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບຂໍ້ມູນການຄຳນວນນີ້?")) {
-            const updatedSaved = savedCalculations.filter(c => c.id !== id);
-            setSavedCalculations(updatedSaved);
-            saveCalculationsToLocalStorage(updatedSaved);
-            toast({
-                title: "ລຶບຂໍ້ມູນສຳເລັດ",
-                variant: "destructive"
-            });
+            try {
+                await deleteCalculation(id);
+                toast({
+                    title: "ລຶບຂໍ້ມູນສຳເລັດ",
+                    variant: "destructive"
+                });
+            } catch(error) {
+                 console.error("Error deleting calculation:", error);
+                 toast({
+                    title: "ເກີດຂໍ້ຜິດພາດໃນການລຶບ",
+                    variant: "destructive"
+                });
+            }
         }
     };
 
@@ -517,7 +469,7 @@ export default function TourCalculatorPage() {
                                     <CardContent className="space-y-4">
                                         <div className="border bg-background rounded-lg p-4 text-center h-full flex flex-col justify-center">
                                             <p className="text-sm text-muted-foreground">ກຳໄລ</p>
-                                            <p className="text-2xl font-bold text-green-600 print:text-lg">{formatNumber(profit, {maximumFractionDigits: 2})}</p>
+                                            <p className="text-3xl font-bold text-green-600 print:text-lg">{formatNumber(profit, {maximumFractionDigits: 2})}</p>
                                             <p className="font-semibold">{targetCurrency}</p>
                                         </div>
                                     </CardContent>
@@ -644,523 +596,525 @@ export default function TourCalculatorPage() {
                         </CardContent>
                     </Card>
 
-                    <Card className="print:hidden">
-                        <CardHeader>
-                            <CardTitle>ຄຳນວນຄ່າໃຊ້ຈ່າຍ</CardTitle>
-                            <CardDescription>ເພີ່ມ ແລະ ຈັດການຄ່າໃຊ້ຈ່າຍຕ່າງໆ</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <Accordion type="multiple" className="w-full space-y-4 md:columns-2 md:gap-8">
-                                {/* Accommodation */}
-                                <CostCategoryContent title="ຄ່າທີ່ພັກ" icon={<BedDouble className="h-5 w-5" />}>
-                                    <div className="space-y-4 pt-2">
-                                        {allCosts.accommodations.map((acc, index) => (
-                                            <Card key={acc.id} className="bg-muted/30">
-                                                <CardHeader className="flex-row items-center justify-between p-3 bg-muted/50">
-                                                    <CardTitle className="text-base">ທີ່ພັກ #{index + 1}</CardTitle>
-                                                    <div className="print:hidden">
-                                                        <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(acc.id)}>
-                                                            {itemVisibility[acc.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
-                                                        </Button>
-                                                        <Button variant="ghost" size="icon" onClick={() => deleteItem('accommodations', acc.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
-                                                    </div>
-                                                </CardHeader>
-                                            {(itemVisibility[acc.id] !== false) && (
-                                                <CardContent className="p-4 space-y-4">
-                                                    {/* Acc Fields */}
-                                                        <div className="grid md:grid-cols-2 gap-4">
-                                                        <div className="space-y-2">
-                                                            <Label>ຊື່ທີ່ພັກ</Label>
-                                                            <Input placeholder="ຊື່ທີ່ພັກ" value={acc.name} onChange={e => updateItem('accommodations', acc.id, 'name', e.target.value)} />
+                    <div className="print:hidden">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>ຄຳນວນຄ່າໃຊ້ຈ່າຍ</CardTitle>
+                                <CardDescription>ເພີ່ມ ແລະ ຈັດການຄ່າໃຊ້ຈ່າຍຕ່າງໆ</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <Accordion type="multiple" className="w-full space-y-4 md:columns-2 md:gap-8">
+                                    {/* Accommodation */}
+                                    <CostCategoryContent title="ຄ່າທີ່ພັກ" icon={<BedDouble className="h-5 w-5" />}>
+                                        <div className="space-y-4 pt-2">
+                                            {allCosts.accommodations.map((acc, index) => (
+                                                <Card key={acc.id} className="bg-muted/30">
+                                                    <CardHeader className="flex-row items-center justify-between p-3 bg-muted/50">
+                                                        <CardTitle className="text-base">ທີ່ພັກ #{index + 1}</CardTitle>
+                                                        <div className="print:hidden">
+                                                            <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(acc.id)}>
+                                                                {itemVisibility[acc.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
+                                                            </Button>
+                                                            <Button variant="ghost" size="icon" onClick={() => deleteItem('accommodations', acc.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
                                                         </div>
-                                                        <div className="space-y-2">
-                                                            <Label>ວັນທີເຊັກອິນ</Label>
-                                                            <Popover>
-                                                                <PopoverTrigger asChild>
-                                                                    <Button variant={"outline"} className="w-full justify-start text-left font-normal">
-                                                                        <CalendarIcon className="mr-2 h-4 w-4" />
-                                                                        {acc.checkInDate ? format(new Date(acc.checkInDate), "dd/MM/yyyy") : <span>mm/dd/yyyy</span>}
-                                                                    </Button>
-                                                                </PopoverTrigger>
-                                                                <PopoverContent className="w-auto p-0">
-                                                                    <Calendar mode="single" selected={acc.checkInDate} onSelect={(date) => updateItem('accommodations', acc.id, 'checkInDate', date)} initialFocus />
-                                                                </PopoverContent>
-                                                            </Popover>
-                                                        </div>
-                                                        </div>
-                                                    {/* Rooms */}
-                                                    {acc.rooms.map((room, roomIndex) => (
-                                                        <div key={room.id} className="p-3 border rounded-md relative bg-background">
-                                                            <Label className="absolute -top-2 left-2 bg-background px-1 text-xs text-muted-foreground">ຫ້ອງ #{roomIndex+1}</Label>
-                                                            <div className="grid grid-cols-2 gap-2">
-                                                                <div className="space-y-1">
-                                                                    <Label className="text-xs">ປະເພດ</Label>
-                                                                    <Select value={room.type} onValueChange={(v) => updateRoom(acc.id, room.id, 'type', v)}>
-                                                                        <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
-                                                                        <SelectContent>
-                                                                            <SelectItem value="เตียงเดี่ยว">ຕຽງດ່ຽວ</SelectItem>
-                                                                            <SelectItem value="เตียงคู่">ຕຽງຄູ່</SelectItem>
-                                                                            <SelectItem value="ห้องสวีท">ຫ້ອງສະວີດ</SelectItem>
-                                                                        </SelectContent>
-                                                                    </Select>
-                                                                </div>
+                                                    </CardHeader>
+                                                {(itemVisibility[acc.id] !== false) && (
+                                                    <CardContent className="p-4 space-y-4">
+                                                        {/* Acc Fields */}
+                                                            <div className="grid md:grid-cols-2 gap-4">
+                                                            <div className="space-y-2">
+                                                                <Label>ຊື່ທີ່ພັກ</Label>
+                                                                <Input placeholder="ຊື່ທີ່ພັກ" value={acc.name} onChange={e => updateItem('accommodations', acc.id, 'name', e.target.value)} />
+                                                            </div>
+                                                            <div className="space-y-2">
+                                                                <Label>ວັນທີເຊັກອິນ</Label>
+                                                                <Popover>
+                                                                    <PopoverTrigger asChild>
+                                                                        <Button variant={"outline"} className="w-full justify-start text-left font-normal">
+                                                                            <CalendarIcon className="mr-2 h-4 w-4" />
+                                                                            {acc.checkInDate ? format(new Date(acc.checkInDate), "dd/MM/yyyy") : <span>mm/dd/yyyy</span>}
+                                                                        </Button>
+                                                                    </PopoverTrigger>
+                                                                    <PopoverContent className="w-auto p-0">
+                                                                        <Calendar mode="single" selected={acc.checkInDate} onSelect={(date) => updateItem('accommodations', acc.id, 'checkInDate', date)} initialFocus />
+                                                                    </PopoverContent>
+                                                                </Popover>
+                                                            </div>
+                                                            </div>
+                                                        {/* Rooms */}
+                                                        {acc.rooms.map((room, roomIndex) => (
+                                                            <div key={room.id} className="p-3 border rounded-md relative bg-background">
+                                                                <Label className="absolute -top-2 left-2 bg-background px-1 text-xs text-muted-foreground">ຫ້ອງ #{roomIndex+1}</Label>
+                                                                <div className="grid grid-cols-2 gap-2">
                                                                     <div className="space-y-1">
-                                                                    <Label className="text-xs">ຈຳນວນຫ້ອງ</Label>
-                                                                    <Input type="number" min="1" value={room.numRooms} onChange={e => updateRoom(acc.id, room.id, 'numRooms', parseInt(e.target.value) || 1)} className="h-8" />
+                                                                        <Label className="text-xs">ປະເພດ</Label>
+                                                                        <Select value={room.type} onValueChange={(v) => updateRoom(acc.id, room.id, 'type', v)}>
+                                                                            <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                                                                            <SelectContent>
+                                                                                <SelectItem value="เตียงเดี่ยว">ຕຽງດ່ຽວ</SelectItem>
+                                                                                <SelectItem value="เตียงคู่">ຕຽງຄູ່</SelectItem>
+                                                                                <SelectItem value="ห้องสวีท">ຫ້ອງສະວີດ</SelectItem>
+                                                                            </SelectContent>
+                                                                        </Select>
+                                                                    </div>
+                                                                        <div className="space-y-1">
+                                                                        <Label className="text-xs">ຈຳນວນຫ້ອງ</Label>
+                                                                        <Input type="number" min="1" value={room.numRooms} onChange={e => updateRoom(acc.id, room.id, 'numRooms', parseInt(e.target.value) || 1)} className="h-8" />
+                                                                    </div>
+                                                                    <div className="space-y-1">
+                                                                        <Label className="text-xs">ຈຳນວນຄືນ</Label>
+                                                                        <Input type="number" min="1" value={room.numNights} onChange={e => updateRoom(acc.id, room.id, 'numNights', parseInt(e.target.value) || 1)} className="h-8" />
+                                                                    </div>
+                                                                    <div className="space-y-1">
+                                                                        <Label className="text-xs">ລາຄາ/ຫ້ອງ/ຄືນ</Label>
+                                                                        <Input type="number" min="0" value={room.price} onChange={e => updateRoom(acc.id, room.id, 'price', parseFloat(e.target.value) || 0)} className="h-8" />
+                                                                    </div>
+                                                                    <div className="space-y-1 col-span-2">
+                                                                        <Label className="text-xs">ສະກຸນເງິນ</Label>
+                                                                        <Select value={room.currency} onValueChange={(v) => updateRoom(acc.id, room.id, 'currency', v)}>
+                                                                            <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                                                                            <SelectContent>
+                                                                                {(Object.keys(currencySymbols) as Currency[]).map(c => (
+                                                                                    <SelectItem key={c} value={c}>{currencySymbols[c]}</SelectItem>
+                                                                                ))}
+                                                                            </SelectContent>
+                                                                        </Select>
+                                                                    </div>
                                                                 </div>
-                                                                <div className="space-y-1">
-                                                                    <Label className="text-xs">ຈຳນວນຄືນ</Label>
-                                                                    <Input type="number" min="1" value={room.numNights} onChange={e => updateRoom(acc.id, room.id, 'numNights', parseInt(e.target.value) || 1)} className="h-8" />
-                                                                </div>
-                                                                <div className="space-y-1">
-                                                                    <Label className="text-xs">ລາຄາ/ຫ້ອງ/ຄືນ</Label>
-                                                                    <Input type="number" min="0" value={room.price} onChange={e => updateRoom(acc.id, room.id, 'price', parseFloat(e.target.value) || 0)} className="h-8" />
-                                                                </div>
-                                                                <div className="space-y-1 col-span-2">
-                                                                    <Label className="text-xs">ສະກຸນເງິນ</Label>
-                                                                    <Select value={room.currency} onValueChange={(v) => updateRoom(acc.id, room.id, 'currency', v)}>
-                                                                        <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
-                                                                        <SelectContent>
-                                                                            {(Object.keys(currencySymbols) as Currency[]).map(c => (
-                                                                                <SelectItem key={c} value={c}>{currencySymbols[c]}</SelectItem>
-                                                                            ))}
-                                                                        </SelectContent>
-                                                                    </Select>
-                                                                </div>
+                                                                {acc.rooms.length > 1 && <Button variant="ghost" size="icon" className="absolute top-0 right-0 h-6 w-6" onClick={() => deleteRoom(acc.id, room.id)}><Trash2 className="h-3 w-3 text-red-400"/></Button>}
                                                             </div>
-                                                            {acc.rooms.length > 1 && <Button variant="ghost" size="icon" className="absolute top-0 right-0 h-6 w-6" onClick={() => deleteRoom(acc.id, room.id)}><Trash2 className="h-3 w-3 text-red-400"/></Button>}
+                                                        ))}
+                                                        <Button size="sm" variant="outline" onClick={() => addRoom(acc.id)}><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຫ້ອງ</Button>
+                                                    </CardContent>
+                                                    )}
+                                                </Card>
+                                            ))}
+                                            <Button onClick={addAccommodation}><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າທີ່ພັກ</Button>
+                                        </div>
+                                        <SummaryFooter title="ລວມຄ່າທີ່ພັກ" totals={accommodationTotals} />
+                                    </CostCategoryContent>
+                                    
+                                    {/* Transport */}
+                                    <CostCategoryContent title="ຄ່າຂົນສົ່ງ" icon={<Truck className="h-5 w-5" />}>
+                                        <div className="space-y-4 pt-2">
+                                            {allCosts.trips.map((trip, index) => (
+                                                <Card key={trip.id} className="bg-muted/30">
+                                                    <CardHeader className="flex-row items-center justify-between p-3 bg-muted/50">
+                                                        <CardTitle className="text-base">ການເດີນທາງ #{index + 1}</CardTitle>
+                                                        <div className="print:hidden">
+                                                            <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(trip.id)}>
+                                                                {itemVisibility[trip.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
+                                                            </Button>
+                                                            <Button variant="ghost" size="icon" onClick={() => deleteItem('trips', trip.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
                                                         </div>
-                                                    ))}
-                                                    <Button size="sm" variant="outline" onClick={() => addRoom(acc.id)}><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຫ້ອງ</Button>
-                                                </CardContent>
-                                                )}
-                                            </Card>
-                                        ))}
-                                        <Button onClick={addAccommodation}><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າທີ່ພັກ</Button>
-                                    </div>
-                                    <SummaryFooter title="ລວມຄ່າທີ່ພັກ" totals={accommodationTotals} />
-                                </CostCategoryContent>
-                                
-                                {/* Transport */}
-                                <CostCategoryContent title="ຄ່າຂົນສົ່ງ" icon={<Truck className="h-5 w-5" />}>
-                                    <div className="space-y-4 pt-2">
-                                        {allCosts.trips.map((trip, index) => (
-                                            <Card key={trip.id} className="bg-muted/30">
-                                                <CardHeader className="flex-row items-center justify-between p-3 bg-muted/50">
-                                                    <CardTitle className="text-base">ການເດີນທາງ #{index + 1}</CardTitle>
-                                                    <div className="print:hidden">
-                                                        <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(trip.id)}>
-                                                            {itemVisibility[trip.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
-                                                        </Button>
-                                                        <Button variant="ghost" size="icon" onClick={() => deleteItem('trips', trip.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
-                                                    </div>
-                                                </CardHeader>
-                                                {(itemVisibility[trip.id] !== false) && (
-                                                <CardContent className="p-4 space-y-4">
-                                                    <div className="grid grid-cols-2 gap-4">
-                                                        <div className="space-y-2">
-                                                            <Label>ສະຖານທີ່</Label>
-                                                            <Input placeholder="ສະຖານທີ່" value={trip.location} onChange={e => updateItem('trips', trip.id, 'location', e.target.value)} />
-                                                        </div>
-                                                        <div className="space-y-2">
-                                                            <Label>ເສັ້ນທາງ</Label>
-                                                            <Input placeholder="ວຽງຈັນ - ວັງວຽງ" value={trip.route} onChange={e => updateItem('trips', trip.id, 'route', e.target.value)} />
-                                                        </div>
-                                                        <div className="col-span-2 space-y-2">
-                                                            <Label>ປະເພດລົດ</Label>
-                                                            <Input placeholder="ລົດຕູ້ທຳມະດາ" value={trip.vehicleType} onChange={e => updateItem('trips', trip.id, 'vehicleType', e.target.value)} />
-                                                        </div>
-                                                    </div>
-                                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                                                        <div className="space-y-1">
-                                                            <Label className="text-xs">ຈຳນວນຄັນ</Label>
-                                                            <Input type="number" min="1" value={trip.numVehicles} onChange={e => updateItem('trips', trip.id, 'numVehicles', parseInt(e.target.value) || 1)} className="h-8"/>
-                                                        </div>
-                                                        <div className="space-y-1">
-                                                            <Label className="text-xs">ຈຳນວນວັນ</Label>
-                                                            <Input type="number" min="1" value={trip.numDays} onChange={e => updateItem('trips', trip.id, 'numDays', parseInt(e.target.value) || 1)} className="h-8"/>
-                                                        </div>
-                                                        <div className="space-y-1">
-                                                            <Label className="text-xs">ລາຄາ/ຄັນ</Label>
-                                                            <Input type="number" min="0" value={trip.pricePerVehicle} onChange={e => updateItem('trips', trip.id, 'pricePerVehicle', parseFloat(e.target.value) || 0)} className="h-8"/>
-                                                        </div>
-                                                        <div className="space-y-1">
-                                                            <Label className="text-xs">ສະກຸນເງິນ</Label>
-                                                            <Select value={trip.currency} onValueChange={(v) => updateItem('trips', trip.id, 'currency', v)}>
-                                                                <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
-                                                                <SelectContent>
-                                                                    {(Object.keys(currencySymbols) as Currency[]).map(c => (<SelectItem key={c} value={c}>{currencySymbols[c]}</SelectItem>))}
-                                                                </SelectContent>
-                                                            </Select>
-                                                        </div>
-                                                    </div>
-                                                </CardContent>
-                                                )}
-                                            </Card>
-                                        ))}
-                                        <Button onClick={addTrip}><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າຂົນສົ່ງ</Button>
-                                    </div>
-                                    <SummaryFooter title="ລວມຄ່າຂົນສົ່ງ" totals={tripTotals} />
-                                </CostCategoryContent>
-                                {/* Flights */}
-                                <CostCategoryContent title="ຄ່າປີ້ຍົນ" icon={<Plane className="h-5 w-5" />}>
-                                    <div className="space-y-4 pt-2">
-                                        {allCosts.flights.map((flight, index) => (
-                                            <Card key={flight.id} className="bg-muted/30">
-                                                <CardHeader className="flex-row items-center justify-between p-3 bg-muted/50">
-                                                    <CardTitle className="text-base">ປີ້ຍົນ #{index + 1}</CardTitle>
-                                                    <div className="print:hidden">
-                                                        <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(flight.id)}>
-                                                            {itemVisibility[flight.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
-                                                        </Button>
-                                                        <Button variant="ghost" size="icon" onClick={() => deleteItem('flights', flight.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
-                                                    </div>
-                                                </CardHeader>
-                                                {(itemVisibility[flight.id] !== false) && (
-                                                <CardContent className="p-4 space-y-4">
-                                                    <div className="grid grid-cols-2 gap-4">
-                                                        <div className="space-y-2">
-                                                            <Label>ເສັ້ນທາງ</Label>
-                                                            <div className="flex items-center gap-2">
-                                                                <Input placeholder="ຈາກ" value={flight.from} onChange={e => updateItem('flights', flight.id, 'from', e.target.value)} />
-                                                                <span>ໄປ</span>
-                                                                <Input placeholder="ໄປ" value={flight.to} onChange={e => updateItem('flights', flight.id, 'to', e.target.value)} />
+                                                    </CardHeader>
+                                                    {(itemVisibility[trip.id] !== false) && (
+                                                    <CardContent className="p-4 space-y-4">
+                                                        <div className="grid grid-cols-2 gap-4">
+                                                            <div className="space-y-2">
+                                                                <Label>ສະຖານທີ່</Label>
+                                                                <Input placeholder="ສະຖານທີ່" value={trip.location} onChange={e => updateItem('trips', trip.id, 'location', e.target.value)} />
+                                                            </div>
+                                                            <div className="space-y-2">
+                                                                <Label>ເສັ້ນທາງ</Label>
+                                                                <Input placeholder="ວຽງຈັນ - ວັງວຽງ" value={trip.route} onChange={e => updateItem('trips', trip.id, 'route', e.target.value)} />
+                                                            </div>
+                                                            <div className="col-span-2 space-y-2">
+                                                                <Label>ປະເພດລົດ</Label>
+                                                                <Input placeholder="ລົດຕູ້ທຳມະດາ" value={trip.vehicleType} onChange={e => updateItem('trips', trip.id, 'vehicleType', e.target.value)} />
                                                             </div>
                                                         </div>
-                                                        <div className="space-y-2">
-                                                            <Label>ວັນ-ເວລາເດີນທາງ</Label>
-                                                            <div className="flex items-center gap-2">
-                                                                <Popover>
-                                                                    <PopoverTrigger asChild>
-                                                                        <Button variant={"outline"} className="w-[180px] justify-start text-left font-normal">
-                                                                            <CalendarIcon className="mr-2 h-4 w-4" />
-                                                                            {flight.departureDate ? format(new Date(flight.departureDate), "dd/MM/yyyy") : <span>mm/dd/yyyy</span>}
-                                                                        </Button>
-                                                                    </PopoverTrigger>
-                                                                    <PopoverContent className="w-auto p-0">
-                                                                        <Calendar mode="single" selected={flight.departureDate} onSelect={(date) => updateItem('flights', flight.id, 'departureDate', date)} initialFocus />
-                                                                    </PopoverContent>
-                                                                </Popover>
-                                                                <div className="relative">
-                                                                    <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                                                    <Input type="time" value={flight.departureTime} onChange={e => updateItem('flights', flight.id, 'departureTime', e.target.value)} className="pl-10" />
+                                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                                            <div className="space-y-1">
+                                                                <Label className="text-xs">ຈຳນວນຄັນ</Label>
+                                                                <Input type="number" min="1" value={trip.numVehicles} onChange={e => updateItem('trips', trip.id, 'numVehicles', parseInt(e.target.value) || 1)} className="h-8"/>
+                                                            </div>
+                                                            <div className="space-y-1">
+                                                                <Label className="text-xs">ຈຳນວນວັນ</Label>
+                                                                <Input type="number" min="1" value={trip.numDays} onChange={e => updateItem('trips', trip.id, 'numDays', parseInt(e.target.value) || 1)} className="h-8"/>
+                                                            </div>
+                                                            <div className="space-y-1">
+                                                                <Label className="text-xs">ລາຄາ/ຄັນ</Label>
+                                                                <Input type="number" min="0" value={trip.pricePerVehicle} onChange={e => updateItem('trips', trip.id, 'pricePerVehicle', parseFloat(e.target.value) || 0)} className="h-8"/>
+                                                            </div>
+                                                            <div className="space-y-1">
+                                                                <Label className="text-xs">ສະກຸນເງິນ</Label>
+                                                                <Select value={trip.currency} onValueChange={(v) => updateItem('trips', trip.id, 'currency', v)}>
+                                                                    <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                                                                    <SelectContent>
+                                                                        {(Object.keys(currencySymbols) as Currency[]).map(c => (<SelectItem key={c} value={c}>{currencySymbols[c]}</SelectItem>))}
+                                                                    </SelectContent>
+                                                                </Select>
+                                                            </div>
+                                                        </div>
+                                                    </CardContent>
+                                                    )}
+                                                </Card>
+                                            ))}
+                                            <Button onClick={addTrip}><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າຂົນສົ່ງ</Button>
+                                        </div>
+                                        <SummaryFooter title="ລວມຄ່າຂົນສົ່ງ" totals={tripTotals} />
+                                    </CostCategoryContent>
+                                    {/* Flights */}
+                                    <CostCategoryContent title="ຄ່າປີ້ຍົນ" icon={<Plane className="h-5 w-5" />}>
+                                        <div className="space-y-4 pt-2">
+                                            {allCosts.flights.map((flight, index) => (
+                                                <Card key={flight.id} className="bg-muted/30">
+                                                    <CardHeader className="flex-row items-center justify-between p-3 bg-muted/50">
+                                                        <CardTitle className="text-base">ປີ້ຍົນ #{index + 1}</CardTitle>
+                                                        <div className="print:hidden">
+                                                            <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(flight.id)}>
+                                                                {itemVisibility[flight.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
+                                                            </Button>
+                                                            <Button variant="ghost" size="icon" onClick={() => deleteItem('flights', flight.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
+                                                        </div>
+                                                    </CardHeader>
+                                                    {(itemVisibility[flight.id] !== false) && (
+                                                    <CardContent className="p-4 space-y-4">
+                                                        <div className="grid grid-cols-2 gap-4">
+                                                            <div className="space-y-2">
+                                                                <Label>ເສັ້ນທາງ</Label>
+                                                                <div className="flex items-center gap-2">
+                                                                    <Input placeholder="ຈາກ" value={flight.from} onChange={e => updateItem('flights', flight.id, 'from', e.target.value)} />
+                                                                    <span>ໄປ</span>
+                                                                    <Input placeholder="ໄປ" value={flight.to} onChange={e => updateItem('flights', flight.id, 'to', e.target.value)} />
                                                                 </div>
                                                             </div>
-                                                        </div>
-                                                    </div>
-                                                        <div className="grid grid-cols-3 gap-4">
-                                                        <div className="space-y-2">
-                                                            <Label>ລາຄາ/ຄົນ</Label>
-                                                            <Input type="number" min="0" value={flight.pricePerPerson} onChange={e => updateItem('flights', flight.id, 'pricePerPerson', parseFloat(e.target.value) || 0)} />
-                                                        </div>
-                                                        <div className="space-y-2">
-                                                            <Label>ຈຳນວນຄົນ</Label>
-                                                            <Input type="number" min="1" value={flight.numPeople} onChange={e => updateItem('flights', flight.id, 'numPeople', parseInt(e.target.value) || 1)} />
-                                                        </div>
-                                                        <div className="space-y-2">
-                                                            <Label>ສະກຸນເງິນ</Label>
-                                                            <Select value={flight.currency} onValueChange={(v) => updateItem('flights', flight.id, 'currency', v)}>
-                                                                <SelectTrigger><SelectValue /></SelectTrigger>
-                                                                <SelectContent>{(Object.keys(currencySymbols) as Currency[]).map(c => (<SelectItem key={c} value={c}>{currencySymbols[c]}</SelectItem>))}</SelectContent>
-                                                            </Select>
-                                                        </div>
-                                                    </div>
-                                                </CardContent>
-                                                )}
-                                            </Card>
-                                        ))}
-                                        <Button onClick={addFlight}><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າປີ້ຍົນ</Button>
-                                    </div>
-                                    <SummaryFooter title="ລວມຄ່າປີ້ຍົນ" totals={flightTotals} />
-                                </CostCategoryContent>
-                                {/* Train Tickets */}
-                                <CostCategoryContent title="ຄ່າປີ້ລົດໄຟ" icon={<TrainFront className="h-5 w-5" />}>
-                                    <div className="space-y-4 pt-2">
-                                        {allCosts.trainTickets.map((ticket, index) => (
-                                            <Card key={ticket.id} className="bg-muted/30">
-                                                <CardHeader className="flex-row items-center justify-between p-3 bg-muted/50">
-                                                    <CardTitle className="text-base">ປີ້ລົດໄຟ #{index + 1}</CardTitle>
-                                                    <div className="print:hidden">
-                                                        <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(ticket.id)}>
-                                                            {itemVisibility[ticket.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
-                                                        </Button>
-                                                        <Button variant="ghost" size="icon" onClick={() => deleteItem('trainTickets', ticket.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
-                                                    </div>
-                                                </CardHeader>
-                                                {(itemVisibility[ticket.id] !== false) && (
-                                                <CardContent className="p-4 space-y-4">
-                                                    <div className="grid grid-cols-2 gap-4">
-                                                        <div className="space-y-2">
-                                                            <Label>ເສັ້ນທາງ</Label>
-                                                            <div className="flex items-center gap-2">
-                                                                <Input placeholder="ຈາກ" value={ticket.from} onChange={e => updateItem('trainTickets', ticket.id, 'from', e.target.value)} />
-                                                                <span>ໄປ</span>
-                                                                <Input placeholder="ໄປ" value={ticket.to} onChange={e => updateItem('trainTickets', ticket.id, 'to', e.target.value)} />
-                                                            </div>
-                                                        </div>
-                                                        <div className="space-y-2">
-                                                            <Label>ວັນ-ເວລາເດີນທາງ</Label>
-                                                            <div className="flex items-center gap-2">
-                                                                <Popover>
-                                                                    <PopoverTrigger asChild>
-                                                                        <Button variant={"outline"} className="w-[180px] justify-start text-left font-normal">
-                                                                            <CalendarIcon className="mr-2 h-4 w-4" />
-                                                                            {ticket.departureDate ? format(new Date(ticket.departureDate), "dd/MM/yyyy") : <span>mm/dd/yyyy</span>}
-                                                                        </Button>
-                                                                    </PopoverTrigger>
-                                                                    <PopoverContent className="w-auto p-0">
-                                                                        <Calendar mode="single" selected={ticket.departureDate} onSelect={(date) => updateItem('trainTickets', ticket.id, 'departureDate', date)} initialFocus />
-                                                                    </PopoverContent>
-                                                                </Popover>
-                                                                <div className="relative">
-                                                                    <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                                                    <Input type="time" value={ticket.departureTime} onChange={e => updateItem('trainTickets', ticket.id, 'departureTime', e.target.value)} className="pl-10" />
+                                                            <div className="space-y-2">
+                                                                <Label>ວັນ-ເວລາເດີນທາງ</Label>
+                                                                <div className="flex items-center gap-2">
+                                                                    <Popover>
+                                                                        <PopoverTrigger asChild>
+                                                                            <Button variant={"outline"} className="w-[180px] justify-start text-left font-normal">
+                                                                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                                                                {flight.departureDate ? format(new Date(flight.departureDate), "dd/MM/yyyy") : <span>mm/dd/yyyy</span>}
+                                                                            </Button>
+                                                                        </PopoverTrigger>
+                                                                        <PopoverContent className="w-auto p-0">
+                                                                            <Calendar mode="single" selected={flight.departureDate} onSelect={(date) => updateItem('flights', flight.id, 'departureDate', date)} initialFocus />
+                                                                        </PopoverContent>
+                                                                    </Popover>
+                                                                    <div className="relative">
+                                                                        <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                                                        <Input type="time" value={flight.departureTime} onChange={e => updateItem('flights', flight.id, 'departureTime', e.target.value)} className="pl-10" />
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                    </div>
-                                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                                        <div className="space-y-2">
-                                                            <Label>ລາຄາ/ປີ້</Label>
-                                                            <Input type="number" min="0" value={ticket.pricePerTicket} onChange={e => updateItem('trainTickets', ticket.id, 'pricePerTicket', parseFloat(e.target.value) || 0)} />
+                                                            <div className="grid grid-cols-3 gap-4">
+                                                            <div className="space-y-2">
+                                                                <Label>ລາຄາ/ຄົນ</Label>
+                                                                <Input type="number" min="0" value={flight.pricePerPerson} onChange={e => updateItem('flights', flight.id, 'pricePerPerson', parseFloat(e.target.value) || 0)} />
+                                                            </div>
+                                                            <div className="space-y-2">
+                                                                <Label>ຈຳນວນຄົນ</Label>
+                                                                <Input type="number" min="1" value={flight.numPeople} onChange={e => updateItem('flights', flight.id, 'numPeople', parseInt(e.target.value) || 1)} />
+                                                            </div>
+                                                            <div className="space-y-2">
+                                                                <Label>ສະກຸນເງິນ</Label>
+                                                                <Select value={flight.currency} onValueChange={(v) => updateItem('flights', flight.id, 'currency', v)}>
+                                                                    <SelectTrigger><SelectValue /></SelectTrigger>
+                                                                    <SelectContent>{(Object.keys(currencySymbols) as Currency[]).map(c => (<SelectItem key={c} value={c}>{currencySymbols[c]}</SelectItem>))}</SelectContent>
+                                                                </Select>
+                                                            </div>
                                                         </div>
-                                                        <div className="space-y-2">
-                                                            <Label>ຈຳນວນປີ້</Label>
-                                                            <Input type="number" min="1" value={ticket.numTickets} onChange={e => updateItem('trainTickets', ticket.id, 'numTickets', parseInt(e.target.value) || 1)} />
+                                                    </CardContent>
+                                                    )}
+                                                </Card>
+                                            ))}
+                                            <Button onClick={addFlight}><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າປີ້ຍົນ</Button>
+                                        </div>
+                                        <SummaryFooter title="ລວມຄ່າປີ້ຍົນ" totals={flightTotals} />
+                                    </CostCategoryContent>
+                                    {/* Train Tickets */}
+                                    <CostCategoryContent title="ຄ່າປີ້ລົດໄຟ" icon={<TrainFront className="h-5 w-5" />}>
+                                        <div className="space-y-4 pt-2">
+                                            {allCosts.trainTickets.map((ticket, index) => (
+                                                <Card key={ticket.id} className="bg-muted/30">
+                                                    <CardHeader className="flex-row items-center justify-between p-3 bg-muted/50">
+                                                        <CardTitle className="text-base">ປີ້ລົດໄຟ #{index + 1}</CardTitle>
+                                                        <div className="print:hidden">
+                                                            <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(ticket.id)}>
+                                                                {itemVisibility[ticket.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
+                                                            </Button>
+                                                            <Button variant="ghost" size="icon" onClick={() => deleteItem('trainTickets', ticket.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
                                                         </div>
-                                                        <div className="space-y-2">
-                                                            <Label>ຊັ້ນປີ້</Label>
-                                                            <Input value={ticket.ticketClass} onChange={e => updateItem('trainTickets', ticket.id, 'ticketClass', e.target.value)} placeholder="เช่น ชั้น 1, ชั้น 2" />
+                                                    </CardHeader>
+                                                    {(itemVisibility[ticket.id] !== false) && (
+                                                    <CardContent className="p-4 space-y-4">
+                                                        <div className="grid grid-cols-2 gap-4">
+                                                            <div className="space-y-2">
+                                                                <Label>ເສັ້ນທາງ</Label>
+                                                                <div className="flex items-center gap-2">
+                                                                    <Input placeholder="ຈາກ" value={ticket.from} onChange={e => updateItem('trainTickets', ticket.id, 'from', e.target.value)} />
+                                                                    <span>ໄປ</span>
+                                                                    <Input placeholder="ໄປ" value={ticket.to} onChange={e => updateItem('trainTickets', ticket.id, 'to', e.target.value)} />
+                                                                </div>
+                                                            </div>
+                                                            <div className="space-y-2">
+                                                                <Label>ວັນ-ເວລາເດີນທາງ</Label>
+                                                                <div className="flex items-center gap-2">
+                                                                    <Popover>
+                                                                        <PopoverTrigger asChild>
+                                                                            <Button variant={"outline"} className="w-[180px] justify-start text-left font-normal">
+                                                                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                                                                {ticket.departureDate ? format(new Date(ticket.departureDate), "dd/MM/yyyy") : <span>mm/dd/yyyy</span>}
+                                                                            </Button>
+                                                                        </PopoverTrigger>
+                                                                        <PopoverContent className="w-auto p-0">
+                                                                            <Calendar mode="single" selected={ticket.departureDate} onSelect={(date) => updateItem('trainTickets', ticket.id, 'departureDate', date)} initialFocus />
+                                                                        </PopoverContent>
+                                                                    </Popover>
+                                                                    <div className="relative">
+                                                                        <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                                                        <Input type="time" value={ticket.departureTime} onChange={e => updateItem('trainTickets', ticket.id, 'departureTime', e.target.value)} className="pl-10" />
+                                                                    </div>
+                                                                </div>
+                                                            </div>
                                                         </div>
-                                                        <div className="space-y-2">
-                                                            <Label>ສະກຸນເງິນ</Label>
-                                                            <Select value={ticket.currency} onValueChange={(v) => updateItem('trainTickets', ticket.id, 'currency', v)}>
-                                                                <SelectTrigger><SelectValue /></SelectTrigger>
-                                                                <SelectContent>{(Object.keys(currencySymbols) as Currency[]).map(c => (<SelectItem key={c} value={c}>{currencySymbols[c]}</SelectItem>))}</SelectContent>
-                                                            </Select>
+                                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                                            <div className="space-y-2">
+                                                                <Label>ລາຄາ/ປີ້</Label>
+                                                                <Input type="number" min="0" value={ticket.pricePerTicket} onChange={e => updateItem('trainTickets', ticket.id, 'pricePerTicket', parseFloat(e.target.value) || 0)} />
+                                                            </div>
+                                                            <div className="space-y-2">
+                                                                <Label>ຈຳນວນປີ້</Label>
+                                                                <Input type="number" min="1" value={ticket.numTickets} onChange={e => updateItem('trainTickets', ticket.id, 'numTickets', parseInt(e.target.value) || 1)} />
+                                                            </div>
+                                                            <div className="space-y-2">
+                                                                <Label>ຊັ້ນປີ້</Label>
+                                                                <Input value={ticket.ticketClass} onChange={e => updateItem('trainTickets', ticket.id, 'ticketClass', e.target.value)} placeholder="เช่น ชั้น 1, ชั้น 2" />
+                                                            </div>
+                                                            <div className="space-y-2">
+                                                                <Label>ສະກຸນເງິນ</Label>
+                                                                <Select value={ticket.currency} onValueChange={(v) => updateItem('trainTickets', ticket.id, 'currency', v)}>
+                                                                    <SelectTrigger><SelectValue /></SelectTrigger>
+                                                                    <SelectContent>{(Object.keys(currencySymbols) as Currency[]).map(c => (<SelectItem key={c} value={c}>{currencySymbols[c]}</SelectItem>))}</SelectContent>
+                                                                </Select>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                </CardContent>
-                                                )}
-                                            </Card>
-                                        ))}
-                                        <Button onClick={addTrainTicket}><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າປີ້ລົດໄຟ</Button>
-                                    </div>
-                                    <SummaryFooter title="ລວມຄ່າປີ້ລົດໄຟ" totals={trainTotals} />
-                                </CostCategoryContent>
-                                {/* Entrance Fees */}
-                                <CostCategoryContent title="ຄ່າເຂົ້າຊົມສະຖານທີ່" icon={<Camera className="h-5 w-5" />}>
+                                                    </CardContent>
+                                                    )}
+                                                </Card>
+                                            ))}
+                                            <Button onClick={addTrainTicket}><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າປີ້ລົດໄຟ</Button>
+                                        </div>
+                                        <SummaryFooter title="ລວມຄ່າປີ້ລົດໄຟ" totals={trainTotals} />
+                                    </CostCategoryContent>
+                                    {/* Entrance Fees */}
+                                    <CostCategoryContent title="ຄ່າເຂົ້າຊົມສະຖານທີ່" icon={<Camera className="h-5 w-5" />}>
+                                        <div className="space-y-4 pt-2">
+                                            {allCosts.entranceFees.map((fee, index) => (
+                                                <Card key={fee.id} className="bg-muted/30">
+                                                    <CardHeader className="flex-row items-center justify-between p-3 bg-muted/50">
+                                                        <CardTitle className="text-base">ຄ່າເຂົ້າຊົມ #{index + 1}</CardTitle>
+                                                        <div className="print:hidden">
+                                                            <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(fee.id)}>
+                                                                {itemVisibility[fee.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
+                                                            </Button>
+                                                            <Button variant="ghost" size="icon" onClick={() => deleteItem('entranceFees', fee.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
+                                                        </div>
+                                                    </CardHeader>
+                                                    {(itemVisibility[fee.id] !== false) && (
+                                                    <CardContent className="p-4 space-y-4">
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                            <div className="space-y-2">
+                                                                <Label>ຊື່ສະຖານທີ່</Label>
+                                                                <Input value={fee.locationName} onChange={e => updateItem('entranceFees', fee.id, 'locationName', e.target.value)} placeholder="ເຊັ່ນ: ພະທາດຫຼວງ, ປະຕູໄຊ" />
+                                                            </div>
+                                                        </div>
+                                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                                            <div className="space-y-2">
+                                                                <Label>Pax</Label>
+                                                                <Input type="number" min="1" value={fee.pax} onChange={e => updateItem('entranceFees', fee.id, 'pax', parseInt(e.target.value) || 1)} />
+                                                            </div>
+                                                            <div className="space-y-2">
+                                                                <Label>ຈຳນວນສະຖານທີ່</Label>
+                                                                <Input type="number" min="1" value={fee.numLocations} onChange={e => updateItem('entranceFees', fee.id, 'numLocations', parseInt(e.target.value) || 1)} />
+                                                            </div>
+                                                            <div className="space-y-2">
+                                                                <Label>ລາຄາ</Label>
+                                                                <Input type="number" min="0" value={fee.price} onChange={e => updateItem('entranceFees', fee.id, 'price', parseFloat(e.target.value) || 0)} />
+                                                            </div>
+                                                            <div className="space-y-2">
+                                                                <Label>ສະກຸນເງິນ</Label>
+                                                                <Select value={fee.currency} onValueChange={(v) => updateItem('entranceFees', fee.id, 'currency', v)}>
+                                                                    <SelectTrigger><SelectValue /></SelectTrigger>
+                                                                    <SelectContent>{(Object.keys(currencySymbols) as Currency[]).map(c => (<SelectItem key={c} value={c}>{currencySymbols[c]}</SelectItem>))}</SelectContent>
+                                                                </Select>
+                                                            </div>
+                                                        </div>
+                                                    </CardContent>
+                                                    )}
+                                                </Card>
+                                            ))}
+                                            <Button onClick={addEntranceFee}><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າເຂົ້າຊົມ</Button>
+                                        </div>
+                                        <SummaryFooter title="ລວມຄ່າເຂົ້າຊົມ" totals={entranceFeeTotals} />
+                                    </CostCategoryContent>
+                                    {/* Meals */}
+                                    <CostCategoryContent title="ຄ່າອາຫານ" icon={<UtensilsCrossed className="h-5 w-5" />}>
                                     <div className="space-y-4 pt-2">
-                                        {allCosts.entranceFees.map((fee, index) => (
-                                            <Card key={fee.id} className="bg-muted/30">
-                                                <CardHeader className="flex-row items-center justify-between p-3 bg-muted/50">
-                                                    <CardTitle className="text-base">ຄ່າເຂົ້າຊົມ #{index + 1}</CardTitle>
-                                                    <div className="print:hidden">
-                                                        <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(fee.id)}>
-                                                            {itemVisibility[fee.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
-                                                        </Button>
-                                                        <Button variant="ghost" size="icon" onClick={() => deleteItem('entranceFees', fee.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
-                                                    </div>
-                                                </CardHeader>
-                                                {(itemVisibility[fee.id] !== false) && (
-                                                <CardContent className="p-4 space-y-4">
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                        <div className="space-y-2">
-                                                            <Label>ຊື່ສະຖານທີ່</Label>
-                                                            <Input value={fee.locationName} onChange={e => updateItem('entranceFees', fee.id, 'locationName', e.target.value)} placeholder="ເຊັ່ນ: ພະທາດຫຼວງ, ປະຕູໄຊ" />
+                                            {allCosts.meals.map((meal, index) => (
+                                                <Card key={meal.id} className="bg-muted/30">
+                                                    <CardHeader className="flex-row items-center justify-between p-3 bg-muted/50">
+                                                        <CardTitle className="text-base">ລາຍການອາຫານ #{index + 1}</CardTitle>
+                                                        <div className="print:hidden">
+                                                            <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(meal.id)}>
+                                                                {itemVisibility[meal.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
+                                                            </Button>
+                                                            <Button variant="ghost" size="icon" onClick={() => deleteItem('meals', meal.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
                                                         </div>
-                                                    </div>
-                                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                                        <div className="space-y-2">
-                                                            <Label>Pax</Label>
-                                                            <Input type="number" min="1" value={fee.pax} onChange={e => updateItem('entranceFees', fee.id, 'pax', parseInt(e.target.value) || 1)} />
+                                                    </CardHeader>
+                                                    {(itemVisibility[meal.id] !== false) && (
+                                                    <CardContent className="p-4 space-y-4">
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                            <div className="space-y-2">
+                                                                <Label>ຊື່ລາຍການ</Label>
+                                                                <Input value={meal.name} onChange={e => updateItem('meals', meal.id, 'name', e.target.value)} placeholder="เช่น อาหารเย็นวันแรก, ร้าน..." />
+                                                            </div>
+                                                            <div className="space-y-2">
+                                                                <Label>Pax</Label>
+                                                                <Input type="number" min="1" value={meal.pax} onChange={e => updateItem('meals', meal.id, 'pax', parseInt(e.target.value) || 1)} />
+                                                            </div>
                                                         </div>
-                                                        <div className="space-y-2">
-                                                            <Label>ຈຳນວນສະຖານທີ່</Label>
-                                                            <Input type="number" min="1" value={fee.numLocations} onChange={e => updateItem('entranceFees', fee.id, 'numLocations', parseInt(e.target.value) || 1)} />
+                                                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                                                            <div className="space-y-1">
+                                                                <Label className="text-xs">ເຊົ້າ</Label>
+                                                                <Input type="number" min="0" value={meal.breakfast} onChange={e => updateItem('meals', meal.id, 'breakfast', parseInt(e.target.value) || 0)} className="h-8"/>
+                                                            </div>
+                                                            <div className="space-y-1">
+                                                                <Label className="text-xs">ທ່ຽງ</Label>
+                                                                <Input type="number" min="0" value={meal.lunch} onChange={e => updateItem('meals', meal.id, 'lunch', parseInt(e.target.value) || 0)} className="h-8"/>
+                                                            </div>
+                                                            <div className="space-y-1">
+                                                                <Label className="text-xs">ແລງ</Label>
+                                                                <Input type="number" min="0" value={meal.dinner} onChange={e => updateItem('meals', meal.id, 'dinner', parseInt(e.target.value) || 0)} className="h-8"/>
+                                                            </div>
                                                         </div>
-                                                        <div className="space-y-2">
-                                                            <Label>ລາຄາ</Label>
-                                                            <Input type="number" min="0" value={fee.price} onChange={e => updateItem('entranceFees', fee.id, 'price', parseFloat(e.target.value) || 0)} />
+                                                        <div className="grid grid-cols-2 gap-4">
+                                                            <div className="space-y-2">
+                                                                <Label>ລາຄາ/ມື້</Label>
+                                                                <Input type="number" min="0" value={meal.pricePerMeal} onChange={e => updateItem('meals', meal.id, 'pricePerMeal', parseFloat(e.target.value) || 0)} />
+                                                            </div>
+                                                            <div className="space-y-2">
+                                                                <Label>ສະກຸນເງິນ</Label>
+                                                                <Select value={meal.currency} onValueChange={(v) => updateItem('meals', meal.id, 'currency', v)}>
+                                                                    <SelectTrigger><SelectValue /></SelectTrigger>
+                                                                    <SelectContent>{(Object.keys(currencySymbols) as Currency[]).map(c => (<SelectItem key={c} value={c}>{currencySymbols[c]}</SelectItem>))}</SelectContent>
+                                                                </Select>
+                                                            </div>
                                                         </div>
-                                                        <div className="space-y-2">
-                                                            <Label>ສະກຸນເງິນ</Label>
-                                                            <Select value={fee.currency} onValueChange={(v) => updateItem('entranceFees', fee.id, 'currency', v)}>
-                                                                <SelectTrigger><SelectValue /></SelectTrigger>
-                                                                <SelectContent>{(Object.keys(currencySymbols) as Currency[]).map(c => (<SelectItem key={c} value={c}>{currencySymbols[c]}</SelectItem>))}</SelectContent>
-                                                            </Select>
-                                                        </div>
-                                                    </div>
-                                                </CardContent>
-                                                )}
-                                            </Card>
-                                        ))}
-                                        <Button onClick={addEntranceFee}><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າເຂົ້າຊົມ</Button>
+                                                    </CardContent>
+                                                    )}
+                                                </Card>
+                                            ))}
+                                            <Button onClick={addMealCost}><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າອາຫານ</Button>
                                     </div>
-                                    <SummaryFooter title="ລວມຄ່າເຂົ້າຊົມ" totals={entranceFeeTotals} />
-                                </CostCategoryContent>
-                                {/* Meals */}
-                                <CostCategoryContent title="ຄ່າອາຫານ" icon={<UtensilsCrossed className="h-5 w-5" />}>
-                                <div className="space-y-4 pt-2">
-                                        {allCosts.meals.map((meal, index) => (
-                                            <Card key={meal.id} className="bg-muted/30">
-                                                <CardHeader className="flex-row items-center justify-between p-3 bg-muted/50">
-                                                    <CardTitle className="text-base">ລາຍການອາຫານ #{index + 1}</CardTitle>
-                                                    <div className="print:hidden">
-                                                        <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(meal.id)}>
-                                                            {itemVisibility[meal.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
-                                                        </Button>
-                                                        <Button variant="ghost" size="icon" onClick={() => deleteItem('meals', meal.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
-                                                    </div>
-                                                </CardHeader>
-                                                {(itemVisibility[meal.id] !== false) && (
-                                                <CardContent className="p-4 space-y-4">
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                        <div className="space-y-2">
-                                                            <Label>ຊື່ລາຍການ</Label>
-                                                            <Input value={meal.name} onChange={e => updateItem('meals', meal.id, 'name', e.target.value)} placeholder="เช่น อาหารเย็นวันแรก, ร้าน..." />
-                                                        </div>
-                                                        <div className="space-y-2">
-                                                            <Label>Pax</Label>
-                                                            <Input type="number" min="1" value={meal.pax} onChange={e => updateItem('meals', meal.id, 'pax', parseInt(e.target.value) || 1)} />
-                                                        </div>
-                                                    </div>
-                                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                                                        <div className="space-y-1">
-                                                            <Label className="text-xs">ເຊົ້າ</Label>
-                                                            <Input type="number" min="0" value={meal.breakfast} onChange={e => updateItem('meals', meal.id, 'breakfast', parseInt(e.target.value) || 0)} className="h-8"/>
-                                                        </div>
-                                                        <div className="space-y-1">
-                                                            <Label className="text-xs">ທ່ຽງ</Label>
-                                                            <Input type="number" min="0" value={meal.lunch} onChange={e => updateItem('meals', meal.id, 'lunch', parseInt(e.target.value) || 0)} className="h-8"/>
-                                                        </div>
-                                                        <div className="space-y-1">
-                                                            <Label className="text-xs">ແລງ</Label>
-                                                            <Input type="number" min="0" value={meal.dinner} onChange={e => updateItem('meals', meal.id, 'dinner', parseInt(e.target.value) || 0)} className="h-8"/>
-                                                        </div>
-                                                    </div>
-                                                    <div className="grid grid-cols-2 gap-4">
-                                                        <div className="space-y-2">
-                                                            <Label>ລາຄາ/ມື້</Label>
-                                                            <Input type="number" min="0" value={meal.pricePerMeal} onChange={e => updateItem('meals', meal.id, 'pricePerMeal', parseFloat(e.target.value) || 0)} />
-                                                        </div>
-                                                        <div className="space-y-2">
-                                                            <Label>ສະກຸນເງິນ</Label>
-                                                            <Select value={meal.currency} onValueChange={(v) => updateItem('meals', meal.id, 'currency', v)}>
-                                                                <SelectTrigger><SelectValue /></SelectTrigger>
-                                                                <SelectContent>{(Object.keys(currencySymbols) as Currency[]).map(c => (<SelectItem key={c} value={c}>{currencySymbols[c]}</SelectItem>))}</SelectContent>
-                                                            </Select>
-                                                        </div>
-                                                    </div>
-                                                </CardContent>
-                                                )}
-                                            </Card>
-                                        ))}
-                                        <Button onClick={addMealCost}><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າອາຫານ</Button>
-                                </div>
-                                <SummaryFooter title="ລວມຄ່າອາຫານ" totals={mealTotals} />
-                                </CostCategoryContent>
-                                {/* Guide */}
-                                <CostCategoryContent title="ຄ່າໄກ້" icon={<Users className="h-5 w-5" />}>
-                                <div className="space-y-4 pt-2">
-                                        {allCosts.guides.map((guide, index) => (
-                                            <Card key={guide.id} className="bg-muted/30">
-                                                <CardHeader className="flex-row items-center justify-between p-3 bg-muted/50">
-                                                    <CardTitle className="text-base">ລາຍການໄກ້ #{index + 1}</CardTitle>
-                                                    <div className="print:hidden">
-                                                        <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(guide.id)}>
-                                                            {itemVisibility[guide.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
-                                                        </Button>
-                                                        <Button variant="ghost" size="icon" onClick={() => deleteItem('guides', guide.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
-                                                    </div>
-                                                </CardHeader>
-                                                {(itemVisibility[guide.id] !== false) && (
-                                                <CardContent className="p-4 space-y-4">
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                        <div className="space-y-2">
-                                                            <Label>ຊື່ໄກ້/ບໍລິສັດ</Label>
-                                                            <Input value={guide.guideName} onChange={e => updateItem('guides', guide.id, 'guideName', e.target.value)} placeholder="ຊື່ໄກ້" />
-                                                        </div>
-                                                    </div>
-                                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                                        <div className="space-y-2">
-                                                            <Label>ຈຳນວນໄກ້</Label>
-                                                            <Input type="number" min="1" value={guide.numGuides} onChange={e => updateItem('guides', guide.id, 'numGuides', parseInt(e.target.value) || 1)} />
-                                                        </div>
-                                                        <div className="space-y-2">
-                                                            <Label>ຈຳນວນວັນ</Label>
-                                                            <Input type="number" min="1" value={guide.numDays} onChange={e => updateItem('guides', guide.id, 'numDays', parseInt(e.target.value) || 1)} />
-                                                        </div>
-                                                        <div className="space-y-2">
-                                                            <Label>ລາຄາ/ວັນ</Label>
-                                                            <Input type="number" min="0" value={guide.pricePerDay} onChange={e => updateItem('guides', guide.id, 'pricePerDay', parseFloat(e.target.value) || 0)} />
-                                                        </div>
-                                                        <div className="space-y-2">
-                                                            <Label>ສະກຸນເງິນ</Label>
-                                                            <Select value={guide.currency} onValueChange={(v) => updateItem('guides', guide.id, 'currency', v)}>
-                                                                <SelectTrigger><SelectValue /></SelectTrigger>
-                                                                <SelectContent>{(Object.keys(currencySymbols) as Currency[]).map(c => (<SelectItem key={c} value={c}>{currencySymbols[c]}</SelectItem>))}</SelectContent>
-                                                            </Select>
-                                                        </div>
-                                                    </div>
-                                                </CardContent>
-                                                )}
-                                            </Card>
-                                        ))}
-                                        <Button onClick={addGuideFee}><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າໄກ້</Button>
-                                </div>
-                                <SummaryFooter title="ລວມຄ່າໄກ້" totals={guideTotals} />
-                                </CostCategoryContent>
-                                {/* Documents */}
-                                <CostCategoryContent title="ຄ່າເອກະສານ" icon={<FileText className="h-5 w-5" />}>
+                                    <SummaryFooter title="ລວມຄ່າອາຫານ" totals={mealTotals} />
+                                    </CostCategoryContent>
+                                    {/* Guide */}
+                                    <CostCategoryContent title="ຄ່າໄກ້" icon={<Users className="h-5 w-5" />}>
                                     <div className="space-y-4 pt-2">
-                                        {allCosts.documents.map((doc, index) => (
-                                            <Card key={doc.id} className="bg-muted/30">
-                                                <CardHeader className="flex-row items-center justify-between p-3 bg-muted/50">
-                                                    <CardTitle className="text-base">ລາຍການເອກະສານ #{index + 1}</CardTitle>
-                                                    <div className="print:hidden">
-                                                        <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(doc.id)}>
-                                                            {itemVisibility[doc.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
-                                                        </Button>
-                                                        <Button variant="ghost" size="icon" onClick={() => deleteItem('documents', doc.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
-                                                    </div>
-                                                </CardHeader>
-                                                {(itemVisibility[doc.id] !== false) && (
-                                                <CardContent className="p-4 space-y-4">
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                        <div className="space-y-2">
-                                                        <Label>ຊື່ເອກະສານ</Label>
-                                                        <Input value={doc.documentName} onChange={e => updateItem('documents', doc.id, 'documentName', e.target.value)} placeholder="เช่น ค่าวีซ่า, ค่าเอกสารผ่านแดน" />
-                                                    </div>
-                                                    </div>
-                                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                                        <div className="space-y-2">
-                                                            <Label>Pax</Label>
-                                                            <Input type="number" min="1" value={doc.pax} onChange={e => updateItem('documents', doc.id, 'pax', parseInt(e.target.value) || 1)} />
+                                            {allCosts.guides.map((guide, index) => (
+                                                <Card key={guide.id} className="bg-muted/30">
+                                                    <CardHeader className="flex-row items-center justify-between p-3 bg-muted/50">
+                                                        <CardTitle className="text-base">ລາຍການໄກ້ #{index + 1}</CardTitle>
+                                                        <div className="print:hidden">
+                                                            <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(guide.id)}>
+                                                                {itemVisibility[guide.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
+                                                            </Button>
+                                                            <Button variant="ghost" size="icon" onClick={() => deleteItem('guides', guide.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
                                                         </div>
-                                                        <div className="space-y-2">
-                                                            <Label>ລາຄາ</Label>
-                                                            <Input type="number" min="0" value={doc.price} onChange={e => updateItem('documents', doc.id, 'price', parseFloat(e.target.value) || 0)} />
+                                                    </CardHeader>
+                                                    {(itemVisibility[guide.id] !== false) && (
+                                                    <CardContent className="p-4 space-y-4">
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                            <div className="space-y-2">
+                                                                <Label>ຊື່ໄກ້/ບໍລິສັດ</Label>
+                                                                <Input value={guide.guideName} onChange={e => updateItem('guides', guide.id, 'guideName', e.target.value)} placeholder="ຊື່ໄກ້" />
+                                                            </div>
                                                         </div>
-                                                        <div className="space-y-2">
-                                                            <Label>ສະກຸນເງິນ</Label>
-                                                            <Select value={doc.currency} onValueChange={(v) => updateItem('documents', doc.id, 'currency', v)}>
-                                                                <SelectTrigger><SelectValue /></SelectTrigger>
-                                                                <SelectContent>{(Object.keys(currencySymbols) as Currency[]).map(c => (<SelectItem key={c} value={c}>{currencySymbols[c]}</SelectItem>))}</SelectContent>
-                                                            </Select>
+                                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                                            <div className="space-y-2">
+                                                                <Label>ຈຳນວນໄກ້</Label>
+                                                                <Input type="number" min="1" value={guide.numGuides} onChange={e => updateItem('guides', guide.id, 'numGuides', parseInt(e.target.value) || 1)} />
+                                                            </div>
+                                                            <div className="space-y-2">
+                                                                <Label>ຈຳນວນວັນ</Label>
+                                                                <Input type="number" min="1" value={guide.numDays} onChange={e => updateItem('guides', guide.id, 'numDays', parseInt(e.target.value) || 1)} />
+                                                            </div>
+                                                            <div className="space-y-2">
+                                                                <Label>ລາຄາ/ວັນ</Label>
+                                                                <Input type="number" min="0" value={guide.pricePerDay} onChange={e => updateItem('guides', guide.id, 'pricePerDay', parseFloat(e.target.value) || 0)} />
+                                                            </div>
+                                                            <div className="space-y-2">
+                                                                <Label>ສະກຸນເງິນ</Label>
+                                                                <Select value={guide.currency} onValueChange={(v) => updateItem('guides', guide.id, 'currency', v)}>
+                                                                    <SelectTrigger><SelectValue /></SelectTrigger>
+                                                                    <SelectContent>{(Object.keys(currencySymbols) as Currency[]).map(c => (<SelectItem key={c} value={c}>{currencySymbols[c]}</SelectItem>))}</SelectContent>
+                                                                </Select>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                </CardContent>
-                                                )}
-                                            </Card>
-                                        ))}
-                                        <Button onClick={addDocumentFee}><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າເອກະສານ</Button>
+                                                    </CardContent>
+                                                    )}
+                                                </Card>
+                                            ))}
+                                            <Button onClick={addGuideFee}><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າໄກ້</Button>
                                     </div>
-                                    <SummaryFooter title="ລວມຄ່າເອກະສານ" totals={documentTotals} />
-                                </CostCategoryContent>
-                            </Accordion>
-                        </CardContent>
-                    </Card>
+                                    <SummaryFooter title="ລວມຄ່າໄກ້" totals={guideTotals} />
+                                    </CostCategoryContent>
+                                    {/* Documents */}
+                                    <CostCategoryContent title="ຄ່າເອກະສານ" icon={<FileText className="h-5 w-5" />}>
+                                        <div className="space-y-4 pt-2">
+                                            {allCosts.documents.map((doc, index) => (
+                                                <Card key={doc.id} className="bg-muted/30">
+                                                    <CardHeader className="flex-row items-center justify-between p-3 bg-muted/50">
+                                                        <CardTitle className="text-base">ລາຍການເອກະສານ #{index + 1}</CardTitle>
+                                                        <div className="print:hidden">
+                                                            <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(doc.id)}>
+                                                                {itemVisibility[doc.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
+                                                            </Button>
+                                                            <Button variant="ghost" size="icon" onClick={() => deleteItem('documents', doc.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
+                                                        </div>
+                                                    </CardHeader>
+                                                    {(itemVisibility[doc.id] !== false) && (
+                                                    <CardContent className="p-4 space-y-4">
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                            <div className="space-y-2">
+                                                            <Label>ຊື່ເອກະສານ</Label>
+                                                            <Input value={doc.documentName} onChange={e => updateItem('documents', doc.id, 'documentName', e.target.value)} placeholder="เช่น ค่าวีซ่า, ค่าเอกสารผ่านแดน" />
+                                                        </div>
+                                                        </div>
+                                                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                                            <div className="space-y-2">
+                                                                <Label>Pax</Label>
+                                                                <Input type="number" min="1" value={doc.pax} onChange={e => updateItem('documents', doc.id, 'pax', parseInt(e.target.value) || 1)} />
+                                                            </div>
+                                                            <div className="space-y-2">
+                                                                <Label>ລາຄາ</Label>
+                                                                <Input type="number" min="0" value={doc.price} onChange={e => updateItem('documents', doc.id, 'price', parseFloat(e.target.value) || 0)} />
+                                                            </div>
+                                                            <div className="space-y-2">
+                                                                <Label>ສະກຸນເງິນ</Label>
+                                                                <Select value={doc.currency} onValueChange={(v) => updateItem('documents', doc.id, 'currency', v)}>
+                                                                    <SelectTrigger><SelectValue /></SelectTrigger>
+                                                                    <SelectContent>{(Object.keys(currencySymbols) as Currency[]).map(c => (<SelectItem key={c} value={c}>{currencySymbols[c]}</SelectItem>))}</SelectContent>
+                                                                </Select>
+                                                            </div>
+                                                        </div>
+                                                    </CardContent>
+                                                    )}
+                                                </Card>
+                                            ))}
+                                            <Button onClick={addDocumentFee}><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າເອກະສານ</Button>
+                                        </div>
+                                        <SummaryFooter title="ລວມຄ່າເອກະສານ" totals={documentTotals} />
+                                    </CostCategoryContent>
+                                </Accordion>
+                            </CardContent>
+                        </Card>
+                    </div>
                     
                     <div className="print:hidden"><TotalCostCard totalsByCategory={totalsByCategory} /></div>
 

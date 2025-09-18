@@ -70,7 +70,7 @@ export interface DrugCreditorEntry {
   createdAt: Date;
 }
 
-export type Currency = 'KIP' | 'BAHT' | 'USD' | 'CNY';
+export type Currency = 'USD' | 'THB' | 'LAK' | 'CNY';
 
 export interface TourProgram {
   id: string;
