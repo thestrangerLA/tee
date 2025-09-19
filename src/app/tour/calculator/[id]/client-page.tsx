@@ -35,14 +35,6 @@ const currencySymbols: Record<Currency, string> = {
 
 const formatNumber = (num: number, options?: Intl.NumberFormatOptions) => new Intl.NumberFormat('en-US', options).format(num);
 
-const SAVED_CALCULATIONS_KEY = 'tour-savedCalculations';
-
-const costCategories: Array<keyof TourCosts> = [
-    'accommodations', 'trips', 'flights', 'trainTickets',
-    'entranceFees', 'meals', 'guides', 'documents'
-];
-
-
 const categoryIcons: { [key: string]: React.ReactNode } = {
     'ຄ່າທີ່ພັກ': <BedDouble className="h-5 w-5" />,
     'ຄ່າຂົນສົ່ງ': <Truck className="h-5 w-5" />,
@@ -455,6 +447,32 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                 </div>
                             </CardContent>
                         </Card>
+                        <div className="grid grid-cols-3 gap-4 pt-4">
+                            <Card>
+                                <CardHeader className="pb-2">
+                                    <CardTitle className="text-base">ຍອດລວມທີ່ແປງແລ້ວ ({targetCurrency})</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <p className="text-2xl font-bold">{formatNumber(convertedTotal, {maximumFractionDigits: 2})}</p>
+                                </CardContent>
+                            </Card>
+                             <Card>
+                                <CardHeader className="pb-2">
+                                    <CardTitle className="text-base">ລາຄາຂາຍ ({targetCurrency})</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <p className="text-2xl font-bold">{formatNumber(sellingPrice, {maximumFractionDigits: 2})}</p>
+                                </CardContent>
+                            </Card>
+                             <Card>
+                                <CardHeader className="pb-2">
+                                    <CardTitle className="text-base">ກຳໄລ ({targetCurrency})</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <p className="text-2xl font-bold text-green-600">{formatNumber(profit, {maximumFractionDigits: 2})}</p>
+                                </CardContent>
+                            </Card>
+                        </div>
                     </div>
                 </div>
 
@@ -809,7 +827,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                         </div>
                                                         <div className="space-y-2">
                                                             <Label>ຊັ້ນປີ້</Label>
-                                                            <Input value={ticket.ticketClass} onChange={e => updateItem('trainTickets', ticket.id, 'ticketClass', e.target.value)} placeholder="เช่น ชั้น 1, ชั้น 2" />
+                                                            <Input value={ticket.ticketClass} onChange={e => updateItem('trainTickets', ticket.id, 'ticketClass', e.target.value)} placeholder="ເຊັ່ນ: ຊັ້ນ 1, ຊັ້ນ 2" />
                                                         </div>
                                                         <div className="space-y-2">
                                                             <Label>ສະກຸນເງິນ</Label>
@@ -1073,7 +1091,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                     </CardHeader>
                                     <CardContent className="space-y-4">
                                         <div>
-                                            <Label htmlFor="target-currency">ເລືอกສະກຸນເງິນ</Label>
+                                            <Label htmlFor="target-currency">ເລືອກສະກຸນເງິນ</Label>
                                             <Select value={targetCurrency} onValueChange={v => setTargetCurrency(v as Currency)}>
                                                 <SelectTrigger id="target-currency">
                                                     <SelectValue />
