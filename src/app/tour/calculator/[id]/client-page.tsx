@@ -343,14 +343,17 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                 <p><strong>Group Code:</strong> {tourInfo.groupCode}</p>
                                 <p><strong>ປະເທດປາຍທາງ:</strong> {tourInfo.destinationCountry}</p>
                                 <p><strong>ໂປຣແກຣມ:</strong> {tourInfo.program}</p>
-                                <p><strong>ວັນທີເດີນທາງ:</strong> {tourInfo.startDate && format(tourInfo.startDate, "dd/MM/yyyy")} - {tourInfo.endDate && format(tourInfo.endDate, "dd/MM/yyyy")}</p>
+                                <p><strong>ວັນທີເດີນທາງ:</strong> {tourInfo.startDate && isValid(new Date(tourInfo.startDate)) ? format(new Date(tourInfo.startDate), "dd/MM/yyyy") : 'N/A'} - {tourInfo.endDate && isValid(new Date(tourInfo.endDate)) ? format(new Date(tourInfo.endDate), "dd/MM/yyyy") : 'N/A'}</p>
                                 <p><strong>ຈຳນວນວັນ:</strong> {tourInfo.numDays} ວັນ {tourInfo.numNights} ຄືນ</p>
                                 <p><strong>ຈຳນວນຄົນ:</strong> {tourInfo.numPeople}</p>
                             </CardContent>
                         </Card>
                         {Object.entries(totalsByCategory).map(([category, totals]) => {
-                             const categoryCosts = allCosts[category.toLowerCase().replace(/\s/g, '-') as keyof TourCosts] as any[];
-                             const hasVisibleItems = categoryCosts && categoryCosts.some(item => itemVisibility[item.id] !== false);
+                             const categoryKey = Object.keys(allCosts).find(k => k.toLowerCase().replace(/\s/g, '-') === category.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace('ຄ່າ','').replace(/^-/,'')) as keyof TourCosts;
+                             if(!categoryKey) return null;
+                             const categoryCosts = allCosts[categoryKey] as any[];
+                             
+                             const hasVisibleItems = categoryCosts && categoryCosts.length > 0;
                              if (!hasVisibleItems) return null;
 
                              return (
@@ -368,17 +371,17 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                     </TableRow>
                                                 </TableHeader>
                                                 <TableBody>
-                                                     {categoryCosts.filter(item => itemVisibility[item.id] !== false).map(item => (
+                                                     {categoryCosts.map(item => (
                                                         <TableRow key={item.id}>
                                                              {Object.entries(item).filter(([k]) => !['id', 'currency'].includes(k)).map(([key, value]) => {
                                                                 let displayValue: any = value;
                                                                 if (value instanceof Date) displayValue = format(value, 'dd/MM/yy');
                                                                 if (typeof value === 'number') displayValue = formatNumber(value);
                                                                 if (typeof value === 'boolean') displayValue = value ? 'Yes' : 'No';
-                                                                return <TableCell key={key}>{String(displayValue)}</TableCell>
+                                                                return <TableCell key={key}>{String(displayValue ?? '')}</TableCell>
                                                             })}
                                                             <TableCell className="text-right font-bold">
-                                                                {currencySymbols[item.currency]} {formatNumber(Object.values(item).filter(v => typeof v === 'number').reduce((a: any, b: any) => a * b, 1) * (item.price || item.pricePerVehicle || item.pricePerPerson || item.pricePerTicket || 0))}
+                                                                {currencySymbols[item.currency as Currency]} {formatNumber(Object.values(item).filter(v => typeof v === 'number').reduce((a: any, b: any) => a * b, 1) * (item.price || item.pricePerVehicle || item.pricePerPerson || item.pricePerTicket || 0))}
                                                             </TableCell>
                                                         </TableRow>
                                                     ))}
@@ -386,7 +389,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                  <TableFooter>
                                                     <TableRow>
                                                         <TableCell colSpan={Object.keys(categoryCosts[0] || {}).length} className="text-right font-bold text-lg">
-                                                            ລວມ: {Object.entries(totals).filter(([,val]) => val > 0).map(([cur, val]) => `${currencySymbols[cur as Currency]}${formatNumber(val)}`).join(' / ')}
+                                                            ລວມ: {Object.entries(totals).filter(([,val]) => val > 0).map(([cur, val]) => `${currencySymbols[cur as Currency]}${formatNumber(val as number)}`).join(' / ')}
                                                         </TableCell>
                                                     </TableRow>
                                                 </TableFooter>
@@ -511,13 +514,9 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                 <CardHeader className="flex-row items-center justify-between p-3 bg-muted/50">
                                                     <CardTitle className="text-base">ທີ່ພັກ #{index + 1}</CardTitle>
                                                     <div className="print:hidden">
-                                                        <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(acc.id)}>
-                                                            {itemVisibility[acc.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
-                                                        </Button>
                                                         <Button variant="ghost" size="icon" onClick={() => deleteItem('accommodations', acc.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
                                                     </div>
                                                 </CardHeader>
-                                            {(itemVisibility[acc.id] !== false) && (
                                                 <CardContent className="p-4 space-y-4">
                                                     {/* Acc Fields */}
                                                         <div className="grid md:grid-cols-2 gap-4">
@@ -585,7 +584,6 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                     ))}
                                                     <Button size="sm" variant="outline" onClick={() => addRoom(acc.id)}><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຫ້ອງ</Button>
                                                 </CardContent>
-                                                )}
                                             </Card>
                                         ))}
                                         <Button onClick={addAccommodation}><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າທີ່ພັກ</Button>
@@ -601,13 +599,9 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                 <CardHeader className="flex-row items-center justify-between p-3 bg-muted/50">
                                                     <CardTitle className="text-base">ການເດີນທາງ #{index + 1}</CardTitle>
                                                     <div className="print:hidden">
-                                                        <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(trip.id)}>
-                                                            {itemVisibility[trip.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
-                                                        </Button>
                                                         <Button variant="ghost" size="icon" onClick={() => deleteItem('trips', trip.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
                                                     </div>
                                                 </CardHeader>
-                                                {(itemVisibility[trip.id] !== false) && (
                                                 <CardContent className="p-4 space-y-4">
                                                     <div className="grid grid-cols-2 gap-4">
                                                         <div className="space-y-2">
@@ -647,7 +641,6 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                         </div>
                                                     </div>
                                                 </CardContent>
-                                                )}
                                             </Card>
                                         ))}
                                         <Button onClick={addTrip}><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າຂົນສົ່ງ</Button>
@@ -662,13 +655,9 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                 <CardHeader className="flex-row items-center justify-between p-3 bg-muted/50">
                                                     <CardTitle className="text-base">ປີ້ຍົນ #{index + 1}</CardTitle>
                                                     <div className="print:hidden">
-                                                        <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(flight.id)}>
-                                                            {itemVisibility[flight.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
-                                                        </Button>
                                                         <Button variant="ghost" size="icon" onClick={() => deleteItem('flights', flight.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
                                                     </div>
                                                 </CardHeader>
-                                                {(itemVisibility[flight.id] !== false) && (
                                                 <CardContent className="p-4 space-y-4">
                                                     <div className="grid grid-cols-2 gap-4">
                                                         <div className="space-y-2">
@@ -718,7 +707,6 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                         </div>
                                                     </div>
                                                 </CardContent>
-                                                )}
                                             </Card>
                                         ))}
                                         <Button onClick={addFlight}><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າປີ້ຍົນ</Button>
@@ -733,13 +721,9 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                 <CardHeader className="flex-row items-center justify-between p-3 bg-muted/50">
                                                     <CardTitle className="text-base">ປີ້ລົດໄຟ #{index + 1}</CardTitle>
                                                     <div className="print:hidden">
-                                                        <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(ticket.id)}>
-                                                            {itemVisibility[ticket.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
-                                                        </Button>
                                                         <Button variant="ghost" size="icon" onClick={() => deleteItem('trainTickets', ticket.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
                                                     </div>
                                                 </CardHeader>
-                                                {(itemVisibility[ticket.id] !== false) && (
                                                 <CardContent className="p-4 space-y-4">
                                                     <div className="grid grid-cols-2 gap-4">
                                                         <div className="space-y-2">
@@ -793,7 +777,6 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                         </div>
                                                     </div>
                                                 </CardContent>
-                                                )}
                                             </Card>
                                         ))}
                                         <Button onClick={addTrainTicket}><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າປີ້ລົດໄຟ</Button>
@@ -808,13 +791,9 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                 <CardHeader className="flex-row items-center justify-between p-3 bg-muted/50">
                                                     <CardTitle className="text-base">ຄ່າເຂົ້າຊົມ #{index + 1}</CardTitle>
                                                     <div className="print:hidden">
-                                                        <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(fee.id)}>
-                                                            {itemVisibility[fee.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
-                                                        </Button>
                                                         <Button variant="ghost" size="icon" onClick={() => deleteItem('entranceFees', fee.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
                                                     </div>
                                                 </CardHeader>
-                                                {(itemVisibility[fee.id] !== false) && (
                                                 <CardContent className="p-4 space-y-4">
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                         <div className="space-y-2">
@@ -844,7 +823,6 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                         </div>
                                                     </div>
                                                 </CardContent>
-                                                )}
                                             </Card>
                                         ))}
                                         <Button onClick={addEntranceFee}><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າເຂົ້າຊົມ</Button>
@@ -859,13 +837,9 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                 <CardHeader className="flex-row items-center justify-between p-3 bg-muted/50">
                                                     <CardTitle className="text-base">ລາຍການອາຫານ #{index + 1}</CardTitle>
                                                     <div className="print:hidden">
-                                                        <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(meal.id)}>
-                                                            {itemVisibility[meal.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
-                                                        </Button>
                                                         <Button variant="ghost" size="icon" onClick={() => deleteItem('meals', meal.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
                                                     </div>
                                                 </CardHeader>
-                                                {(itemVisibility[meal.id] !== false) && (
                                                 <CardContent className="p-4 space-y-4">
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                         <div className="space-y-2">
@@ -905,7 +879,6 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                         </div>
                                                     </div>
                                                 </CardContent>
-                                                )}
                                             </Card>
                                         ))}
                                         <Button onClick={addMealCost}><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າອາຫານ</Button>
@@ -920,13 +893,9 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                 <CardHeader className="flex-row items-center justify-between p-3 bg-muted/50">
                                                     <CardTitle className="text-base">ລາຍການໄກ້ #{index + 1}</CardTitle>
                                                     <div className="print:hidden">
-                                                        <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(guide.id)}>
-                                                            {itemVisibility[guide.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
-                                                        </Button>
                                                         <Button variant="ghost" size="icon" onClick={() => deleteItem('guides', guide.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
                                                     </div>
                                                 </CardHeader>
-                                                {(itemVisibility[guide.id] !== false) && (
                                                 <CardContent className="p-4 space-y-4">
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                         <div className="space-y-2">
@@ -956,7 +925,6 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                         </div>
                                                     </div>
                                                 </CardContent>
-                                                )}
                                             </Card>
                                         ))}
                                         <Button onClick={addGuideFee}><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າໄກ້</Button>
@@ -971,13 +939,9 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                 <CardHeader className="flex-row items-center justify-between p-3 bg-muted/50">
                                                     <CardTitle className="text-base">ລາຍການເອກະສານ #{index + 1}</CardTitle>
                                                     <div className="print:hidden">
-                                                        <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(doc.id)}>
-                                                            {itemVisibility[doc.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
-                                                        </Button>
                                                         <Button variant="ghost" size="icon" onClick={() => deleteItem('documents', doc.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
                                                     </div>
                                                 </CardHeader>
-                                                {(itemVisibility[doc.id] !== false) && (
                                                 <CardContent className="p-4 space-y-4">
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                         <div className="space-y-2">
@@ -1003,7 +967,6 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                         </div>
                                                     </div>
                                                 </CardContent>
-                                                )}
                                             </Card>
                                         ))}
                                         <Button onClick={addDocumentFee}><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າເອກະສານ</Button>
