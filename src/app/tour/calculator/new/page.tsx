@@ -23,8 +23,8 @@ export default function NewCalculationPage() {
                     groupCode: `NewCalc-${uuidv4().substring(0, 4)}`,
                     destinationCountry: '',
                     program: 'New Calculation',
-                    startDate: undefined,
-                    endDate: undefined,
+                    startDate: new Date(),
+                    endDate: new Date(),
                     numDays: 1,
                     numNights: 0,
                     numPeople: 1,
@@ -69,4 +69,3 @@ export default function NewCalculationPage() {
         </div>
     );
 }
-
