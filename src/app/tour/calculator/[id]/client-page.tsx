@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { ArrowLeft, Save, Trash2, MapPin, Calendar as CalendarIcon, BedDouble, Truck, Plane, TrainFront, PlusCircle, Camera, UtensilsCrossed, Users, FileText, Copy, Clock, Eye, EyeOff, Download, History, Printer, ChevronsRight, Percent, TrendingUp } from "lucide-react";
+import { ArrowLeft, Save, Trash2, MapPin, Calendar as CalendarIcon, BedDouble, Truck, Plane, TrainFront, PlusCircle, Camera, UtensilsCrossed, Users, FileText, Copy, Clock, Eye, EyeOff, Download, History, Printer, ChevronsRight, Percent, TrendingUp, Calculator } from "lucide-react";
 import { format, isValid } from 'date-fns';
 import { th } from 'date-fns/locale';
 import { TotalCostCard } from '@/components/tour/TotalCostCard';
@@ -35,7 +35,16 @@ const currencySymbols: Record<Currency, string> = {
 
 const formatNumber = (num: number, options?: Intl.NumberFormatOptions) => new Intl.NumberFormat('en-US', options).format(num);
 
-const SAVED_CALCULATIONS_KEY = 'tour-savedCalculations';
+const categoryIcons: { [key: string]: React.ReactNode } = {
+    'ຄ່າທີ່ພັກ': <BedDouble className="h-5 w-5" />,
+    'ຄ່າຂົນສົ່ງ': <Truck className="h-5 w-5" />,
+    'ຄ່າປີ້ຍົນ': <Plane className="h-5 w-5" />,
+    'ຄ່າປີ້ລົດໄຟ': <TrainFront className="h-5 w-5" />,
+    'ຄ່າເຂົ້າຊົມສະຖານທີ່': <Camera className="h-5 w-5" />,
+    'ຄ່າອາຫານ': <UtensilsCrossed className="h-5 w-5" />,
+    'ຄ່າໄກ້': <Users className="h-5 w-5" />,
+    'ຄ່າເອກະສານ': <FileText className="h-5 w-5" />,
+};
 
 const costCategories: Array<keyof TourCosts> = [
     'accommodations', 'trips', 'flights', 'trainTickets',
@@ -331,10 +340,85 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                 </div>
             </header>
             <main className="flex w-full flex-1 flex-col gap-8 p-4 sm:px-6 sm:py-4 bg-muted/40 print:p-0 print:bg-white print:gap-4">
-                <div id="print-content" className="print-container">
-                    {/* Content for printing will be added here via other components */}
+
+                {/* Print View */}
+                <div id="print-content" className="hidden print:block w-full max-w-screen-xl mx-auto p-4">
+                    {/* Page 1 */}
+                    <div>
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2 text-xl">
+                                    <MapPin className="h-6 w-6 text-primary" />
+                                    ຂໍ້ມູນທົວ
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="grid gap-4 print:text-base">
+                                <div className="grid grid-cols-2 gap-x-8 gap-y-2">
+                                    <div><strong>MOU Contact:</strong> {tourInfo.mouContact}</div>
+                                    <div><strong>Group Code:</strong> {tourInfo.groupCode}</div>
+                                    <div><strong>ປະເທດປາຍທາງ:</strong> {tourInfo.destinationCountry}</div>
+                                    <div><strong>ໂປຣແກຣມ:</strong> {tourInfo.program}</div>
+                                    <div><strong>ວັນທີເດີນທາງ:</strong> {tourInfo.startDate ? format(tourInfo.startDate, "dd/MM/yyyy") : ''} - {tourInfo.endDate ? format(tourInfo.endDate, "dd/MM/yyyy") : ''}</div>
+                                    <div><strong>ຈຳນວນວັນ:</strong> {tourInfo.numDays} ວັນ {tourInfo.numNights} ຄືນ</div>
+                                    <div><strong>ຈຳນວນຄົນ:</strong> {tourInfo.numPeople}</div>
+                                    <div><strong>ຂໍ້ມູນຜູ້ຮ່ວມເດີນທາງ:</strong> {tourInfo.travelerInfo}</div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                        <div className="mt-4">
+                            <TotalCostCard totalsByCategory={totalsByCategory} />
+                        </div>
+                    </div>
+                    {/* Page 2 */}
+                    <div className="print-page-break-before">
+                        <Card>
+                             <CardHeader>
+                                <CardTitle className="text-xl">ຄ່າໃຊ້ຈ່າຍລວມທັງໝົດ ແລະ ອັດຕາແລກປ່ຽນ</CardTitle>
+                            </CardHeader>
+                             <CardContent className="space-y-6">
+                                <div className="grid grid-cols-4 gap-4">
+                                    {(Object.keys(grandTotals) as Currency[]).map(currency => (
+                                        <Card key={currency}>
+                                            <CardHeader className="pb-2"><CardTitle className="text-lg">{currency}</CardTitle></CardHeader>
+                                            <CardContent><p className="text-2xl font-bold">{formatNumber(grandTotals[currency])}</p></CardContent>
+                                        </Card>
+                                    ))}
+                                </div>
+                            </CardContent>
+                        </Card>
+                        <div className="grid grid-cols-3 gap-4 mt-4">
+                            <Card>
+                                <CardHeader><CardTitle>ຍອດລວມທີ່ແປງແລ້ວ</CardTitle></CardHeader>
+                                <CardContent>
+                                    <div className="border bg-background rounded-lg p-4 text-center">
+                                        <p className="text-sm text-muted-foreground">ຍອດລວມ ({targetCurrency})</p>
+                                        <p className="text-3xl font-bold text-primary">{formatNumber(convertedTotal, {maximumFractionDigits: 2})}</p>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                            <Card>
+                                <CardHeader><CardTitle>ລາຄາຂາຍ</CardTitle></CardHeader>
+                                <CardContent>
+                                     <div className="border bg-background rounded-lg p-4 text-center">
+                                        <p className="text-sm text-muted-foreground">ລາຄາຂາຍສຸດທິ ({targetCurrency})</p>
+                                        <p className="text-3xl font-bold text-primary">{formatNumber(sellingPrice, {maximumFractionDigits: 2})}</p>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                             <Card>
+                                <CardHeader><CardTitle className="flex items-center gap-2"><TrendingUp/>ກຳໄລ</CardTitle></CardHeader>
+                                <CardContent>
+                                    <div className="border bg-background rounded-lg p-4 text-center h-full flex flex-col justify-center">
+                                        <p className="text-sm text-muted-foreground">ກຳໄລ ({targetCurrency})</p>
+                                        <p className="text-3xl font-bold text-green-600">{formatNumber(profit, {maximumFractionDigits: 2})}</p>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
+                    </div>
                 </div>
 
+                {/* Screen View */}
                 <div className="w-full max-w-screen-xl mx-auto flex flex-col gap-8 print:hidden">
                      <Card>
                         <CardHeader>
@@ -1055,3 +1139,5 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
         </div>
     );
 }
+
+    
