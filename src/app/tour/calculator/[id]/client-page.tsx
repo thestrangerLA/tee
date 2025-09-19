@@ -347,21 +347,21 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                             <div className="grid md:grid-cols-2 gap-6">
                                 <div className="grid gap-2">
                                     <Label htmlFor="mou-contact">MOU Contact:</Label>
-                                    <Input id="mou-contact" placeholder="ຊື່ຜູ້ຕິດຕໍ່" value={tourInfo.mouContact} onChange={e => setTourInfo({...tourInfo, mouContact: e.target.value})} onBlur={handleSaveCalculation} />
+                                    <Input id="mou-contact" placeholder="ຊື່ຜູ້ຕິດຕໍ່" value={tourInfo.mouContact} onChange={e => setTourInfo({...tourInfo, mouContact: e.target.value})} />
                                 </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="group-code">Group Code:</Label>
-                                    <Input id="group-code" placeholder="ລະຫັດກຸ່ມ" value={tourInfo.groupCode} onChange={e => setTourInfo({...tourInfo, groupCode: e.target.value})} onBlur={handleSaveCalculation} />
+                                    <Input id="group-code" placeholder="ລະຫັດກຸ່ມ" value={tourInfo.groupCode} onChange={e => setTourInfo({...tourInfo, groupCode: e.target.value})} />
                                 </div>
                             </div>
                             <div className="grid md:grid-cols-2 gap-6">
                                 <div className="grid gap-2">
                                     <Label htmlFor="destination-country">ປະເທດປາຍທາງ:</Label>
-                                    <Input id="destination-country" placeholder="ປະເທດປາຍທາງ" value={tourInfo.destinationCountry} onChange={e => setTourInfo({...tourInfo, destinationCountry: e.target.value})} onBlur={handleSaveCalculation}/>
+                                    <Input id="destination-country" placeholder="ປະເທດປາຍທາງ" value={tourInfo.destinationCountry} onChange={e => setTourInfo({...tourInfo, destinationCountry: e.target.value})} />
                                 </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="program">ໂປຣແກຣມ:</Label>
-                                    <Input id="program" placeholder="ລະບຸໂປຣແກຣມ" value={tourInfo.program} onChange={e => setTourInfo({...tourInfo, program: e.target.value})} onBlur={handleSaveCalculation}/>
+                                    <Input id="program" placeholder="ລະບຸໂປຣແກຣມ" value={tourInfo.program} onChange={e => setTourInfo({...tourInfo, program: e.target.value})} />
                                 </div>
                             </div>
                                 <div className="grid md:grid-cols-2 gap-6 items-end">
@@ -376,7 +376,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                 </Button>
                                             </PopoverTrigger>
                                             <PopoverContent className="w-auto p-0">
-                                                <Calendar mode="single" selected={tourInfo.startDate} onSelect={date => { setTourInfo({...tourInfo, startDate: date }); handleSaveCalculation(); }} initialFocus locale={th} />
+                                                <Calendar mode="single" selected={tourInfo.startDate} onSelect={date => setTourInfo({...tourInfo, startDate: date })} initialFocus locale={th} />
                                             </PopoverContent>
                                         </Popover>
                                     </div>
@@ -390,7 +390,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                 </Button>
                                             </PopoverTrigger>
                                             <PopoverContent className="w-auto p-0">
-                                                <Calendar mode="single" selected={tourInfo.endDate} onSelect={date => { setTourInfo({...tourInfo, endDate: date }); handleSaveCalculation(); }} initialFocus locale={th} />
+                                                <Calendar mode="single" selected={tourInfo.endDate} onSelect={date => setTourInfo({...tourInfo, endDate: date })} initialFocus locale={th} />
                                             </PopoverContent>
                                         </Popover>
                                     </div>
@@ -398,22 +398,22 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                 <div className="grid grid-cols-2 gap-2">
                                     <div className="grid gap-2">
                                         <Label htmlFor="num-days">ຈຳນວນວັນ:</Label>
-                                        <Input id="num-days" type="number" placeholder="1" value={tourInfo.numDays} onChange={e => setTourInfo({...tourInfo, numDays: Number(e.target.value) || 1})} onBlur={handleSaveCalculation} />
+                                        <Input id="num-days" type="number" placeholder="1" value={tourInfo.numDays} onChange={e => setTourInfo({...tourInfo, numDays: Number(e.target.value) || 1})} />
                                     </div>
                                     <div className="grid gap-2">
                                         <Label htmlFor="num-nights">ຈຳນວນຄືນ:</Label>
-                                        <Input id="num-nights" type="number" placeholder="0" value={tourInfo.numNights} onChange={e => setTourInfo({...tourInfo, numNights: Number(e.target.value) || 0})} onBlur={handleSaveCalculation} />
+                                        <Input id="num-nights" type="number" placeholder="0" value={tourInfo.numNights} onChange={e => setTourInfo({...tourInfo, numNights: Number(e.target.value) || 0})} />
                                     </div>
                                 </div>
                             </div>
                             <div className="grid md:grid-cols-2 gap-6">
                                 <div className="grid gap-2">
                                     <Label htmlFor="num-people">ຈຳນວນຄົນ:</Label>
-                                    <Input id="num-people" type="number" placeholder="1" value={tourInfo.numPeople} onChange={e => setTourInfo({...tourInfo, numPeople: Number(e.target.value) || 1})} onBlur={handleSaveCalculation} />
+                                    <Input id="num-people" type="number" placeholder="1" value={tourInfo.numPeople} onChange={e => setTourInfo({...tourInfo, numPeople: Number(e.target.value) || 1})} />
                                 </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="traveler-info">ຂໍ້ມູນຜູ້ຮ່ວມເດີນທາງ:</Label>
-                                    <Textarea id="traveler-info" placeholder="ຕົວຢ່າງ ກຸ່ມຄອບຄົວ, ຄູ່ຮັກ, ຜູ້ສູງອາຍຸ" className="min-h-[40px]" value={tourInfo.travelerInfo} onChange={e => setTourInfo({...tourInfo, travelerInfo: e.target.value})} onBlur={handleSaveCalculation}/>
+                                    <Textarea id="traveler-info" placeholder="ຕົວຢ່າງ ກຸ່ມຄອບຄົວ, ຄູ່ຮັກ, ຜູ້ສູງອາຍຸ" className="min-h-[40px]" value={tourInfo.travelerInfo} onChange={e => setTourInfo({...tourInfo, travelerInfo: e.target.value})} />
                                 </div>
                             </div>
                         </CardContent>
@@ -446,7 +446,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                         <div className="grid md:grid-cols-2 gap-4">
                                                         <div className="space-y-2">
                                                             <Label>ຊື່ທີ່ພັກ</Label>
-                                                            <Input placeholder="ຊື່ທີ່ພັກ" value={acc.name} onChange={e => updateItem('accommodations', acc.id, 'name', e.target.value)} onBlur={handleSaveCalculation} />
+                                                            <Input placeholder="ຊື່ທີ່ພັກ" value={acc.name} onChange={e => updateItem('accommodations', acc.id, 'name', e.target.value)} />
                                                         </div>
                                                         <div className="space-y-2">
                                                             <Label>ວັນທີເຊັກອິນ</Label>
@@ -458,7 +458,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                                     </Button>
                                                                 </PopoverTrigger>
                                                                 <PopoverContent className="w-auto p-0">
-                                                                    <Calendar mode="single" selected={acc.checkInDate} onSelect={(date) => { updateItem('accommodations', acc.id, 'checkInDate', date); handleSaveCalculation(); }} initialFocus />
+                                                                    <Calendar mode="single" selected={acc.checkInDate} onSelect={(date) => updateItem('accommodations', acc.id, 'checkInDate', date)} initialFocus />
                                                                 </PopoverContent>
                                                             </Popover>
                                                         </div>
@@ -470,7 +470,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                             <div className="grid grid-cols-2 gap-2">
                                                                 <div className="space-y-1">
                                                                     <Label className="text-xs">ປະເພດ</Label>
-                                                                    <Select value={room.type} onValueChange={(v) => {updateRoom(acc.id, room.id, 'type', v); handleSaveCalculation();}}>
+                                                                    <Select value={room.type} onValueChange={(v) => updateRoom(acc.id, room.id, 'type', v)}>
                                                                         <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
                                                                         <SelectContent>
                                                                             <SelectItem value="เตียงเดี่ยว">ຕຽງດ່ຽວ</SelectItem>
@@ -481,19 +481,19 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                                 </div>
                                                                     <div className="space-y-1">
                                                                     <Label className="text-xs">ຈຳນວນຫ້ອງ</Label>
-                                                                    <Input type="number" min="1" value={room.numRooms} onChange={e => updateRoom(acc.id, room.id, 'numRooms', parseInt(e.target.value) || 1)} onBlur={handleSaveCalculation} className="h-8" />
+                                                                    <Input type="number" min="1" value={room.numRooms} onChange={e => updateRoom(acc.id, room.id, 'numRooms', parseInt(e.target.value) || 1)} className="h-8" />
                                                                 </div>
                                                                 <div className="space-y-1">
                                                                     <Label className="text-xs">ຈຳນວນຄືນ</Label>
-                                                                    <Input type="number" min="1" value={room.numNights} onChange={e => updateRoom(acc.id, room.id, 'numNights', parseInt(e.target.value) || 1)} onBlur={handleSaveCalculation} className="h-8" />
+                                                                    <Input type="number" min="1" value={room.numNights} onChange={e => updateRoom(acc.id, room.id, 'numNights', parseInt(e.target.value) || 1)} className="h-8" />
                                                                 </div>
                                                                 <div className="space-y-1">
                                                                     <Label className="text-xs">ລາຄາ/ຫ້ອງ/ຄືນ</Label>
-                                                                    <Input type="number" min="0" value={room.price} onChange={e => updateRoom(acc.id, room.id, 'price', parseFloat(e.target.value) || 0)} onBlur={handleSaveCalculation} className="h-8" />
+                                                                    <Input type="number" min="0" value={room.price} onChange={e => updateRoom(acc.id, room.id, 'price', parseFloat(e.target.value) || 0)} className="h-8" />
                                                                 </div>
                                                                 <div className="space-y-1 col-span-2">
                                                                     <Label className="text-xs">ສະກຸນເງິນ</Label>
-                                                                    <Select value={room.currency} onValueChange={(v) => {updateRoom(acc.id, room.id, 'currency', v); handleSaveCalculation();}}>
+                                                                    <Select value={room.currency} onValueChange={(v) => updateRoom(acc.id, room.id, 'currency', v)}>
                                                                         <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
                                                                         <SelectContent>
                                                                             {(Object.keys(currencySymbols) as Currency[]).map(c => (
@@ -503,7 +503,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                                     </Select>
                                                                 </div>
                                                             </div>
-                                                            {acc.rooms.length > 1 && <Button variant="ghost" size="icon" className="absolute top-0 right-0 h-6 w-6" onClick={() => {deleteRoom(acc.id, room.id); handleSaveCalculation()}}><Trash2 className="h-3 w-3 text-red-400"/></Button>}
+                                                            {acc.rooms.length > 1 && <Button variant="ghost" size="icon" className="absolute top-0 right-0 h-6 w-6" onClick={() => deleteRoom(acc.id, room.id)}><Trash2 className="h-3 w-3 text-red-400"/></Button>}
                                                         </div>
                                                     ))}
                                                     <Button size="sm" variant="outline" onClick={() => addRoom(acc.id)}><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຫ້ອງ</Button>
@@ -527,7 +527,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                         <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(trip.id)}>
                                                             {itemVisibility[trip.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
                                                         </Button>
-                                                        <Button variant="ghost" size="icon" onClick={() => {deleteItem('trips', trip.id); handleSaveCalculation();}}><Trash2 className="h-4 w-4 text-red-500"/></Button>
+                                                        <Button variant="ghost" size="icon" onClick={() => deleteItem('trips', trip.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
                                                     </div>
                                                 </CardHeader>
                                                 {(itemVisibility[trip.id] !== false) && (
@@ -535,33 +535,33 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                     <div className="grid grid-cols-2 gap-4">
                                                         <div className="space-y-2">
                                                             <Label>ສະຖານທີ່</Label>
-                                                            <Input placeholder="ສະຖານທີ່" value={trip.location} onChange={e => updateItem('trips', trip.id, 'location', e.target.value)} onBlur={handleSaveCalculation}/>
+                                                            <Input placeholder="ສະຖານທີ່" value={trip.location} onChange={e => updateItem('trips', trip.id, 'location', e.target.value)} />
                                                         </div>
                                                         <div className="space-y-2">
                                                             <Label>ເສັ້ນທາງ</Label>
-                                                            <Input placeholder="ວຽງຈັນ - ວັງວຽງ" value={trip.route} onChange={e => updateItem('trips', trip.id, 'route', e.target.value)} onBlur={handleSaveCalculation}/>
+                                                            <Input placeholder="ວຽງຈັນ - ວັງວຽງ" value={trip.route} onChange={e => updateItem('trips', trip.id, 'route', e.target.value)} />
                                                         </div>
                                                         <div className="col-span-2 space-y-2">
                                                             <Label>ປະເພດລົດ</Label>
-                                                            <Input placeholder="ລົດຕູ້ທຳມະດາ" value={trip.vehicleType} onChange={e => updateItem('trips', trip.id, 'vehicleType', e.target.value)} onBlur={handleSaveCalculation}/>
+                                                            <Input placeholder="ລົດຕູ້ທຳມະດາ" value={trip.vehicleType} onChange={e => updateItem('trips', trip.id, 'vehicleType', e.target.value)} />
                                                         </div>
                                                     </div>
                                                         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                                                         <div className="space-y-1">
                                                             <Label className="text-xs">ຈຳນວນຄັນ</Label>
-                                                            <Input type="number" min="1" value={trip.numVehicles} onChange={e => updateItem('trips', trip.id, 'numVehicles', parseInt(e.target.value) || 1)} onBlur={handleSaveCalculation} className="h-8"/>
+                                                            <Input type="number" min="1" value={trip.numVehicles} onChange={e => updateItem('trips', trip.id, 'numVehicles', parseInt(e.target.value) || 1)} className="h-8"/>
                                                         </div>
                                                         <div className="space-y-1">
                                                             <Label className="text-xs">ຈຳນວນວັນ</Label>
-                                                            <Input type="number" min="1" value={trip.numDays} onChange={e => updateItem('trips', trip.id, 'numDays', parseInt(e.target.value) || 1)} onBlur={handleSaveCalculation} className="h-8"/>
+                                                            <Input type="number" min="1" value={trip.numDays} onChange={e => updateItem('trips', trip.id, 'numDays', parseInt(e.target.value) || 1)} className="h-8"/>
                                                         </div>
                                                         <div className="space-y-1">
                                                             <Label className="text-xs">ລາຄາ/ຄັນ</Label>
-                                                            <Input type="number" min="0" value={trip.pricePerVehicle} onChange={e => updateItem('trips', trip.id, 'pricePerVehicle', parseFloat(e.target.value) || 0)} onBlur={handleSaveCalculation} className="h-8"/>
+                                                            <Input type="number" min="0" value={trip.pricePerVehicle} onChange={e => updateItem('trips', trip.id, 'pricePerVehicle', parseFloat(e.target.value) || 0)} className="h-8"/>
                                                         </div>
                                                         <div className="space-y-1">
                                                             <Label className="text-xs">ສະກຸນເງິນ</Label>
-                                                            <Select value={trip.currency} onValueChange={(v) => {updateItem('trips', trip.id, 'currency', v); handleSaveCalculation();}}>
+                                                            <Select value={trip.currency} onValueChange={(v) => updateItem('trips', trip.id, 'currency', v)}>
                                                                 <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
                                                                 <SelectContent>
                                                                     {(Object.keys(currencySymbols) as Currency[]).map(c => (<SelectItem key={c} value={c}>{currencySymbols[c]}</SelectItem>))}
@@ -588,7 +588,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                         <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(flight.id)}>
                                                             {itemVisibility[flight.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
                                                         </Button>
-                                                        <Button variant="ghost" size="icon" onClick={() => {deleteItem('flights', flight.id); handleSaveCalculation();}}><Trash2 className="h-4 w-4 text-red-500"/></Button>
+                                                        <Button variant="ghost" size="icon" onClick={() => deleteItem('flights', flight.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
                                                     </div>
                                                 </CardHeader>
                                                 {(itemVisibility[flight.id] !== false) && (
@@ -597,9 +597,9 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                         <div className="space-y-2">
                                                             <Label>ເສັ້ນທາງ</Label>
                                                             <div className="flex items-center gap-2">
-                                                                <Input placeholder="ຈາກ" value={flight.from} onChange={e => updateItem('flights', flight.id, 'from', e.target.value)} onBlur={handleSaveCalculation}/>
+                                                                <Input placeholder="ຈາກ" value={flight.from} onChange={e => updateItem('flights', flight.id, 'from', e.target.value)} />
                                                                 <span>ໄປ</span>
-                                                                <Input placeholder="ໄປ" value={flight.to} onChange={e => updateItem('flights', flight.id, 'to', e.target.value)} onBlur={handleSaveCalculation}/>
+                                                                <Input placeholder="ໄປ" value={flight.to} onChange={e => updateItem('flights', flight.id, 'to', e.target.value)} />
                                                             </div>
                                                         </div>
                                                         <div className="space-y-2">
@@ -613,12 +613,12 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                                         </Button>
                                                                     </PopoverTrigger>
                                                                     <PopoverContent className="w-auto p-0">
-                                                                        <Calendar mode="single" selected={flight.departureDate} onSelect={(date) => {updateItem('flights', flight.id, 'departureDate', date); handleSaveCalculation();}} initialFocus />
+                                                                        <Calendar mode="single" selected={flight.departureDate} onSelect={(date) => updateItem('flights', flight.id, 'departureDate', date)} initialFocus />
                                                                     </PopoverContent>
                                                                 </Popover>
                                                                 <div className="relative">
                                                                     <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                                                    <Input type="time" value={flight.departureTime} onChange={e => updateItem('flights', flight.id, 'departureTime', e.target.value)} onBlur={handleSaveCalculation} className="pl-10" />
+                                                                    <Input type="time" value={flight.departureTime} onChange={e => updateItem('flights', flight.id, 'departureTime', e.target.value)} className="pl-10" />
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -626,15 +626,15 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                         <div className="grid grid-cols-3 gap-4">
                                                         <div className="space-y-2">
                                                             <Label>ລາຄາ/ຄົນ</Label>
-                                                            <Input type="number" min="0" value={flight.pricePerPerson} onChange={e => updateItem('flights', flight.id, 'pricePerPerson', parseFloat(e.target.value) || 0)} onBlur={handleSaveCalculation} />
+                                                            <Input type="number" min="0" value={flight.pricePerPerson} onChange={e => updateItem('flights', flight.id, 'pricePerPerson', parseFloat(e.target.value) || 0)} />
                                                         </div>
                                                         <div className="space-y-2">
                                                             <Label>ຈຳນວນຄົນ</Label>
-                                                            <Input type="number" min="1" value={flight.numPeople} onChange={e => updateItem('flights', flight.id, 'numPeople', parseInt(e.target.value) || 1)} onBlur={handleSaveCalculation} />
+                                                            <Input type="number" min="1" value={flight.numPeople} onChange={e => updateItem('flights', flight.id, 'numPeople', parseInt(e.target.value) || 1)} />
                                                         </div>
                                                         <div className="space-y-2">
                                                             <Label>ສະກຸນເງິນ</Label>
-                                                            <Select value={flight.currency} onValueChange={(v) => {updateItem('flights', flight.id, 'currency', v); handleSaveCalculation();}}>
+                                                            <Select value={flight.currency} onValueChange={(v) => updateItem('flights', flight.id, 'currency', v)}>
                                                                 <SelectTrigger><SelectValue /></SelectTrigger>
                                                                 <SelectContent>{(Object.keys(currencySymbols) as Currency[]).map(c => (<SelectItem key={c} value={c}>{currencySymbols[c]}</SelectItem>))}</SelectContent>
                                                             </Select>
@@ -659,7 +659,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                         <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(ticket.id)}>
                                                             {itemVisibility[ticket.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
                                                         </Button>
-                                                        <Button variant="ghost" size="icon" onClick={() => {deleteItem('trainTickets', ticket.id); handleSaveCalculation();}}><Trash2 className="h-4 w-4 text-red-500"/></Button>
+                                                        <Button variant="ghost" size="icon" onClick={() => deleteItem('trainTickets', ticket.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
                                                     </div>
                                                 </CardHeader>
                                                 {(itemVisibility[ticket.id] !== false) && (
@@ -668,9 +668,9 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                         <div className="space-y-2">
                                                             <Label>ເສັ້ນທາງ</Label>
                                                             <div className="flex items-center gap-2">
-                                                                <Input placeholder="ຈາກ" value={ticket.from} onChange={e => updateItem('trainTickets', ticket.id, 'from', e.target.value)} onBlur={handleSaveCalculation}/>
+                                                                <Input placeholder="ຈາກ" value={ticket.from} onChange={e => updateItem('trainTickets', ticket.id, 'from', e.target.value)} />
                                                                 <span>ໄປ</span>
-                                                                <Input placeholder="ໄປ" value={ticket.to} onChange={e => updateItem('trainTickets', ticket.id, 'to', e.target.value)} onBlur={handleSaveCalculation}/>
+                                                                <Input placeholder="ໄປ" value={ticket.to} onChange={e => updateItem('trainTickets', ticket.id, 'to', e.target.value)} />
                                                             </div>
                                                         </div>
                                                         <div className="space-y-2">
@@ -684,12 +684,12 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                                         </Button>
                                                                     </PopoverTrigger>
                                                                     <PopoverContent className="w-auto p-0">
-                                                                        <Calendar mode="single" selected={ticket.departureDate} onSelect={(date) => {updateItem('trainTickets', ticket.id, 'departureDate', date); handleSaveCalculation();}} initialFocus />
+                                                                        <Calendar mode="single" selected={ticket.departureDate} onSelect={(date) => updateItem('trainTickets', ticket.id, 'departureDate', date)} initialFocus />
                                                                     </PopoverContent>
                                                                 </Popover>
                                                                 <div className="relative">
                                                                     <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                                                    <Input type="time" value={ticket.departureTime} onChange={e => updateItem('trainTickets', ticket.id, 'departureTime', e.target.value)} onBlur={handleSaveCalculation} className="pl-10" />
+                                                                    <Input type="time" value={ticket.departureTime} onChange={e => updateItem('trainTickets', ticket.id, 'departureTime', e.target.value)} className="pl-10" />
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -697,19 +697,19 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                                         <div className="space-y-2">
                                                             <Label>ລາຄາ/ປີ້</Label>
-                                                            <Input type="number" min="0" value={ticket.pricePerTicket} onChange={e => updateItem('trainTickets', ticket.id, 'pricePerTicket', parseFloat(e.target.value) || 0)} onBlur={handleSaveCalculation}/>
+                                                            <Input type="number" min="0" value={ticket.pricePerTicket} onChange={e => updateItem('trainTickets', ticket.id, 'pricePerTicket', parseFloat(e.target.value) || 0)} />
                                                         </div>
                                                         <div className="space-y-2">
                                                             <Label>ຈຳນວນປີ້</Label>
-                                                            <Input type="number" min="1" value={ticket.numTickets} onChange={e => updateItem('trainTickets', ticket.id, 'numTickets', parseInt(e.target.value) || 1)} onBlur={handleSaveCalculation}/>
+                                                            <Input type="number" min="1" value={ticket.numTickets} onChange={e => updateItem('trainTickets', ticket.id, 'numTickets', parseInt(e.target.value) || 1)} />
                                                         </div>
                                                         <div className="space-y-2">
                                                             <Label>ຊັ້ນປີ້</Label>
-                                                            <Input value={ticket.ticketClass} onChange={e => updateItem('trainTickets', ticket.id, 'ticketClass', e.target.value)} placeholder="เช่น ชั้น 1, ชั้น 2" onBlur={handleSaveCalculation}/>
+                                                            <Input value={ticket.ticketClass} onChange={e => updateItem('trainTickets', ticket.id, 'ticketClass', e.target.value)} placeholder="เช่น ชั้น 1, ชั้น 2" />
                                                         </div>
                                                         <div className="space-y-2">
                                                             <Label>ສະກຸນເງິນ</Label>
-                                                            <Select value={ticket.currency} onValueChange={(v) => {updateItem('trainTickets', ticket.id, 'currency', v); handleSaveCalculation();}}>
+                                                            <Select value={ticket.currency} onValueChange={(v) => updateItem('trainTickets', ticket.id, 'currency', v)}>
                                                                 <SelectTrigger><SelectValue /></SelectTrigger>
                                                                 <SelectContent>{(Object.keys(currencySymbols) as Currency[]).map(c => (<SelectItem key={c} value={c}>{currencySymbols[c]}</SelectItem>))}</SelectContent>
                                                             </Select>
@@ -734,7 +734,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                         <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(fee.id)}>
                                                             {itemVisibility[fee.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
                                                         </Button>
-                                                        <Button variant="ghost" size="icon" onClick={() => {deleteItem('entranceFees', fee.id); handleSaveCalculation();}}><Trash2 className="h-4 w-4 text-red-500"/></Button>
+                                                        <Button variant="ghost" size="icon" onClick={() => deleteItem('entranceFees', fee.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
                                                     </div>
                                                 </CardHeader>
                                                 {(itemVisibility[fee.id] !== false) && (
@@ -742,25 +742,25 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                         <div className="space-y-2">
                                                             <Label>ຊື່ສະຖານທີ່</Label>
-                                                            <Input value={fee.locationName} onChange={e => updateItem('entranceFees', fee.id, 'locationName', e.target.value)} onBlur={handleSaveCalculation} placeholder="ເຊັ່ນ: ພະທາດຫຼວງ, ປະຕູໄຊ" />
+                                                            <Input value={fee.locationName} onChange={e => updateItem('entranceFees', fee.id, 'locationName', e.target.value)} placeholder="ເຊັ່ນ: ພະທາດຫຼວງ, ປະຕູໄຊ" />
                                                         </div>
                                                     </div>
                                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                                         <div className="space-y-2">
                                                             <Label>Pax</Label>
-                                                            <Input type="number" min="1" value={fee.pax} onChange={e => updateItem('entranceFees', fee.id, 'pax', parseInt(e.target.value) || 1)} onBlur={handleSaveCalculation}/>
+                                                            <Input type="number" min="1" value={fee.pax} onChange={e => updateItem('entranceFees', fee.id, 'pax', parseInt(e.target.value) || 1)} />
                                                         </div>
                                                         <div className="space-y-2">
                                                             <Label>ຈຳນວນສະຖານທີ່</Label>
-                                                            <Input type="number" min="1" value={fee.numLocations} onChange={e => updateItem('entranceFees', fee.id, 'numLocations', parseInt(e.target.value) || 1)} onBlur={handleSaveCalculation}/>
+                                                            <Input type="number" min="1" value={fee.numLocations} onChange={e => updateItem('entranceFees', fee.id, 'numLocations', parseInt(e.target.value) || 1)} />
                                                         </div>
                                                         <div className="space-y-2">
                                                             <Label>ລາຄາ</Label>
-                                                            <Input type="number" min="0" value={fee.price} onChange={e => updateItem('entranceFees', fee.id, 'price', parseFloat(e.target.value) || 0)} onBlur={handleSaveCalculation}/>
+                                                            <Input type="number" min="0" value={fee.price} onChange={e => updateItem('entranceFees', fee.id, 'price', parseFloat(e.target.value) || 0)} />
                                                         </div>
                                                         <div className="space-y-2">
                                                             <Label>ສະກຸນເງິນ</Label>
-                                                            <Select value={fee.currency} onValueChange={(v) => {updateItem('entranceFees', fee.id, 'currency', v); handleSaveCalculation();}}>
+                                                            <Select value={fee.currency} onValueChange={(v) => updateItem('entranceFees', fee.id, 'currency', v)}>
                                                                 <SelectTrigger><SelectValue /></SelectTrigger>
                                                                 <SelectContent>{(Object.keys(currencySymbols) as Currency[]).map(c => (<SelectItem key={c} value={c}>{currencySymbols[c]}</SelectItem>))}</SelectContent>
                                                             </Select>
@@ -785,7 +785,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                         <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(meal.id)}>
                                                             {itemVisibility[meal.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
                                                         </Button>
-                                                        <Button variant="ghost" size="icon" onClick={() => {deleteItem('meals', meal.id); handleSaveCalculation();}}><Trash2 className="h-4 w-4 text-red-500"/></Button>
+                                                        <Button variant="ghost" size="icon" onClick={() => deleteItem('meals', meal.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
                                                     </div>
                                                 </CardHeader>
                                                 {(itemVisibility[meal.id] !== false) && (
@@ -793,35 +793,35 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                         <div className="space-y-2">
                                                             <Label>ຊື່ລາຍການ</Label>
-                                                            <Input value={meal.name} onChange={e => updateItem('meals', meal.id, 'name', e.target.value)} onBlur={handleSaveCalculation} placeholder="เช่น อาหารเย็นวันแรก, ร้าน..." />
+                                                            <Input value={meal.name} onChange={e => updateItem('meals', meal.id, 'name', e.target.value)} placeholder="เช่น อาหารเย็นวันแรก, ร้าน..." />
                                                         </div>
                                                         <div className="space-y-2">
                                                             <Label>Pax</Label>
-                                                            <Input type="number" min="1" value={meal.pax} onChange={e => updateItem('meals', meal.id, 'pax', parseInt(e.target.value) || 1)} onBlur={handleSaveCalculation}/>
+                                                            <Input type="number" min="1" value={meal.pax} onChange={e => updateItem('meals', meal.id, 'pax', parseInt(e.target.value) || 1)} />
                                                         </div>
                                                     </div>
                                                     <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                                                         <div className="space-y-1">
                                                             <Label className="text-xs">ເຊົ້າ</Label>
-                                                            <Input type="number" min="0" value={meal.breakfast} onChange={e => updateItem('meals', meal.id, 'breakfast', parseInt(e.target.value) || 0)} onBlur={handleSaveCalculation} className="h-8"/>
+                                                            <Input type="number" min="0" value={meal.breakfast} onChange={e => updateItem('meals', meal.id, 'breakfast', parseInt(e.target.value) || 0)} className="h-8"/>
                                                         </div>
                                                         <div className="space-y-1">
                                                             <Label className="text-xs">ທ່ຽງ</Label>
-                                                            <Input type="number" min="0" value={meal.lunch} onChange={e => updateItem('meals', meal.id, 'lunch', parseInt(e.target.value) || 0)} onBlur={handleSaveCalculation} className="h-8"/>
+                                                            <Input type="number" min="0" value={meal.lunch} onChange={e => updateItem('meals', meal.id, 'lunch', parseInt(e.target.value) || 0)} className="h-8"/>
                                                         </div>
                                                         <div className="space-y-1">
                                                             <Label className="text-xs">ແລງ</Label>
-                                                            <Input type="number" min="0" value={meal.dinner} onChange={e => updateItem('meals', meal.id, 'dinner', parseInt(e.target.value) || 0)} onBlur={handleSaveCalculation} className="h-8"/>
+                                                            <Input type="number" min="0" value={meal.dinner} onChange={e => updateItem('meals', meal.id, 'dinner', parseInt(e.target.value) || 0)} className="h-8"/>
                                                         </div>
                                                     </div>
                                                     <div className="grid grid-cols-2 gap-4">
                                                         <div className="space-y-2">
                                                             <Label>ລາຄາ/ມື້</Label>
-                                                            <Input type="number" min="0" value={meal.pricePerMeal} onChange={e => updateItem('meals', meal.id, 'pricePerMeal', parseFloat(e.target.value) || 0)} onBlur={handleSaveCalculation}/>
+                                                            <Input type="number" min="0" value={meal.pricePerMeal} onChange={e => updateItem('meals', meal.id, 'pricePerMeal', parseFloat(e.target.value) || 0)} />
                                                         </div>
                                                         <div className="space-y-2">
                                                             <Label>ສະກຸນເງິນ</Label>
-                                                            <Select value={meal.currency} onValueChange={(v) => {updateItem('meals', meal.id, 'currency', v); handleSaveCalculation();}}>
+                                                            <Select value={meal.currency} onValueChange={(v) => updateItem('meals', meal.id, 'currency', v)}>
                                                                 <SelectTrigger><SelectValue /></SelectTrigger>
                                                                 <SelectContent>{(Object.keys(currencySymbols) as Currency[]).map(c => (<SelectItem key={c} value={c}>{currencySymbols[c]}</SelectItem>))}</SelectContent>
                                                             </Select>
@@ -846,7 +846,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                         <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(guide.id)}>
                                                             {itemVisibility[guide.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
                                                         </Button>
-                                                        <Button variant="ghost" size="icon" onClick={() => {deleteItem('guides', guide.id); handleSaveCalculation();}}><Trash2 className="h-4 w-4 text-red-500"/></Button>
+                                                        <Button variant="ghost" size="icon" onClick={() => deleteItem('guides', guide.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
                                                     </div>
                                                 </CardHeader>
                                                 {(itemVisibility[guide.id] !== false) && (
@@ -854,25 +854,25 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                         <div className="space-y-2">
                                                             <Label>ຊື່ໄກ້/ບໍລິສັດ</Label>
-                                                            <Input value={guide.guideName} onChange={e => updateItem('guides', guide.id, 'guideName', e.target.value)} onBlur={handleSaveCalculation} placeholder="ຊື່ໄກ້" />
+                                                            <Input value={guide.guideName} onChange={e => updateItem('guides', guide.id, 'guideName', e.target.value)} placeholder="ຊື່ໄກ້" />
                                                         </div>
                                                     </div>
                                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                                         <div className="space-y-2">
                                                             <Label>ຈຳນວນໄກ້</Label>
-                                                            <Input type="number" min="1" value={guide.numGuides} onChange={e => updateItem('guides', guide.id, 'numGuides', parseInt(e.target.value) || 1)} onBlur={handleSaveCalculation}/>
+                                                            <Input type="number" min="1" value={guide.numGuides} onChange={e => updateItem('guides', guide.id, 'numGuides', parseInt(e.target.value) || 1)} />
                                                         </div>
                                                         <div className="space-y-2">
                                                             <Label>ຈຳນວນວັນ</Label>
-                                                            <Input type="number" min="1" value={guide.numDays} onChange={e => updateItem('guides', guide.id, 'numDays', parseInt(e.target.value) || 1)} onBlur={handleSaveCalculation}/>
+                                                            <Input type="number" min="1" value={guide.numDays} onChange={e => updateItem('guides', guide.id, 'numDays', parseInt(e.target.value) || 1)} />
                                                         </div>
                                                         <div className="space-y-2">
                                                             <Label>ລາຄາ/ວັນ</Label>
-                                                            <Input type="number" min="0" value={guide.pricePerDay} onChange={e => updateItem('guides', guide.id, 'pricePerDay', parseFloat(e.target.value) || 0)} onBlur={handleSaveCalculation}/>
+                                                            <Input type="number" min="0" value={guide.pricePerDay} onChange={e => updateItem('guides', guide.id, 'pricePerDay', parseFloat(e.target.value) || 0)} />
                                                         </div>
                                                         <div className="space-y-2">
                                                             <Label>ສະກຸນເງິນ</Label>
-                                                            <Select value={guide.currency} onValueChange={(v) => {updateItem('guides', guide.id, 'currency', v); handleSaveCalculation();}}>
+                                                            <Select value={guide.currency} onValueChange={(v) => updateItem('guides', guide.id, 'currency', v)}>
                                                                 <SelectTrigger><SelectValue /></SelectTrigger>
                                                                 <SelectContent>{(Object.keys(currencySymbols) as Currency[]).map(c => (<SelectItem key={c} value={c}>{currencySymbols[c]}</SelectItem>))}</SelectContent>
                                                             </Select>
@@ -897,7 +897,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                         <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(doc.id)}>
                                                             {itemVisibility[doc.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
                                                         </Button>
-                                                        <Button variant="ghost" size="icon" onClick={() => {deleteItem('documents', doc.id); handleSaveCalculation();}}><Trash2 className="h-4 w-4 text-red-500"/></Button>
+                                                        <Button variant="ghost" size="icon" onClick={() => deleteItem('documents', doc.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
                                                     </div>
                                                 </CardHeader>
                                                 {(itemVisibility[doc.id] !== false) && (
@@ -905,21 +905,21 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                         <div className="space-y-2">
                                                         <Label>ຊື່ເອກະສານ</Label>
-                                                        <Input value={doc.documentName} onChange={e => updateItem('documents', doc.id, 'documentName', e.target.value)} onBlur={handleSaveCalculation} placeholder="เช่น ค่าวีซ่า, ค่าเอกสารผ่านแดน" />
+                                                        <Input value={doc.documentName} onChange={e => updateItem('documents', doc.id, 'documentName', e.target.value)} placeholder="เช่น ค่าวีซ่า, ค่าเอกสารผ่านแดน" />
                                                     </div>
                                                     </div>
                                                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                                         <div className="space-y-2">
                                                             <Label>Pax</Label>
-                                                            <Input type="number" min="1" value={doc.pax} onChange={e => updateItem('documents', doc.id, 'pax', parseInt(e.target.value) || 1)} onBlur={handleSaveCalculation}/>
+                                                            <Input type="number" min="1" value={doc.pax} onChange={e => updateItem('documents', doc.id, 'pax', parseInt(e.target.value) || 1)} />
                                                         </div>
                                                         <div className="space-y-2">
                                                             <Label>ລາຄາ</Label>
-                                                            <Input type="number" min="0" value={doc.price} onChange={e => updateItem('documents', doc.id, 'price', parseFloat(e.target.value) || 0)} onBlur={handleSaveCalculation}/>
+                                                            <Input type="number" min="0" value={doc.price} onChange={e => updateItem('documents', doc.id, 'price', parseFloat(e.target.value) || 0)} />
                                                         </div>
                                                         <div className="space-y-2">
                                                             <Label>ສະກຸນເງິນ</Label>
-                                                            <Select value={doc.currency} onValueChange={(v) => {updateItem('documents', doc.id, 'currency', v); handleSaveCalculation();}}>
+                                                            <Select value={doc.currency} onValueChange={(v) => updateItem('documents', doc.id, 'currency', v)}>
                                                                 <SelectTrigger><SelectValue /></SelectTrigger>
                                                                 <SelectContent>{(Object.keys(currencySymbols) as Currency[]).map(c => (<SelectItem key={c} value={c}>{currencySymbols[c]}</SelectItem>))}</SelectContent>
                                                             </Select>
