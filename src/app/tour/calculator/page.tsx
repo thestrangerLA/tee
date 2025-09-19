@@ -40,6 +40,7 @@ export default function TourCalculationsListPage() {
     
     const filteredCalculations = useMemo(() => {
         return allCalculations.filter(p => {
+            if (!p.savedAt) return false;
             const isYearMatch = selectedYear === null || getYear(p.savedAt) === selectedYear;
             return isYearMatch;
         });
@@ -47,6 +48,7 @@ export default function TourCalculationsListPage() {
 
     const calculationsByMonth = useMemo(() => {
         return filteredCalculations.reduce((acc, calc) => {
+            if (!calc.savedAt) return acc;
             const month = getMonth(calc.savedAt);
             if (!acc[month]) {
                 acc[month] = [];
@@ -119,7 +121,7 @@ export default function TourCalculationsListPage() {
             {calculations.map(calc => (
                 <TableRow key={calc.id} className="group cursor-pointer" onClick={() => handleRowClick(calc.id)}>
                     <TableCell>
-                        {format(calc.savedAt, "dd/MM/yyyy HH:mm", { locale: lo })}
+                        {calc.savedAt ? format(calc.savedAt, "dd/MM/yyyy HH:mm", { locale: lo }) : 'N/A'}
                     </TableCell>
                     <TableCell>{calc.tourInfo.groupCode}</TableCell>
                     <TableCell className="font-medium">{calc.tourInfo.program}</TableCell>
