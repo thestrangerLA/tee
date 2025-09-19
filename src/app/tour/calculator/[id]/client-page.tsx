@@ -333,21 +333,51 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
             <main className="flex w-full flex-1 flex-col gap-8 p-4 sm:px-6 sm:py-4 bg-muted/40 print:p-0 print:bg-white print:gap-4">
                 <div id="print-content" className="print-container hidden print:block">
                      <div className="space-y-4 p-4">
-                        <h1 className="text-2xl font-bold text-center">ລາຍລະອຽດຄ່າໃຊ້ຈ່າຍໂປຣແກຣມທົວ</h1>
+                        <h1 className="text-2xl font-bold text-center">ຂໍ້ມູນທົວ</h1>
                         <Card>
-                            <CardHeader>
-                                <CardTitle>ຂໍ້ມູນທົວ</CardTitle>
-                            </CardHeader>
-                            <CardContent className="grid grid-cols-2 text-sm gap-2">
-                                <p><strong>MOU Contact:</strong> {tourInfo.mouContact}</p>
-                                <p><strong>Group Code:</strong> {tourInfo.groupCode}</p>
-                                <p><strong>ປະເທດປາຍທາງ:</strong> {tourInfo.destinationCountry}</p>
-                                <p><strong>ໂປຣແກຣມ:</strong> {tourInfo.program}</p>
-                                <p><strong>ວັນທີເດີນທາງ:</strong> {tourInfo.startDate && isValid(new Date(tourInfo.startDate)) ? format(new Date(tourInfo.startDate), "dd/MM/yyyy") : 'N/A'} - {tourInfo.endDate && isValid(new Date(tourInfo.endDate)) ? format(new Date(tourInfo.endDate), "dd/MM/yyyy") : 'N/A'}</p>
-                                <p><strong>ຈຳນວນວັນ:</strong> {tourInfo.numDays} ວັນ {tourInfo.numNights} ຄືນ</p>
-                                <p><strong>ຈຳນວນຄົນ:</strong> {tourInfo.numPeople}</p>
+                            <CardContent className="grid grid-cols-2 text-sm gap-x-8 gap-y-2 pt-4">
+                                <div className="flex justify-between border-b pb-1"><strong className="font-semibold">MOU Contact:</strong><span>{tourInfo.mouContact || '-'}</span></div>
+                                <div className="flex justify-between border-b pb-1"><strong className="font-semibold">Travel Dates:</strong><span>{tourInfo.travelerInfo || '-'}</span></div>
+                                <div className="flex justify-between border-b pb-1"><strong className="font-semibold">Group Code:</strong><span>{tourInfo.groupCode || '-'}</span></div>
+                                <div className="flex justify-between border-b pb-1"><strong className="font-semibold">Duration:</strong><span>{tourInfo.numDays} Days, {tourInfo.numNights} Nights</span></div>
+                                <div className="flex justify-between border-b pb-1"><strong className="font-semibold">Destination:</strong><span>{tourInfo.destinationCountry || '-'}</span></div>
+                                <div className="flex justify-between border-b pb-1"><strong className="font-semibold">Pax:</strong><span>{tourInfo.numPeople || '-'}</span></div>
+                                <div className="flex justify-between border-b pb-1"><strong className="font-semibold">Program:</strong><span>{tourInfo.program || '-'}</span></div>
+                                <div className="flex justify-between border-b pb-1"><strong className="font-semibold">Traveler Info:</strong><span>{tourInfo.travelerInfo || '-'}</span></div>
                             </CardContent>
                         </Card>
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>ສະຫຼຸບຕາມໝວດໝູ່</CardTitle>
+                            </CardHeader>
+                             <CardContent className="grid grid-cols-2 gap-4">
+                                {Object.entries(totalsByCategory).map(([category, totals]) => {
+                                    const filteredTotals = Object.entries(totals).filter(([, value]) => value > 0);
+                                    if (filteredTotals.length === 0) return null;
+
+                                    return (
+                                        <div key={category} className="flex items-center justify-between p-2 border rounded-md">
+                                            <div className="flex items-center gap-2">
+                                                {categoryIcons[category] || <Calculator className="h-5 w-5" />}
+                                                <span className="font-semibold">{category}</span>
+                                            </div>
+                                            <div className="flex gap-2 font-mono">
+                                                 {filteredTotals.map(([currency, value]) => (
+                                                    <span key={currency}>
+                                                        {currencySymbols[currency as Currency].split(' ')[0]}
+                                                        {formatNumber(value)}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+                            </CardContent>
+                        </Card>
+                     </div>
+                     <div className="print-page-break-before" />
+                     <div className="space-y-4 p-4">
+                         <h1 className="text-2xl font-bold text-center">ລາຍລະອຽດຄ່າໃຊ້ຈ່າຍໂປຣແກຣມທົວ</h1>
                         {Object.entries(totalsByCategory).map(([category, totals]) => {
                              const categoryKey = Object.keys(allCosts).find(k => k.toLowerCase().replace(/\s/g, '-') === category.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace('ຄ່າ','').replace(/^-/,'')) as keyof TourCosts;
                              if(!categoryKey) return null;
@@ -381,7 +411,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                                 return <TableCell key={key}>{String(displayValue ?? '')}</TableCell>
                                                             })}
                                                             <TableCell className="text-right font-bold">
-                                                                {currencySymbols[item.currency as Currency]} {formatNumber(Object.values(item).filter(v => typeof v === 'number').reduce((a: any, b: any) => a * b, 1) * (item.price || item.pricePerVehicle || item.pricePerPerson || item.pricePerTicket || 0))}
+                                                                {currencySymbols[item.currency as Currency].split(' ')[0]} {formatNumber(Object.values(item).filter(v => typeof v === 'number').reduce((a: any, b: any) => a * b, 1) * (item.price || item.pricePerVehicle || item.pricePerPerson || item.pricePerTicket || 0))}
                                                             </TableCell>
                                                         </TableRow>
                                                     ))}
@@ -389,7 +419,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                  <TableFooter>
                                                     <TableRow>
                                                         <TableCell colSpan={Object.keys(categoryCosts[0] || {}).length} className="text-right font-bold text-lg">
-                                                            ລວມ: {Object.entries(totals).filter(([,val]) => val > 0).map(([cur, val]) => `${currencySymbols[cur as Currency]}${formatNumber(val as number)}`).join(' / ')}
+                                                            ລວມ: {Object.entries(totals).filter(([,val]) => val > 0).map(([cur, val]) => `${currencySymbols[cur as Currency].split(' ')[0]}${formatNumber(val as number)}`).join(' / ')}
                                                         </TableCell>
                                                     </TableRow>
                                                 </TableFooter>
@@ -399,7 +429,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                 </div>
                              )
                         })}
-                        <Card>
+                        <Card className="mt-4">
                             <CardHeader><CardTitle>Total Costs</CardTitle></CardHeader>
                             <CardContent>
                                 <div className="grid grid-cols-4 gap-4 text-center">
@@ -412,7 +442,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                 </div>
                             </CardContent>
                         </Card>
-                     </div>
+                    </div>
                 </div>
 
                 <div className="w-full max-w-screen-xl mx-auto flex flex-col gap-8 print:hidden">
@@ -1095,3 +1125,5 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
         </div>
     );
 }
+
+    
