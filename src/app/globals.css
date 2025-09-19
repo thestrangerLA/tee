@@ -85,7 +85,7 @@
 @media print {
   html, body {
     background-color: #fff !important;
-    font-size: 12px; /* Larger base font for print */
+    font-size: 14px; /* Larger base font for print */
   }
   .print-container {
       display: block !important;
@@ -129,11 +129,11 @@
   .print\:shadow-none { box-shadow: none !important; }
   .print\:border-none { border: none !important; }
   .print\:border { border-width: 1px !important; }
-  .print\:text-xl { font-size: 1.5rem !important; line-height: 2rem !important; }
-  .print\:text-lg { font-size: 1.25rem !important; line-height: 1.75rem !important; }
-  .print\:text-base { font-size: 1.125rem !important; line-height: 1.75rem !important; }
-  .print\:text-sm { font-size: 1rem !important; line-height: 1.5rem !important; }
-  .print\:text-xs { font-size: 0.875rem !important; line-height: 1.25rem !important; }
+  .print\:text-xl { font-size: 1.75rem !important; line-height: 2.25rem !important; }
+  .print\:text-lg { font-size: 1.5rem !important; line-height: 2rem !important; }
+  .print\:text-base { font-size: 1.25rem !important; line-height: 1.75rem !important; }
+  .print\:text-sm { font-size: 1.125rem !important; line-height: 1.75rem !important; }
+  .print\:text-xs { font-size: 1rem !important; line-height: 1.5rem !important; }
   .print\:font-bold { font-weight: 700 !important; }
   .print-page-break-before {
     break-before: page;
