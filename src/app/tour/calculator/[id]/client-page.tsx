@@ -21,7 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import type { SavedCalculation, TourInfo, TourCosts, Accommodation, Room, Trip, Flight, TrainTicket, EntranceFee, MealCost, GuideFee, DocumentFee } from '@/lib/types';
 import { updateCalculation } from '@/services/tourCalculatorService';
-
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 
 // Types
 type Currency = 'USD' | 'THB' | 'LAK' | 'CNY';
@@ -331,8 +331,85 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                 </div>
             </header>
             <main className="flex w-full flex-1 flex-col gap-8 p-4 sm:px-6 sm:py-4 bg-muted/40 print:p-0 print:bg-white print:gap-4">
-                <div id="print-content" className="print-container">
-                    {/* Content for printing will be added here via other components */}
+                <div id="print-content" className="print-container hidden print:block">
+                     <div className="space-y-4 p-4">
+                        <h1 className="text-2xl font-bold text-center">ລາຍລະອຽດຄ່າໃຊ້ຈ່າຍໂປຣແກຣມທົວ</h1>
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>ຂໍ້ມູນທົວ</CardTitle>
+                            </CardHeader>
+                            <CardContent className="grid grid-cols-2 text-sm gap-2">
+                                <p><strong>MOU Contact:</strong> {tourInfo.mouContact}</p>
+                                <p><strong>Group Code:</strong> {tourInfo.groupCode}</p>
+                                <p><strong>ປະເທດປາຍທາງ:</strong> {tourInfo.destinationCountry}</p>
+                                <p><strong>ໂປຣແກຣມ:</strong> {tourInfo.program}</p>
+                                <p><strong>ວັນທີເດີນທາງ:</strong> {tourInfo.startDate && format(tourInfo.startDate, "dd/MM/yyyy")} - {tourInfo.endDate && format(tourInfo.endDate, "dd/MM/yyyy")}</p>
+                                <p><strong>ຈຳນວນວັນ:</strong> {tourInfo.numDays} ວັນ {tourInfo.numNights} ຄືນ</p>
+                                <p><strong>ຈຳນວນຄົນ:</strong> {tourInfo.numPeople}</p>
+                            </CardContent>
+                        </Card>
+                        {Object.entries(totalsByCategory).map(([category, totals]) => {
+                             const categoryCosts = allCosts[category.toLowerCase().replace(/\s/g, '-') as keyof TourCosts] as any[];
+                             const hasVisibleItems = categoryCosts && categoryCosts.some(item => itemVisibility[item.id] !== false);
+                             if (!hasVisibleItems) return null;
+
+                             return (
+                                <div key={category} className="print-page-break-before first:print-page-break-before-auto">
+                                    <Card>
+                                        <CardHeader>
+                                            <CardTitle>{category}</CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <Table>
+                                                <TableHeader>
+                                                    <TableRow>
+                                                        {Object.keys(categoryCosts[0] || {}).filter(k => !['id', 'currency'].includes(k)).map(key => <TableHead key={key}>{key}</TableHead>)}
+                                                        <TableHead className="text-right">Total</TableHead>
+                                                    </TableRow>
+                                                </TableHeader>
+                                                <TableBody>
+                                                     {categoryCosts.filter(item => itemVisibility[item.id] !== false).map(item => (
+                                                        <TableRow key={item.id}>
+                                                             {Object.entries(item).filter(([k]) => !['id', 'currency'].includes(k)).map(([key, value]) => {
+                                                                let displayValue: any = value;
+                                                                if (value instanceof Date) displayValue = format(value, 'dd/MM/yy');
+                                                                if (typeof value === 'number') displayValue = formatNumber(value);
+                                                                if (typeof value === 'boolean') displayValue = value ? 'Yes' : 'No';
+                                                                return <TableCell key={key}>{String(displayValue)}</TableCell>
+                                                            })}
+                                                            <TableCell className="text-right font-bold">
+                                                                {currencySymbols[item.currency]} {formatNumber(Object.values(item).filter(v => typeof v === 'number').reduce((a: any, b: any) => a * b, 1) * (item.price || item.pricePerVehicle || item.pricePerPerson || item.pricePerTicket || 0))}
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ))}
+                                                </TableBody>
+                                                 <TableFooter>
+                                                    <TableRow>
+                                                        <TableCell colSpan={Object.keys(categoryCosts[0] || {}).length} className="text-right font-bold text-lg">
+                                                            ລວມ: {Object.entries(totals).filter(([,val]) => val > 0).map(([cur, val]) => `${currencySymbols[cur as Currency]}${formatNumber(val)}`).join(' / ')}
+                                                        </TableCell>
+                                                    </TableRow>
+                                                </TableFooter>
+                                            </Table>
+                                        </CardContent>
+                                    </Card>
+                                </div>
+                             )
+                        })}
+                        <Card>
+                            <CardHeader><CardTitle>Total Costs</CardTitle></CardHeader>
+                            <CardContent>
+                                <div className="grid grid-cols-4 gap-4 text-center">
+                                    {Object.entries(grandTotals).map(([currency, value]) => (
+                                        <div key={currency}>
+                                            <p className="font-bold text-xl">{currency}</p>
+                                            <p>{formatNumber(value)}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </CardContent>
+                        </Card>
+                     </div>
                 </div>
 
                 <div className="w-full max-w-screen-xl mx-auto flex flex-col gap-8 print:hidden">
@@ -372,7 +449,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                             <PopoverTrigger asChild>
                                                 <Button variant={"outline"} className="justify-start text-left font-normal">
                                                     <CalendarIcon className="mr-2 h-4 w-4" />
-                                                    {tourInfo.startDate ? format(tourInfo.startDate, "dd/MM/yyyy") : <span>mm/dd/yyyy</span>}
+                                                    {tourInfo.startDate && isValid(new Date(tourInfo.startDate)) ? format(new Date(tourInfo.startDate), "dd/MM/yyyy") : <span>mm/dd/yyyy</span>}
                                                 </Button>
                                             </PopoverTrigger>
                                             <PopoverContent className="w-auto p-0">
@@ -386,7 +463,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                             <PopoverTrigger asChild>
                                                 <Button variant={"outline"} className="justify-start text-left font-normal">
                                                     <CalendarIcon className="mr-2 h-4 w-4" />
-                                                    {tourInfo.endDate ? format(tourInfo.endDate, "dd/MM/yyyy") : <span>mm/dd/yyyy</span>}
+                                                    {tourInfo.endDate && isValid(new Date(tourInfo.endDate)) ? format(new Date(tourInfo.endDate), "dd/MM/yyyy") : <span>mm/dd/yyyy</span>}
                                                 </Button>
                                             </PopoverTrigger>
                                             <PopoverContent className="w-auto p-0">
