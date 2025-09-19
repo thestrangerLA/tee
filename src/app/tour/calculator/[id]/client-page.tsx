@@ -21,7 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import type { SavedCalculation, TourInfo, TourCosts, Accommodation, Room, Trip, Flight, TrainTicket, EntranceFee, MealCost, GuideFee, DocumentFee } from '@/lib/types';
 import { updateCalculation } from '@/services/tourCalculatorService';
-
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 
 // Types
 type Currency = 'USD' | 'THB' | 'LAK' | 'CNY';
@@ -45,12 +45,6 @@ const categoryIcons: { [key: string]: React.ReactNode } = {
     'ຄ່າໄກ້': <Users className="h-5 w-5" />,
     'ຄ່າເອກະສານ': <FileText className="h-5 w-5" />,
 };
-
-const costCategories: Array<keyof TourCosts> = [
-    'accommodations', 'trips', 'flights', 'trainTickets',
-    'entranceFees', 'meals', 'guides', 'documents'
-];
-
 
 const CostCategoryContent = ({ title, icon, children }: { title: string, icon: React.ReactNode, children: React.ReactNode }) => (
      <AccordionItem value={title.toLowerCase().replace(/\s/g, '-')} className="break-inside-avoid">
@@ -331,7 +325,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                  <div className="flex items-center gap-2">
                     <Button variant="outline" className="bg-transparent text-primary-foreground border-primary-foreground hover:bg-primary-foreground/10" onClick={handleSaveCalculation} disabled={isSaving}>
                         <Save className="mr-2 h-4 w-4" />
-                        {isSaving ? 'ກຳລັງບັນທຶກ...' : 'ບັນທຶກข้อมูล'}
+                        {isSaving ? 'ກຳລັງບັນທຶກ...' : 'ບັນທຶກຂໍ້ມູນ'}
                     </Button>
                     <Button variant="outline" className="bg-transparent text-primary-foreground border-primary-foreground hover:bg-primary-foreground/10" onClick={handlePrint}>
                         <Printer className="mr-2 h-4 w-4" />
@@ -341,10 +335,9 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
             </header>
             <main className="flex w-full flex-1 flex-col gap-8 p-4 sm:px-6 sm:py-4 bg-muted/40 print:p-0 print:bg-white print:gap-4">
 
-                {/* Print View */}
-                <div id="print-content" className="hidden print:block w-full max-w-screen-xl mx-auto p-4">
-                    {/* Page 1 */}
-                    <div>
+                {/* Print View Page 1 */}
+                <div id="print-content-page-1" className="hidden print:block print-container">
+                     <div className="space-y-4 p-4">
                         <Card>
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2 text-xl">
@@ -368,16 +361,19 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                         <div className="mt-4">
                             <TotalCostCard totalsByCategory={totalsByCategory} />
                         </div>
-                    </div>
-                    {/* Page 2 */}
-                    <div className="print-page-break-before">
+                     </div>
+                </div>
+
+                {/* Print View Page 2 */}
+                 <div id="print-content-page-2" className="hidden print:block print-page-break-before">
+                     <div className="space-y-4 p-4">
                         <Card>
                              <CardHeader>
                                 <CardTitle className="text-xl">ຄ່າໃຊ້ຈ່າຍລວມທັງໝົດ ແລະ ອັດຕາແລກປ່ຽນ</CardTitle>
                             </CardHeader>
                              <CardContent className="space-y-6">
                                 <div className="grid grid-cols-4 gap-4">
-                                    {(Object.keys(grandTotals) as Currency[]).map(currency => (
+                                    {(Object.keys(grandTotals) as Currency[]).filter(c => grandTotals[c] > 0).map(currency => (
                                         <Card key={currency}>
                                             <CardHeader className="pb-2"><CardTitle className="text-lg">{currency}</CardTitle></CardHeader>
                                             <CardContent><p className="text-2xl font-bold">{formatNumber(grandTotals[currency])}</p></CardContent>
@@ -386,36 +382,33 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                 </div>
                             </CardContent>
                         </Card>
-                        <div className="grid grid-cols-3 gap-4 mt-4">
+                        <div className="grid grid-cols-3 gap-4 pt-4">
                             <Card>
-                                <CardHeader><CardTitle>ຍອດລວມທີ່ແປງແລ້ວ</CardTitle></CardHeader>
+                                <CardHeader className="pb-2">
+                                    <CardTitle className="text-base">ຍອດລວມທີ່ແປງແລ້ວ ({targetCurrency})</CardTitle>
+                                </CardHeader>
                                 <CardContent>
-                                    <div className="border bg-background rounded-lg p-4 text-center">
-                                        <p className="text-sm text-muted-foreground">ຍອດລວມ ({targetCurrency})</p>
-                                        <p className="text-3xl font-bold text-primary">{formatNumber(convertedTotal, {maximumFractionDigits: 2})}</p>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                            <Card>
-                                <CardHeader><CardTitle>ລາຄາຂາຍ</CardTitle></CardHeader>
-                                <CardContent>
-                                     <div className="border bg-background rounded-lg p-4 text-center">
-                                        <p className="text-sm text-muted-foreground">ລາຄາຂາຍສຸດທິ ({targetCurrency})</p>
-                                        <p className="text-3xl font-bold text-primary">{formatNumber(sellingPrice, {maximumFractionDigits: 2})}</p>
-                                    </div>
+                                    <p className="text-2xl font-bold">{formatNumber(convertedTotal, {maximumFractionDigits: 2})}</p>
                                 </CardContent>
                             </Card>
                              <Card>
-                                <CardHeader><CardTitle className="flex items-center gap-2"><TrendingUp/>ກຳໄລ</CardTitle></CardHeader>
+                                <CardHeader className="pb-2">
+                                    <CardTitle className="text-base">ລາຄາຂາຍ ({targetCurrency})</CardTitle>
+                                </CardHeader>
                                 <CardContent>
-                                    <div className="border bg-background rounded-lg p-4 text-center h-full flex flex-col justify-center">
-                                        <p className="text-sm text-muted-foreground">ກຳໄລ ({targetCurrency})</p>
-                                        <p className="text-3xl font-bold text-green-600">{formatNumber(profit, {maximumFractionDigits: 2})}</p>
-                                    </div>
+                                    <p className="text-2xl font-bold">{formatNumber(sellingPrice, {maximumFractionDigits: 2})}</p>
+                                </CardContent>
+                            </Card>
+                             <Card>
+                                <CardHeader className="pb-2">
+                                    <CardTitle className="text-base">ກຳໄລ ({targetCurrency})</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <p className="text-2xl font-bold text-green-600">{formatNumber(profit, {maximumFractionDigits: 2})}</p>
                                 </CardContent>
                             </Card>
                         </div>
-                    </div>
+                     </div>
                 </div>
 
                 {/* Screen View */}
@@ -456,7 +449,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                             <PopoverTrigger asChild>
                                                 <Button variant={"outline"} className="justify-start text-left font-normal">
                                                     <CalendarIcon className="mr-2 h-4 w-4" />
-                                                    {tourInfo.startDate ? format(tourInfo.startDate, "dd/MM/yyyy") : <span>mm/dd/yyyy</span>}
+                                                    {tourInfo.startDate && isValid(new Date(tourInfo.startDate)) ? format(new Date(tourInfo.startDate), "dd/MM/yyyy") : <span>mm/dd/yyyy</span>}
                                                 </Button>
                                             </PopoverTrigger>
                                             <PopoverContent className="w-auto p-0">
@@ -470,7 +463,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                             <PopoverTrigger asChild>
                                                 <Button variant={"outline"} className="justify-start text-left font-normal">
                                                     <CalendarIcon className="mr-2 h-4 w-4" />
-                                                    {tourInfo.endDate ? format(tourInfo.endDate, "dd/MM/yyyy") : <span>mm/dd/yyyy</span>}
+                                                    {tourInfo.endDate && isValid(new Date(tourInfo.endDate)) ? format(new Date(tourInfo.endDate), "dd/MM/yyyy") : <span>mm/dd/yyyy</span>}
                                                 </Button>
                                             </PopoverTrigger>
                                             <PopoverContent className="w-auto p-0">
@@ -518,13 +511,9 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                 <CardHeader className="flex-row items-center justify-between p-3 bg-muted/50">
                                                     <CardTitle className="text-base">ທີ່ພັກ #{index + 1}</CardTitle>
                                                     <div className="print:hidden">
-                                                        <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(acc.id)}>
-                                                            {itemVisibility[acc.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
-                                                        </Button>
                                                         <Button variant="ghost" size="icon" onClick={() => deleteItem('accommodations', acc.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
                                                     </div>
                                                 </CardHeader>
-                                            {(itemVisibility[acc.id] !== false) && (
                                                 <CardContent className="p-4 space-y-4">
                                                     {/* Acc Fields */}
                                                         <div className="grid md:grid-cols-2 gap-4">
@@ -592,7 +581,6 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                     ))}
                                                     <Button size="sm" variant="outline" onClick={() => addRoom(acc.id)}><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຫ້ອງ</Button>
                                                 </CardContent>
-                                                )}
                                             </Card>
                                         ))}
                                         <Button onClick={addAccommodation}><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າທີ່ພັກ</Button>
@@ -608,13 +596,9 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                 <CardHeader className="flex-row items-center justify-between p-3 bg-muted/50">
                                                     <CardTitle className="text-base">ການເດີນທາງ #{index + 1}</CardTitle>
                                                     <div className="print:hidden">
-                                                        <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(trip.id)}>
-                                                            {itemVisibility[trip.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
-                                                        </Button>
                                                         <Button variant="ghost" size="icon" onClick={() => deleteItem('trips', trip.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
                                                     </div>
                                                 </CardHeader>
-                                                {(itemVisibility[trip.id] !== false) && (
                                                 <CardContent className="p-4 space-y-4">
                                                     <div className="grid grid-cols-2 gap-4">
                                                         <div className="space-y-2">
@@ -654,7 +638,6 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                         </div>
                                                     </div>
                                                 </CardContent>
-                                                )}
                                             </Card>
                                         ))}
                                         <Button onClick={addTrip}><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າຂົນສົ່ງ</Button>
@@ -669,13 +652,9 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                 <CardHeader className="flex-row items-center justify-between p-3 bg-muted/50">
                                                     <CardTitle className="text-base">ປີ້ຍົນ #{index + 1}</CardTitle>
                                                     <div className="print:hidden">
-                                                        <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(flight.id)}>
-                                                            {itemVisibility[flight.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
-                                                        </Button>
                                                         <Button variant="ghost" size="icon" onClick={() => deleteItem('flights', flight.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
                                                     </div>
                                                 </CardHeader>
-                                                {(itemVisibility[flight.id] !== false) && (
                                                 <CardContent className="p-4 space-y-4">
                                                     <div className="grid grid-cols-2 gap-4">
                                                         <div className="space-y-2">
@@ -725,7 +704,6 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                         </div>
                                                     </div>
                                                 </CardContent>
-                                                )}
                                             </Card>
                                         ))}
                                         <Button onClick={addFlight}><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າປີ້ຍົນ</Button>
@@ -740,13 +718,9 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                 <CardHeader className="flex-row items-center justify-between p-3 bg-muted/50">
                                                     <CardTitle className="text-base">ປີ້ລົດໄຟ #{index + 1}</CardTitle>
                                                     <div className="print:hidden">
-                                                        <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(ticket.id)}>
-                                                            {itemVisibility[ticket.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
-                                                        </Button>
                                                         <Button variant="ghost" size="icon" onClick={() => deleteItem('trainTickets', ticket.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
                                                     </div>
                                                 </CardHeader>
-                                                {(itemVisibility[ticket.id] !== false) && (
                                                 <CardContent className="p-4 space-y-4">
                                                     <div className="grid grid-cols-2 gap-4">
                                                         <div className="space-y-2">
@@ -789,7 +763,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                         </div>
                                                         <div className="space-y-2">
                                                             <Label>ຊັ້ນປີ້</Label>
-                                                            <Input value={ticket.ticketClass} onChange={e => updateItem('trainTickets', ticket.id, 'ticketClass', e.target.value)} placeholder="เช่น ชั้น 1, ชั้น 2" />
+                                                            <Input value={ticket.ticketClass} onChange={e => updateItem('trainTickets', ticket.id, 'ticketClass', e.target.value)} placeholder="ເຊັ່ນ: ຊັ້ນ 1, ຊັ້ນ 2" />
                                                         </div>
                                                         <div className="space-y-2">
                                                             <Label>ສະກຸນເງິນ</Label>
@@ -800,7 +774,6 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                         </div>
                                                     </div>
                                                 </CardContent>
-                                                )}
                                             </Card>
                                         ))}
                                         <Button onClick={addTrainTicket}><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າປີ້ລົດໄຟ</Button>
@@ -815,13 +788,9 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                 <CardHeader className="flex-row items-center justify-between p-3 bg-muted/50">
                                                     <CardTitle className="text-base">ຄ່າເຂົ້າຊົມ #{index + 1}</CardTitle>
                                                     <div className="print:hidden">
-                                                        <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(fee.id)}>
-                                                            {itemVisibility[fee.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
-                                                        </Button>
                                                         <Button variant="ghost" size="icon" onClick={() => deleteItem('entranceFees', fee.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
                                                     </div>
                                                 </CardHeader>
-                                                {(itemVisibility[fee.id] !== false) && (
                                                 <CardContent className="p-4 space-y-4">
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                         <div className="space-y-2">
@@ -851,7 +820,6 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                         </div>
                                                     </div>
                                                 </CardContent>
-                                                )}
                                             </Card>
                                         ))}
                                         <Button onClick={addEntranceFee}><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າເຂົ້າຊົມ</Button>
@@ -866,13 +834,9 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                 <CardHeader className="flex-row items-center justify-between p-3 bg-muted/50">
                                                     <CardTitle className="text-base">ລາຍການອາຫານ #{index + 1}</CardTitle>
                                                     <div className="print:hidden">
-                                                        <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(meal.id)}>
-                                                            {itemVisibility[meal.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
-                                                        </Button>
                                                         <Button variant="ghost" size="icon" onClick={() => deleteItem('meals', meal.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
                                                     </div>
                                                 </CardHeader>
-                                                {(itemVisibility[meal.id] !== false) && (
                                                 <CardContent className="p-4 space-y-4">
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                         <div className="space-y-2">
@@ -912,7 +876,6 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                         </div>
                                                     </div>
                                                 </CardContent>
-                                                )}
                                             </Card>
                                         ))}
                                         <Button onClick={addMealCost}><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າອາຫານ</Button>
@@ -927,13 +890,9 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                 <CardHeader className="flex-row items-center justify-between p-3 bg-muted/50">
                                                     <CardTitle className="text-base">ລາຍການໄກ້ #{index + 1}</CardTitle>
                                                     <div className="print:hidden">
-                                                        <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(guide.id)}>
-                                                            {itemVisibility[guide.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
-                                                        </Button>
                                                         <Button variant="ghost" size="icon" onClick={() => deleteItem('guides', guide.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
                                                     </div>
                                                 </CardHeader>
-                                                {(itemVisibility[guide.id] !== false) && (
                                                 <CardContent className="p-4 space-y-4">
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                         <div className="space-y-2">
@@ -963,7 +922,6 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                         </div>
                                                     </div>
                                                 </CardContent>
-                                                )}
                                             </Card>
                                         ))}
                                         <Button onClick={addGuideFee}><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າໄກ້</Button>
@@ -978,13 +936,9 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                 <CardHeader className="flex-row items-center justify-between p-3 bg-muted/50">
                                                     <CardTitle className="text-base">ລາຍການເອກະສານ #{index + 1}</CardTitle>
                                                     <div className="print:hidden">
-                                                        <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(doc.id)}>
-                                                            {itemVisibility[doc.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
-                                                        </Button>
                                                         <Button variant="ghost" size="icon" onClick={() => deleteItem('documents', doc.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
                                                     </div>
                                                 </CardHeader>
-                                                {(itemVisibility[doc.id] !== false) && (
                                                 <CardContent className="p-4 space-y-4">
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                         <div className="space-y-2">
@@ -1010,7 +964,6 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                         </div>
                                                     </div>
                                                 </CardContent>
-                                                )}
                                             </Card>
                                         ))}
                                         <Button onClick={addDocumentFee}><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າເອກະສານ</Button>
@@ -1074,7 +1027,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                     </CardHeader>
                                     <CardContent className="space-y-4">
                                         <div>
-                                            <Label htmlFor="target-currency">ເລືอกສະກຸນເງິນ</Label>
+                                            <Label htmlFor="target-currency">ເລືອກສະກຸນເງິນ</Label>
                                             <Select value={targetCurrency} onValueChange={v => setTargetCurrency(v as Currency)}>
                                                 <SelectTrigger id="target-currency">
                                                     <SelectValue />
@@ -1139,5 +1092,3 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
         </div>
     );
 }
-
-    
