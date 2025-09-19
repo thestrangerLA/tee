@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { ArrowLeft, Save, Trash2, MapPin, Calendar as CalendarIcon, BedDouble, Truck, Plane, TrainFront, PlusCircle, Camera, UtensilsCrossed, Users, FileText, Copy, Clock, Eye, EyeOff, Download, History, Printer, ChevronsRight, Percent, TrendingUp } from "lucide-react";
+import { ArrowLeft, Save, Trash2, MapPin, Calendar as CalendarIcon, BedDouble, Truck, Plane, TrainFront, PlusCircle, Camera, UtensilsCrossed, Users, FileText, Copy, Clock, Eye, EyeOff, Download, History, Printer, ChevronsRight, Percent, TrendingUp, Calculator } from "lucide-react";
 import { format, isValid } from 'date-fns';
 import { th } from 'date-fns/locale';
 import { TotalCostCard } from '@/components/tour/TotalCostCard';
@@ -41,6 +41,18 @@ const costCategories: Array<keyof TourCosts> = [
     'accommodations', 'trips', 'flights', 'trainTickets',
     'entranceFees', 'meals', 'guides', 'documents'
 ];
+
+
+const categoryIcons: { [key: string]: React.ReactNode } = {
+    'ຄ່າທີ່ພັກ': <BedDouble className="h-5 w-5" />,
+    'ຄ່າຂົນສົ່ງ': <Truck className="h-5 w-5" />,
+    'ຄ່າປີ້ຍົນ': <Plane className="h-5 w-5" />,
+    'ຄ່າປີ້ລົດໄຟ': <TrainFront className="h-5 w-5" />,
+    'ຄ່າເຂົ້າຊົມສະຖານທີ່': <Camera className="h-5 w-5" />,
+    'ຄ່າອາຫານ': <UtensilsCrossed className="h-5 w-5" />,
+    'ຄ່າໄກ້': <Users className="h-5 w-5" />,
+    'ຄ່າເອກະສານ': <FileText className="h-5 w-5" />,
+};
 
 
 const CostCategoryContent = ({ title, icon, children }: { title: string, icon: React.ReactNode, children: React.ReactNode }) => (
@@ -322,7 +334,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                  <div className="flex items-center gap-2">
                     <Button variant="outline" className="bg-transparent text-primary-foreground border-primary-foreground hover:bg-primary-foreground/10" onClick={handleSaveCalculation} disabled={isSaving}>
                         <Save className="mr-2 h-4 w-4" />
-                        {isSaving ? 'ກຳລັງບັນທຶກ...' : 'ບັນທຶກข้อมูล'}
+                        {isSaving ? 'ກຳລັງບັນທຶກ...' : 'ບັນທຶກຂໍ້ມູນ'}
                     </Button>
                     <Button variant="outline" className="bg-transparent text-primary-foreground border-primary-foreground hover:bg-primary-foreground/10" onClick={handlePrint}>
                         <Printer className="mr-2 h-4 w-4" />
@@ -331,7 +343,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                 </div>
             </header>
             <main className="flex w-full flex-1 flex-col gap-8 p-4 sm:px-6 sm:py-4 bg-muted/40 print:p-0 print:bg-white print:gap-4">
-                <div id="print-content" className="print-container hidden print:block">
+                 <div id="print-content-page-1" className="hidden print:block print-container">
                      <div className="space-y-4 p-4">
                         <h1 className="text-2xl font-bold text-center">ຂໍ້ມູນທົວ</h1>
                         <Card>
@@ -375,11 +387,12 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                             </CardContent>
                         </Card>
                      </div>
-                     <div className="print-page-break-before" />
+                </div>
+                 <div id="print-content-page-2" className="hidden print:block print-page-break-before">
                      <div className="space-y-4 p-4">
                          <h1 className="text-2xl font-bold text-center">ລາຍລະອຽດຄ່າໃຊ້ຈ່າຍໂປຣແກຣມທົວ</h1>
                         {Object.entries(totalsByCategory).map(([category, totals]) => {
-                             const categoryKey = Object.keys(allCosts).find(k => k.toLowerCase().replace(/\s/g, '-') === category.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace('ຄ່າ','').replace(/^-/,'')) as keyof TourCosts;
+                             const categoryKey = Object.keys(allCosts).find(k => k.toLowerCase().replace(/\s/g, '-') === category.toLowerCase().replace(/[^a-z0-9-]/g, '').replace('ຄ່າ','').replace(/^-/,'')) as keyof TourCosts;
                              if(!categoryKey) return null;
                              const categoryCosts = allCosts[categoryKey] as any[];
                              
@@ -1125,5 +1138,3 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
         </div>
     );
 }
-
-    
