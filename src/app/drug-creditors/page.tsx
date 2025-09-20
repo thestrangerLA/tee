@@ -26,11 +26,10 @@ const formatCurrency = (value: number) => {
 };
 
 
-const AddEntryForm = ({ onAddEntry, defaultDate }: { onAddEntry: (entry: Omit<DrugCreditorEntry, 'id' | 'createdAt' | 'date' | 'isPaid'>, date: Date) => Promise<void>, defaultDate: Date }) => {
+const AddEntryForm = ({ onAddEntry, defaultDate }: { onAddEntry: (entry: Omit<DrugCreditorEntry, 'id' | 'createdAt' | 'date' | 'isPaid' | 'note'>, date: Date) => Promise<void>, defaultDate: Date }) => {
     const { toast } = useToast();
     const [order, setOrder] = useState(0);
     const [description, setDescription] = useState('');
-    const [note, setNote] = useState('');
     const [cost, setCost] = useState(0);
     const [sellingPrice, setSellingPrice] = useState(0);
     
@@ -50,7 +49,6 @@ const AddEntryForm = ({ onAddEntry, defaultDate }: { onAddEntry: (entry: Omit<Dr
             await onAddEntry({
                 order,
                 description,
-                note,
                 cost,
                 sellingPrice,
             }, defaultDate);
@@ -58,7 +56,6 @@ const AddEntryForm = ({ onAddEntry, defaultDate }: { onAddEntry: (entry: Omit<Dr
             // Reset form
             setOrder(0);
             setDescription('');
-            setNote('');
             setCost(0);
             setSellingPrice(0);
         } catch (error) {
@@ -87,10 +84,6 @@ const AddEntryForm = ({ onAddEntry, defaultDate }: { onAddEntry: (entry: Omit<Dr
                              <Label htmlFor="description">ລາຍການ</Label>
                              <Input id="description" placeholder="ຊື່ຢາ" value={description} onChange={(e) => setDescription(e.target.value)} required />
                         </div>
-                         <div className="grid gap-2 col-span-2">
-                             <Label htmlFor="note">ໝາຍເຫດ</Label>
-                             <Textarea id="note" placeholder="ລາຍລະອຽດເພີ່ມເຕີມ" value={note} onChange={(e) => setNote(e.target.value)} />
-                        </div>
                          <div className="grid gap-2">
                              <Label htmlFor="cost">ຕົ້ນທຶນ</Label>
                              <Input id="cost" type="number" placeholder="0" value={cost || ''} onChange={(e) => setCost(Number(e.target.value))} />
@@ -100,7 +93,7 @@ const AddEntryForm = ({ onAddEntry, defaultDate }: { onAddEntry: (entry: Omit<Dr
                              <Input id="sellingPrice" type="number" placeholder="0" value={sellingPrice || ''} onChange={(e) => setSellingPrice(Number(e.target.value))} />
                         </div>
                     </div>
-                    <Button type="submit" className="w-full">
+                    <Button type="submit" className="w-full mt-4">
                         <PlusCircle className="mr-2 h-4 w-4" />
                         ເພີ່ມລາຍການ
                     </Button>
@@ -127,7 +120,7 @@ export default function DrugCreditorsPage() {
         return allEntries.filter(entry => isWithinInterval(entry.date, { start, end }));
     }, [allEntries, displayMonth]);
 
-    const handleAddEntry = async (newEntry: Omit<DrugCreditorEntry, 'id' | 'createdAt' | 'date' | 'isPaid'>, date: Date) => {
+    const handleAddEntry = async (newEntry: Omit<DrugCreditorEntry, 'id' | 'createdAt' | 'date' | 'isPaid' | 'note'>, date: Date) => {
         try {
             const selectedDateForEntry = new Date(displayMonth); // Use the month being displayed
             await addDrugCreditorEntry(newEntry, selectedDateForEntry);
