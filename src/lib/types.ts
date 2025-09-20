@@ -22,7 +22,7 @@ export interface Transaction {
     baht?: number;
     usd?: number;
     cny?: number;
-    businessType?: 'agriculture' | 'tour';
+    businessType?: 'agriculture' | 'tour' | 'documents';
 }
 
 export interface AccountSummary {
@@ -169,3 +169,5 @@ export interface SavedCalculation {
     tourInfo: TourInfo;
     allCosts: TourCosts;
 }
+
+export interface DocumentAccountSummary extends TourAccountSummary {}
