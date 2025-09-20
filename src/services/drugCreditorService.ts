@@ -69,6 +69,7 @@ export const listenToDrugCreditorEntries = (callback: (items: DrugCreditorEntry[
 export const addDrugCreditorEntry = async (entry: Omit<DrugCreditorEntry, 'id' | 'createdAt' | 'date' | 'isPaid'>, date: Date) => {
     const entryWithTimestamp = {
         ...entry,
+        note: entry.note || '',
         date: Timestamp.fromDate(startOfDay(date)),
         isPaid: false,
         createdAt: serverTimestamp()

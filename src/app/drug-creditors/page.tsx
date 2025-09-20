@@ -17,6 +17,7 @@ import { DrugCreditorEntry } from '@/lib/types';
 import { listenToDrugCreditorEntries, addDrugCreditorEntry, updateDrugCreditorEntry, deleteDrugCreditorEntry, updateOrderStatus } from '@/services/drugCreditorService';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuPortal, DropdownMenuSubTrigger, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Textarea } from '@/components/ui/textarea';
 
 
 const formatCurrency = (value: number) => {
@@ -29,6 +30,7 @@ const AddEntryForm = ({ onAddEntry, defaultDate }: { onAddEntry: (entry: Omit<Dr
     const { toast } = useToast();
     const [order, setOrder] = useState(0);
     const [description, setDescription] = useState('');
+    const [note, setNote] = useState('');
     const [cost, setCost] = useState(0);
     const [sellingPrice, setSellingPrice] = useState(0);
     
@@ -48,6 +50,7 @@ const AddEntryForm = ({ onAddEntry, defaultDate }: { onAddEntry: (entry: Omit<Dr
             await onAddEntry({
                 order,
                 description,
+                note,
                 cost,
                 sellingPrice,
             }, defaultDate);
@@ -55,6 +58,7 @@ const AddEntryForm = ({ onAddEntry, defaultDate }: { onAddEntry: (entry: Omit<Dr
             // Reset form
             setOrder(0);
             setDescription('');
+            setNote('');
             setCost(0);
             setSellingPrice(0);
         } catch (error) {
@@ -82,6 +86,10 @@ const AddEntryForm = ({ onAddEntry, defaultDate }: { onAddEntry: (entry: Omit<Dr
                         <div className="grid gap-2">
                              <Label htmlFor="description">ລາຍການ</Label>
                              <Input id="description" placeholder="ຊື່ຢາ" value={description} onChange={(e) => setDescription(e.target.value)} required />
+                        </div>
+                         <div className="grid gap-2 col-span-2">
+                             <Label htmlFor="note">ໝາຍເຫດ</Label>
+                             <Textarea id="note" placeholder="ລາຍລະອຽດເພີ່ມເຕີມ" value={note} onChange={(e) => setNote(e.target.value)} />
                         </div>
                          <div className="grid gap-2">
                              <Label htmlFor="cost">ຕົ້ນທຶນ</Label>
@@ -383,6 +391,7 @@ export default function DrugCreditorsPage() {
                                                                     <TableHeader>
                                                                         <TableRow>
                                                                             <TableHead>ລາຍການ</TableHead>
+                                                                            <TableHead>ໝາຍເຫດ</TableHead>
                                                                             <TableHead className="w-[100px] text-right">ຕົ້ນທຶນ</TableHead>
                                                                             <TableHead className="w-[100px] text-right">ລາຄາຂາຍ</TableHead>
                                                                             <TableHead className="w-[100px] text-right">ກຳໄລ</TableHead>
@@ -400,6 +409,9 @@ export default function DrugCreditorsPage() {
                                                                                 <TableRow key={entry.id} className={entry.isPaid ? "bg-green-50/50 text-muted-foreground" : ""}>
                                                                                     <TableCell className="p-1">
                                                                                         <Input defaultValue={entry.description} onBlur={(e) => handleUpdateEntry(entry.id, 'description', e.target.value)} className="h-8" disabled={entry.isPaid} />
+                                                                                    </TableCell>
+                                                                                     <TableCell className="p-1">
+                                                                                        <Input defaultValue={entry.note} onBlur={(e) => handleUpdateEntry(entry.id, 'note', e.target.value)} className="h-8" disabled={entry.isPaid} />
                                                                                     </TableCell>
                                                                                     <TableCell className="p-1">
                                                                                         <Input type="number" defaultValue={entry.cost} onBlur={(e) => handleUpdateEntry(entry.id, 'cost', Number(e.target.value) || 0)} className="h-8 text-right" disabled={entry.isPaid} />
@@ -419,7 +431,7 @@ export default function DrugCreditorsPage() {
                                                                     </TableBody>
                                                                     <tfoot className="bg-muted/50 font-medium">
                                                                         <TableRow>
-                                                                            <TableCell className="p-2 text-right">ລວມ</TableCell>
+                                                                            <TableCell colSpan={2} className="p-2 text-right">ລວມ</TableCell>
                                                                             <TableCell className="p-2 text-right">{formatCurrency(orderTotals.cost)}</TableCell>
                                                                             <TableCell className="p-2 text-right">{formatCurrency(orderTotals.sellingPrice)}</TableCell>
                                                                             <TableCell className="p-2 text-right">{formatCurrency(orderTotals.profit)}</TableCell>

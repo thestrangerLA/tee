@@ -64,6 +64,7 @@ export interface DrugCreditorEntry {
   date: Date;
   order: number;
   description: string;
+  note?: string;
   cost: number;
   sellingPrice: number;
   isPaid: boolean;
