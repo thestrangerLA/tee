@@ -13,6 +13,8 @@ import type { Transaction, CurrencyValues } from '@/lib/types';
 import { getMonth, format, setMonth, isWithinInterval, startOfMonth, endOfMonth } from 'date-fns';
 import { lo } from "date-fns/locale";
 
+export const dynamic = 'force-dynamic';
+
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('th-TH', { minimumFractionDigits: 0 }).format(value);
 };
