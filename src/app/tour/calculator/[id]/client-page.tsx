@@ -21,7 +21,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import type { SavedCalculation, TourInfo, TourCosts, Accommodation, Room, Trip, Flight, TrainTicket, EntranceFee, MealCost, GuideFee, DocumentFee, CalculationSnapshot } from '@/lib/types';
-import { addCalculationToHistory } from '@/services/tourCalculatorService';
+import { addCalculationToHistory, deleteCalculationSnapshot } from '@/services/tourCalculatorService';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 
 // Types
@@ -91,15 +91,15 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                 note: `Saved on ${new Date().toLocaleString()}` // Default note
             };
 
-            await addCalculationToHistory(initialCalculation.id, snapshot);
+            const newSnapshotId = await addCalculationToHistory(initialCalculation.id, snapshot);
 
             // Optimistically update local history state
             const newHistoryEntry: CalculationSnapshot = {
-                id: uuidv4(), // temporary client-side ID
+                id: newSnapshotId, 
                 savedAt: new Date(),
                 ...snapshot,
             };
-            setCalculationHistory(prev => [newHistoryEntry, ...prev]);
+            setCalculationHistory(prev => [newHistoryEntry, ...prev.filter(h => h.id !== newSnapshotId)]);
 
             toast({
                 title: "ບັນທຶກສະບັບຮ່າງສຳເລັດ",
@@ -125,6 +125,27 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                 title: "ໂຫຼດຂໍ້ມູນສຳເລັດ",
                 description: `ຂໍ້ມູນຈາກ ${format(snapshot.savedAt, "PPpp")} ໄດ້ຖືກໂຫຼດແລ້ວ.`,
             });
+        }
+    };
+    
+    const handleDeleteFromHistory = async (snapshotId: string) => {
+        if (!window.confirm('Are you sure you want to delete this saved version? This action cannot be undone.')) {
+            return;
+        }
+        try {
+            await deleteCalculationSnapshot(initialCalculation.id, snapshotId);
+            setCalculationHistory(prev => prev.filter(s => s.id !== snapshotId));
+            toast({
+                title: "ລົບສະບັບຮ່າງສຳເລັດ",
+                description: "The saved version has been removed from history.",
+            });
+        } catch (e) {
+            toast({
+                title: "ເກີດຂໍ້ຜິດພາດ",
+                description: "Could not delete the saved version.",
+                variant: 'destructive'
+            });
+            console.error(e);
         }
     };
 
@@ -1125,14 +1146,19 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                         <div className="space-y-2">
                                             {calculationHistory.map(snapshot => (
                                                 <div key={snapshot.id} className="flex items-center justify-between rounded-lg border p-3">
-                                                    <div className="flex items-center gap-3">
-                                                        <p className="font-semibold">{format(snapshot.savedAt, "dd MMM yyyy, HH:mm:ss")}</p>
-                                                        <p className="text-sm text-muted-foreground">{snapshot.note}</p>
+                                                    <div className="flex flex-col sm:flex-row sm:items-center sm:gap-3">
+                                                        <p className="font-semibold">{snapshot.tourInfo.groupCode || 'No Group Code'}</p>
+                                                        <p className="text-sm text-muted-foreground">{format(snapshot.savedAt, "dd MMM yyyy, HH:mm:ss")}</p>
                                                     </div>
-                                                    <Button variant="outline" size="sm" onClick={() => loadFromHistory(snapshot)}>
-                                                        <RotateCcw className="mr-2 h-4 w-4" />
-                                                        ໂຫຼດ
-                                                    </Button>
+                                                    <div className="flex gap-2">
+                                                        <Button variant="ghost" size="sm" onClick={() => loadFromHistory(snapshot)}>
+                                                            <RotateCcw className="mr-2 h-4 w-4" />
+                                                            ໂຫຼດ
+                                                        </Button>
+                                                        <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-600" onClick={() => handleDeleteFromHistory(snapshot.id)}>
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                    </div>
                                                 </div>
                                             ))}
                                         </div>

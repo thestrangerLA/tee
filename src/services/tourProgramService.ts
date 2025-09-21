@@ -90,7 +90,7 @@ export const addTourProgram = async (program: Omit<TourProgram, 'id' | 'createdA
 export const updateTourProgram = async (id: string, updatedFields: Partial<Omit<TourProgram, 'id' | 'createdAt'>>) => {
     const programDoc = doc(db, 'tourPrograms', id);
     const dataToUpdate: any = { ...updatedFields };
-    if (updatedFields.date) {
+    if (updatedFields.date && updatedFields.date instanceof Date) {
         dataToUpdate.date = Timestamp.fromDate(updatedFields.date as Date);
     }
     await updateDoc(programDoc, dataToUpdate);
@@ -162,7 +162,7 @@ export const addTourCostItem = async (programId: string) => {
 export const updateTourCostItem = async (id: string, updatedFields: Partial<Omit<TourCostItem, 'id' | 'createdAt'>>) => {
     const itemDoc = doc(db, 'tourCostItems', id);
     const dataToUpdate: any = { ...updatedFields };
-    if (updatedFields.date) {
+    if (updatedFields.date && updatedFields.date instanceof Date) {
         dataToUpdate.date = Timestamp.fromDate(updatedFields.date as Date);
     }
     await updateDoc(itemDoc, dataToUpdate);
@@ -214,7 +214,7 @@ export const addTourIncomeItem = async (programId: string) => {
 export const updateTourIncomeItem = async (id: string, updatedFields: Partial<Omit<TourIncomeItem, 'id' | 'createdAt'>>) => {
     const itemDoc = doc(db, 'tourIncomeItems', id);
     const dataToUpdate: any = { ...updatedFields };
-    if (updatedFields.date) {
+    if (updatedFields.date && updatedFields.date instanceof Date) {
         dataToUpdate.date = Timestamp.fromDate(updatedFields.date as Date);
     }
     await updateDoc(itemDoc, dataToUpdate);
