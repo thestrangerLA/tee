@@ -11,7 +11,7 @@ import { ArrowLeft, FilePieChart, Calendar as CalendarIcon } from "lucide-react"
 import { listenToAllTourPrograms, listenToAllTourCostItems, listenToAllTourIncomeItems } from '@/services/tourReportService';
 import type { TourProgram, TourCostItem, TourIncomeItem, Currency } from '@/lib/types';
 import { getYear, format, startOfYear, endOfYear, isWithinInterval } from 'date-fns';
-import { lo } from "date-fns/locale";
+import { lo } from "date-fns/locale/lo";
 import {
   Popover,
   PopoverContent,

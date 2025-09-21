@@ -10,7 +10,7 @@ import { ArrowLeft, BookOpen, Printer, AlertCircle } from "lucide-react";
 import { listenToTourTransactions } from '@/services/tourAccountancyService';
 import type { Transaction, CurrencyValues } from '@/lib/types';
 import { format, isWithinInterval, startOfMonth, endOfMonth, isValid } from 'date-fns';
-import { lo } from "date-fns/locale";
+import { lo } from "date-fns/locale/lo";
 import { useClientSearchParams } from '@/hooks/useClientSearchParams';
 import StaticExportWrapper from '@/components/StaticExportWrapper';
 

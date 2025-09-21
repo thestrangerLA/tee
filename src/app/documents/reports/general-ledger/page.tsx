@@ -9,7 +9,7 @@ import { ArrowLeft, BookOpen, Calendar as CalendarIcon, Printer, ChevronRight } 
 import { listenToDocumentTransactions } from '@/services/documentAccountancyService';
 import type { Transaction, CurrencyValues } from '@/lib/types';
 import { getMonth, format, setMonth, isWithinInterval, startOfYear, endOfYear, getYear } from 'date-fns';
-import { lo } from "date-fns/locale";
+import { lo } from "date-fns/locale/lo";
 import {
   Popover,
   PopoverContent,
@@ -99,7 +99,7 @@ export default function DocumentGeneralLedgerPage() {
                 <Button variant="outline" size="icon" className="h-8 w-8" asChild>
                     <Link href="/documents/reports">
                         <ArrowLeft className="h-4 w-4" />
-                        <span className="sr-only">ກັບໄປໜ้ารາຍງານ</span>
+                        <span className="sr-only">ກັບໄປໜ້ານາຍງານ</span>
                     </Link>
                 </Button>
                 <div className="flex items-center gap-2">
@@ -171,7 +171,7 @@ export default function DocumentGeneralLedgerPage() {
                                 {currencyKeys.map(c => <div key={c} className="w-1/5 text-right text-green-600 font-mono">{formatCurrency(reportData.grandTotals.income[c])}</div>)}
                             </div>
                              <div className="flex items-center text-sm border-b py-2">
-                                <div className="w-1/5 font-lao">ລາຍຈ່າຍ</div>
+                                <div className="w-1/fiv font-lao">ລາຍຈ່າຍ</div>
                                 {currencyKeys.map(c => <div key={c} className="w-1/5 text-right text-red-600 font-mono">{formatCurrency(reportData.grandTotals.expense[c])}</div>)}
                             </div>
                             <div className="flex items-center text-sm font-bold bg-blue-50 -mx-4 px-4 py-2">

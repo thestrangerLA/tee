@@ -23,6 +23,7 @@ import { useToast } from "@/hooks/use-toast";
 import type { SavedCalculation, TourInfo, TourCosts, Accommodation, Room, Trip, Flight, TrainTicket, EntranceFee, MealCost, GuideFee, DocumentFee } from '@/lib/types';
 import { updateCalculation } from '@/services/tourCalculatorService';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
+import { useClientRouter } from '@/hooks/useClientRouter';
 
 // Types
 type Currency = 'USD' | 'THB' | 'LAK' | 'CNY';
@@ -61,7 +62,7 @@ const CostCategoryContent = ({ title, icon, children }: { title: string, icon: R
 );
 
 export default function TourCalculatorClientPage({ initialCalculation }: { initialCalculation: SavedCalculation }) {
-    const router = useRouter();
+    const clientRouter = useClientRouter();
     const { toast } = useToast();
     const [isSaving, setIsSaving] = useState(false);
     
@@ -79,7 +80,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
     const [targetCurrency, setTargetCurrency] = useState<Currency>('LAK');
     const [sellingPricePercentage, setSellingPricePercentage] = useState(20);
 
-    const handleSave = useCallback(async () => {
+    const handleSave = useCallback(async (andThen?: () => void) => {
         if (isSaving) return;
         setIsSaving(true);
         try {
@@ -91,6 +92,9 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                 title: "บันทึกข้อมูลสำเร็จ",
                 description: `ข้อมูล ${tourInfo.groupCode || 'ไม่มีชื่อ'} ถูกบันทึกแล้ว`,
             });
+            if (andThen) {
+                andThen();
+            }
         } catch (e) {
             toast({
                 title: "เกิดข้อผิดพลาด",
@@ -315,18 +319,16 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
     return (
         <div className="flex min-h-screen w-full flex-col">
             <header className="sticky top-0 z-30 flex h-20 items-center gap-4 bg-primary px-4 text-primary-foreground sm:px-6 print:hidden">
-                <Button variant="outline" size="icon" className="h-8 w-8 bg-transparent text-primary-foreground border-primary-foreground hover:bg-primary-foreground/10" asChild>
-                    <Link href="/">
-                        <ArrowLeft className="h-4 w-4" />
-                        <span className="sr-only">ກັບໄປໜ້າຫຼັກ</span>
-                    </Link>
+                <Button variant="outline" size="icon" className="h-8 w-8 bg-transparent text-primary-foreground border-primary-foreground hover:bg-primary-foreground/10" onClick={() => handleSave(() => clientRouter.push('/'))}>
+                    <ArrowLeft className="h-4 w-4" />
+                    <span className="sr-only">ກັບໄປໜ້າຫຼັກ</span>
                 </Button>
                 <div className="flex-1">
                     <h1 className="text-xl font-bold tracking-tight">ລະບົບຈອງທົວ ແລະ ຄຳນວນຄ່າໃຊ້ຈ່າຍ</h1>
                     <p className="text-sm text-primary-foreground/80">{tourInfo.groupCode || 'New Calculation'}</p>
                 </div>
                  <div className="flex items-center gap-2">
-                     <Button variant="outline" className="bg-transparent text-primary-foreground border-primary-foreground hover:bg-primary-foreground/10" onClick={handleSave} disabled={isSaving}>
+                     <Button variant="outline" className="bg-transparent text-primary-foreground border-primary-foreground hover:bg-primary-foreground/10" onClick={() => handleSave()} disabled={isSaving}>
                         <Save className="mr-2 h-4 w-4" />
                         {isSaving ? 'ກຳລັງບັນທຶກ...' : 'ບັນທຶກຂໍ້ມູນ'}
                     </Button>
@@ -478,18 +480,18 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                 <div className="grid grid-cols-2 gap-2">
                                     <div className="grid gap-2">
                                         <Label htmlFor="num-days">ຈຳນວນວັນ:</Label>
-                                        <Input id="num-days" type="number" placeholder="1" value={tourInfo.numDays} onChange={e => setTourInfo({...tourInfo, numDays: Number(e.target.value) || 1})} />
+                                        <Input id="num-days" type="number" placeholder="1" value={tourInfo.numDays || ''} onChange={e => setTourInfo({...tourInfo, numDays: Number(e.target.value) || 1})} />
                                     </div>
                                     <div className="grid gap-2">
                                         <Label htmlFor="num-nights">ຈຳນວນຄືນ:</Label>
-                                        <Input id="num-nights" type="number" placeholder="0" value={tourInfo.numNights} onChange={e => setTourInfo({...tourInfo, numNights: Number(e.target.value) || 0})} />
+                                        <Input id="num-nights" type="number" placeholder="0" value={tourInfo.numNights || ''} onChange={e => setTourInfo({...tourInfo, numNights: Number(e.target.value) || 0})} />
                                     </div>
                                 </div>
                             </div>
                             <div className="grid md:grid-cols-2 gap-6">
                                 <div className="grid gap-2">
                                     <Label htmlFor="num-people">ຈຳນວນຄົນ:</Label>
-                                    <Input id="num-people" type="number" placeholder="1" value={tourInfo.numPeople} onChange={e => setTourInfo({...tourInfo, numPeople: Number(e.target.value) || 1})} />
+                                    <Input id="num-people" type="number" placeholder="1" value={tourInfo.numPeople || ''} onChange={e => setTourInfo({...tourInfo, numPeople: Number(e.target.value) || 1})} />
                                 </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="traveler-info">ຂໍ້ມູນຜູ້ຮ່ວມເດີນທາງ:</Label>
@@ -557,15 +559,15 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                                 </div>
                                                                     <div className="space-y-1">
                                                                     <Label className="text-xs">ຈຳນວນຫ້ອງ</Label>
-                                                                    <Input type="number" min="1" value={room.numRooms} onChange={e => updateRoom(acc.id, room.id, 'numRooms', parseInt(e.target.value) || 1)} className="h-8" />
+                                                                    <Input type="number" min="1" value={room.numRooms || ''} onChange={e => updateRoom(acc.id, room.id, 'numRooms', parseInt(e.target.value) || 1)} className="h-8" />
                                                                 </div>
                                                                 <div className="space-y-1">
                                                                     <Label className="text-xs">ຈຳນວນຄືນ</Label>
-                                                                    <Input type="number" min="1" value={room.numNights} onChange={e => updateRoom(acc.id, room.id, 'numNights', parseInt(e.target.value) || 1)} className="h-8" />
+                                                                    <Input type="number" min="1" value={room.numNights || ''} onChange={e => updateRoom(acc.id, room.id, 'numNights', parseInt(e.target.value) || 1)} className="h-8" />
                                                                 </div>
                                                                 <div className="space-y-1">
                                                                     <Label className="text-xs">ລາຄາ/ຫ້ອງ/ຄືນ</Label>
-                                                                    <Input type="number" min="0" value={room.price} onChange={e => updateRoom(acc.id, room.id, 'price', parseFloat(e.target.value) || 0)} className="h-8" />
+                                                                    <Input type="number" min="0" value={room.price || ''} onChange={e => updateRoom(acc.id, room.id, 'price', parseFloat(e.target.value) || 0)} className="h-8" />
                                                                 </div>
                                                                 <div className="space-y-1 col-span-2">
                                                                     <Label className="text-xs">ສະກຸນເງິນ</Label>
@@ -620,15 +622,15 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                                                         <div className="space-y-1">
                                                             <Label className="text-xs">ຈຳນວນຄັນ</Label>
-                                                            <Input type="number" min="1" value={trip.numVehicles} onChange={e => updateItem('trips', trip.id, 'numVehicles', parseInt(e.target.value) || 1)} className="h-8"/>
+                                                            <Input type="number" min="1" value={trip.numVehicles || ''} onChange={e => updateItem('trips', trip.id, 'numVehicles', parseInt(e.target.value) || 1)} className="h-8"/>
                                                         </div>
                                                         <div className="space-y-1">
                                                             <Label className="text-xs">ຈຳນວນວັນ</Label>
-                                                            <Input type="number" min="1" value={trip.numDays} onChange={e => updateItem('trips', trip.id, 'numDays', parseInt(e.target.value) || 1)} className="h-8"/>
+                                                            <Input type="number" min="1" value={trip.numDays || ''} onChange={e => updateItem('trips', trip.id, 'numDays', parseInt(e.target.value) || 1)} className="h-8"/>
                                                         </div>
                                                         <div className="space-y-1">
                                                             <Label className="text-xs">ລາຄາ/ຄັນ</Label>
-                                                            <Input type="number" min="0" value={trip.pricePerVehicle} onChange={e => updateItem('trips', trip.id, 'pricePerVehicle', parseFloat(e.target.value) || 0)} className="h-8"/>
+                                                            <Input type="number" min="0" value={trip.pricePerVehicle || ''} onChange={e => updateItem('trips', trip.id, 'pricePerVehicle', parseFloat(e.target.value) || 0)} className="h-8"/>
                                                         </div>
                                                         <div className="space-y-1">
                                                             <Label className="text-xs">ສະກຸນເງິນ</Label>
@@ -692,11 +694,11 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                         <div className="grid grid-cols-3 gap-4">
                                                         <div className="space-y-2">
                                                             <Label>ລາຄາ/ຄົນ</Label>
-                                                            <Input type="number" min="0" value={flight.pricePerPerson} onChange={e => updateItem('flights', flight.id, 'pricePerPerson', parseFloat(e.target.value) || 0)} />
+                                                            <Input type="number" min="0" value={flight.pricePerPerson || ''} onChange={e => updateItem('flights', flight.id, 'pricePerPerson', parseFloat(e.target.value) || 0)} />
                                                         </div>
                                                         <div className="space-y-2">
                                                             <Label>ຈຳນວນຄົນ</Label>
-                                                            <Input type="number" min="1" value={flight.numPeople} onChange={e => updateItem('flights', flight.id, 'numPeople', parseInt(e.target.value) || 1)} />
+                                                            <Input type="number" min="1" value={flight.numPeople || ''} onChange={e => updateItem('flights', flight.id, 'numPeople', parseInt(e.target.value) || 1)} />
                                                         </div>
                                                         <div className="space-y-2">
                                                             <Label>ສະກຸນເງິນ</Label>
@@ -758,11 +760,11 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                                         <div className="space-y-2">
                                                             <Label>ລາຄາ/ປີ້</Label>
-                                                            <Input type="number" min="0" value={ticket.pricePerTicket} onChange={e => updateItem('trainTickets', ticket.id, 'pricePerTicket', parseFloat(e.target.value) || 0)} />
+                                                            <Input type="number" min="0" value={ticket.pricePerTicket || ''} onChange={e => updateItem('trainTickets', ticket.id, 'pricePerTicket', parseFloat(e.target.value) || 0)} />
                                                         </div>
                                                         <div className="space-y-2">
                                                             <Label>ຈຳນວນປີ້</Label>
-                                                            <Input type="number" min="1" value={ticket.numTickets} onChange={e => updateItem('trainTickets', ticket.id, 'numTickets', parseInt(e.target.value) || 1)} />
+                                                            <Input type="number" min="1" value={ticket.numTickets || ''} onChange={e => updateItem('trainTickets', ticket.id, 'numTickets', parseInt(e.target.value) || 1)} />
                                                         </div>
                                                         <div className="space-y-2">
                                                             <Label>ຊັ້ນປີ້</Label>
@@ -804,15 +806,15 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                                         <div className="space-y-2">
                                                             <Label>Pax</Label>
-                                                            <Input type="number" min="1" value={fee.pax} onChange={e => updateItem('entranceFees', fee.id, 'pax', parseInt(e.target.value) || 1)} />
+                                                            <Input type="number" min="1" value={fee.pax || ''} onChange={e => updateItem('entranceFees', fee.id, 'pax', parseInt(e.target.value) || 1)} />
                                                         </div>
                                                         <div className="space-y-2">
                                                             <Label>ຈຳນວນສະຖານທີ່</Label>
-                                                            <Input type="number" min="1" value={fee.numLocations} onChange={e => updateItem('entranceFees', fee.id, 'numLocations', parseInt(e.target.value) || 1)} />
+                                                            <Input type="number" min="1" value={fee.numLocations || ''} onChange={e => updateItem('entranceFees', fee.id, 'numLocations', parseInt(e.target.value) || 1)} />
                                                         </div>
                                                         <div className="space-y-2">
                                                             <Label>ລາຄາ</Label>
-                                                            <Input type="number" min="0" value={fee.price} onChange={e => updateItem('entranceFees', fee.id, 'price', parseFloat(e.target.value) || 0)} />
+                                                            <Input type="number" min="0" value={fee.price || ''} onChange={e => updateItem('entranceFees', fee.id, 'price', parseFloat(e.target.value) || 0)} />
                                                         </div>
                                                         <div className="space-y-2">
                                                             <Label>ສະກຸນເງິນ</Label>
@@ -848,27 +850,27 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                         </div>
                                                         <div className="space-y-2">
                                                             <Label>Pax</Label>
-                                                            <Input type="number" min="1" value={meal.pax} onChange={e => updateItem('meals', meal.id, 'pax', parseInt(e.target.value) || 1)} />
+                                                            <Input type="number" min="1" value={meal.pax || ''} onChange={e => updateItem('meals', meal.id, 'pax', parseInt(e.target.value) || 1)} />
                                                         </div>
                                                     </div>
                                                     <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                                                         <div className="space-y-1">
                                                             <Label className="text-xs">ເຊົ້າ</Label>
-                                                            <Input type="number" min="0" value={meal.breakfast} onChange={e => updateItem('meals', meal.id, 'breakfast', parseInt(e.target.value) || 0)} className="h-8"/>
+                                                            <Input type="number" min="0" value={meal.breakfast || ''} onChange={e => updateItem('meals', meal.id, 'breakfast', parseInt(e.target.value) || 0)} className="h-8"/>
                                                         </div>
                                                         <div className="space-y-1">
                                                             <Label className="text-xs">ທ່ຽງ</Label>
-                                                            <Input type="number" min="0" value={meal.lunch} onChange={e => updateItem('meals', meal.id, 'lunch', parseInt(e.target.value) || 0)} className="h-8"/>
+                                                            <Input type="number" min="0" value={meal.lunch || ''} onChange={e => updateItem('meals', meal.id, 'lunch', parseInt(e.target.value) || 0)} className="h-8"/>
                                                         </div>
                                                         <div className="space-y-1">
                                                             <Label className="text-xs">ແລງ</Label>
-                                                            <Input type="number" min="0" value={meal.dinner} onChange={e => updateItem('meals', meal.id, 'dinner', parseInt(e.target.value) || 0)} className="h-8"/>
+                                                            <Input type="number" min="0" value={meal.dinner || ''} onChange={e => updateItem('meals', meal.id, 'dinner', parseInt(e.target.value) || 0)} className="h-8"/>
                                                         </div>
                                                     </div>
                                                     <div className="grid grid-cols-2 gap-4">
                                                         <div className="space-y-2">
                                                             <Label>ລາຄາ/ມື້</Label>
-                                                            <Input type="number" min="0" value={meal.pricePerMeal} onChange={e => updateItem('meals', meal.id, 'pricePerMeal', parseFloat(e.target.value) || 0)} />
+                                                            <Input type="number" min="0" value={meal.pricePerMeal || ''} onChange={e => updateItem('meals', meal.id, 'pricePerMeal', parseFloat(e.target.value) || 0)} />
                                                         </div>
                                                         <div className="space-y-2">
                                                             <Label>ສະກຸນເງິນ</Label>
@@ -906,15 +908,15 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                                         <div className="space-y-2">
                                                             <Label>ຈຳນວນໄກ້</Label>
-                                                            <Input type="number" min="1" value={guide.numGuides} onChange={e => updateItem('guides', guide.id, 'numGuides', parseInt(e.target.value) || 1)} />
+                                                            <Input type="number" min="1" value={guide.numGuides || ''} onChange={e => updateItem('guides', guide.id, 'numGuides', parseInt(e.target.value) || 1)} />
                                                         </div>
                                                         <div className="space-y-2">
                                                             <Label>ຈຳນວນວັນ</Label>
-                                                            <Input type="number" min="1" value={guide.numDays} onChange={e => updateItem('guides', guide.id, 'numDays', parseInt(e.target.value) || 1)} />
+                                                            <Input type="number" min="1" value={guide.numDays || ''} onChange={e => updateItem('guides', guide.id, 'numDays', parseInt(e.target.value) || 1)} />
                                                         </div>
                                                         <div className="space-y-2">
                                                             <Label>ລາຄາ/ວັນ</Label>
-                                                            <Input type="number" min="0" value={guide.pricePerDay} onChange={e => updateItem('guides', guide.id, 'pricePerDay', parseFloat(e.target.value) || 0)} />
+                                                            <Input type="number" min="0" value={guide.pricePerDay || ''} onChange={e => updateItem('guides', guide.id, 'pricePerDay', parseFloat(e.target.value) || 0)} />
                                                         </div>
                                                         <div className="space-y-2">
                                                             <Label>ສະກຸນເງິນ</Label>
@@ -952,11 +954,11 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                                         <div className="space-y-2">
                                                             <Label>Pax</Label>
-                                                            <Input type="number" min="1" value={doc.pax} onChange={e => updateItem('documents', doc.id, 'pax', parseInt(e.target.value) || 1)} />
+                                                            <Input type="number" min="1" value={doc.pax || ''} onChange={e => updateItem('documents', doc.id, 'pax', parseInt(e.target.value) || 1)} />
                                                         </div>
                                                         <div className="space-y-2">
                                                             <Label>ລາຄາ</Label>
-                                                            <Input type="number" min="0" value={doc.price} onChange={e => updateItem('documents', doc.id, 'price', parseFloat(e.target.value) || 0)} />
+                                                            <Input type="number" min="0" value={doc.price || ''} onChange={e => updateItem('documents', doc.id, 'price', parseFloat(e.target.value) || 0)} />
                                                         </div>
                                                         <div className="space-y-2">
                                                             <Label>ສະກຸນເງິນ</Label>
@@ -1061,7 +1063,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                 <Input
                                                     id="selling-percentage"
                                                     type="number"
-                                                    value={sellingPricePercentage}
+                                                    value={sellingPricePercentage || ''}
                                                     onChange={(e) => setSellingPricePercentage(Number(e.target.value))}
                                                     placeholder="20"
                                                     className="pl-10"

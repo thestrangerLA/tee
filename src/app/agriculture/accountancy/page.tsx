@@ -14,7 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar"
 import { Textarea } from "@/components/ui/textarea"
 import { format, isSameDay, startOfMonth, endOfMonth, isWithinInterval, addMonths, subMonths, getMonth, getYear, setMonth, startOfDay, eachDayOfInterval, getDate } from "date-fns"
-import { lo } from "date-fns/locale"
+import { lo } from "date-fns/locale/lo"
 import {
   Table,
   TableBody,
@@ -740,7 +740,7 @@ export default function AgricultureAccountancyPage() {
                             </div>
                             <div className="grid gap-3">
                                 <Label htmlFor="edit-amount">ຈຳນວນເງິນ</Label>
-                                <Input id="edit-amount" type="number" value={editingTransaction.amount} onChange={(e) => setEditingTransaction({ ...editingTransaction, amount: Number(e.target.value)})} required />
+                                <Input id="edit-amount" type="number" value={editingTransaction.amount || ''} onChange={(e) => setEditingTransaction({ ...editingTransaction, amount: Number(e.target.value)})} required />
                             </div>
                             <div className="grid gap-3">
                                 <Label htmlFor="edit-description">ຄຳອະທິບາຍ</Label>
@@ -770,7 +770,7 @@ export default function AgricultureAccountancyPage() {
                                 <Input 
                                     id="edit-summary-amount" 
                                     type="number" 
-                                    value={editingSummaryValue} 
+                                    value={editingSummaryValue || ''} 
                                     onChange={(e) => setEditingSummaryValue(Number(e.target.value))} 
                                     required 
                                 />

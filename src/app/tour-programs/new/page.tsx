@@ -15,7 +15,7 @@ import type { TourProgram, Currency } from '@/lib/types';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format, startOfDay } from 'date-fns';
-import { lo } from 'date-fns/locale';
+import { lo } from "date-fns/locale/lo";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import StaticExportWrapper from '@/components/StaticExportWrapper';
 import { useClientRouter } from '@/hooks/useClientRouter';
@@ -168,7 +168,7 @@ function NewTourProgramPageComponent() {
                                 </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="pax">ຈຳນວນຄົນ (Pax)</Label>
-                                    <Input id="pax" name="pax" type="number" value={formData.pax} onChange={(e) => handleFormValueChange('pax', Number(e.target.value))} />
+                                    <Input id="pax" name="pax" type="number" value={formData.pax || ''} onChange={(e) => handleFormValueChange('pax', Number(e.target.value))} />
                                 </div>
                             </div>
                             
@@ -179,7 +179,7 @@ function NewTourProgramPageComponent() {
                                 </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="durationDays">ໄລຍະເວລາ (ວັນ)</Label>
-                                    <Input id="durationDays" name="durationDays" type="number" value={formData.durationDays} onChange={(e) => handleFormValueChange('durationDays', Number(e.target.value))} />
+                                    <Input id="durationDays" name="durationDays" type="number" value={formData.durationDays || ''} onChange={(e) => handleFormValueChange('durationDays', Number(e.target.value))} />
                                 </div>
                             </div>
 
