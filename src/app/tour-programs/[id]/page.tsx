@@ -4,7 +4,8 @@ import { getTourProgram, getAllTourPrograms } from '@/services/tourProgramServic
 import TourProgramClientPage from './client-page';
 
 // export const dynamic = 'force-static';
-export const revalidate = 0; // Revalidate every 0 seconds (on every request)
+// This ensures the page is re-evaluated on every request, but allows static export
+export const revalidate = 0; 
 
 export async function generateStaticParams() {
   // This function is still useful for initial builds, 

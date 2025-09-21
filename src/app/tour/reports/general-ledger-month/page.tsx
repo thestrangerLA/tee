@@ -1,16 +1,16 @@
 
 "use client"
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, BookOpen, Printer } from "lucide-react";
 import { listenToTourTransactions } from '@/services/tourAccountancyService';
 import type { Transaction, CurrencyValues } from '@/lib/types';
-import { getMonth, format, setMonth, isWithinInterval, startOfMonth, endOfMonth, getYear } from 'date-fns';
+import { getMonth, format, setMonth, isWithinInterval, startOfMonth, endOfMonth } from 'date-fns';
 import { lo } from "date-fns/locale";
 
 const formatCurrency = (value: number) => {
@@ -20,14 +20,21 @@ const formatCurrency = (value: number) => {
 const currencyKeys: (keyof CurrencyValues)[] = ['kip', 'baht', 'usd', 'cny'];
 const initialCurrencyValues: CurrencyValues = { kip: 0, baht: 0, usd: 0, cny: 0 };
 
-
-export default function GeneralLedgerMonthPage() {
+// Separate component for the main content
+function DocumentContent() {
     const searchParams = useSearchParams();
+    const [transactions, setTransactions] = useState<Transaction[]>([]);
+    const [isClient, setIsClient] = useState(false);
+
+    // This ensures that rendering of components that use client-side hooks like
+    // useSearchParams happens only on the client, after initial hydration.
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
+
     const year = searchParams.get('year');
     const month = searchParams.get('month');
 
-    const [transactions, setTransactions] = useState<Transaction[]>([]);
-    
     const displayDate = useMemo(() => {
         if (year && month) {
             return new Date(Number(year), Number(month));
@@ -36,19 +43,32 @@ export default function GeneralLedgerMonthPage() {
     }, [year, month]);
 
     useEffect(() => {
+        if (!isClient) return;
+        
         const unsubscribeTransactions = listenToTourTransactions(setTransactions);
         return () => {
             unsubscribeTransactions();
         };
-    }, []);
+    }, [isClient]);
     
     const reportData = useMemo(() => {
-        if (!year || !month) return { transactions: [], income: { ...initialCurrencyValues }, expense: { ...initialCurrencyValues }, net: { ...initialCurrencyValues } };
+        if (!year || !month || !isClient) {
+            return { 
+                transactions: [], 
+                income: { ...initialCurrencyValues }, 
+                expense: { ...initialCurrencyValues }, 
+                net: { ...initialCurrencyValues } 
+            };
+        }
         
         const startDate = startOfMonth(displayDate);
         const endDate = endOfMonth(displayDate);
 
-        const monthlyTransactions = transactions.filter(tx => isWithinInterval(tx.date, { start: startDate, end: endDate }));
+        const monthlyTransactions = transactions.filter(tx => {
+            // Add null check for tx.date
+            if (!tx.date) return false;
+            return isWithinInterval(tx.date, { start: startDate, end: endDate });
+        });
         
         const initialTotals = (): CurrencyValues => ({ kip: 0, baht: 0, usd: 0, cny: 0 });
         
@@ -58,10 +78,11 @@ export default function GeneralLedgerMonthPage() {
 
         monthlyTransactions.forEach(tx => {
              currencyKeys.forEach(c => {
+                 const key = c as keyof Transaction;
                  if (tx.type === 'income') {
-                    income[c] += tx[c] || 0;
+                    income[c] += (tx[key] as number) || 0;
                 } else {
-                    expense[c] += tx[c] || 0;
+                    expense[c] += (tx[key] as number) || 0;
                 }
             });
         });
@@ -72,7 +93,12 @@ export default function GeneralLedgerMonthPage() {
 
         return { transactions: monthlyTransactions, income, expense, net };
 
-    }, [transactions, displayDate, year, month]);
+    }, [transactions, displayDate, year, month, isClient]);
+
+    // Show loading state during hydration
+    if (!isClient) {
+        return null;
+    }
 
     const headerTitle = format(displayDate, 'LLLL yyyy', { locale: lo });
     
@@ -90,7 +116,15 @@ export default function GeneralLedgerMonthPage() {
                     <h1 className="text-xl font-bold tracking-tight">ປະຫວັດຮັບ-ຈ່າຍ: {headerTitle}</h1>
                 </div>
                  <div className="ml-auto">
-                     <Button onClick={() => window.print()} variant="outline" size="sm">
+                     <Button 
+                        onClick={() => {
+                            if (typeof window !== 'undefined') {
+                                window.print();
+                            }
+                        }} 
+                        variant="outline" 
+                        size="sm"
+                    >
                         <Printer className="mr-2 h-4 w-4" />
                         ພິມ
                     </Button>
@@ -153,14 +187,18 @@ export default function GeneralLedgerMonthPage() {
                                 <TableBody>
                                     {reportData.transactions.map(tx => (
                                         <TableRow key={tx.id} className={tx.type === 'income' ? 'bg-green-50/30' : 'bg-red-50/30'}>
-                                            <TableCell>{format(tx.date, 'dd/MM/yy')}</TableCell>
-                                            <TableCell>{tx.description}</TableCell>
+                                            <TableCell>{tx.date ? format(tx.date, 'dd/MM/yy') : '-'}</TableCell>
+                                            <TableCell>{tx.description || '-'}</TableCell>
                                             <TableCell>{tx.type === 'income' ? 'ລາຍຮັບ' : 'ລາຍຈ່າຍ'}</TableCell>
-                                            {currencyKeys.map(c => (
-                                                <TableCell key={c} className={`text-right font-mono ${tx[c] || 0 > 0 ? (tx.type === 'income' ? 'text-green-700' : 'text-red-700') : ''}`}>
-                                                    {(tx[c] || 0) > 0 ? formatCurrency(tx[c]!) : '-'}
+                                            {currencyKeys.map(c => {
+                                                const key = c as keyof Transaction;
+                                                const value = (tx[key] as number) || 0;
+                                                return (
+                                                <TableCell key={c} className={`text-right font-mono ${value > 0 ? (tx.type === 'income' ? 'text-green-700' : 'text-red-700') : ''}`}>
+                                                    {value > 0 ? formatCurrency(value) : '-'}
                                                 </TableCell>
-                                            ))}
+                                            )}
+                                            )}
                                         </TableRow>
                                     ))}
                                 </TableBody>
@@ -179,4 +217,19 @@ export default function GeneralLedgerMonthPage() {
     );
 }
 
-    
+export default function GeneralLedgerMonthPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex min-h-screen w-full flex-col bg-muted/40">
+                <div className="flex items-center justify-center min-h-[400px]">
+                    <div className="text-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                        <p className="text-muted-foreground">ກຳລັງໂຫຼດ...</p>
+                    </div>
+                </div>
+            </div>
+        }>
+            <DocumentContent />
+        </Suspense>
+    );
+}
