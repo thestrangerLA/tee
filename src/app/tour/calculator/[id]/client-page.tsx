@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -12,15 +13,15 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { ArrowLeft, Save, Trash2, MapPin, Calendar as CalendarIcon, BedDouble, Truck, Plane, TrainFront, PlusCircle, Camera, UtensilsCrossed, Users, FileText, Copy, Clock, Eye, EyeOff, Download, History, Printer, ChevronsRight, Percent, TrendingUp, Calculator } from "lucide-react";
+import { ArrowLeft, Save, Trash2, MapPin, Calendar as CalendarIcon, BedDouble, Truck, Plane, TrainFront, PlusCircle, Camera, UtensilsCrossed, Users, FileText, Copy, Clock, Eye, EyeOff, Download, History, Printer, ChevronsRight, Percent, TrendingUp, Calculator, RotateCcw } from "lucide-react";
 import { format, isValid } from 'date-fns';
 import { th } from 'date-fns/locale';
 import { TotalCostCard } from '@/components/tour/TotalCostCard';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import type { SavedCalculation, TourInfo, TourCosts, Accommodation, Room, Trip, Flight, TrainTicket, EntranceFee, MealCost, GuideFee, DocumentFee } from '@/lib/types';
-import { updateCalculation } from '@/services/tourCalculatorService';
+import type { SavedCalculation, TourInfo, TourCosts, Accommodation, Room, Trip, Flight, TrainTicket, EntranceFee, MealCost, GuideFee, DocumentFee, CalculationSnapshot } from '@/lib/types';
+import { addCalculationToHistory } from '@/services/tourCalculatorService';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 
 // Types
@@ -66,6 +67,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
     
     const [tourInfo, setTourInfo] = useState<TourInfo>(initialCalculation.tourInfo);
     const [allCosts, setAllCosts] = useState<TourCosts>(initialCalculation.allCosts);
+    const [calculationHistory, setCalculationHistory] = useState<CalculationSnapshot[]>(initialCalculation.history || []);
     
     const [itemVisibility, setItemVisibility] = useState<Record<string, boolean>>({});
     
@@ -79,19 +81,34 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
     const [sellingPricePercentage, setSellingPricePercentage] = useState(20);
 
 
-    const handleSaveCalculation = useCallback(async () => {
-        if(isSaving) return;
+    const handleSaveToHistory = useCallback(async () => {
+        if (isSaving) return;
         setIsSaving(true);
         try {
-            await updateCalculation(initialCalculation.id, { tourInfo, allCosts });
+            const snapshot: Omit<CalculationSnapshot, 'id' | 'savedAt'> = {
+                tourInfo: tourInfo,
+                allCosts: allCosts,
+                note: `Saved on ${new Date().toLocaleString()}` // Default note
+            };
+
+            await addCalculationToHistory(initialCalculation.id, snapshot);
+
+            // Optimistically update local history state
+            const newHistoryEntry: CalculationSnapshot = {
+                id: uuidv4(), // temporary client-side ID
+                savedAt: new Date(),
+                ...snapshot,
+            };
+            setCalculationHistory(prev => [newHistoryEntry, ...prev]);
+
             toast({
-                title: "ບັນທຶກການຄຳນວນສຳເລັດ",
-                description: `ຂໍ້ມູນ ${tourInfo.groupCode || 'ບໍ່ມີຊື່'} ໄດ້ຖືກບັນທຶກແລ້ວ.`,
+                title: "ບັນທຶກສະບັບຮ່າງສຳເລັດ",
+                description: `ຂໍ້ມູນ ${tourInfo.groupCode || 'ບໍ່ມີຊື່'} ໄດ້ຖືກບັນທຶກໄວ້ໃນປະຫວັດແລ້ວ.`,
             });
-        } catch(e) {
-             toast({
+        } catch (e) {
+            toast({
                 title: "ເກີດຂໍ້ຜິດພາດ",
-                description: "ບໍ່ສາມາດບັນທຶກການຄຳນວນໄດ້",
+                description: "ບໍ່ສາມາດບັນທຶກສະບັບຮ່າງໄດ້",
                 variant: 'destructive'
             });
             console.error(e);
@@ -99,6 +116,18 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
             setIsSaving(false);
         }
     }, [initialCalculation.id, tourInfo, allCosts, toast, isSaving]);
+    
+    const loadFromHistory = (snapshot: CalculationSnapshot) => {
+        if(window.confirm('Are you sure you want to load this version? Any unsaved changes will be lost.')) {
+            setTourInfo(snapshot.tourInfo);
+            setAllCosts(snapshot.allCosts);
+            toast({
+                title: "ໂຫຼດຂໍ້ມູນສຳເລັດ",
+                description: `ຂໍ້ມູນຈາກ ${format(snapshot.savedAt, "PPpp")} ໄດ້ຖືກໂຫຼດແລ້ວ.`,
+            });
+        }
+    };
+
 
 
     const toggleItemVisibility = (itemId: string) => {
@@ -323,7 +352,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                     <p className="text-sm text-primary-foreground/80">{tourInfo.groupCode || 'New Calculation'}</p>
                 </div>
                  <div className="flex items-center gap-2">
-                    <Button variant="outline" className="bg-transparent text-primary-foreground border-primary-foreground hover:bg-primary-foreground/10" onClick={handleSaveCalculation} disabled={isSaving}>
+                    <Button variant="outline" className="bg-transparent text-primary-foreground border-primary-foreground hover:bg-primary-foreground/10" onClick={handleSaveToHistory} disabled={isSaving}>
                         <Save className="mr-2 h-4 w-4" />
                         {isSaving ? 'ກຳລັງບັນທຶກ...' : 'ບັນທຶກຂໍ້ມູນ'}
                     </Button>
@@ -1086,6 +1115,32 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                     </CardContent>
                                 </Card>
                             </div>
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-2"><History />ປະຫວັດການຄຳນວນ</CardTitle>
+                                    <CardDescription>ສະບັບຮ່າງທີ່ບັນທຶກໄວ້ຂອງການຄຳນວນນີ້</CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    {calculationHistory.length > 0 ? (
+                                        <div className="space-y-2">
+                                            {calculationHistory.map(snapshot => (
+                                                <div key={snapshot.id} className="flex items-center justify-between rounded-lg border p-3">
+                                                    <div className="flex items-center gap-3">
+                                                        <p className="font-semibold">{format(snapshot.savedAt, "dd MMM yyyy, HH:mm:ss")}</p>
+                                                        <p className="text-sm text-muted-foreground">{snapshot.note}</p>
+                                                    </div>
+                                                    <Button variant="outline" size="sm" onClick={() => loadFromHistory(snapshot)}>
+                                                        <RotateCcw className="mr-2 h-4 w-4" />
+                                                        ໂຫຼດ
+                                                    </Button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className="text-sm text-muted-foreground text-center py-4">ບໍ່ມີປະຫວັດການຄຳນວນທີ່ບັນທຶກໄວ້.</p>
+                                    )}
+                                </CardContent>
+                            </Card>
                         </div>
                 </div>
             </main>

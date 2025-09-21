@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import { useState } from 'react';
@@ -26,7 +27,7 @@ export default function NewCalculationPage() {
         e.preventDefault();
         setIsSaving(true);
         
-        const newCalculationData: Omit<SavedCalculation, 'id'| 'savedAt'> = {
+        const newCalculationData: Omit<SavedCalculation, 'id'| 'savedAt' | 'history'> = {
             tourInfo: {
                 mouContact: '',
                 groupCode: groupCode,

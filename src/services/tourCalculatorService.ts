@@ -1,6 +1,7 @@
 
+
 import { db } from '@/lib/firebase';
-import type { SavedCalculation } from '@/lib/types';
+import type { SavedCalculation, CalculationSnapshot } from '@/lib/types';
 import {
     collection,
     addDoc,
@@ -13,8 +14,11 @@ import {
     serverTimestamp,
     Timestamp,
     getDoc,
-    getDocs
+    getDocs,
+    arrayUnion
 } from 'firebase/firestore';
+import { v4 as uuidv4 } from 'uuid';
+
 
 const calculationsCollectionRef = collection(db, 'tourCalculations');
 
@@ -100,6 +104,10 @@ export const getCalculation = async (id: string): Promise<SavedCalculation | nul
         if (docSnap.exists()) {
             const data = docSnap.data();
             const convertedData = convertTimestampsToDates(data);
+            // Ensure history is an array
+            if (!convertedData.history) {
+                convertedData.history = [];
+            }
             return { id: docSnap.id, ...convertedData } as SavedCalculation;
         }
         return null;
@@ -123,12 +131,13 @@ export const getAllCalculations = async (): Promise<SavedCalculation[]> => {
     return calculations;
 }
 
-export const saveCalculation = async (calculation: Omit<SavedCalculation, 'id'| 'savedAt'>): Promise<string> => {
+export const saveCalculation = async (calculation: Omit<SavedCalculation, 'id'| 'savedAt' | 'history'>): Promise<string> => {
     try {
         const dataToSave = convertDatesToTimestamps(calculation);
         
         const docRef = await addDoc(calculationsCollectionRef, {
             ...dataToSave,
+            history: [],
             savedAt: serverTimestamp()
         });
         
@@ -138,6 +147,32 @@ export const saveCalculation = async (calculation: Omit<SavedCalculation, 'id'| 
         throw error;
     }
 };
+
+export const addCalculationToHistory = async (id: string, snapshotData: Omit<CalculationSnapshot, 'id' | 'savedAt'>): Promise<void> => {
+    try {
+        const docRef = doc(calculationsCollectionRef, id);
+
+        const newSnapshot: CalculationSnapshot = {
+            id: uuidv4(),
+            savedAt: new Date(),
+            ...snapshotData
+        };
+
+        const snapshotForFirestore = convertDatesToTimestamps(newSnapshot);
+
+        await updateDoc(docRef, {
+            history: arrayUnion(snapshotForFirestore),
+            // Also update the main document to reflect the latest state
+            tourInfo: snapshotForFirestore.tourInfo,
+            allCosts: snapshotForFirestore.allCosts,
+            savedAt: serverTimestamp() // Update savedAt timestamp
+        });
+    } catch (error) {
+        console.error('Error adding calculation to history:', error);
+        throw error;
+    }
+}
+
 
 export const updateCalculation = async (id: string, updates: Partial<Omit<SavedCalculation, 'id'>>): Promise<void> => {
     try {
