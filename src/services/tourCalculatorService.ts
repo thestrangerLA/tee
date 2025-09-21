@@ -15,6 +15,7 @@ import {
     Timestamp,
     getDoc,
     getDocs,
+    setDoc,
 } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -126,16 +127,26 @@ export const getAllCalculations = async (): Promise<SavedCalculation[]> => {
     return calculations;
 }
 
-export const saveCalculation = async (calculation: Omit<SavedCalculation, 'id'| 'savedAt'>): Promise<string> => {
+export const saveCalculation = async (calculation: Omit<SavedCalculation, 'id'| 'savedAt'>, docId?: string): Promise<string> => {
     try {
         const dataToSave = convertDatesToTimestamps(calculation);
         
-        const docRef = await addDoc(calculationsCollectionRef, {
-            ...dataToSave,
-            savedAt: serverTimestamp()
-        });
-        
-        return docRef.id;
+        if (docId) {
+            // Use setDoc to create a document with a specific ID
+            const docRef = doc(calculationsCollectionRef, docId);
+            await setDoc(docRef, {
+                ...dataToSave,
+                savedAt: serverTimestamp()
+            });
+            return docId;
+        } else {
+            // Use addDoc to auto-generate an ID
+            const docRef = await addDoc(calculationsCollectionRef, {
+                ...dataToSave,
+                savedAt: serverTimestamp()
+            });
+            return docRef.id;
+        }
     } catch (error) {
         console.error('Error saving calculation:', error);
         throw error;

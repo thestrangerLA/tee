@@ -1,7 +1,9 @@
 
-import { getCalculation, getAllCalculations } from '@/services/tourCalculatorService';
+import { getCalculation, getAllCalculations, saveCalculation } from '@/services/tourCalculatorService';
 import TourCalculatorClientPage from './client-page';
 import { Suspense } from 'react';
+import type { SavedCalculation } from '@/lib/types';
+
 
 // This tells Next.js to always render this page dynamically on the server
 export const dynamic = 'force-dynamic';
@@ -10,15 +12,53 @@ export const dynamic = 'force-dynamic';
 export async function generateStaticParams() {
   const calculations = await getAllCalculations();
  
-  return calculations.map((calc) => ({
+  const staticParams = calculations.map((calc) => ({
     id: calc.id,
-  }))
+  }));
+
+  // Ensure the 'default' param is always included
+  if (!staticParams.some(p => p.id === 'default')) {
+      staticParams.push({ id: 'default' });
+  }
+  
+  return staticParams;
 }
 
 async function getCalculationData(id: string) {
-    const calculation = await getCalculation(id);
-    if (!calculation) {
-        return null;
+    let calculation = await getCalculation(id);
+    if (!calculation && id === 'default') {
+        const newCalculationData: Omit<SavedCalculation, 'id'| 'savedAt'> = {
+            tourInfo: {
+                mouContact: '',
+                groupCode: 'Default Group',
+                destinationCountry: '',
+                program: 'Default Calculation',
+                startDate: new Date(),
+                endDate: new Date(),
+                numDays: 1,
+                numNights: 0,
+                numPeople: 1,
+                travelerInfo: ''
+            },
+            allCosts: {
+                accommodations: [],
+                trips: [],
+                flights: [],
+                trainTickets: [],
+                entranceFees: [],
+                meals: [],
+                guides: [],
+                documents: [],
+            }
+        };
+        // The saveCalculation function in the original service returns the new ID,
+        // but we need to create it with a *specific* ID ('default').
+        // This requires a modification to how we save, or we assume it exists.
+        // For now, we'll return the new structure and the client page will handle it.
+        // A better approach would be a `getOrCreate` service function.
+        // Let's create it on the fly.
+        await saveCalculation(newCalculationData, 'default');
+        calculation = await getCalculation(id);
     }
     return calculation;
 }
