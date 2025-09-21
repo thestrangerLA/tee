@@ -1,7 +1,7 @@
 
 
 import { db } from '@/lib/firebase';
-import type { SavedCalculation, CalculationSnapshot } from '@/lib/types';
+import type { SavedCalculation } from '@/lib/types';
 import {
     collection,
     addDoc,
@@ -15,8 +15,6 @@ import {
     Timestamp,
     getDoc,
     getDocs,
-    arrayUnion,
-    arrayRemove
 } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -105,12 +103,6 @@ export const getCalculation = async (id: string): Promise<SavedCalculation | nul
         if (docSnap.exists()) {
             const data = docSnap.data();
             const convertedData = convertTimestampsToDates(data);
-            // Ensure history is an array and sort it descending by savedAt date
-            if (!convertedData.history) {
-                convertedData.history = [];
-            } else {
-                convertedData.history.sort((a: CalculationSnapshot, b: CalculationSnapshot) => b.savedAt.getTime() - a.savedAt.getTime());
-            }
             return { id: docSnap.id, ...convertedData } as SavedCalculation;
         }
         return null;
@@ -134,76 +126,18 @@ export const getAllCalculations = async (): Promise<SavedCalculation[]> => {
     return calculations;
 }
 
-export const saveCalculation = async (calculation: Omit<SavedCalculation, 'id'| 'savedAt' | 'history'>): Promise<string> => {
+export const saveCalculation = async (calculation: Omit<SavedCalculation, 'id'| 'savedAt'>): Promise<string> => {
     try {
         const dataToSave = convertDatesToTimestamps(calculation);
         
         const docRef = await addDoc(calculationsCollectionRef, {
             ...dataToSave,
-            history: [],
             savedAt: serverTimestamp()
         });
         
         return docRef.id;
     } catch (error) {
         console.error('Error saving calculation:', error);
-        throw error;
-    }
-};
-
-export const addCalculationToHistory = async (id: string, snapshotData: Omit<CalculationSnapshot, 'id' | 'savedAt'>): Promise<string> => {
-    try {
-        const docRef = doc(calculationsCollectionRef, id);
-
-        const newSnapshot: CalculationSnapshot = {
-            id: uuidv4(),
-            savedAt: new Date(),
-            ...snapshotData
-        };
-
-        const snapshotForFirestore = convertDatesToTimestamps(newSnapshot);
-
-        await updateDoc(docRef, {
-            history: arrayUnion(snapshotForFirestore),
-            // Also update the main document to reflect the latest state
-            tourInfo: snapshotForFirestore.tourInfo,
-            allCosts: snapshotForFirestore.allCosts,
-            savedAt: serverTimestamp() // Update savedAt timestamp
-        });
-        return newSnapshot.id;
-    } catch (error) {
-        console.error('Error adding calculation to history:', error);
-        throw error;
-    }
-}
-
-export const deleteCalculationSnapshot = async (calculationId: string, snapshotId: string): Promise<void> => {
-    try {
-        const docRef = doc(calculationsCollectionRef, calculationId);
-        const docSnap = await getDoc(docRef);
-
-        if (!docSnap.exists()) {
-            throw new Error("Calculation document not found!");
-        }
-
-        const calculationData = docSnap.data() as SavedCalculation;
-        const history = convertTimestampsToDates(calculationData.history || []) as CalculationSnapshot[];
-        
-        const snapshotToDelete = history.find(snap => snap.id === snapshotId);
-
-        if (!snapshotToDelete) {
-             console.warn("Snapshot to delete not found in history array.");
-             return;
-        }
-
-        const snapshotToDeleteForFirestore = convertDatesToTimestamps(snapshotToDelete);
-
-        await updateDoc(docRef, {
-            history: arrayRemove(snapshotToDeleteForFirestore)
-        });
-
-    } catch (error) {
-        console.error('Error deleting calculation snapshot:', error);
         throw error;
     }
 };

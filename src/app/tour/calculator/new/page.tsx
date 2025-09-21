@@ -27,7 +27,7 @@ export default function NewCalculationPage() {
         e.preventDefault();
         setIsSaving(true);
         
-        const newCalculationData: Omit<SavedCalculation, 'id'| 'savedAt' | 'history'> = {
+        const newCalculationData: Omit<SavedCalculation, 'id'| 'savedAt'> = {
             tourInfo: {
                 mouContact: '',
                 groupCode: groupCode,

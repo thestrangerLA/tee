@@ -20,8 +20,8 @@ import { TotalCostCard } from '@/components/tour/TotalCostCard';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import type { SavedCalculation, TourInfo, TourCosts, Accommodation, Room, Trip, Flight, TrainTicket, EntranceFee, MealCost, GuideFee, DocumentFee, CalculationSnapshot } from '@/lib/types';
-import { addCalculationToHistory, deleteCalculationSnapshot } from '@/services/tourCalculatorService';
+import type { SavedCalculation, TourInfo, TourCosts, Accommodation, Room, Trip, Flight, TrainTicket, EntranceFee, MealCost, GuideFee, DocumentFee } from '@/lib/types';
+import { updateCalculation } from '@/services/tourCalculatorService';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 
 // Types
@@ -67,7 +67,6 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
     
     const [tourInfo, setTourInfo] = useState<TourInfo>(initialCalculation.tourInfo);
     const [allCosts, setAllCosts] = useState<TourCosts>(initialCalculation.allCosts);
-    const [calculationHistory, setCalculationHistory] = useState<CalculationSnapshot[]>(initialCalculation.history || []);
     
     const [itemVisibility, setItemVisibility] = useState<Record<string, boolean>>({});
     
@@ -80,75 +79,36 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
     const [targetCurrency, setTargetCurrency] = useState<Currency>('LAK');
     const [sellingPricePercentage, setSellingPricePercentage] = useState(20);
 
-
-    const handleSaveToHistory = useCallback(async () => {
-        if (isSaving) return;
+    const handleAutoSave = useCallback(async (updatedTourInfo: TourInfo, updatedCosts: TourCosts) => {
         setIsSaving(true);
         try {
-            const snapshot: Omit<CalculationSnapshot, 'id' | 'savedAt'> = {
-                tourInfo: tourInfo,
-                allCosts: allCosts,
-                note: `Saved on ${new Date().toLocaleString()}` // Default note
-            };
-
-            const newSnapshotId = await addCalculationToHistory(initialCalculation.id, snapshot);
-
-            // Optimistically update local history state
-            const newHistoryEntry: CalculationSnapshot = {
-                id: newSnapshotId, 
-                savedAt: new Date(),
-                ...snapshot,
-            };
-            setCalculationHistory(prev => [newHistoryEntry, ...prev.filter(h => h.id !== newSnapshotId)]);
-
-            toast({
-                title: "ບັນທຶກສະບັບຮ່າງສຳເລັດ",
-                description: `ຂໍ້ມູນ ${tourInfo.groupCode || 'ບໍ່ມີຊື່'} ໄດ້ຖືກບັນທຶກໄວ້ໃນປະຫວັດແລ້ວ.`,
+            await updateCalculation(initialCalculation.id, {
+                tourInfo: updatedTourInfo,
+                allCosts: updatedCosts
+            });
+             toast({
+                title: "บันทึกอัตโนมัติ",
+                description: `ข้อมูล ${updatedTourInfo.groupCode || 'ไม่มีชื่อ'} ถูกบันทึกแล้ว`,
             });
         } catch (e) {
             toast({
-                title: "ເກີດຂໍ້ຜິດພາດ",
-                description: "ບໍ່ສາມາດບັນທຶກສະບັບຮ່າງໄດ້",
+                title: "เกิดข้อผิดพลาด",
+                description: "ไม่สามารถบันทึกข้อมูลได้",
                 variant: 'destructive'
             });
             console.error(e);
         } finally {
             setIsSaving(false);
         }
-    }, [initialCalculation.id, tourInfo, allCosts, toast, isSaving]);
-    
-    const loadFromHistory = (snapshot: CalculationSnapshot) => {
-        if(window.confirm('Are you sure you want to load this version? Any unsaved changes will be lost.')) {
-            setTourInfo(snapshot.tourInfo);
-            setAllCosts(snapshot.allCosts);
-            toast({
-                title: "ໂຫຼດຂໍ້ມູນສຳເລັດ",
-                description: `ຂໍ້ມູນຈາກ ${format(snapshot.savedAt, "PPpp")} ໄດ້ຖືກໂຫຼດແລ້ວ.`,
-            });
-        }
-    };
-    
-    const handleDeleteFromHistory = async (snapshotId: string) => {
-        if (!window.confirm('Are you sure you want to delete this saved version? This action cannot be undone.')) {
-            return;
-        }
-        try {
-            await deleteCalculationSnapshot(initialCalculation.id, snapshotId);
-            setCalculationHistory(prev => prev.filter(s => s.id !== snapshotId));
-            toast({
-                title: "ລົບສະບັບຮ່າງສຳເລັດ",
-                description: "The saved version has been removed from history.",
-            });
-        } catch (e) {
-            toast({
-                title: "ເກີດຂໍ້ຜິດພາດ",
-                description: "Could not delete the saved version.",
-                variant: 'destructive'
-            });
-            console.error(e);
-        }
-    };
+    }, [initialCalculation.id, toast]);
 
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            handleAutoSave(tourInfo, allCosts);
+        }, 3000); // Autosave after 3 seconds of inactivity
+
+        return () => clearTimeout(timer);
+    }, [tourInfo, allCosts, handleAutoSave]);
 
 
     const toggleItemVisibility = (itemId: string) => {
@@ -373,10 +333,6 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                     <p className="text-sm text-primary-foreground/80">{tourInfo.groupCode || 'New Calculation'}</p>
                 </div>
                  <div className="flex items-center gap-2">
-                    <Button variant="outline" className="bg-transparent text-primary-foreground border-primary-foreground hover:bg-primary-foreground/10" onClick={handleSaveToHistory} disabled={isSaving}>
-                        <Save className="mr-2 h-4 w-4" />
-                        {isSaving ? 'ກຳລັງບັນທຶກ...' : 'ບັນທຶກຂໍ້ມູນ'}
-                    </Button>
                     <Button variant="outline" className="bg-transparent text-primary-foreground border-primary-foreground hover:bg-primary-foreground/10" onClick={handlePrint}>
                         <Printer className="mr-2 h-4 w-4" />
                         ພິມ
@@ -1136,37 +1092,6 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                     </CardContent>
                                 </Card>
                             </div>
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2"><History />ປະຫວັດການຄຳນວນ</CardTitle>
-                                    <CardDescription>ສະບັບຮ່າງທີ່ບັນທຶກໄວ້ຂອງການຄຳນວນນີ້</CardDescription>
-                                </CardHeader>
-                                <CardContent>
-                                    {calculationHistory.length > 0 ? (
-                                        <div className="space-y-2">
-                                            {calculationHistory.map(snapshot => (
-                                                <div key={snapshot.id} className="flex items-center justify-between rounded-lg border p-3">
-                                                    <div className="flex flex-col sm:flex-row sm:items-center sm:gap-3">
-                                                        <p className="font-semibold">{snapshot.tourInfo.groupCode || 'No Group Code'}</p>
-                                                        <p className="text-sm text-muted-foreground">{format(snapshot.savedAt, "dd MMM yyyy, HH:mm:ss")}</p>
-                                                    </div>
-                                                    <div className="flex gap-2">
-                                                        <Button variant="ghost" size="sm" onClick={() => loadFromHistory(snapshot)}>
-                                                            <RotateCcw className="mr-2 h-4 w-4" />
-                                                            ໂຫຼດ
-                                                        </Button>
-                                                        <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-600" onClick={() => handleDeleteFromHistory(snapshot.id)}>
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </Button>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <p className="text-sm text-muted-foreground text-center py-4">ບໍ່ມີປະຫວັດການຄຳນວນທີ່ບັນທຶກໄວ້.</p>
-                                    )}
-                                </CardContent>
-                            </Card>
                         </div>
                 </div>
             </main>
