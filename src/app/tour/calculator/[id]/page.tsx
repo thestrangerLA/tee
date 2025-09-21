@@ -3,8 +3,10 @@ import { getCalculation, getAllCalculations } from '@/services/tourCalculatorSer
 import TourCalculatorClientPage from './client-page';
 import { Suspense } from 'react';
 
+// This tells Next.js to always render this page dynamically on the server
+export const dynamic = 'force-dynamic';
 
-// This allows Next.js to know all possible IDs at build time
+// This allows Next.js to know all possible IDs at build time for initial generation
 export async function generateStaticParams() {
   const calculations = await getAllCalculations();
  
