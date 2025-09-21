@@ -5,6 +5,8 @@ import TourCalculatorClientPage from './client-page';
 import type { SavedCalculation } from '@/lib/types';
 import StaticExportWrapper from '@/components/StaticExportWrapper';
 
+export const dynamicParams = false;
+
 export async function generateStaticParams() {
     const calculations = await getAllCalculations();
     const params = calculations.map((calc) => ({
