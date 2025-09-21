@@ -79,7 +79,7 @@ export default function Home() {
               </CardContent>
             </Card>
           </Link>
-          <Link href="/">
+          <Link href="/aa">
             <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-2xl font-bold font-headline">AA</CardTitle>
@@ -87,7 +87,7 @@ export default function Home() {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  Placeholder for AA Business Section
+                  ລະບົບຈອງ ແລະ ຄຳນວນຄ່າໃຊ້ຈ່າຍ AA
                 </p>
               </CardContent>
             </Card>
