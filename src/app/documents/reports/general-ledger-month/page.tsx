@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect, useMemo, Suspense } from 'react';
@@ -25,17 +24,18 @@ const initialCurrencyValues: CurrencyValues = { kip: 0, baht: 0, usd: 0, cny: 0 
 // Separate component for the main content
 function DocumentContent() {
     const searchParams = useSearchParams();
-    const year = searchParams.get('year');
-    const month = searchParams.get('month');
-
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [isClient, setIsClient] = useState(false);
-    
-    // Handle client-side hydration
+
+    // This ensures that rendering of components that use client-side hooks like
+    // useSearchParams happens only on the client, after initial hydration.
     useEffect(() => {
         setIsClient(true);
     }, []);
-    
+
+    const year = searchParams.get('year');
+    const month = searchParams.get('month');
+
     const displayDate = useMemo(() => {
         if (year && month) {
             return new Date(Number(year), Number(month));
@@ -98,16 +98,7 @@ function DocumentContent() {
 
     // Show loading state during hydration
     if (!isClient) {
-        return (
-            <div className="flex min-h-screen w-full flex-col bg-muted/40">
-                <div className="flex items-center justify-center min-h-[400px]">
-                    <div className="text-center">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-                        <p className="text-muted-foreground">ກຳລັງໂຫຼດ...</p>
-                    </div>
-                </div>
-            </div>
-        );
+        return null;
     }
 
     const headerTitle = format(displayDate, 'LLLL yyyy', { locale: lo });
@@ -243,5 +234,3 @@ export default function DocumentGeneralLedgerMonthPage() {
         </Suspense>
     );
 }
-
-    
