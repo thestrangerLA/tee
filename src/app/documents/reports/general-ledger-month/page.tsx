@@ -110,7 +110,7 @@ function DocumentContent() {
                 <Button variant="outline" size="icon" className="h-8 w-8" asChild>
                     <Link href="/documents/reports/general-ledger">
                         <ArrowLeft className="h-4 w-4" />
-                        <span className="sr-only">ກັບໄປໜ້ារາຍງານຫຼັກ</span>
+                        <span className="sr-only">ກັບໄປໜ້ານາຍງານຫຼັກ</span>
                     </Link>
                 </Button>
                 <div className="flex items-center gap-2">
