@@ -46,19 +46,6 @@ export default function TourCalculationsListPage() {
         });
     }, [allCalculations, selectedYear]);
 
-    const calculationsByMonth = useMemo(() => {
-        return filteredCalculations.reduce((acc, calc) => {
-            if (!calc.savedAt) return acc;
-            const month = getMonth(calc.savedAt);
-            if (!acc[month]) {
-                acc[month] = [];
-            }
-            acc[month].push(calc);
-            return acc;
-        }, {} as Record<number, SavedCalculation[]>);
-
-    }, [filteredCalculations]);
-
     const handleDeleteCalculation = async (calculationId: string, groupCode: string) => {
         if (!window.confirm(`ເຈົ້າແນ່ໃຈບໍ່ວ່າຕ້ອງການລົບການຄຳນວນ "${groupCode || 'ບໍ່ມີຊື່'}"?`)) {
             return;
@@ -191,20 +178,9 @@ export default function TourCalculationsListPage() {
                     </CardHeader>
                     <CardContent>
                          {filteredCalculations.length > 0 ? (
-                             <Accordion type="single" collapsible className="w-full" defaultValue="item-0">
-                                {Object.entries(calculationsByMonth).sort(([a], [b]) => Number(b) - Number(a)).map(([month, calcs]) => (
-                                    <AccordionItem value={`month-${month}`} key={month}>
-                                        <AccordionTrigger className="bg-muted/50 px-4 rounded-md text-base font-semibold">
-                                            {format(new Date(selectedYear || 0, Number(month)), 'LLLL', { locale: lo })}
-                                        </AccordionTrigger>
-                                        <AccordionContent className="pt-2">
-                                            <div className="overflow-x-auto">
-                                                {renderCalculationRows(calcs)}
-                                            </div>
-                                        </AccordionContent>
-                                    </AccordionItem>
-                                ))}
-                            </Accordion>
+                            <div className="overflow-x-auto">
+                                {renderCalculationRows(filteredCalculations)}
+                            </div>
                          ) : (
                             <div className="text-center text-muted-foreground py-16">
                                 ບໍ່ມີລາຍການຄຳນວນທີ່ບັນທຶກໄວ້ {selectedYear ? `ໃນປີ ${selectedYear + 543}`: ''}
