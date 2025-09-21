@@ -15,7 +15,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { ArrowLeft, Save, Trash2, MapPin, Calendar as CalendarIcon, BedDouble, Truck, Plane, TrainFront, PlusCircle, Camera, UtensilsCrossed, Users, FileText, Copy, Clock, Eye, EyeOff, Download, History, Printer, ChevronsRight, Percent, TrendingUp, Calculator, RotateCcw } from "lucide-react";
 import { format, isValid } from 'date-fns';
-import { th } from 'date-fns/locale';
 import { TotalCostCard } from '@/components/tour/TotalCostCard';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -48,6 +47,12 @@ const categoryIcons: { [key: string]: React.ReactNode } = {
     'ຄ່າເອກະສານ': <FileText className="h-5 w-5" />,
 };
 
+type ExchangeRateMatrix = {
+    [key in Currency]: {
+        [key in Currency]: number;
+    };
+};
+
 const CostCategoryContent = ({ title, icon, children }: { title: string, icon: React.ReactNode, children: React.ReactNode }) => (
      <AccordionItem value={title.toLowerCase().replace(/\s/g, '-')} className="break-inside-avoid">
         <AccordionTrigger className="text-lg font-semibold">
@@ -71,11 +76,11 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
     
     const [itemVisibility, setItemVisibility] = useState<Record<string, boolean>>({});
     
-    const [exchangeRates, setExchangeRates] = useState({
-        USD: { THB: 36.7, LAK: 21800, CNY: 7.25 },
-        THB: { USD: 1 / 36.7, LAK: 605, CNY: 0.19 },
-        LAK: { USD: 1 / 21800, THB: 1 / 605, CNY: 1 / 3000 },
-        CNY: { USD: 1 / 7.25, THB: 5.1, LAK: 3000 },
+    const [exchangeRates, setExchangeRates] = useState<ExchangeRateMatrix>({
+        USD: { USD: 1, THB: 36.7, LAK: 21800, CNY: 7.25 },
+        THB: { USD: 1 / 36.7, THB: 1, LAK: 605, CNY: 0.19 },
+        LAK: { USD: 1 / 21800, THB: 1 / 605, LAK: 1, CNY: 1 / 3000 },
+        CNY: { USD: 1 / 7.25, THB: 5.1, LAK: 3000, CNY: 1 },
     });
     const [targetCurrency, setTargetCurrency] = useState<Currency>('LAK');
     const [sellingPricePercentage, setSellingPricePercentage] = useState(20);
@@ -267,11 +272,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
         let total = 0;
         (Object.keys(grandTotals) as Currency[]).forEach(fromCurrency => {
             const amount = grandTotals[fromCurrency];
-            if (fromCurrency === targetCurrency) {
-                total += amount;
-            } else {
-                total += amount * (exchangeRates[fromCurrency]?.[targetCurrency] || 0);
-            }
+            total += amount * (exchangeRates[fromCurrency][targetCurrency] || 0);
         });
         return total;
     }, [grandTotals, exchangeRates, targetCurrency]);
@@ -458,7 +459,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                 </Button>
                                             </PopoverTrigger>
                                             <PopoverContent className="w-auto p-0">
-                                                <Calendar mode="single" selected={tourInfo.startDate} onSelect={date => setTourInfo({...tourInfo, startDate: date })} initialFocus locale={th} />
+                                                <Calendar mode="single" selected={tourInfo.startDate} onSelect={date => setTourInfo({...tourInfo, startDate: date })} initialFocus />
                                             </PopoverContent>
                                         </Popover>
                                     </div>
@@ -472,7 +473,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                 </Button>
                                             </PopoverTrigger>
                                             <PopoverContent className="w-auto p-0">
-                                                <Calendar mode="single" selected={tourInfo.endDate} onSelect={date => setTourInfo({...tourInfo, endDate: date })} initialFocus locale={th} />
+                                                <Calendar mode="single" selected={tourInfo.endDate} onSelect={date => setTourInfo({...tourInfo, endDate: date })} initialFocus />
                                             </PopoverContent>
                                         </Popover>
                                     </div>
@@ -1002,21 +1003,23 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                         ))}
                                     </div>
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                        {(Object.keys(exchangeRates) as Currency[]).map(from => (
+                                        {(Object.keys(exchangeRates) as (keyof ExchangeRateMatrix)[]).map(from => (
                                             <div key={from} className="space-y-2">
                                                 <Label className="font-semibold">1 {from}</Label>
-                                                {(Object.keys(exchangeRates[from]) as Currency[]).map(to => (
+                                                {(Object.keys(exchangeRates[from]) as Currency[]).map(to => {
+                                                    if (from === to) return null;
+                                                    return (
                                                     <div key={to} className="flex items-center gap-2">
                                                         <ChevronsRight className="h-4 w-4 text-muted-foreground" />
                                                         <Input
                                                             type="number"
                                                             value={exchangeRates[from][to]}
-                                                            onChange={(e) => handleRateChange(from, to as Currency, e.target.value)}
+                                                            onChange={(e) => handleRateChange(from, to, e.target.value)}
                                                             className="h-8"
                                                         />
                                                         <Label htmlFor={`${from}-to-${to}`} className="text-sm">{to}</Label>
                                                     </div>
-                                                ))}
+                                                )})}
                                             </div>
                                         ))}
                                     </div>
