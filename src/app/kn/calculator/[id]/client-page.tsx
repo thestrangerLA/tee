@@ -21,7 +21,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import type { SavedCalculation, TourInfo, TourCosts, Accommodation, Room, Trip, Flight, TrainTicket, EntranceFee, MealCost, GuideFee, DocumentFee, CalculationSnapshot } from '@/lib/types';
-import { addCalculationToHistory, deleteCalculationSnapshot } from '@/services/knCalculatorService';
+import { addCalculationToHistory, deleteCalculationSnapshot, updateCalculation } from '@/services/knCalculatorService';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 
 // Types
@@ -81,34 +81,23 @@ export default function KNCalculatorClientPage({ initialCalculation }: { initial
     const [sellingPricePercentage, setSellingPricePercentage] = useState(20);
 
 
-    const handleSaveToHistory = useCallback(async () => {
+    const handleSave = useCallback(async () => {
         if (isSaving) return;
         setIsSaving(true);
         try {
-            const snapshot: Omit<CalculationSnapshot, 'id' | 'savedAt'> = {
+            await updateCalculation(initialCalculation.id, {
                 tourInfo: tourInfo,
-                allCosts: allCosts,
-                note: `Saved on ${new Date().toLocaleString()}` // Default note
-            };
-
-            const newSnapshotId = await addCalculationToHistory(initialCalculation.id, snapshot);
-
-            // Optimistically update local history state
-            const newHistoryEntry: CalculationSnapshot = {
-                id: newSnapshotId, 
-                savedAt: new Date(),
-                ...snapshot,
-            };
-            setCalculationHistory(prev => [newHistoryEntry, ...prev.filter(h => h.id !== newSnapshotId)]);
+                allCosts: allCosts
+            });
 
             toast({
-                title: "ບັນທຶກສະບັບຮ່າງສຳເລັດ",
-                description: `ຂໍ້ມູນ ${tourInfo.groupCode || 'ບໍ່ມີຊື່'} ໄດ້ຖືກບັນທຶກໄວ້ໃນປະຫວັດແລ້ວ.`,
+                title: "ບັນທຶກข้อมูลสำเร็จ",
+                description: `ข้อมูล ${tourInfo.groupCode || 'ไม่มีชื่อ'} ถูกบันทึกแล้ว.`,
             });
         } catch (e) {
             toast({
                 title: "ເກີດຂໍ້ຜິດພາດ",
-                description: "ບໍ່ສາມາດບັນທຶກສະບັບຮ່າງໄດ້",
+                description: "ບໍ່ສາມາດບັນທຶກข้อมูลได้",
                 variant: 'destructive'
             });
             console.error(e);
@@ -123,7 +112,7 @@ export default function KNCalculatorClientPage({ initialCalculation }: { initial
             setAllCosts(snapshot.allCosts);
             toast({
                 title: "ໂຫຼດຂໍ້ມູນສຳເລັດ",
-                description: `ຂໍ້ມູນຈາກ ${format(snapshot.savedAt, "PPpp")} ໄດ້ຖືກໂຫຼດແລ້ວ.`,
+                description: `ข้อมูลจาก ${format(snapshot.savedAt, "PPpp")} ໄດ້ຖືກໂຫຼດແລ້ວ.`,
             });
         }
     };
@@ -373,9 +362,9 @@ export default function KNCalculatorClientPage({ initialCalculation }: { initial
                     <p className="text-sm text-primary-foreground/80">{tourInfo.groupCode || 'New Calculation'}</p>
                 </div>
                  <div className="flex items-center gap-2">
-                    <Button variant="outline" className="bg-transparent text-primary-foreground border-primary-foreground hover:bg-primary-foreground/10" onClick={handleSaveToHistory} disabled={isSaving}>
+                    <Button variant="outline" className="bg-transparent text-primary-foreground border-primary-foreground hover:bg-primary-foreground/10" onClick={handleSave} disabled={isSaving}>
                         <Save className="mr-2 h-4 w-4" />
-                        {isSaving ? 'ກຳລັງບັນທຶກ...' : 'ບັນທຶກຂໍ້ມູນ'}
+                        {isSaving ? 'ກຳລັງບັນທຶກ...' : 'ບັນທຶກข้อมูล'}
                     </Button>
                     <Button variant="outline" className="bg-transparent text-primary-foreground border-primary-foreground hover:bg-primary-foreground/10" onClick={handlePrint}>
                         <Printer className="mr-2 h-4 w-4" />
@@ -1077,7 +1066,7 @@ export default function KNCalculatorClientPage({ initialCalculation }: { initial
                                     </CardHeader>
                                     <CardContent className="space-y-4">
                                         <div>
-                                            <Label htmlFor="target-currency">ເລືອກສະກຸນເງິນ</Label>
+                                            <Label htmlFor="target-currency">ເລືอกສະກຸນເງິນ</Label>
                                             <Select value={targetCurrency} onValueChange={v => setTargetCurrency(v as Currency)}>
                                                 <SelectTrigger id="target-currency">
                                                     <SelectValue />
@@ -1142,3 +1131,5 @@ export default function KNCalculatorClientPage({ initialCalculation }: { initial
         </div>
     );
 }
+
+    

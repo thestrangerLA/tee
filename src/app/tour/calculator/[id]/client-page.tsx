@@ -79,16 +79,17 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
     const [targetCurrency, setTargetCurrency] = useState<Currency>('LAK');
     const [sellingPricePercentage, setSellingPricePercentage] = useState(20);
 
-    const handleAutoSave = useCallback(async (updatedTourInfo: TourInfo, updatedCosts: TourCosts) => {
+    const handleSave = useCallback(async () => {
+        if (isSaving) return;
         setIsSaving(true);
         try {
             await updateCalculation(initialCalculation.id, {
-                tourInfo: updatedTourInfo,
-                allCosts: updatedCosts
+                tourInfo: tourInfo,
+                allCosts: allCosts
             });
              toast({
-                title: "บันทึกอัตโนมัติ",
-                description: `ข้อมูล ${updatedTourInfo.groupCode || 'ไม่มีชื่อ'} ถูกบันทึกแล้ว`,
+                title: "บันทึกข้อมูลสำเร็จ",
+                description: `ข้อมูล ${tourInfo.groupCode || 'ไม่มีชื่อ'} ถูกบันทึกแล้ว`,
             });
         } catch (e) {
             toast({
@@ -100,15 +101,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
         } finally {
             setIsSaving(false);
         }
-    }, [initialCalculation.id, toast]);
-
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            handleAutoSave(tourInfo, allCosts);
-        }, 3000); // Autosave after 3 seconds of inactivity
-
-        return () => clearTimeout(timer);
-    }, [tourInfo, allCosts, handleAutoSave]);
+    }, [initialCalculation.id, tourInfo, allCosts, toast, isSaving]);
 
 
     const toggleItemVisibility = (itemId: string) => {
@@ -333,6 +326,10 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                     <p className="text-sm text-primary-foreground/80">{tourInfo.groupCode || 'New Calculation'}</p>
                 </div>
                  <div className="flex items-center gap-2">
+                     <Button variant="outline" className="bg-transparent text-primary-foreground border-primary-foreground hover:bg-primary-foreground/10" onClick={handleSave} disabled={isSaving}>
+                        <Save className="mr-2 h-4 w-4" />
+                        {isSaving ? 'ກຳລັງບັນທຶກ...' : 'ບັນທຶກຂໍ້ມູນ'}
+                    </Button>
                     <Button variant="outline" className="bg-transparent text-primary-foreground border-primary-foreground hover:bg-primary-foreground/10" onClick={handlePrint}>
                         <Printer className="mr-2 h-4 w-4" />
                         ພິມ
@@ -1098,3 +1095,5 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
         </div>
     );
 }
+
+    
