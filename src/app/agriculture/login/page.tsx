@@ -23,7 +23,7 @@ function LoginPage() {
         e.preventDefault();
         if (password === 'qwe') {
             sessionStorage.setItem('agriculture-auth', 'true');
-            router.push('/agriculture');
+            router.push('/agriculture/');
         } else {
             toast({
                 title: "รหัสผ่านไม่ถูกต้อง",
