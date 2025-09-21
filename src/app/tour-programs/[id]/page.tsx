@@ -4,6 +4,13 @@ import { getTourProgram, getAllTourPrograms } from '@/services/tourProgramServic
 import TourProgramClientPage from './client-page';
 import StaticExportWrapper from '@/components/StaticExportWrapper';
 
+export async function generateStaticParams() {
+    const programs = await getAllTourPrograms();
+    return programs.map((program) => ({
+        id: program.id,
+    }));
+}
+
 async function getProgramData(id: string) {
     const program = await getTourProgram(id);
     if (!program) {
