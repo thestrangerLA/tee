@@ -75,7 +75,7 @@ const SummaryCard = ({ title, value, icon, onClick, className }: { title: string
 
 const CashCalculatorCard = ({ onTotalChange }: { onTotalChange: (total: number) => void }) => {
     const denominations = [100000, 50000, 20000, 10000, 5000, 2000, 1000];
-    const initialCounts: Record<string, number> = { baht: 0, rate: 0, ...denominations.reduce((acc, d) => ({...acc, [d]: 0}), {}) };
+    const initialCounts: Record<string, number> = { baht: 0, rate: 0, usd: 0, usd_rate: 0, ...denominations.reduce((acc, d) => ({...acc, [d]: 0}), {}) };
     
     const [calculatorState, setCalculatorState] = useState<CashCalculatorState>({ id: 'latest', counts: initialCounts });
     const [isCalculatorVisible, setCalculatorVisible] = useState(true);
@@ -88,7 +88,8 @@ const CashCalculatorCard = ({ onTotalChange }: { onTotalChange: (total: number) 
     const totalKip = useMemo(() => {
         const kipFromNotes = denominations.reduce((sum, d) => sum + (d * (calculatorState.counts[d] || 0)), 0);
         const kipFromBaht = (calculatorState.counts.baht || 0) * (calculatorState.counts.rate || 0);
-        return kipFromNotes + kipFromBaht;
+        const kipFromUsd = (calculatorState.counts.usd || 0) * (calculatorState.counts.usd_rate || 0);
+        return kipFromNotes + kipFromBaht + kipFromUsd;
     }, [calculatorState.counts, denominations]);
 
     useEffect(() => {
@@ -143,6 +144,15 @@ const CashCalculatorCard = ({ onTotalChange }: { onTotalChange: (total: number) 
                              <TableRow>
                                 <TableCell className="font-medium">Rate</TableCell>
                                 <TableCell><Input type="number" value={calculatorState.counts.rate || ''} onChange={e => handleCountChange('rate', e.target.value)} className="w-24 h-8" /></TableCell>
+                            </TableRow>
+                             <TableRow>
+                                <TableCell className="font-medium">USD</TableCell>
+                                <TableCell><Input type="number" value={calculatorState.counts.usd || ''} onChange={e => handleCountChange('usd', e.target.value)} className="w-24 h-8" /></TableCell>
+                                <TableCell rowSpan={2} className="text-right align-bottom">{(calculatorState.counts.usd * calculatorState.counts.usd_rate).toLocaleString()}</TableCell>
+                            </TableRow>
+                             <TableRow>
+                                <TableCell className="font-medium">Rate</TableCell>
+                                <TableCell><Input type="number" value={calculatorState.counts.usd_rate || ''} onChange={e => handleCountChange('usd_rate', e.target.value)} className="w-24 h-8" /></TableCell>
                             </TableRow>
                              <TableRow className="bg-muted/50 font-bold">
                                 <TableCell colSpan={2}>ລວມທັງໝົດ (KIP)</TableCell>
@@ -776,3 +786,4 @@ export default function AgricultureAccountancyPage() {
         </div>
     );
 }
+
