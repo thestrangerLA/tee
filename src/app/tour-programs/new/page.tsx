@@ -21,7 +21,7 @@ import StaticExportWrapper from '@/components/StaticExportWrapper';
 import { useClientRouter } from '@/hooks/useClientRouter';
 
 
-const currencies: Currency[] = ['KIP', 'BAHT', 'USD', 'CNY'];
+const currencies: Currency[] = ['LAK', 'THB', 'USD', 'CNY'];
 
 const CurrencyInput = ({ label, amount, currency, onAmountChange, onCurrencyChange }: {
     label: string;
@@ -66,9 +66,9 @@ function NewTourProgramPageComponent() {
         tourDates: '',
         durationDays: 0,
         price: 0,
-        priceCurrency: 'KIP',
+        priceCurrency: 'LAK',
         bankCharge: 0,
-        bankChargeCurrency: 'KIP',
+        bankChargeCurrency: 'LAK',
         totalPrice: 0,
     });
 
@@ -81,7 +81,7 @@ function NewTourProgramPageComponent() {
         if (!date || !formData.programName) {
             toast({
                 title: "ຂໍ້ມູນບໍ່ຄົບຖ້ວນ",
-                description: "ກະລຸນາເລືอกວັນທີ และ ໃສ່ຊື່ໂປຣແກຣມ",
+                description: "ກະລຸນາເລືอกວັນທີ ແລະ ໃສ່ຊື່ໂປຣແກຣມ",
                 variant: "destructive"
             });
             return;

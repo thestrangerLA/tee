@@ -25,7 +25,7 @@ const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('th-TH', { minimumFractionDigits: 0 }).format(value);
 };
 
-const currencies: Currency[] = ['KIP', 'BAHT', 'USD', 'CNY'];
+const currencies: Currency[] = ['LAK', 'THB', 'USD', 'CNY'];
 
 type ProgramReport = TourProgram & {
     totalCost: Record<Currency, number>;
@@ -87,17 +87,17 @@ export default function ProgramSummaryPage() {
             const totalCost = programCosts.reduce((acc, item) => {
                 currencies.forEach(c => acc[c] += item[c.toLowerCase() as keyof typeof item] as number || 0);
                 return acc;
-            }, { KIP: 0, BAHT: 0, USD: 0, CNY: 0 });
+            }, { LAK: 0, THB: 0, USD: 0, CNY: 0 });
 
             const totalIncome = programIncomes.reduce((acc, item) => {
                 currencies.forEach(c => acc[c] += item[c.toLowerCase() as keyof typeof item] as number || 0);
                 return acc;
-            }, { KIP: 0, BAHT: 0, USD: 0, CNY: 0 });
+            }, { LAK: 0, THB: 0, USD: 0, CNY: 0 });
 
             const profit = currencies.reduce((acc, c) => {
                 acc[c] = totalIncome[c] - totalCost[c];
                 return acc;
-            }, { KIP: 0, BAHT: 0, USD: 0, CNY: 0 });
+            }, { LAK: 0, THB: 0, USD: 0, CNY: 0 });
 
             return { ...p, totalCost, totalIncome, profit };
         });
@@ -105,7 +105,7 @@ export default function ProgramSummaryPage() {
         const groupedByYear = programReports.reduce((acc, report) => {
             const year = getYear(report.date);
             if (!acc[year]) {
-                acc[year] = { year, programs: [], totalProfit: { KIP: 0, BAHT: 0, USD: 0, CNY: 0 } };
+                acc[year] = { year, programs: [], totalProfit: { LAK: 0, THB: 0, USD: 0, CNY: 0 } };
             }
             acc[year].programs.push(report);
             currencies.forEach(c => acc[year].totalProfit[c] += report.profit[c]);
