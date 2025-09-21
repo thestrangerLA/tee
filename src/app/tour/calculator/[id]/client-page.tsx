@@ -23,6 +23,7 @@ import { useToast } from "@/hooks/use-toast";
 import type { SavedCalculation, TourInfo, TourCosts, Accommodation, Room, Trip, Flight, TrainTicket, EntranceFee, MealCost, GuideFee, DocumentFee } from '@/lib/types';
 import { updateCalculation } from '@/services/tourCalculatorService';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
+import { useClientRouter } from '@/hooks/useClientRouter';
 
 // Types
 type Currency = 'USD' | 'THB' | 'LAK' | 'CNY';
@@ -61,7 +62,7 @@ const CostCategoryContent = ({ title, icon, children }: { title: string, icon: R
 );
 
 export default function TourCalculatorClientPage({ initialCalculation }: { initialCalculation: SavedCalculation }) {
-    const router = useRouter();
+    const clientRouter = useClientRouter();
     const { toast } = useToast();
     const [isSaving, setIsSaving] = useState(false);
     
@@ -79,7 +80,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
     const [targetCurrency, setTargetCurrency] = useState<Currency>('LAK');
     const [sellingPricePercentage, setSellingPricePercentage] = useState(20);
 
-    const handleSave = useCallback(async () => {
+    const handleSave = useCallback(async (andThen?: () => void) => {
         if (isSaving) return;
         setIsSaving(true);
         try {
@@ -91,6 +92,9 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                 title: "บันทึกข้อมูลสำเร็จ",
                 description: `ข้อมูล ${tourInfo.groupCode || 'ไม่มีชื่อ'} ถูกบันทึกแล้ว`,
             });
+            if (andThen) {
+                andThen();
+            }
         } catch (e) {
             toast({
                 title: "เกิดข้อผิดพลาด",
@@ -315,18 +319,16 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
     return (
         <div className="flex min-h-screen w-full flex-col">
             <header className="sticky top-0 z-30 flex h-20 items-center gap-4 bg-primary px-4 text-primary-foreground sm:px-6 print:hidden">
-                <Button variant="outline" size="icon" className="h-8 w-8 bg-transparent text-primary-foreground border-primary-foreground hover:bg-primary-foreground/10" asChild>
-                    <Link href="/">
-                        <ArrowLeft className="h-4 w-4" />
-                        <span className="sr-only">ກັບໄປໜ້າຫຼັກ</span>
-                    </Link>
+                <Button variant="outline" size="icon" className="h-8 w-8 bg-transparent text-primary-foreground border-primary-foreground hover:bg-primary-foreground/10" onClick={() => handleSave(() => clientRouter.push('/'))}>
+                    <ArrowLeft className="h-4 w-4" />
+                    <span className="sr-only">ກັບໄປໜ້າຫຼັກ</span>
                 </Button>
                 <div className="flex-1">
                     <h1 className="text-xl font-bold tracking-tight">ລະບົບຈອງທົວ ແລະ ຄຳນວນຄ່າໃຊ້ຈ່າຍ</h1>
                     <p className="text-sm text-primary-foreground/80">{tourInfo.groupCode || 'New Calculation'}</p>
                 </div>
                  <div className="flex items-center gap-2">
-                     <Button variant="outline" className="bg-transparent text-primary-foreground border-primary-foreground hover:bg-primary-foreground/10" onClick={handleSave} disabled={isSaving}>
+                     <Button variant="outline" className="bg-transparent text-primary-foreground border-primary-foreground hover:bg-primary-foreground/10" onClick={() => handleSave()} disabled={isSaving}>
                         <Save className="mr-2 h-4 w-4" />
                         {isSaving ? 'ກຳລັງບັນທຶກ...' : 'ບັນທຶກຂໍ້ມູນ'}
                     </Button>
