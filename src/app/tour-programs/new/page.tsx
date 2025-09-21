@@ -168,7 +168,7 @@ function NewTourProgramPageComponent() {
                                 </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="pax">ຈຳນວນຄົນ (Pax)</Label>
-                                    <Input id="pax" name="pax" type="number" value={formData.pax} onChange={(e) => handleFormValueChange('pax', Number(e.target.value))} />
+                                    <Input id="pax" name="pax" type="number" value={formData.pax || ''} onChange={(e) => handleFormValueChange('pax', Number(e.target.value))} />
                                 </div>
                             </div>
                             
@@ -179,7 +179,7 @@ function NewTourProgramPageComponent() {
                                 </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="durationDays">ໄລຍະເວລາ (ວັນ)</Label>
-                                    <Input id="durationDays" name="durationDays" type="number" value={formData.durationDays} onChange={(e) => handleFormValueChange('durationDays', Number(e.target.value))} />
+                                    <Input id="durationDays" name="durationDays" type="number" value={formData.durationDays || ''} onChange={(e) => handleFormValueChange('durationDays', Number(e.target.value))} />
                                 </div>
                             </div>
 
