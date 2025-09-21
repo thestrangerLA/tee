@@ -1,6 +1,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Leaf, FerrisWheel, Calculator, FileText, HelpCircle } from "lucide-react"
+import { Leaf, FerrisWheel, Calculator, FileText } from "lucide-react"
 import Link from 'next/link'
 
 export default function Home() {
@@ -40,7 +40,7 @@ export default function Home() {
               </CardContent>
             </Card>
           </Link>
-           <Link href="/tour/calculator/new">
+           <Link href="/tour/calculator">
             <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-2xl font-bold font-headline">ຄຳນວນຕົ້ນທຶນ</CardTitle>
@@ -62,19 +62,6 @@ export default function Home() {
               <CardContent>
                 <p className="text-muted-foreground">
                   ຈັດການຂໍ້ມູນເອກະສານ ແລະ ວີຊ່າ
-                </p>
-              </CardContent>
-            </Card>
-          </Link>
-          <Link href="/kn">
-            <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-2xl font-bold font-headline">KN</CardTitle>
-                <HelpCircle className="h-8 w-8 text-primary" />
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  ລະບົບຈອງ ແລະ ຄຳນວນຄ່າໃຊ້ຈ່າຍ KN
                 </p>
               </CardContent>
             </Card>
