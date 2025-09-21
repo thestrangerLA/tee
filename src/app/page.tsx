@@ -1,6 +1,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Leaf, FerrisWheel, Calculator, FileText, HelpCircle } from "lucide-react"
+import { Leaf, FerrisWheel, Calculator, FileText } from "lucide-react"
 import Link from 'next/link'
 
 export default function Home() {
