@@ -66,7 +66,7 @@ export default function Home() {
               </CardContent>
             </Card>
           </Link>
-          <Link href="/">
+          <Link href="/kn">
             <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-2xl font-bold font-headline">KN</CardTitle>
@@ -74,7 +74,7 @@ export default function Home() {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  Placeholder card. Click to configure.
+                  ລະບົບຈອງ ແລະ ຄຳນວນຄ່າໃຊ້ຈ່າຍ KN
                 </p>
               </CardContent>
             </Card>
