@@ -320,7 +320,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
     return (
         <div className="flex min-h-screen w-full flex-col">
             <header className="sticky top-0 z-30 flex h-20 items-center gap-4 bg-primary px-4 text-primary-foreground sm:px-6 print:hidden">
-                <Button variant="outline" size="icon" className="h-8 w-8 bg-transparent text-primary-foreground border-primary-foreground hover:bg-primary-foreground/10" onClick={() => handleSave(() => clientRouter.push('/'))}>
+                <Button variant="outline" size="icon" className="h-8 w-8 bg-transparent text-primary-foreground border-primary-foreground hover:bg-primary-foreground/10" onClick={() => handleSave(() => clientRouter.push('/tour/calculator'))}>
                     <ArrowLeft className="h-4 w-4" />
                     <span className="sr-only">ກັບໄປໜ້າຫຼັກ</span>
                 </Button>
