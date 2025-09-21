@@ -11,7 +11,7 @@ import { ArrowLeft, FilePieChart, Calendar as CalendarIcon } from "lucide-react"
 import { listenToAllTourPrograms, listenToAllTourCostItems, listenToAllTourIncomeItems } from '@/services/tourReportService';
 import type { TourProgram, TourCostItem, TourIncomeItem, Currency } from '@/lib/types';
 import { getYear, format, startOfYear, endOfYear, isWithinInterval } from 'date-fns';
-import { lo } from "date-fns/locale/lo";
+
 import {
   Popover,
   PopoverContent,
@@ -147,7 +147,7 @@ export default function ProgramSummaryPage() {
                                     </Button>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-auto p-0">
-                                    <Calendar mode="single" selected={startDate} onSelect={setStartDate} initialFocus locale={lo} />
+                                    <Calendar mode="single" selected={startDate} onSelect={setStartDate} initialFocus  />
                                 </PopoverContent>
                             </Popover>
                         </div>
@@ -161,7 +161,7 @@ export default function ProgramSummaryPage() {
                                     </Button>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-auto p-0">
-                                    <Calendar mode="single" selected={endDate} onSelect={setEndDate} initialFocus locale={lo} />
+                                    <Calendar mode="single" selected={endDate} onSelect={setEndDate} initialFocus  />
                                 </PopoverContent>
                             </Popover>
                         </div>
@@ -172,7 +172,7 @@ export default function ProgramSummaryPage() {
                     <Card key={yearlyReport.year}>
                         <CardHeader>
                             <CardTitle>ພາບລວມປີ {yearlyReport.year + 543}</CardTitle>
-                            <CardDescription>ພາບລວມກຳໄລ-ຂາດທຶນ ແລະ ລາຍລະອຽດของແຕ່ລະໂປຣແກຣມ</CardDescription>
+                            <CardDescription>ພາບລວມກຳໄລ-ຂາດທຶນ และ ລາຍລະອຽດของແຕ່ລະໂປຣແກຣມ</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="p-4 bg-muted/50 rounded-lg">
@@ -198,7 +198,7 @@ export default function ProgramSummaryPage() {
                                                 <div className="flex justify-between w-full pr-4 items-center">
                                                     <div className="text-left">
                                                         <p className="font-bold">{program.programName}</p>
-                                                        <p className="text-sm text-muted-foreground">{program.tourCode} | {program.date ? format(program.date, "dd MMM yyyy", { locale: lo }) : ''}</p>
+                                                        <p className="text-sm text-muted-foreground">{program.tourCode} | {program.date ? format(program.date, "dd MMM yyyy") : ''}</p>
                                                     </div>
                                                     <div className="flex gap-4 text-xs font-mono text-right">
                                                         {currencies.map(c => (
@@ -255,7 +255,7 @@ export default function ProgramSummaryPage() {
                     <Card>
                         <CardContent>
                              <div className="text-center text-muted-foreground py-16">
-                                <p>ບໍ່ມີຂໍ້ມູນໂປຣແກຣມສຳລັບຊ່ວງວັນທີທີ່ເລືອກ</p>
+                                <p>ບໍ່ມີຂໍ້ມູນໂປຣແກຣມສຳລັບຊ່ວງວັນທີທີ່ເລືอก</p>
                             </div>
                         </CardContent>
                     </Card>

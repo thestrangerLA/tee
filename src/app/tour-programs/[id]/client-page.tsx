@@ -26,7 +26,7 @@ import type { TourCostItem, TourIncomeItem, TourProgram, Currency } from '@/lib/
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from 'date-fns';
-import { lo } from "date-fns/locale/lo";
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -126,7 +126,7 @@ const CurrencyEntryTable = ({
                                                     selected={item.date || undefined}
                                                     onSelect={(date) => onUpdateItem(item.id, 'date', date || new Date())}
                                                     initialFocus
-                                                    locale={lo}
+                                                    
                                                 />
                                             </PopoverContent>
                                         </Popover>
@@ -468,7 +468,7 @@ export default function TourProgramClientPage({ initialProgram }: { initialProgr
             <CardHeader>
                 <CardTitle>ລາຍລະອຽດໂປຣແກຣມ ແລະ ຂໍ້ມູນກຸ່ມ</CardTitle>
                 <CardDescription>
-                    ວັນທີສ້າງ: {localProgram.createdAt ? format(localProgram.createdAt, "PPP", {locale: lo}) : '-'}
+                    ວັນທີສ້າງ: {localProgram.createdAt ? format(localProgram.createdAt, "PPP") : '-'}
                      {isSaving && <span className="ml-4 text-blue-500 animate-pulse">ກຳລັງບັນທึก...</span>}
                 </CardDescription>
             </CardHeader>
@@ -658,7 +658,7 @@ export default function TourProgramClientPage({ initialProgram }: { initialProgr
               <Card className="print:hidden">
                   <CardHeader>
                       <CardTitle>ສະຫຼຸບຜົນປະກອບການ</CardTitle>
-                      <CardDescription>ສະຫຼຸບລາຍຮັບ, ຕົ້ນທຶນ, ແລະกำไร/ขาดทุน สำหรับໂປຣແກຣມນີ້</CardDescription>
+                      <CardDescription>ສະຫຼຸບລາຍຮັບ, ຕົ້ນທຶນ, และกำไร/ขาดทุน สำหรับໂປຣແກຣມນີ້</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6 print:p-0 print:space-y-2">
                        <div>

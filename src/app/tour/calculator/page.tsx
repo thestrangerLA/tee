@@ -10,7 +10,7 @@ import { ArrowLeft, Calculator, PlusCircle, MoreHorizontal, ChevronDown, Calenda
 import { deleteCalculation, listenToSavedCalculations } from '@/services/tourCalculatorService';
 import type { SavedCalculation } from '@/lib/types';
 import { format, getYear, getMonth } from 'date-fns';
-import { lo } from 'date-fns/locale';
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -109,7 +109,7 @@ function TourCalculationsListPageComponent() {
             {calculations.map(calc => (
                 <TableRow key={calc.id} className="group cursor-pointer" onClick={() => handleRowClick(calc.id)}>
                     <TableCell>
-                        {calc.savedAt ? format(calc.savedAt, "dd/MM/yyyy HH:mm", { locale: lo }) : 'N/A'}
+                        {calc.savedAt ? format(calc.savedAt, "dd/MM/yyyy HH:mm") : 'N/A'}
                     </TableCell>
                     <TableCell>{calc.tourInfo.groupCode}</TableCell>
                     <TableCell className="font-medium">{calc.tourInfo.program}</TableCell>

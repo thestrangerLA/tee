@@ -10,7 +10,7 @@ import { ArrowLeft, FileText, PlusCircle, MoreHorizontal, ChevronDown, Calendar 
 import { listenToTourPrograms, deleteTourProgram, updateTourProgram } from '@/services/tourProgramService';
 import type { TourProgram } from '@/lib/types';
 import { format, getYear, getMonth, startOfDay } from 'date-fns';
-import { lo } from "date-fns/locale/lo";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -89,7 +89,7 @@ function TourProgramsListPageComponent() {
 
 
     const handleDeleteProgram = async (programId: string, programName: string) => {
-        if (!window.confirm(`ເຈົ້າແນ່ໃຈບໍ່ວ່າต้องการลบໂປຣແກຣມ "${programName}"? ການກະທຳນີ້ຈະລົບລາຍຮັບ ແລະ ລາຍຈ່າຍທັງໝົດທີ່ກ່ຽວຂ້ອງ ແລະ ບໍ່ສາມາດย้อนกลับໄດ້`)) {
+        if (!window.confirm(`ເຈົ້າແນ່ໃຈບໍ່ວ່າต้องการลบໂປຣແກຣມ "${programName}"? ການກະທຳນີ້ຈະລົບລາຍຮັບ ແລະ ລາຍຈ່າຍທັງໝົດທີ່ກ່ຽວຂ້ອງ และ ບໍ່ສາມາດย้อนกลับໄດ້`)) {
             return;
         }
         try {
@@ -209,7 +209,7 @@ function TourProgramsListPageComponent() {
                                     selected={program.date}
                                     onSelect={(date) => handleUpdateProgramDate(program.id, date)}
                                     initialFocus
-                                    locale={lo}
+                                    
                                 />
                             </PopoverContent>
                         </Popover>
@@ -290,7 +290,7 @@ function TourProgramsListPageComponent() {
                                     Object.entries(programsByMonth).sort(([a], [b]) => Number(a) - Number(b)).map(([month, programs]) => (
                                         <AccordionItem value={`month-${month}`} key={month}>
                                             <AccordionTrigger className="bg-muted/50 px-4 rounded-md text-base font-semibold">
-                                                {format(new Date(selectedYear, Number(month)), 'LLLL', { locale: lo })}
+                                                {format(new Date(selectedYear, Number(month)), 'LLLL')}
                                             </AccordionTrigger>
                                             <AccordionContent className="pt-2">
                                                 <div className="overflow-x-auto">
@@ -305,7 +305,7 @@ function TourProgramsListPageComponent() {
                                     .map(({year, month, programs}) => (
                                         <AccordionItem value={`${year}-${month}`} key={`${year}-${month}`}>
                                             <AccordionTrigger className="bg-muted/50 px-4 rounded-md text-base font-semibold">
-                                                  {format(new Date(year, month), 'LLLL yyyy', { locale: lo })}
+                                                  {format(new Date(year, month), 'LLLL yyyy')}
                                             </AccordionTrigger>
                                              <AccordionContent className="pt-2">
                                                 <div className="overflow-x-auto">

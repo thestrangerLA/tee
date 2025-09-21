@@ -16,7 +16,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format, startOfDay, isWithinInterval, startOfMonth, endOfMonth, getMonth, setMonth, getYear, isSameDay } from 'date-fns';
-import { lo } from "date-fns/locale/lo";
+
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuPortal, DropdownMenuSubTrigger, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 
@@ -152,7 +152,7 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
                             ))}
                          </Accordion>
                     ) : (
-                         <div className="text-center text-muted-foreground py-4">ບໍ່ມີລາຍການໃນເດືອນທີ່ເລືອກ</div>
+                         <div className="text-center text-muted-foreground py-4">ບໍ່ມີລາຍການໃນເດືອນທີ່ເລືอก</div>
                     )}
                 </div>
             </CardContent>
@@ -227,7 +227,7 @@ export default function TransportPage() {
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="outline" className="flex items-center gap-2">
-                        {format(displayMonth, "LLLL yyyy", { locale: lo })}
+                        {format(displayMonth, "LLLL yyyy")}
                         <ChevronDown className="h-4 w-4" />
                     </Button>
                 </DropdownMenuTrigger>
@@ -247,7 +247,7 @@ export default function TransportPage() {
                                                 setDisplayMonth(newDate);
                                             }}
                                         >
-                                            {format(month, "LLLL", { locale: lo })}
+                                            {format(month, "LLLL")}
                                         </DropdownMenuItem>
                                     ))}
                                 </DropdownMenuSubContent>
@@ -324,7 +324,7 @@ export default function TransportPage() {
                 <div className="md:col-span-1 mt-4 md:mt-0 flex flex-col gap-4">
                      <Card>
                         <CardHeader>
-                            <CardTitle>ສະຫຼຸບຍອດລວມ (ເດືອນທີ່ເລືອກ)</CardTitle>
+                            <CardTitle>ສະຫຼຸບຍອດລວມ (ເດືອນທີ່ເລືอก)</CardTitle>
                         </CardHeader>
                         <CardContent className="flex flex-col gap-4">
                              <div className="flex justify-between items-center p-4 bg-muted rounded-md">

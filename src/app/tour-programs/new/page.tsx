@@ -15,7 +15,7 @@ import type { TourProgram, Currency } from '@/lib/types';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format, startOfDay } from 'date-fns';
-import { lo } from "date-fns/locale/lo";
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import StaticExportWrapper from '@/components/StaticExportWrapper';
 import { useClientRouter } from '@/hooks/useClientRouter';
@@ -81,7 +81,7 @@ function NewTourProgramPageComponent() {
         if (!date || !formData.programName) {
             toast({
                 title: "ຂໍ້ມູນບໍ່ຄົບຖ້ວນ",
-                description: "ກະລຸນາເລືອກວັນທີ ແລະ ໃສ່ຊື່ໂປຣແກຣມ",
+                description: "ກະລຸນາເລືอกວັນທີ และ ໃສ່ຊື່ໂປຣແກຣມ",
                 variant: "destructive"
             });
             return;
@@ -138,11 +138,11 @@ function NewTourProgramPageComponent() {
                                         <PopoverTrigger asChild>
                                             <Button variant={"outline"} className="w-full justify-start text-left font-normal">
                                                 <CalendarIcon className="mr-2 h-4 w-4" />
-                                                {date ? format(date, "PPP", { locale: lo }) : <span>ເລືອກວັນທີ</span>}
+                                                {date ? format(date, "PPP") : <span>ເລືອກວັນທີ</span>}
                                             </Button>
                                         </PopoverTrigger>
                                         <PopoverContent className="w-auto p-0">
-                                            <Calendar mode="single" selected={date} onSelect={setDate} initialFocus locale={lo} />
+                                            <Calendar mode="single" selected={date} onSelect={setDate} initialFocus  />
                                         </PopoverContent>
                                     </Popover>
                                 </div>
@@ -202,7 +202,7 @@ function NewTourProgramPageComponent() {
                             
                             <div className="flex justify-end gap-2">
                                 <Button type="button" variant="outline" asChild><Link href="/tour-programs">ຍົກເລີກ</Link></Button>
-                                <Button type="submit">ບັນທຶກ ແລະ ໄປຕໍ່</Button>
+                                <Button type="submit">ບັນທຶກ และ ໄປຕໍ່</Button>
                             </div>
                         </form>
                     </CardContent>

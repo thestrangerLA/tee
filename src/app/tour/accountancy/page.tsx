@@ -14,7 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar"
 import { Textarea } from "@/components/ui/textarea"
 import { format, isSameDay, startOfMonth, endOfMonth, isWithinInterval, startOfDay, eachDayOfInterval, getYear, setMonth, getMonth } from "date-fns"
-import { lo } from "date-fns/locale/lo"
+
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuPortal, DropdownMenuSubContent } from "@/components/ui/dropdown-menu"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -239,7 +239,7 @@ export default function TourAccountancyPage() {
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="outline" className="flex items-center gap-2">
-                        {format(historyDisplayMonth, "LLLL yyyy", { locale: lo })}
+                        {format(historyDisplayMonth, "LLLL yyyy")}
                         <ChevronDown className="h-4 w-4" />
                     </Button>
                 </DropdownMenuTrigger>
@@ -259,7 +259,7 @@ export default function TourAccountancyPage() {
                                                 setHistoryDisplayMonth(newDate);
                                             }}
                                         >
-                                            {format(month, "LLLL", { locale: lo })}
+                                            {format(month, "LLLL")}
                                         </DropdownMenuItem>
                                     ))}
                                 </DropdownMenuSubContent>
@@ -279,7 +279,7 @@ export default function TourAccountancyPage() {
         switch(editingField) {
             case 'capital': return 'ແກ້ໄຂເງິນທຶນ';
             case 'cash': return 'ແກ້ໄຂເງິນສົດ';
-            case 'transfer': return 'ແກ້ໄຂເງິນໂອນ';
+            case 'transfer': return 'ແກ້ໄຂເງິນໂอน';
             default: return 'ແກ້ໄຂ';
         }
     }
@@ -297,14 +297,14 @@ export default function TourAccountancyPage() {
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4">
                      <SummaryCard title="ເງິນທຶນ" values={summary.capital} icon={<Briefcase className="h-5 w-5 text-primary" />} onClick={() => openEditDialog('capital')} />
                      <SummaryCard title="ເງິນສົດ" values={summary.cash} icon={<Wallet className="h-5 w-5 text-primary" />} onClick={() => openEditDialog('cash')} />
-                     <SummaryCard title="ເງິນໂອນ" values={summary.transfer} icon={<Landmark className="h-5 w-5 text-primary" />} onClick={() => openEditDialog('transfer')} />
+                     <SummaryCard title="ເງິນໂอน" values={summary.transfer} icon={<Landmark className="h-5 w-5 text-primary" />} onClick={() => openEditDialog('transfer')} />
                      <SummaryCard title="ລວມເງິນຄົງເຫຼືອ" values={totalBalance} icon={<Combine className="h-5 w-5 text-green-600" />} />
                 </div>
                  <Card>
                     <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                         <div>
                             <CardTitle>ສະຫຼຸບຜົນປະກອບການ</CardTitle>
-                            <CardDescription>ສຳລັບເດືອນທີ່ເລືອກ</CardDescription>
+                            <CardDescription>ສຳລັບເດືອນທີ່ເລືอก</CardDescription>
                         </div>
                         <MonthYearSelector />
                     </CardHeader>
@@ -345,10 +345,10 @@ export default function TourAccountancyPage() {
                                             <PopoverTrigger asChild>
                                                 <Button variant={"outline"} className="w-full justify-start text-left font-normal">
                                                     <CalendarIcon className="mr-2 h-4 w-4" />
-                                                    {date ? format(date, "PPP", { locale: lo }) : <span>ເລືອກວັນທີ</span>}
+                                                    {date ? format(date, "PPP") : <span>ເລືອກວັນທີ</span>}
                                                 </Button>
                                             </PopoverTrigger>
-                                            <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={date} onSelect={setDate} initialFocus locale={lo} /></PopoverContent>
+                                            <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={date} onSelect={setDate} initialFocus  /></PopoverContent>
                                         </Popover>
                                     </div>
                                     <div className="grid gap-2">
@@ -374,7 +374,7 @@ export default function TourAccountancyPage() {
                         <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                              <div>
                                 <CardTitle>ປະຫວັດທຸລະກຳ</CardTitle>
-                                <CardDescription>ສະແດງລາຍການສຳລັບເດືອນທີ່ເລືອກ</CardDescription>
+                                <CardDescription>ສະແດງລາຍການສຳລັບເດືອນທີ່ເລືอก</CardDescription>
                             </div>
                             <MonthYearSelector />
                         </CardHeader>
@@ -385,7 +385,7 @@ export default function TourAccountancyPage() {
                                 <AccordionItem value={`item-${index}`} key={index}>
                                     <AccordionTrigger>
                                         <div className="flex justify-between w-full pr-4">
-                                            <div className="font-semibold">{`ວັນທີ ${format(summary.date, "d MMMM yyyy", { locale: lo })}`}</div>
+                                            <div className="font-semibold">{`ວັນທີ ${format(summary.date, "d MMMM yyyy")}`}</div>
                                             <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
                                                 <span className="text-green-600">ຮັບ: {currencies.map(c => `${formatCurrency(summary.income[c])} ${c.toUpperCase()}`).join(' / ')}</span>
                                                 <span className="text-red-600">ຈ່າຍ: {currencies.map(c => `${formatCurrency(summary.expense[c])} ${c.toUpperCase()}`).join(' / ')}</span>
@@ -445,10 +445,10 @@ export default function TourAccountancyPage() {
                            </RadioGroup>
                             <Popover>
                                 <PopoverTrigger asChild>
-                                    <Button variant={"outline"}><CalendarIcon className="mr-2 h-4 w-4" />{format(editingTransaction.date, "PPP", { locale: lo })}</Button>
+                                    <Button variant={"outline"}><CalendarIcon className="mr-2 h-4 w-4" />{format(editingTransaction.date, "PPP")}</Button>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-auto p-0">
-                                    <Calendar mode="single" selected={editingTransaction.date} onSelect={(d) => setEditingTransaction(p => p ? { ...p, date: d || new Date() } : null)} initialFocus locale={lo} />
+                                    <Calendar mode="single" selected={editingTransaction.date} onSelect={(d) => setEditingTransaction(p => p ? { ...p, date: d || new Date() } : null)} initialFocus  />
                                 </PopoverContent>
                             </Popover>
                             <Textarea value={editingTransaction.description} onChange={(e) => setEditingTransaction(p => p ? { ...p, description: e.target.value } : null)} />

@@ -10,7 +10,7 @@ import { ArrowLeft, BookOpen, Printer, AlertCircle } from "lucide-react";
 import { listenToTourTransactions } from '@/services/tourAccountancyService';
 import type { Transaction, CurrencyValues } from '@/lib/types';
 import { format, isWithinInterval, startOfMonth, endOfMonth, isValid } from 'date-fns';
-import { lo } from "date-fns/locale/lo";
+
 import { useClientSearchParams } from '@/hooks/useClientSearchParams';
 import StaticExportWrapper from '@/components/StaticExportWrapper';
 
@@ -177,7 +177,7 @@ function GeneralLedgerMonthPageComponent() {
         );
     }
 
-    const headerTitle = format(displayDate, 'LLLL yyyy', { locale: lo });
+    const headerTitle = format(displayDate, 'LLLL yyyy');
     
     return (
         <div className="flex min-h-screen w-full flex-col bg-muted/40 print:bg-white">
