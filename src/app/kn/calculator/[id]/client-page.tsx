@@ -363,7 +363,7 @@ export default function KNCalculatorClientPage({ initialCalculation }: { initial
         <div className="flex min-h-screen w-full flex-col">
             <header className="sticky top-0 z-30 flex h-20 items-center gap-4 bg-primary px-4 text-primary-foreground sm:px-6 print:hidden">
                 <Button variant="outline" size="icon" className="h-8 w-8 bg-transparent text-primary-foreground border-primary-foreground hover:bg-primary-foreground/10" asChild>
-                    <Link href="/kn/calculator">
+                    <Link href="/kn">
                         <ArrowLeft className="h-4 w-4" />
                         <span className="sr-only">ກັບໄປໜ້າລາຍການ</span>
                     </Link>
@@ -1136,37 +1136,6 @@ export default function KNCalculatorClientPage({ initialCalculation }: { initial
                                     </CardContent>
                                 </Card>
                             </div>
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2"><History />ປະຫວັດການຄຳນວນ</CardTitle>
-                                    <CardDescription>ສະບັບຮ່າງທີ່ບັນທຶກໄວ້ຂອງການຄຳນວນນີ້</CardDescription>
-                                </CardHeader>
-                                <CardContent>
-                                    {calculationHistory.length > 0 ? (
-                                        <div className="space-y-2">
-                                            {calculationHistory.map(snapshot => (
-                                                <div key={snapshot.id} className="flex items-center justify-between rounded-lg border p-3">
-                                                    <div className="flex flex-col sm:flex-row sm:items-center sm:gap-3">
-                                                        <p className="font-semibold">{snapshot.tourInfo.groupCode || 'No Group Code'}</p>
-                                                        <p className="text-sm text-muted-foreground">{format(snapshot.savedAt, "dd MMM yyyy, HH:mm:ss")}</p>
-                                                    </div>
-                                                    <div className="flex gap-2">
-                                                        <Button variant="ghost" size="sm" onClick={() => loadFromHistory(snapshot)}>
-                                                            <RotateCcw className="mr-2 h-4 w-4" />
-                                                            ໂຫຼດ
-                                                        </Button>
-                                                        <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-600" onClick={() => handleDeleteFromHistory(snapshot.id)}>
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </Button>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <p className="text-sm text-muted-foreground text-center py-4">ບໍ່ມີປະຫວັດການຄຳນວນທີ່ບັນທຶກໄວ້.</p>
-                                    )}
-                                </CardContent>
-                            </Card>
                         </div>
                 </div>
             </main>
