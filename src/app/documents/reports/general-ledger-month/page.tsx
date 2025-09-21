@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect, useMemo, Suspense } from 'react';
@@ -10,7 +11,7 @@ import { ArrowLeft, BookOpen, Printer } from "lucide-react";
 import { listenToDocumentTransactions } from '@/services/documentAccountancyService';
 import type { Transaction, CurrencyValues } from '@/lib/types';
 import { getMonth, format, setMonth, isWithinInterval, startOfMonth, endOfMonth } from 'date-fns';
-import { lo } from "date-fns/locale";
+import { lo } from "date-fns/locale/lo";
 
 export const dynamic = 'force-dynamic';
 

@@ -15,7 +15,7 @@ import type { TourProgram, Currency } from '@/lib/types';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format, startOfDay } from 'date-fns';
-import { lo } from 'date-fns/locale';
+import { lo } from "date-fns/locale/lo";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import StaticExportWrapper from '@/components/StaticExportWrapper';
 import { useClientRouter } from '@/hooks/useClientRouter';

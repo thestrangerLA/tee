@@ -11,7 +11,7 @@ import { ArrowLeft, BarChart, ArrowUpCircle, ArrowDownCircle, Scale, Minus } fro
 import { listenToAllTransactions } from '@/services/accountancyService';
 import type { Transaction } from '@/lib/types';
 import { getYear, getMonth, format } from 'date-fns';
-import { lo } from "date-fns/locale";
+import { lo } from "date-fns/locale/lo";
 
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('lo-LA', { style: 'currency', currency: 'LAK', currencyDisplay: 'code', minimumFractionDigits: 0 }).format(value).replace('LAK', 'KIP');

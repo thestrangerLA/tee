@@ -26,7 +26,7 @@ import type { TourCostItem, TourIncomeItem, TourProgram, Currency } from '@/lib/
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from 'date-fns';
-import { lo } from 'date-fns/locale';
+import { lo } from "date-fns/locale/lo";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -106,7 +106,7 @@ const CurrencyEntryTable = ({
                                 <TableHead className="text-right">BAHT</TableHead>
                                 <TableHead className="text-right">USD</TableHead>
                                 <TableHead className="text-right">CNY</TableHead>
-                                <TableHead className="w-[50px] print:hidden"><span className="sr-only">ลบ</span></TableHead>
+                                <TableHead className="w-[50px] print:hidden"><span className="sr-only">ລົບ</span></TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>

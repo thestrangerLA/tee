@@ -10,7 +10,7 @@ import { ArrowLeft, FileText, PlusCircle, MoreHorizontal, ChevronDown, Calendar 
 import { listenToTourPrograms, deleteTourProgram, updateTourProgram } from '@/services/tourProgramService';
 import type { TourProgram } from '@/lib/types';
 import { format, getYear, getMonth, startOfDay } from 'date-fns';
-import { lo } from 'date-fns/locale';
+import { lo } from "date-fns/locale/lo";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -89,7 +89,7 @@ function TourProgramsListPageComponent() {
 
 
     const handleDeleteProgram = async (programId: string, programName: string) => {
-        if (!window.confirm(`ເຈົ້າແນ່ໃຈບໍ່ວ່າต้องการลบໂປຣແກຣມ "${programName}"? ການກະທຳນີ້ຈະລົບລາຍຮັບ ແລະ ລາຍຈ່າຍທັງໝົດທີ່ກ່ຽວຂ້ອງ ແລະ ບໍ່ສາມາດย้อนกลับได้`)) {
+        if (!window.confirm(`ເຈົ້າແນ່ໃຈບໍ່ວ່າต้องการลบໂປຣແກຣມ "${programName}"? ການກະທຳນີ້ຈະລົບລາຍຮັບ ແລະ ລາຍຈ່າຍທັງໝົດທີ່ກ່ຽວຂ້ອງ ແລະ ບໍ່ສາມາດย้อนกลับໄດ້`)) {
             return;
         }
         try {

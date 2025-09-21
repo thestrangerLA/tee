@@ -10,7 +10,7 @@ import { ArrowLeft, BookOpen, Calendar as CalendarIcon, Printer, ChevronRight } 
 import { listenToTourTransactions, addTourTransaction } from '@/services/tourAccountancyService';
 import type { Transaction, CurrencyValues } from '@/lib/types';
 import { getMonth, format, setMonth, isWithinInterval, startOfYear, endOfYear, getYear } from 'date-fns';
-import { lo } from "date-fns/locale";
+import { lo } from "date-fns/locale/lo";
 import {
   Popover,
   PopoverContent,
@@ -168,7 +168,7 @@ export default function GeneralLedgerPage() {
                                 <PopoverTrigger asChild>
                                     <Button id="start-date" variant={"outline"} className="w-[280px] justify-start text-left font-normal">
                                         <CalendarIcon className="mr-2 h-4 w-4" />
-                                        {startDate ? format(startDate, "PPP", { locale: lo }) : <span>ເລືอกວັນທີ</span>}
+                                        {startDate ? format(startDate, "PPP", { locale: lo }) : <span>ເລືອກວັນທີ</span>}
                                     </Button>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={startDate} onSelect={setStartDate} initialFocus locale={lo} /></PopoverContent>
@@ -180,7 +180,7 @@ export default function GeneralLedgerPage() {
                                 <PopoverTrigger asChild>
                                     <Button id="end-date" variant={"outline"} className="w-[280px] justify-start text-left font-normal">
                                         <CalendarIcon className="mr-2 h-4 w-4" />
-                                        {endDate ? format(endDate, "PPP", { locale: lo }) : <span>ເລືอกວັນທີ</span>}
+                                        {endDate ? format(endDate, "PPP", { locale: lo }) : <span>ເລືອກວັນທີ</span>}
                                     </Button>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={endDate} onSelect={setEndDate} initialFocus locale={lo} /></PopoverContent>
