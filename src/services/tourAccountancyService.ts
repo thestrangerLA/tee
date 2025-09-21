@@ -61,7 +61,10 @@ export const updateTourAccountSummary = async (summary: Partial<Omit<TourAccount
 
 
 // Transaction Functions
-export const listenToTourTransactions = (callback: (items: Transaction[]) => void) => {
+export const listenToTourTransactions = (
+    callback: (items: Transaction[]) => void,
+    onError?: (error: Error) => void
+) => {
     const q = query(transactionsCollectionRef, orderBy('date', 'desc'));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
         const transactions: Transaction[] = [];
@@ -70,10 +73,16 @@ export const listenToTourTransactions = (callback: (items: Transaction[]) => voi
             transactions.push({ 
                 id: doc.id, 
                 ...data,
-                date: (data.date as Timestamp).toDate()
+                date: (data.date as Timestamp)?.toDate()
             } as Transaction);
         });
         callback(transactions);
+    },
+    (error) => {
+        console.error("Error in transaction listener:", error);
+        if (onError) {
+            onError(error);
+        }
     });
     return unsubscribe;
 };
