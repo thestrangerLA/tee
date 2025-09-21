@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -10,6 +11,8 @@ import { listenToTourTransactions } from '@/services/tourAccountancyService';
 import type { Transaction, CurrencyValues } from '@/lib/types';
 import { format, isWithinInterval, startOfMonth, endOfMonth, isValid } from 'date-fns';
 import { lo } from "date-fns/locale";
+import { useClientSearchParams } from '@/hooks/useClientSearchParams';
+import StaticExportWrapper from '@/components/StaticExportWrapper';
 
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('th-TH', { minimumFractionDigits: 0 }).format(value);
@@ -18,20 +21,7 @@ const formatCurrency = (value: number) => {
 const currencyKeys: (keyof CurrencyValues)[] = ['kip', 'baht', 'usd', 'cny'];
 const initialCurrencyValues: CurrencyValues = { kip: 0, baht: 0, usd: 0, cny: 0 };
 
-// Helper function to get URL parameters without useSearchParams
-function getUrlParams() {
-    if (typeof window === 'undefined') {
-        return { year: null, month: null };
-    }
-    
-    const urlParams = new URLSearchParams(window.location.search);
-    return {
-        year: urlParams.get('year'),
-        month: urlParams.get('month')
-    };
-}
 
-// Error boundary component
 function ErrorDisplay({ message }: { message: string }) {
     return (
         <div className="flex items-center justify-center min-h-[400px]">
@@ -46,66 +36,42 @@ function ErrorDisplay({ message }: { message: string }) {
     );
 }
 
-// Loading component
-function LoadingSpinner() {
-    return (
-        <div className="flex min-h-screen w-full flex-col bg-muted/40">
-            <div className="flex items-center justify-center min-h-[400px]">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-                    <p className="text-muted-foreground">ກຳລັງໂຫຼດ...</p>
-                </div>
-            </div>
-        </div>
-    );
-}
 
-export default function GeneralLedgerMonthPage() {
+function GeneralLedgerMonthPageComponent() {
     const [transactions, setTransactions] = useState<Transaction[]>([]);
-    const [isClient, setIsClient] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
-    const [urlParams, setUrlParams] = useState<{ year: string | null; month: string | null }>({ year: null, month: null });
-
-    // Client-side hydration and URL parameter extraction
-    useEffect(() => {
-        setIsClient(true);
-        setUrlParams(getUrlParams());
-    }, []);
+    
+    const searchParams = useClientSearchParams();
+    const year = searchParams.get('year');
+    const month = searchParams.get('month');
 
     // Get and validate URL parameters
-    const { year, month, displayDate, isValidParams } = useMemo(() => {
-        if (!urlParams.year || !urlParams.month) {
+    const { displayDate, isValidParams } = useMemo(() => {
+        if (!year || !month) {
             return { 
-                year: null, 
-                month: null, 
                 displayDate: new Date(), 
                 isValidParams: false 
             };
         }
 
-        const yearNum = Number(urlParams.year);
-        const monthNum = Number(urlParams.month);
+        const yearNum = Number(year);
+        const monthNum = Number(month);
         
-        // Validate year and month ranges
         const isValid = yearNum >= 1900 && yearNum <= 2100 && monthNum >= 0 && monthNum <= 11;
         
         if (!isValid) {
             return { 
-                year: urlParams.year, 
-                month: urlParams.month, 
                 displayDate: new Date(), 
                 isValidParams: false 
             };
         }
 
         return {
-            year: urlParams.year,
-            month: urlParams.month,
             displayDate: new Date(yearNum, monthNum),
             isValidParams: true
         };
-    }, [urlParams]);
+    }, [year, month]);
 
     // Memoized print handler
     const handlePrint = useCallback(() => {
@@ -116,8 +82,6 @@ export default function GeneralLedgerMonthPage() {
 
     // Load transactions with error handling
     useEffect(() => {
-        if (!isClient) return;
-        
         setLoading(true);
         setError(null);
         
@@ -142,11 +106,11 @@ export default function GeneralLedgerMonthPage() {
             setError('ບໍ່ສາມາດເຊື່ອມຕໍ່ກັບລະບົບຖານຂໍ້ມູນໄດ້');
             setLoading(false);
         }
-    }, [isClient]);
+    }, []);
     
     // Process report data
     const reportData = useMemo(() => {
-        if (!isValidParams || !isClient) {
+        if (!isValidParams) {
             return { 
                 transactions: [], 
                 income: { ...initialCurrencyValues }, 
@@ -159,7 +123,6 @@ export default function GeneralLedgerMonthPage() {
         const endDate = endOfMonth(displayDate);
 
         const monthlyTransactions = transactions.filter(tx => {
-            // Enhanced date validation
             if (!tx.date || !isValid(tx.date)) return false;
             return isWithinInterval(tx.date, { start: startDate, end: endDate });
         });
@@ -175,7 +138,6 @@ export default function GeneralLedgerMonthPage() {
                 const key = c as keyof Transaction;
                 const value = (tx[key] as number) || 0;
                 
-                // Additional validation for numeric values
                 if (typeof value === 'number' && !isNaN(value)) {
                     if (tx.type === 'income') {
                         income[c] += value;
@@ -191,12 +153,8 @@ export default function GeneralLedgerMonthPage() {
         });
 
         return { transactions: monthlyTransactions, income, expense, net };
-    }, [transactions, displayDate, isValidParams, isClient]);
+    }, [transactions, displayDate, isValidParams]);
 
-    // Handle different states
-    if (!isClient) {
-        return <LoadingSpinner />;
-    }
 
     if (error) {
         return <ErrorDisplay message={error} />;
@@ -207,7 +165,16 @@ export default function GeneralLedgerMonthPage() {
     }
 
     if (loading) {
-        return <LoadingSpinner />;
+         return (
+            <div className="flex min-h-screen w-full flex-col bg-muted/40">
+                <div className="flex items-center justify-center min-h-[400px]">
+                    <div className="text-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                        <p className="text-muted-foreground">ກຳລັງໂຫຼດ...</p>
+                    </div>
+                </div>
+            </div>
+        );
     }
 
     const headerTitle = format(displayDate, 'LLLL yyyy', { locale: lo });
@@ -363,4 +330,12 @@ export default function GeneralLedgerMonthPage() {
             </main>
         </div>
     );
+}
+
+export default function GeneralLedgerMonthPage() {
+    return (
+        <StaticExportWrapper>
+            <GeneralLedgerMonthPageComponent />
+        </StaticExportWrapper>
+    )
 }

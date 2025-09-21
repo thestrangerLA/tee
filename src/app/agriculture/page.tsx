@@ -2,28 +2,23 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Leaf, Package, Calculator, Truck, Users, Landmark, BarChart, ArrowLeft } from "lucide-react"
 import Link from 'next/link'
 import { Button } from "@/components/ui/button"
+import { useClientRouter } from '@/hooks/useClientRouter';
+import StaticExportWrapper from '@/components/StaticExportWrapper';
 
 
-export default function AgriculturePage() {
-    const router = useRouter();
-    const [isMounted, setIsMounted] = useState(false);
+function AgricultureDashboard() {
+    const router = useClientRouter();
 
     useEffect(() => {
-        setIsMounted(true);
         const isAuthenticated = sessionStorage.getItem('agriculture-auth');
         if (!isAuthenticated) {
             router.replace('/agriculture/login');
         }
     }, [router]);
-
-    if (!isMounted) {
-        return null; 
-    }
 
 
   return (
@@ -137,4 +132,13 @@ export default function AgriculturePage() {
       </main>
     </div>
   )
+}
+
+
+export default function AgriculturePage() {
+    return (
+        <StaticExportWrapper>
+            <AgricultureDashboard />
+        </StaticExportWrapper>
+    )
 }

@@ -1,6 +1,12 @@
 
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'export',
+  trailingSlash: true,
+  images: {
+    unoptimized: true
+  },
   /* config options here */
   typescript: {
     ignoreBuildErrors: true,
@@ -8,16 +14,9 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'placehold.co',
-        port: '',
-        pathname: '/**',
-      },
-    ],
-  },
+  experimental: {
+    missingSuspenseWithCSRBailout: false,
+  }
 };
 
 module.exports = nextConfig;

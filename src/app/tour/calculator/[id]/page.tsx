@@ -1,28 +1,9 @@
 
+
 import { getCalculation, getAllCalculations, saveCalculation } from '@/services/tourCalculatorService';
 import TourCalculatorClientPage from './client-page';
-import { Suspense } from 'react';
 import type { SavedCalculation } from '@/lib/types';
-
-
-// This tells Next.js to always render this page dynamically on the server
-export const dynamic = 'force-dynamic';
-
-// This allows Next.js to know all possible IDs at build time for initial generation
-export async function generateStaticParams() {
-  const calculations = await getAllCalculations();
- 
-  const staticParams = calculations.map((calc) => ({
-    id: calc.id,
-  }));
-
-  // Ensure the 'default' param is always included
-  if (!staticParams.some(p => p.id === 'default')) {
-      staticParams.push({ id: 'default' });
-  }
-  
-  return staticParams;
-}
+import StaticExportWrapper from '@/components/StaticExportWrapper';
 
 async function getCalculationData(id: string) {
     let calculation = await getCalculation(id);
@@ -51,12 +32,6 @@ async function getCalculationData(id: string) {
                 documents: [],
             }
         };
-        // The saveCalculation function in the original service returns the new ID,
-        // but we need to create it with a *specific* ID ('default').
-        // This requires a modification to how we save, or we assume it exists.
-        // For now, we'll return the new structure and the client page will handle it.
-        // A better approach would be a `getOrCreate` service function.
-        // Let's create it on the fly.
         await saveCalculation(newCalculationData, 'default');
         calculation = await getCalculation(id);
     }
@@ -85,8 +60,8 @@ export default async function TourProgramPage({ params }: { params: { id: string
     }
 
     return (
-        <Suspense fallback={<LoadingFallback />}>
+        <StaticExportWrapper fallback={<LoadingFallback/>}>
             <TourCalculatorClientPage initialCalculation={calculationData} />
-        </Suspense>
+        </StaticExportWrapper>
     );
 }

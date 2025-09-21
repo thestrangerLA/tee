@@ -3,7 +3,6 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -22,12 +21,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { useClientRouter } from '@/hooks/useClientRouter';
+import StaticExportWrapper from '@/components/StaticExportWrapper';
 
-export default function TourCalculationsListPage() {
+function TourCalculationsListPageComponent() {
     const { toast } = useToast();
     const [allCalculations, setAllCalculations] = useState<SavedCalculation[]>([]);
     const [selectedYear, setSelectedYear] = useState<number | null>(new Date().getFullYear());
-    const router = useRouter();
+    const router = useClientRouter();
 
     useEffect(() => {
         const unsubscribe = listenToSavedCalculations(setAllCalculations);
@@ -190,5 +191,13 @@ export default function TourCalculationsListPage() {
                 </Card>
             </main>
         </div>
+    )
+}
+
+export default function TourCalculationsListPage() {
+    return (
+        <StaticExportWrapper>
+            <TourCalculationsListPageComponent />
+        </StaticExportWrapper>
     )
 }

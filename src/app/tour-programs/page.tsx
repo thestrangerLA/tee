@@ -3,7 +3,6 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -24,6 +23,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import { useClientRouter } from '@/hooks/useClientRouter';
+import StaticExportWrapper from '@/components/StaticExportWrapper';
 
 
 const formatCurrency = (value: number | null | undefined, currency: string) => {
@@ -31,12 +32,12 @@ const formatCurrency = (value: number | null | undefined, currency: string) => {
     return new Intl.NumberFormat('th-TH', { minimumFractionDigits: 0 }).format(value) + ` ${currency}`;
 };
 
-export default function TourProgramsListPage() {
+function TourProgramsListPageComponent() {
     const { toast } = useToast();
     const [allPrograms, setAllPrograms] = useState<TourProgram[]>([]);
     const [selectedYear, setSelectedYear] = useState<number | null>(2025);
     const [selectedGroupCode, setSelectedGroupCode] = useState<string | null>(null);
-    const router = useRouter();
+    const router = useClientRouter();
 
     useEffect(() => {
         const unsubscribe = listenToTourPrograms(setAllPrograms);
@@ -327,4 +328,10 @@ export default function TourProgramsListPage() {
     )
 }
 
-    
+export default function TourProgramsPage() {
+    return (
+        <StaticExportWrapper>
+            <TourProgramsListPageComponent />
+        </StaticExportWrapper>
+    )
+}

@@ -3,7 +3,6 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,6 +17,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { format, startOfDay } from 'date-fns';
 import { lo } from 'date-fns/locale';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import StaticExportWrapper from '@/components/StaticExportWrapper';
+import { useClientRouter } from '@/hooks/useClientRouter';
 
 
 const currencies: Currency[] = ['KIP', 'BAHT', 'USD', 'CNY'];
@@ -52,9 +53,9 @@ const CurrencyInput = ({ label, amount, currency, onAmountChange, onCurrencyChan
 );
 
 
-export default function NewTourProgramPage() {
+function NewTourProgramPageComponent() {
     const { toast } = useToast();
-    const router = useRouter();
+    const router = useClientRouter();
     const [date, setDate] = useState<Date | undefined>(new Date());
     const [formData, setFormData] = useState<Omit<TourProgram, 'id' | 'createdAt' | 'date'>>({
         tourCode: '',
@@ -200,7 +201,7 @@ export default function NewTourProgramPage() {
                             </div>
                             
                             <div className="flex justify-end gap-2">
-                                <Button type="button" variant="outline" onClick={() => router.push('/tour-programs')}>ຍົກເລີກ</Button>
+                                <Button type="button" variant="outline" asChild><Link href="/tour-programs">ຍົກເລີກ</Link></Button>
                                 <Button type="submit">ບັນທຶກ ແລະ ໄປຕໍ່</Button>
                             </div>
                         </form>
@@ -211,4 +212,10 @@ export default function NewTourProgramPage() {
     );
 }
 
-    
+export default function NewTourProgramPage() {
+    return (
+        <StaticExportWrapper>
+            <NewTourProgramPageComponent />
+        </StaticExportWrapper>
+    )
+}
