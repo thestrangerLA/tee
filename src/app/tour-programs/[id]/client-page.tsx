@@ -134,7 +134,7 @@ const CurrencyEntryTable = ({
                                     </TableCell>
                                      <TableCell className="p-1">
                                         <Input 
-                                            value={item.detail || ''} 
+                                            defaultValue={item.detail || ''} 
                                             onBlur={(e) => onUpdateItem(item.id, 'detail', e.target.value)}
                                             className="h-8 print:border-none print:pl-0 print:font-lao print:text-sm"
                                         />
@@ -471,31 +471,31 @@ export default function TourProgramClientPage({ initialProgram }: { initialProgr
                  <div className="grid md:grid-cols-3 gap-6">
                      <div className="grid gap-2">
                         <Label htmlFor="programName">Tour Program</Label>
-                        <Input id="programName" value={localProgram.programName} onChange={(e) => handleProgramChange('programName', e.target.value)} disabled={isSaving} />
+                        <Input id="programName" value={localProgram.programName} onChange={(e) => handleProgramChange('programName', e.target.value)} />
                     </div>
                      <div className="grid gap-2">
                         <Label htmlFor="tourCode">Group Code</Label>
-                        <Input id="tourCode" value={localProgram.tourCode} onChange={(e) => handleProgramChange('tourCode', e.target.value)} disabled={isSaving} />
+                        <Input id="tourCode" value={localProgram.tourCode} onChange={(e) => handleProgramChange('tourCode', e.target.value)} />
                     </div>
                      <div className="grid gap-2">
                         <Label htmlFor="groupName">Nationality</Label>
-                        <Input id="groupName" value={localProgram.groupName} onChange={(e) => handleProgramChange('groupName', e.target.value)} disabled={isSaving} />
+                        <Input id="groupName" value={localProgram.groupName} onChange={(e) => handleProgramChange('groupName', e.target.value)} />
                     </div>
                     <div className="grid gap-2 md:col-span-3">
                         <Label htmlFor="tourDates">ວັນທີເດີນທາງ (Tour Dates)</Label>
-                        <Textarea id="tourDates" value={localProgram.tourDates || ''} onChange={(e) => handleProgramChange('tourDates', e.target.value)} disabled={isSaving} />
+                        <Textarea id="tourDates" value={localProgram.tourDates || ''} onChange={(e) => handleProgramChange('tourDates', e.target.value)} />
                     </div>
                     <div className="grid gap-2">
                         <Label htmlFor="pax">ຈຳນວນຄົນ (Pax)</Label>
-                        <Input id="pax" type="number" value={localProgram.pax} onChange={(e) => handleProgramChange('pax', Number(e.target.value))} disabled={isSaving} />
+                        <Input id="pax" type="number" value={localProgram.pax} onChange={(e) => handleProgramChange('pax', Number(e.target.value))} />
                     </div>
                      <div className="grid gap-2">
                         <Label htmlFor="destination">ຈຸດໝາຍ</Label>
-                        <Input id="destination" value={localProgram.destination} onChange={(e) => handleProgramChange('destination', e.target.value)} disabled={isSaving} />
+                        <Input id="destination" value={localProgram.destination} onChange={(e) => handleProgramChange('destination', e.target.value)} />
                     </div>
                      <div className="grid gap-2">
                         <Label htmlFor="durationDays">ໄລຍະເວລາ (ວັນ)</Label>
-                        <Input id="durationDays" type="number" value={localProgram.durationDays} onChange={(e) => handleProgramChange('durationDays', Number(e.target.value))} disabled={isSaving} />
+                        <Input id="durationDays" type="number" value={localProgram.durationDays} onChange={(e) => handleProgramChange('durationDays', Number(e.target.value))} />
                     </div>
                 </div>
 
@@ -506,7 +506,6 @@ export default function TourProgramClientPage({ initialProgram }: { initialProgr
                         currency={localProgram.priceCurrency}
                         onAmountChange={(v) => handleProgramChange('price', v)}
                         onCurrencyChange={(v) => handleProgramChange('priceCurrency', v)}
-                        disabled={isSaving}
                      />
                      <CurrencyInput 
                         label="Bank Charge"
@@ -514,7 +513,6 @@ export default function TourProgramClientPage({ initialProgram }: { initialProgr
                         currency={localProgram.bankChargeCurrency}
                         onAmountChange={(v) => handleProgramChange('bankCharge', v)}
                         onCurrencyChange={(v) => handleProgramChange('bankChargeCurrency', v)}
-                        disabled={isSaving}
                      />
                 </div>
             </CardContent>
