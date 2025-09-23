@@ -164,20 +164,11 @@ export interface TourCosts {
     documents: DocumentFee[];
 }
 
-export interface CalculationSnapshot {
-    id: string;
-    savedAt: Date;
-    tourInfo: TourInfo;
-    allCosts: TourCosts;
-    note: string;
-}
-
 export interface SavedCalculation {
     id: string;
     savedAt: Date;
     tourInfo: TourInfo;
     allCosts: TourCosts;
-    history?: CalculationSnapshot[];
 }
 
 export interface DocumentAccountSummary extends TourAccountSummary {}
