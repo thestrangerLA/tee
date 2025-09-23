@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, FileText, Trash2, PlusCircle, Calendar as CalendarIcon, Printer, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, FileText, Trash2, PlusCircle, Calendar as CalendarIcon, Printer, Eye, EyeOff, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { 
     listenToTourCostItemsForProgram, 
@@ -224,13 +224,12 @@ const SummaryCard = ({ title, value, currency, isProfit = false }: { title: stri
     );
 };
 
-const CurrencyInput = ({ label, amount, currency, onAmountChange, onCurrencyChange, onBlur, disabled }: {
+const CurrencyInput = ({ label, amount, currency, onAmountChange, onCurrencyChange, disabled }: {
     label: string;
     amount: number;
     currency: Currency;
     onAmountChange: (value: number) => void;
     onCurrencyChange: (value: Currency) => void;
-    onBlur: () => void;
     disabled?: boolean;
 }) => (
     <div className="grid gap-2">
@@ -242,11 +241,10 @@ const CurrencyInput = ({ label, amount, currency, onAmountChange, onCurrencyChan
                 type="number"
                 value={amount || ''}
                 onChange={(e) => onAmountChange(Number(e.target.value))}
-                onBlur={onBlur}
                 className="w-2/3 print:hidden"
                 disabled={disabled}
             />
-            <Select value={currency} onValueChange={(v) => { onCurrencyChange(v as Currency); onBlur(); }} disabled={disabled}>
+            <Select value={currency} onValueChange={(v) => onCurrencyChange(v as Currency)} disabled={disabled}>
                 <SelectTrigger className="w-1/3 print:hidden">
                     <SelectValue />
                 </SelectTrigger>
@@ -317,45 +315,36 @@ export default function TourProgramClientPage({ initialProgram }: { initialProgr
             
             setLocalProgram(updatedProgram);
 
-            toast({ title: "บันทึกข้อมูลโปรแกรมแล้ว" });
+            toast({ title: "ບັນທຶກຂໍ້ມູນໂປຣແກຣມແລ້ວ" });
         } catch (error) {
              console.error("Failed to save program info:", error);
-            toast({ title: "เกิดข้อผิดพลาดในการบันทึก", variant: "destructive" });
+            toast({ title: "ເກີດຂໍ້ຜິດພາດໃນການບັນທຶກ", variant: "destructive" });
         } finally {
             setIsSaving(false);
         }
     }, [localProgram, isSaving, toast]);
     
-    const handleSelectChange = useCallback((field: keyof TourProgram, value: any) => {
-         setLocalProgram(prev => {
-            if (!prev) return initialProgram;
-            const newState = { ...prev, [field]: value };
-            return newState;
-        });
-        setTimeout(handleSaveProgramInfo, 0);
-    }, [handleSaveProgramInfo, initialProgram]);
-
     const handleAddCostItem = async () => {
         if (!id) return;
         try {
             await addTourCostItem(id);
-        } catch (error) { toast({ title: "เกิดข้อผิดพลาดในการเพิ่มต้นทุน", variant: "destructive" }); }
+        } catch (error) { toast({ title: "ເກີດຂໍ້ຜິດພາດໃນການເພີ່ມຕົ້ນທຶນ", variant: "destructive" }); }
     };
      const handleUpdateCostItem = async (itemId: string, field: keyof TourCostItem, value: any) => {
         try { await updateTourCostItem(itemId, { [field]: value }); } 
-        catch (error) { toast({ title: "เกิดข้อผิดพลาดในการอัปเดตต้นทุน", variant: "destructive" }); }
+        catch (error) { toast({ title: "ເກີດຂໍ້ຜິດພາດໃນການອັບເດດຕົ້ນທຶນ", variant: "destructive" }); }
     };
     const handleDeleteCostItem = async (itemId: string) => {
         if (!window.confirm("ยืนยันการลบรายการต้นทุนนี้?")) return;
         try { await deleteTourCostItem(itemId); toast({title: "ลบรายการต้นทุนสำเร็จ"}); } 
-        catch (error) { toast({ title: "เกิดข้อผิดพลาดในการลบต้นทุน", variant: "destructive" }); }
+        catch (error) { toast({ title: "ເກີດຂໍ້ຜິດພາດໃນການລົບຕົ້ນທຶນ", variant: "destructive" }); }
     };
 
     const handleAddIncomeItem = async () => {
         if (!id) return;
         try {
             await addTourIncomeItem(id);
-        } catch (error) { toast({ title: "เกิดข้อผิดพลาดในการเพิ่มรายรับ", variant: "destructive" }); }
+        } catch (error) { toast({ title: "ເກີດຂໍ້ຜິດພາດໃນการเพิ่มรายรับ", variant: "destructive" }); }
     };
      const handleUpdateIncomeItem = async (itemId: string, field: keyof TourIncomeItem, value: any) => {
         try { await updateTourIncomeItem(itemId, { [field]: value }); } 
@@ -465,42 +454,48 @@ export default function TourProgramClientPage({ initialProgram }: { initialProgr
     
     const ProgramInfoCard = () => (
          <Card className="print:hidden">
-            <CardHeader>
-                <CardTitle>ລາຍລະອຽດໂປຣແກຣມ ແລະ ຂໍ້ມູນກຸ່ມ</CardTitle>
-                <CardDescription>
-                    ວັນທີສ້າງ: {localProgram.createdAt ? format(localProgram.createdAt, "PPP", {locale: lo}) : '-'}
-                     {isSaving && <span className="ml-4 text-blue-500 animate-pulse">ກຳລັງບັນທึก...</span>}
-                </CardDescription>
+            <CardHeader className="flex flex-row justify-between items-start">
+                <div>
+                    <CardTitle>ລາຍລະອຽດໂປຣແກຣມ ແລະ ຂໍ້ມູນກຸ່ມ</CardTitle>
+                    <CardDescription>
+                        ວັນທີສ້າງ: {localProgram.createdAt ? format(localProgram.createdAt, "PPP", {locale: lo}) : '-'}
+                        {isSaving && <span className="ml-4 text-blue-500 animate-pulse">ກຳລັງບັນທຶກ...</span>}
+                    </CardDescription>
+                </div>
+                <Button onClick={handleSaveProgramInfo} disabled={isSaving}>
+                    <Save className="mr-2 h-4 w-4" />
+                    {isSaving ? 'ກຳລັງບັນທຶກ' : 'ບັນທຶກການປ່ຽນແປງ'}
+                </Button>
             </CardHeader>
             <CardContent className="space-y-6">
                  <div className="grid md:grid-cols-3 gap-6">
                      <div className="grid gap-2">
                         <Label htmlFor="programName">Tour Program</Label>
-                        <Input id="programName" value={localProgram.programName} onChange={(e) => handleProgramChange('programName', e.target.value)} onBlur={handleSaveProgramInfo} disabled={isSaving} />
+                        <Input id="programName" value={localProgram.programName} onChange={(e) => handleProgramChange('programName', e.target.value)} disabled={isSaving} />
                     </div>
                      <div className="grid gap-2">
                         <Label htmlFor="tourCode">Group Code</Label>
-                        <Input id="tourCode" value={localProgram.tourCode} onChange={(e) => handleProgramChange('tourCode', e.target.value)} onBlur={handleSaveProgramInfo} disabled={isSaving} />
+                        <Input id="tourCode" value={localProgram.tourCode} onChange={(e) => handleProgramChange('tourCode', e.target.value)} disabled={isSaving} />
                     </div>
                      <div className="grid gap-2">
                         <Label htmlFor="groupName">Nationality</Label>
-                        <Input id="groupName" value={localProgram.groupName} onChange={(e) => handleProgramChange('groupName', e.target.value)} onBlur={handleSaveProgramInfo} disabled={isSaving} />
+                        <Input id="groupName" value={localProgram.groupName} onChange={(e) => handleProgramChange('groupName', e.target.value)} disabled={isSaving} />
                     </div>
                     <div className="grid gap-2 md:col-span-3">
                         <Label htmlFor="tourDates">ວັນທີເດີນທາງ (Tour Dates)</Label>
-                        <Textarea id="tourDates" value={localProgram.tourDates || ''} onChange={(e) => handleProgramChange('tourDates', e.target.value)} onBlur={handleSaveProgramInfo} disabled={isSaving} />
+                        <Textarea id="tourDates" value={localProgram.tourDates || ''} onChange={(e) => handleProgramChange('tourDates', e.target.value)} disabled={isSaving} />
                     </div>
                     <div className="grid gap-2">
                         <Label htmlFor="pax">ຈຳນວນຄົນ (Pax)</Label>
-                        <Input id="pax" type="number" value={localProgram.pax} onChange={(e) => handleProgramChange('pax', Number(e.target.value))} onBlur={handleSaveProgramInfo} disabled={isSaving} />
+                        <Input id="pax" type="number" value={localProgram.pax} onChange={(e) => handleProgramChange('pax', Number(e.target.value))} disabled={isSaving} />
                     </div>
                      <div className="grid gap-2">
                         <Label htmlFor="destination">ຈຸດໝາຍ</Label>
-                        <Input id="destination" value={localProgram.destination} onChange={(e) => handleProgramChange('destination', e.target.value)} onBlur={handleSaveProgramInfo} disabled={isSaving} />
+                        <Input id="destination" value={localProgram.destination} onChange={(e) => handleProgramChange('destination', e.target.value)} disabled={isSaving} />
                     </div>
                      <div className="grid gap-2">
                         <Label htmlFor="durationDays">ໄລຍະເວລາ (ວັນ)</Label>
-                        <Input id="durationDays" type="number" value={localProgram.durationDays} onChange={(e) => handleProgramChange('durationDays', Number(e.target.value))} onBlur={handleSaveProgramInfo} disabled={isSaving} />
+                        <Input id="durationDays" type="number" value={localProgram.durationDays} onChange={(e) => handleProgramChange('durationDays', Number(e.target.value))} disabled={isSaving} />
                     </div>
                 </div>
 
@@ -510,8 +505,7 @@ export default function TourProgramClientPage({ initialProgram }: { initialProgr
                         amount={localProgram.price}
                         currency={localProgram.priceCurrency}
                         onAmountChange={(v) => handleProgramChange('price', v)}
-                        onCurrencyChange={(v) => handleSelectChange('priceCurrency', v)}
-                        onBlur={handleSaveProgramInfo}
+                        onCurrencyChange={(v) => handleProgramChange('priceCurrency', v)}
                         disabled={isSaving}
                      />
                      <CurrencyInput 
@@ -519,8 +513,7 @@ export default function TourProgramClientPage({ initialProgram }: { initialProgr
                         amount={localProgram.bankCharge}
                         currency={localProgram.bankChargeCurrency}
                         onAmountChange={(v) => handleProgramChange('bankCharge', v)}
-                        onCurrencyChange={(v) => handleSelectChange('bankChargeCurrency', v)}
-                        onBlur={handleSaveProgramInfo}
+                        onCurrencyChange={(v) => handleProgramChange('bankChargeCurrency', v)}
                         disabled={isSaving}
                      />
                 </div>
@@ -777,5 +770,3 @@ export default function TourProgramClientPage({ initialProgram }: { initialProgr
     </div>
   )
 }
-
-    
