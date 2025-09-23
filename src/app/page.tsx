@@ -40,10 +40,10 @@ export default function Home() {
               </CardContent>
             </Card>
           </Link>
-           <Link href="/tour/calculator/default">
+           <Link href="/kn/calculator">
             <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-2xl font-bold font-headline">ຄຳນວນຕົ້ນທຶນ</CardTitle>
+                <CardTitle className="text-2xl font-bold font-headline">ຄຳນວນຕົ້ນທຶນ (KN)</CardTitle>
                 <Calculator className="h-8 w-8 text-primary" />
               </CardHeader>
               <CardContent>
@@ -71,5 +71,3 @@ export default function Home() {
     </div>
   )
 }
-
-    
