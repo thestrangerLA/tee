@@ -6,15 +6,11 @@ import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Calculator, PlusCircle, MoreHorizontal, Trash2 } from "lucide-react";
+import { ArrowLeft, Calculator, PlusCircle, MoreHorizontal, Trash2, Calendar as CalendarIcon, ChevronDown } from "lucide-react";
 import { listenToSavedCalculations, deleteCalculation } from '@/services/tourCalculatorService';
 import type { SavedCalculation } from '@/lib/types';
-<<<<<<< HEAD
-import { format } from 'date-fns';
-=======
 import { format, getYear, getMonth } from 'date-fns';
 
->>>>>>> a426d290bda97e938a49db9fc1d42c4280364a2d
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,24 +20,15 @@ import {
   DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
-<<<<<<< HEAD
-import { Input } from '@/components/ui/input';
-=======
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useClientRouter } from '@/hooks/useClientRouter';
 import StaticExportWrapper from '@/components/StaticExportWrapper';
->>>>>>> a426d290bda97e938a49db9fc1d42c4280364a2d
 
 function TourCalculationsListPageComponent() {
     const { toast } = useToast();
     const [allCalculations, setAllCalculations] = useState<SavedCalculation[]>([]);
-<<<<<<< HEAD
-    const [searchQuery, setSearchQuery] = useState("");
-    const router = useRouter();
-=======
     const [selectedYear, setSelectedYear] = useState<number | null>(new Date().getFullYear());
     const router = useClientRouter();
->>>>>>> a426d290bda97e938a49db9fc1d42c4280364a2d
 
     useEffect(() => {
         const unsubscribe = listenToSavedCalculations(setAllCalculations);
@@ -52,13 +39,17 @@ function TourCalculationsListPageComponent() {
         router.push(`/tour/calculator/${id}`);
     };
     
-    const filteredCalculations = useMemo(() => {
-        return allCalculations.filter(p =>
-            (p.tourInfo.program?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
-            (p.tourInfo.groupCode?.toLowerCase() || '').includes(searchQuery.toLowerCase())
-        );
-    }, [allCalculations, searchQuery]);
-
+    const calculationsByMonth = useMemo(() => {
+        const filtered = allCalculations.filter(c => selectedYear === null || getYear(c.savedAt) === selectedYear);
+        return filtered.reduce((acc, calc) => {
+            const month = getMonth(calc.savedAt);
+            if (!acc[month]) {
+                acc[month] = [];
+            }
+            acc[month].push(calc);
+            return acc;
+        }, {} as Record<number, SavedCalculation[]>);
+    }, [allCalculations, selectedYear]);
 
     const handleDeleteCalculation = async (id: string, name: string) => {
         if (!window.confirm(`Are you sure you want to delete the calculation "${name}"? This action cannot be undone.`)) {
@@ -80,8 +71,6 @@ function TourCalculationsListPageComponent() {
         }
     };
     
-<<<<<<< HEAD
-=======
     const YearSelector = () => {
         const years = [...new Set(allCalculations.map(c => getYear(c.savedAt)))].sort((a,b) => b-a);
 
@@ -162,7 +151,6 @@ function TourCalculationsListPageComponent() {
         </Table>
     );
 
->>>>>>> a426d290bda97e938a49db9fc1d42c4280364a2d
     return (
         <div className="flex min-h-screen w-full flex-col bg-muted/40">
             <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
@@ -177,12 +165,7 @@ function TourCalculationsListPageComponent() {
                     <h1 className="text-xl font-bold tracking-tight font-headline">ລາຍການຄຳນວນທັງໝົດ</h1>
                 </div>
                  <div className="ml-auto flex items-center gap-4">
-                    <Input 
-                        placeholder="Search by Program or Group Code..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-64"
-                    />
+                    <YearSelector />
                     <Link href="/tour/calculator/new">
                         <Button size="sm">
                             <PlusCircle className="mr-2 h-4 w-4" />
@@ -194,56 +177,24 @@ function TourCalculationsListPageComponent() {
             <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
                 <Card>
                     <CardContent className="p-0">
-                         {filteredCalculations.length > 0 ? (
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Saved At</TableHead>
-                                        <TableHead>Program Name</TableHead>
-                                        <TableHead>Group Code</TableHead>
-                                        <TableHead>Destination</TableHead>
-                                        <TableHead className="text-right">Pax</TableHead>
-                                        <TableHead><span className="sr-only">Actions</span></TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                {filteredCalculations.map(calc => (
-                                    <TableRow key={calc.id} onClick={() => handleRowClick(calc.id)} className="cursor-pointer">
-                                        <TableCell>{format(calc.savedAt, "dd MMM yyyy, HH:mm")}</TableCell>
-                                        <TableCell className="font-medium">{calc.tourInfo.program}</TableCell>
-                                        <TableCell>{calc.tourInfo.groupCode}</TableCell>
-                                        <TableCell>{calc.tourInfo.destinationCountry}</TableCell>
-                                        <TableCell className="text-right">{calc.tourInfo.numPeople}</TableCell>
-                                        <TableCell className="text-right">
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" className="h-8 w-8 p-0" onClick={(e) => e.stopPropagation()}>
-                                                        <MoreHorizontal className="h-4 w-4" />
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end">
-                                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                    <DropdownMenuItem onClick={() => handleRowClick(calc.id)}>View/Edit</DropdownMenuItem>
-                                                    <DropdownMenuSeparator />
-                                                    <DropdownMenuItem
-                                                        className="text-red-600"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleDeleteCalculation(calc.id, calc.tourInfo.program);
-                                                        }}
-                                                    >
-                                                        <Trash2 className="mr-2 h-4 w-4"/> Delete
-                                                    </DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                        </TableCell>
-                                    </TableRow>
+                         {Object.keys(calculationsByMonth).length > 0 ? (
+                            <Accordion type="single" collapsible className="w-full" defaultValue="month-0">
+                                {Object.entries(calculationsByMonth)
+                                .sort(([a], [b]) => Number(b) - Number(a))
+                                .map(([month, calcs]) => (
+                                <AccordionItem value={`month-${month}`} key={month}>
+                                    <AccordionTrigger className="bg-muted/50 px-4 rounded-md text-base font-semibold">
+                                        {format(new Date(selectedYear || 0, Number(month)), 'LLLL yyyy')}
+                                    </AccordionTrigger>
+                                    <AccordionContent>
+                                        {renderCalculationRows(calcs)}
+                                    </AccordionContent>
+                                </AccordionItem>
                                 ))}
-                                </TableBody>
-                            </Table>
+                            </Accordion>
                          ) : (
                             <div className="text-center text-muted-foreground py-16">
-                                <p>No calculations found.</p>
+                                <p>No calculations found for the selected year.</p>
                             </div>
                          )}
                     </CardContent>
@@ -260,3 +211,5 @@ export default function TourCalculationsListPage() {
         </StaticExportWrapper>
     )
 }
+
+    

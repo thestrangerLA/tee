@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
@@ -26,6 +27,7 @@ import type { TourCostItem, TourIncomeItem, TourProgram, Currency } from '@/lib/
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from 'date-fns';
+import { lo } from 'date-fns/locale';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Checkbox } from "@/components/ui/checkbox";
@@ -55,22 +57,22 @@ const initialDividendStructure = [
 
 const CurrencyEntryTable = ({ 
     items, 
-    onAddItem,
     onUpdateItem,
     onDeleteItem,
+    onAddItem,
     title,
     description,
-    itemVisibility,
-    toggleItemVisibility
+    onSave,
+    isSaving,
 }: { 
     items: (TourCostItem[] | TourIncomeItem[]),
-    onAddItem: () => Promise<void>,
     onUpdateItem: (id: string, field: keyof (TourCostItem | TourIncomeItem), value: any) => void,
     onDeleteItem: (id: string) => Promise<void>,
+    onAddItem: () => Promise<void>,
     title: string,
     description: string,
-    itemVisibility: Record<string, boolean>;
-    toggleItemVisibility: (itemId: string) => void;
+    onSave: () => void,
+    isSaving: boolean
 }) => {
     
     const totals = useMemo(() => {
@@ -82,12 +84,11 @@ const CurrencyEntryTable = ({
             return acc;
         }, { lak: 0, thb: 0, usd: 0, cny: 0 });
     }, [items]);
-    
-     const handleItemChange = (id: string, field: keyof (TourCostItem | TourIncomeItem), value: any) => {
+
+    const handleBlur = (id: string, field: keyof (TourCostItem | TourIncomeItem), value: any) => {
         onUpdateItem(id, field, value);
-    };
-
-
+    }
+    
     return (
         <Card className="print:shadow-none print:border-none">
             <CardHeader className="flex flex-row items-center justify-between print:hidden">
@@ -95,10 +96,16 @@ const CurrencyEntryTable = ({
                     <CardTitle>{title}</CardTitle>
                     <CardDescription>{description}</CardDescription>
                 </div>
-                 <Button size="sm" onClick={onAddItem}>
-                    <PlusCircle className="mr-2 h-4 w-4"/>
-                    เพิ่มรายการ
-                </Button>
+                 <div className="flex items-center gap-2">
+                    <Button size="sm" onClick={onAddItem}>
+                        <PlusCircle className="mr-2 h-4 w-4"/>
+                        ເພີ່ມລາຍການ
+                    </Button>
+                    <Button size="sm" onClick={onSave} disabled={isSaving} variant="secondary">
+                        <Save className="mr-2 h-4 w-4"/>
+                        {isSaving ? 'ກຳລັງບັນທຶກ...' : 'ບັນທຶກລາຍການ'}
+                    </Button>
+                </div>
             </CardHeader>
              <CardContent className="print:p-0">
                 <div className="overflow-x-auto">
@@ -129,7 +136,7 @@ const CurrencyEntryTable = ({
                                                 <Calendar
                                                     mode="single"
                                                     selected={item.date || undefined}
-                                                    onSelect={(date) => handleItemChange(item.id, 'date', date || new Date())}
+                                                    onSelect={(date) => handleBlur(item.id, 'date', date || new Date())}
                                                     initialFocus
                                                     
                                                 />
@@ -139,55 +146,40 @@ const CurrencyEntryTable = ({
                                     </TableCell>
                                      <TableCell className="p-1">
                                         <Input 
-                                            value={item.detail || ''} 
-                                            onChange={(e) => handleItemChange(item.id, 'detail', e.target.value)}
-                                            onBlur={(e) => updateTourCostItem(item.id, { detail: e.target.value })}
+                                            defaultValue={item.detail || ''} 
+                                            onBlur={(e) => handleBlur(item.id, 'detail', e.target.value)}
                                             className="h-8 print:border-none print:pl-0 print:font-lao print:text-sm"
                                         />
                                     </TableCell>
                                     <TableCell className="p-1">
                                         <Input
                                             type="text"
-<<<<<<< HEAD
-                                            value={formatCurrency(item.kip)}
-                                            onChange={(e) => handleItemChange(item.id, 'kip', parseFormattedNumber(e.target.value))}
-                                            onBlur={(e) => updateTourCostItem(item.id, { kip: parseFormattedNumber(e.target.value) })}
-=======
-                                            value={formatCurrency(item.lak)}
-                                            onChange={(e) => onUpdateItem(item.id, 'lak', parseFormattedNumber(e.target.value))}
->>>>>>> a426d290bda97e938a49db9fc1d42c4280364a2d
+                                            defaultValue={formatCurrency(item.lak)}
+                                            onBlur={(e) => handleBlur(item.id, 'lak', parseFormattedNumber(e.target.value))}
                                             className="h-8 text-right print:border-none print:text-sm"
                                         />
                                     </TableCell>
                                      <TableCell className="p-1">
                                         <Input
                                             type="text"
-<<<<<<< HEAD
-                                            value={formatCurrency(item.baht)}
-                                            onChange={(e) => handleItemChange(item.id, 'baht', parseFormattedNumber(e.target.value))}
-                                            onBlur={(e) => updateTourCostItem(item.id, { baht: parseFormattedNumber(e.target.value) })}
-=======
-                                            value={formatCurrency(item.thb)}
-                                            onChange={(e) => onUpdateItem(item.id, 'thb', parseFormattedNumber(e.target.value))}
->>>>>>> a426d290bda97e938a49db9fc1d42c4280364a2d
+                                            defaultValue={formatCurrency(item.thb)}
+                                            onBlur={(e) => handleBlur(item.id, 'thb', parseFormattedNumber(e.target.value))}
                                             className="h-8 text-right print:border-none print:text-sm"
                                         />
                                     </TableCell>
                                      <TableCell className="p-1">
                                         <Input
                                             type="text"
-                                            value={formatCurrency(item.usd)}
-                                            onChange={(e) => handleItemChange(item.id, 'usd', parseFormattedNumber(e.target.value))}
-                                            onBlur={(e) => updateTourCostItem(item.id, { usd: parseFormattedNumber(e.target.value) })}
+                                            defaultValue={formatCurrency(item.usd)}
+                                            onBlur={(e) => handleBlur(item.id, 'usd', parseFormattedNumber(e.target.value))}
                                             className="h-8 text-right print:border-none print:text-sm"
                                         />
                                     </TableCell>
                                      <TableCell className="p-1">
                                         <Input
                                             type="text"
-                                            value={formatCurrency(item.cny)}
-                                            onChange={(e) => handleItemChange(item.id, 'cny', parseFormattedNumber(e.target.value))}
-                                            onBlur={(e) => updateTourCostItem(item.id, { cny: parseFormattedNumber(e.target.value) })}
+                                            defaultValue={formatCurrency(item.cny)}
+                                            onBlur={(e) => handleBlur(item.id, 'cny', parseFormattedNumber(e.target.value))}
                                             className="h-8 text-right print:border-none print:text-sm"
                                         />
                                     </TableCell>
@@ -288,13 +280,9 @@ export default function TourProgramClientPage({ initialProgram }: { initialProgr
     const [printCurrencies, setPrintCurrencies] = useState<Currency[]>(['LAK']);
     
     const [isSaving, setIsSaving] = useState(false);
+    const [isTableSaving, setIsTableSaving] = useState(false);
     const [activeTab, setActiveTab] = useState<TabValue>('info');
-    const [itemVisibility, setItemVisibility] = useState<Record<string, boolean>>({});
     const [dividendStructure, setDividendStructure] = useState<DividendItem[]>(initialDividendStructure);
-
-    const toggleItemVisibility = (itemId: string) => {
-        setItemVisibility(prev => ({ ...prev, [itemId]: !prev[itemId] }));
-    };
 
     useEffect(() => {
         if (!id) return;
@@ -348,9 +336,28 @@ export default function TourProgramClientPage({ initialProgram }: { initialProgr
             await addTourCostItem(id);
         } catch (error) { toast({ title: "ເກີດຂໍ້ຜິດພາດໃນການເພີ່ມຕົ້ນທຶນ", variant: "destructive" }); }
     };
-    const handleUpdateCostItem = (itemId: string, field: keyof TourCostItem, value: any) => {
-        setCostItems(prev => prev.map(item => item.id === itemId ? {...item, [field]: value} : item));
+    
+    const handleUpdateCostItem = useCallback((itemId: string, field: keyof TourCostItem, value: any) => {
+        setCostItems(prev => prev.map(item => item.id === itemId ? { ...item, [field]: value } : item));
+    }, []);
+
+    const handleSaveCostItems = async () => {
+        setIsTableSaving(true);
+        const promises = costItems.map(item => {
+            const { id, ...dataToUpdate } = item;
+            return updateTourCostItem(id, dataToUpdate);
+        });
+        try {
+            await Promise.all(promises);
+            toast({title: "ບັນທຶກລາຍຈ່າຍສຳເລັດ"});
+        } catch (error) {
+            console.error("Error saving cost items", error);
+            toast({title: "ເກີດຂໍ້ຜິດພາດໃນການບັນທຶກລາຍຈ່າຍ", variant: "destructive"})
+        } finally {
+            setIsTableSaving(false);
+        }
     };
+
     const handleDeleteCostItem = async (itemId: string) => {
         if (!window.confirm("ยืนยันการลบรายการต้นทุนนี้?")) return;
         try { await deleteTourCostItem(itemId); toast({title: "ลบรายการต้นทุนสำเร็จ"}); } 
@@ -363,9 +370,28 @@ export default function TourProgramClientPage({ initialProgram }: { initialProgr
             await addTourIncomeItem(id);
         } catch (error) { toast({ title: "ເກີດຂໍ້ຜິດພາດໃນการเพิ่มรายรับ", variant: "destructive" }); }
     };
-    const handleUpdateIncomeItem = (itemId: string, field: keyof TourIncomeItem, value: any) => {
-        setIncomeItems(prev => prev.map(item => item.id === itemId ? {...item, [field]: value} : item));
+
+    const handleUpdateIncomeItem = useCallback((itemId: string, field: keyof TourIncomeItem, value: any) => {
+        setIncomeItems(prev => prev.map(item => item.id === itemId ? { ...item, [field]: value } : item));
+    }, []);
+    
+    const handleSaveIncomeItems = async () => {
+        setIsTableSaving(true);
+        const promises = incomeItems.map(item => {
+            const { id, ...dataToUpdate } = item;
+            return updateTourIncomeItem(id, dataToUpdate);
+        });
+        try {
+            await Promise.all(promises);
+            toast({title: "ບັນທຶກລາຍຮັບສຳເລັດ"});
+        } catch (error) {
+            console.error("Error saving income items", error);
+            toast({title: "ເກີດຂໍ້ຜິດພາດໃນການບັນທຶກລາຍຮັບ", variant: "destructive"})
+        } finally {
+            setIsTableSaving(false);
+        }
     };
+
     const handleDeleteIncomeItem = async (itemId: string) => {
         if (!window.confirm("ยืนยันการลบรายการรายรับนี้?")) return;
         try { await deleteTourIncomeItem(itemId); toast({title: "ลบรายการรายรับสำเร็จ"}); } 
@@ -470,7 +496,6 @@ export default function TourProgramClientPage({ initialProgram }: { initialProgr
     
     const ProgramInfoCard = () => (
          <Card className="print:hidden">
-<<<<<<< HEAD
             <CardHeader className="flex flex-row justify-between items-start">
                 <div>
                     <CardTitle>ລາຍລະອຽດໂປຣແກຣມ ແລະ ຂໍ້ມູນກຸ່ມ</CardTitle>
@@ -483,62 +508,73 @@ export default function TourProgramClientPage({ initialProgram }: { initialProgr
                     <Save className="mr-2 h-4 w-4" />
                     {isSaving ? 'ກຳລັງບັນທຶກ' : 'ບັນທຶກການປ່ຽນແປງ'}
                 </Button>
-=======
-            <CardHeader>
-                <CardTitle>ລາຍລະອຽດໂປຣແກຣມ ແລະ ຂໍ້ມູນກຸ່ມ</CardTitle>
-                <CardDescription>
-                    ວັນທີສ້າງ: {localProgram.createdAt ? format(localProgram.createdAt, "PPP") : '-'}
-                     {isSaving && <span className="ml-4 text-blue-500 animate-pulse">ກຳລັງບັນທึก...</span>}
-                </CardDescription>
->>>>>>> a426d290bda97e938a49db9fc1d42c4280364a2d
             </CardHeader>
-            <CardContent className="space-y-6">
-                 <div className="grid md:grid-cols-3 gap-6">
-                     <div className="grid gap-2">
-                        <Label htmlFor="programName">Tour Program</Label>
-                        <Input id="programName" value={localProgram.programName || ''} onChange={(e) => handleProgramChange('programName', e.target.value)} />
+            <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="md:col-span-3">
+                         <Table>
+                            <TableBody>
+                                <TableRow>
+                                    <TableCell className="font-semibold w-1/4">ຊື່ໂປຣແກຣມ</TableCell>
+                                    <TableCell>
+                                        <Input id="programName" value={localProgram.programName || ''} onChange={(e) => handleProgramChange('programName', e.target.value)} />
+                                    </TableCell>
+                                    <TableCell className="font-semibold w-1/4">ລະຫັດກຸ່ມ</TableCell>
+                                    <TableCell>
+                                         <Input id="tourCode" value={localProgram.tourCode || ''} onChange={(e) => handleProgramChange('tourCode', e.target.value)} />
+                                    </TableCell>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCell className="font-semibold">ສັນຊາດ</TableCell>
+                                    <TableCell>
+                                        <Input id="groupName" value={localProgram.groupName || ''} onChange={(e) => handleProgramChange('groupName', e.target.value)} />
+                                    </TableCell>
+                                    <TableCell className="font-semibold">ຈຳນວນຄົນ</TableCell>
+                                    <TableCell>
+                                        <Input id="pax" type="number" value={localProgram.pax || ''} onChange={(e) => handleProgramChange('pax', Number(e.target.value) || 0)} />
+                                    </TableCell>
+                                </TableRow>
+                                 <TableRow>
+                                    <TableCell className="font-semibold">ຈຸດໝາຍ</TableCell>
+                                    <TableCell>
+                                        <Input id="destination" value={localProgram.destination || ''} onChange={(e) => handleProgramChange('destination', e.target.value)} />
+                                    </TableCell>
+                                    <TableCell className="font-semibold">ໄລຍະເວລາ (ວັນ)</TableCell>
+                                    <TableCell>
+                                        <Input id="durationDays" type="number" value={localProgram.durationDays || ''} onChange={(e) => handleProgramChange('durationDays', Number(e.target.value) || 0)} />
+                                    </TableCell>
+                                </TableRow>
+                                <TableRow>
+                                     <TableCell className="font-semibold align-top">ວັນທີເດີນທາງ</TableCell>
+                                    <TableCell colSpan={3}>
+                                        <Textarea id="tourDates" value={localProgram.tourDates || ''} onChange={(e) => handleProgramChange('tourDates', e.target.value)} />
+                                    </TableCell>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCell className="font-semibold">ລາຄາ</TableCell>
+                                    <TableCell>
+                                        <CurrencyInput 
+                                            label="Price"
+                                            amount={localProgram.price}
+                                            currency={localProgram.priceCurrency}
+                                            onAmountChange={(v) => handleProgramChange('price', v)}
+                                            onCurrencyChange={(v) => handleProgramChange('priceCurrency', v)}
+                                        />
+                                    </TableCell>
+                                     <TableCell className="font-semibold">ຄ່າທຳນຽມທະນາຄານ</TableCell>
+                                    <TableCell>
+                                        <CurrencyInput 
+                                            label="Bank Charge"
+                                            amount={localProgram.bankCharge}
+                                            currency={localProgram.bankChargeCurrency}
+                                            onAmountChange={(v) => handleProgramChange('bankCharge', v)}
+                                            onCurrencyChange={(v) => handleProgramChange('bankChargeCurrency', v)}
+                                        />
+                                    </TableCell>
+                                </TableRow>
+                            </TableBody>
+                        </Table>
                     </div>
-                     <div className="grid gap-2">
-                        <Label htmlFor="tourCode">Group Code</Label>
-                        <Input id="tourCode" value={localProgram.tourCode || ''} onChange={(e) => handleProgramChange('tourCode', e.target.value)} />
-                    </div>
-                     <div className="grid gap-2">
-                        <Label htmlFor="groupName">Nationality</Label>
-                        <Input id="groupName" value={localProgram.groupName || ''} onChange={(e) => handleProgramChange('groupName', e.target.value)} />
-                    </div>
-                    <div className="grid gap-2 md:col-span-3">
-                        <Label htmlFor="tourDates">ວັນທີເດີນທາງ (Tour Dates)</Label>
-                        <Textarea id="tourDates" value={localProgram.tourDates || ''} onChange={(e) => handleProgramChange('tourDates', e.target.value)} />
-                    </div>
-                    <div className="grid gap-2">
-                        <Label htmlFor="pax">ຈຳນວນຄົນ (Pax)</Label>
-                        <Input id="pax" type="number" value={localProgram.pax || ''} onChange={(e) => handleProgramChange('pax', Number(e.target.value) || 0)} />
-                    </div>
-                     <div className="grid gap-2">
-                        <Label htmlFor="destination">ຈຸດໝາຍ</Label>
-                        <Input id="destination" value={localProgram.destination || ''} onChange={(e) => handleProgramChange('destination', e.target.value)} />
-                    </div>
-                     <div className="grid gap-2">
-                        <Label htmlFor="durationDays">ໄລຍະເວລາ (ວັນ)</Label>
-                        <Input id="durationDays" type="number" value={localProgram.durationDays || ''} onChange={(e) => handleProgramChange('durationDays', Number(e.target.value) || 0)} />
-                    </div>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-6">
-                     <CurrencyInput 
-                        label="Price"
-                        amount={localProgram.price}
-                        currency={localProgram.priceCurrency}
-                        onAmountChange={(v) => handleProgramChange('price', v)}
-                        onCurrencyChange={(v) => handleProgramChange('priceCurrency', v)}
-                     />
-                     <CurrencyInput 
-                        label="Bank Charge"
-                        amount={localProgram.bankCharge}
-                        currency={localProgram.bankChargeCurrency}
-                        onAmountChange={(v) => handleProgramChange('bankCharge', v)}
-                        onCurrencyChange={(v) => handleProgramChange('bankChargeCurrency', v)}
-                     />
                 </div>
             </CardContent>
         </Card>
@@ -599,8 +635,8 @@ export default function TourProgramClientPage({ initialProgram }: { initialProgr
                       onDeleteItem={handleDeleteIncomeItem}
                       title="ຕາຕະລາງບັນທຶກລາຍຮັບ"
                       description="ບັນທຶກລາຍຮັບທັງໝົດຂອງໂປຣແກຣມນີ້"
-                      itemVisibility={itemVisibility}
-                      toggleItemVisibility={toggleItemVisibility}
+                      onSave={handleSaveIncomeItems}
+                      isSaving={isTableSaving}
                   />
               </div>
           </TabsContent>
@@ -614,8 +650,8 @@ export default function TourProgramClientPage({ initialProgram }: { initialProgr
                       onDeleteItem={handleDeleteCostItem}
                       title="ຕາຕະລາງຄຳນວນຕົ້ນທຶນ"
                       description="ບັນທຶກຄ່າໃຊ້ຈ່າຍທັງໝົດຂອງໂປຣແກຣມນີ້"
-                      itemVisibility={itemVisibility}
-                      toggleItemVisibility={toggleItemVisibility}
+                      onSave={handleSaveCostItems}
+                      isSaving={isTableSaving}
                   />
               </div>
           </TabsContent>
@@ -793,3 +829,5 @@ export default function TourProgramClientPage({ initialProgram }: { initialProgr
     </div>
   )
 }
+
+    

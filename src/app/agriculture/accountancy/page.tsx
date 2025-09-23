@@ -786,8 +786,3 @@ export default function AgricultureAccountancyPage() {
         </div>
     );
 }
-
-<<<<<<< HEAD
-    
-=======
->>>>>>> a426d290bda97e938a49db9fc1d42c4280364a2d

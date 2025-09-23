@@ -1,6 +1,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Leaf, FerrisWheel, Briefcase } from "lucide-react"
+import { Leaf, FerrisWheel, Briefcase, FileText, Calculator } from "lucide-react"
 import Link from 'next/link'
 
 export default function Home() {
@@ -27,11 +27,7 @@ export default function Home() {
               </CardContent>
             </Card>
           </Link>
-<<<<<<< HEAD
-          <Link href="/tee-work">
-=======
           <Link href="/agriculture/login/">
->>>>>>> a426d290bda97e938a49db9fc1d42c4280364a2d
             <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-2xl font-bold font-headline">Tee's WORK</CardTitle>
@@ -39,9 +35,6 @@ export default function Home() {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-<<<<<<< HEAD
-                  ຈັດການທຸລະກິດກະສິກຳ ແລະ ເອກະສານ
-=======
                   ຈັດການສະຕັອກ, ບັນຊີ, ແລະ ຂໍ້ມູນອື່ນໆ
                 </p>
               </CardContent>
@@ -69,7 +62,6 @@ export default function Home() {
               <CardContent>
                 <p className="text-muted-foreground">
                   ຈັດການຂໍ້ມູນເອກະສານ ແລະ ວີຊ່າ
->>>>>>> a426d290bda97e938a49db9fc1d42c4280364a2d
                 </p>
               </CardContent>
             </Card>
@@ -79,3 +71,5 @@ export default function Home() {
     </div>
   )
 }
+
+    

@@ -85,11 +85,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
     const [targetCurrency, setTargetCurrency] = useState<Currency>('LAK');
     const [sellingPricePercentage, setSellingPricePercentage] = useState(20);
 
-<<<<<<< HEAD
-    const handleSave = useCallback(async () => {
-=======
     const handleSave = useCallback(async (andThen?: () => void) => {
->>>>>>> a426d290bda97e938a49db9fc1d42c4280364a2d
         if (isSaving) return;
         setIsSaving(true);
         try {
@@ -98,11 +94,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                 allCosts: allCosts
             });
              toast({
-<<<<<<< HEAD
-                title: "บันทึกสำเร็จ",
-=======
                 title: "บันทึกข้อมูลสำเร็จ",
->>>>>>> a426d290bda97e938a49db9fc1d42c4280364a2d
                 description: `ข้อมูล ${tourInfo.groupCode || 'ไม่มีชื่อ'} ถูกบันทึกแล้ว`,
             });
             if (andThen) {
@@ -339,11 +331,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                     <p className="text-sm text-primary-foreground/80">{tourInfo.groupCode || 'New Calculation'}</p>
                 </div>
                  <div className="flex items-center gap-2">
-<<<<<<< HEAD
-                    <Button variant="outline" className="bg-transparent text-primary-foreground border-primary-foreground hover:bg-primary-foreground/10" onClick={handleSave} disabled={isSaving}>
-=======
                      <Button variant="outline" className="bg-transparent text-primary-foreground border-primary-foreground hover:bg-primary-foreground/10" onClick={() => handleSave()} disabled={isSaving}>
->>>>>>> a426d290bda97e938a49db9fc1d42c4280364a2d
                         <Save className="mr-2 h-4 w-4" />
                         {isSaving ? 'ກຳລັງບັນທຶກ...' : 'ບັນທຶກຂໍ້ມູນ'}
                     </Button>
@@ -1114,3 +1102,5 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
         </div>
     );
 }
+
+    
