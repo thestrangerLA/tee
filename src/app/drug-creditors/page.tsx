@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { format, startOfDay, isWithinInterval, startOfMonth, endOfMonth, getYear, setMonth, getMonth } from "date-fns";
-import { lo } from "date-fns/locale";
+
 import { ArrowLeft, Users, Calendar as CalendarIcon, Trash2, PlusCircle, ChevronDown } from "lucide-react";
 import { DrugCreditorEntry } from '@/lib/types';
 import { listenToDrugCreditorEntries, addDrugCreditorEntry, updateDrugCreditorEntry, deleteDrugCreditorEntry, updateOrderStatus } from '@/services/drugCreditorService';
@@ -232,7 +232,7 @@ export default function DrugCreditorsPage() {
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="outline" className="flex items-center gap-2">
-                        {format(displayMonth, "LLLL yyyy", { locale: lo })}
+                        {format(displayMonth, "LLLL yyyy")}
                         <ChevronDown className="h-4 w-4" />
                     </Button>
                 </DropdownMenuTrigger>
@@ -252,7 +252,7 @@ export default function DrugCreditorsPage() {
                                                 setDisplayMonth(newDate);
                                             }}
                                         >
-                                            {format(month, "LLLL", { locale: lo })}
+                                            {format(month, "LLLL")}
                                         </DropdownMenuItem>
                                     ))}
                                 </DropdownMenuSubContent>
@@ -312,7 +312,7 @@ export default function DrugCreditorsPage() {
                     <Card>
                         <CardHeader>
                             <CardTitle>ຕາຕະລາງຄິດໄລ່ສ່ວນແບ່ງ</CardTitle>
-                             <CardDescription>ຂໍ້ມູນສຳລັບເດືອນ {format(displayMonth, "LLLL yyyy", { locale: lo })}</CardDescription>
+                             <CardDescription>ຂໍ້ມູນສຳລັບເດືອນ {format(displayMonth, "LLLL yyyy")}</CardDescription>
                         </CardHeader>
                         <CardContent>
                             {dailySummaries.length > 0 ? (
@@ -407,10 +407,10 @@ export default function DrugCreditorsPage() {
                                                                                         <Input defaultValue={entry.note} onBlur={(e) => handleUpdateEntry(entry.id, 'note', e.target.value)} className="h-8" disabled={entry.isPaid} />
                                                                                     </TableCell>
                                                                                     <TableCell className="p-1">
-                                                                                        <Input type="number" defaultValue={entry.cost} onBlur={(e) => handleUpdateEntry(entry.id, 'cost', Number(e.target.value) || 0)} className="h-8 text-right" disabled={entry.isPaid} />
+                                                                                        <Input type="number" defaultValue={entry.cost || undefined} onBlur={(e) => handleUpdateEntry(entry.id, 'cost', Number(e.target.value) || 0)} className="h-8 text-right" disabled={entry.isPaid} />
                                                                                     </TableCell>
                                                                                     <TableCell className="p-1">
-                                                                                        <Input type="number" defaultValue={entry.sellingPrice} onBlur={(e) => handleUpdateEntry(entry.id, 'sellingPrice', Number(e.target.value) || 0)} className="h-8 text-right" disabled={entry.isPaid} />
+                                                                                        <Input type="number" defaultValue={entry.sellingPrice || undefined} onBlur={(e) => handleUpdateEntry(entry.id, 'sellingPrice', Number(e.target.value) || 0)} className="h-8 text-right" disabled={entry.isPaid} />
                                                                                     </TableCell>
                                                                                     <TableCell className="p-1 text-right">{formatCurrency(profit)}</TableCell>
                                                                                     <TableCell className="p-1 text-right text-green-600 font-medium">{formatCurrency(share40)}</TableCell>

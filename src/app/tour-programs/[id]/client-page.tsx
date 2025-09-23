@@ -26,7 +26,7 @@ import type { TourCostItem, TourIncomeItem, TourProgram, Currency } from '@/lib/
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from 'date-fns';
-import { lo } from 'date-fns/locale';
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -42,7 +42,7 @@ const parseFormattedNumber = (value: string): number => {
     return Number(value.replace(/,/g, '')) || 0;
 };
 
-const allCurrencies: Currency[] = ['KIP', 'BAHT', 'USD', 'CNY'];
+const allCurrencies: Currency[] = ['LAK', 'THB', 'USD', 'CNY'];
 
 const initialDividendStructure = [
     { id: '1', name: 'ບໍລິສັດ', percentage: 0.30 },
@@ -75,12 +75,12 @@ const CurrencyEntryTable = ({
     
     const totals = useMemo(() => {
         return (items as Array<TourCostItem | TourIncomeItem>).reduce((acc, item) => {
-            acc.kip += item.kip || 0;
-            acc.baht += item.baht || 0;
+            acc.lak += item.lak || 0;
+            acc.thb += item.thb || 0;
             acc.usd += item.usd || 0;
             acc.cny += item.cny || 0;
             return acc;
-        }, { kip: 0, baht: 0, usd: 0, cny: 0 });
+        }, { lak: 0, thb: 0, usd: 0, cny: 0 });
     }, [items]);
     
      const handleItemChange = (id: string, field: keyof (TourCostItem | TourIncomeItem), value: any) => {
@@ -107,11 +107,11 @@ const CurrencyEntryTable = ({
                             <TableRow>
                                 <TableHead className="w-[150px] print:w-[100px] print:text-xs print:font-lao">ວັນທີ (Date)</TableHead>
                                 <TableHead className="print:font-lao">ລາຍລະອຽດ (Description)</TableHead>
-                                <TableHead className="text-right">KIP</TableHead>
-                                <TableHead className="text-right">BAHT</TableHead>
+                                <TableHead className="text-right">LAK</TableHead>
+                                <TableHead className="text-right">THB</TableHead>
                                 <TableHead className="text-right">USD</TableHead>
                                 <TableHead className="text-right">CNY</TableHead>
-                                <TableHead className="w-[50px] print:hidden"><span className="sr-only">ลบ</span></TableHead>
+                                <TableHead className="w-[50px] print:hidden"><span className="sr-only">ລົບ</span></TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -131,7 +131,7 @@ const CurrencyEntryTable = ({
                                                     selected={item.date || undefined}
                                                     onSelect={(date) => handleItemChange(item.id, 'date', date || new Date())}
                                                     initialFocus
-                                                    locale={lo}
+                                                    
                                                 />
                                             </PopoverContent>
                                         </Popover>
@@ -148,18 +148,28 @@ const CurrencyEntryTable = ({
                                     <TableCell className="p-1">
                                         <Input
                                             type="text"
+<<<<<<< HEAD
                                             value={formatCurrency(item.kip)}
                                             onChange={(e) => handleItemChange(item.id, 'kip', parseFormattedNumber(e.target.value))}
                                             onBlur={(e) => updateTourCostItem(item.id, { kip: parseFormattedNumber(e.target.value) })}
+=======
+                                            value={formatCurrency(item.lak)}
+                                            onChange={(e) => onUpdateItem(item.id, 'lak', parseFormattedNumber(e.target.value))}
+>>>>>>> a426d290bda97e938a49db9fc1d42c4280364a2d
                                             className="h-8 text-right print:border-none print:text-sm"
                                         />
                                     </TableCell>
                                      <TableCell className="p-1">
                                         <Input
                                             type="text"
+<<<<<<< HEAD
                                             value={formatCurrency(item.baht)}
                                             onChange={(e) => handleItemChange(item.id, 'baht', parseFormattedNumber(e.target.value))}
                                             onBlur={(e) => updateTourCostItem(item.id, { baht: parseFormattedNumber(e.target.value) })}
+=======
+                                            value={formatCurrency(item.thb)}
+                                            onChange={(e) => onUpdateItem(item.id, 'thb', parseFormattedNumber(e.target.value))}
+>>>>>>> a426d290bda97e938a49db9fc1d42c4280364a2d
                                             className="h-8 text-right print:border-none print:text-sm"
                                         />
                                     </TableCell>
@@ -192,8 +202,8 @@ const CurrencyEntryTable = ({
                          <TableFooter className="print:hidden">
                             <TableRow className="bg-muted font-bold">
                                 <TableCell colSpan={2} className="text-right print:font-lao">ລວມ (Total)</TableCell>
-                                <TableCell className="text-right">{formatCurrency(totals.kip)}</TableCell>
-                                <TableCell className="text-right">{formatCurrency(totals.baht)}</TableCell>
+                                <TableCell className="text-right">{formatCurrency(totals.lak)}</TableCell>
+                                <TableCell className="text-right">{formatCurrency(totals.thb)}</TableCell>
                                 <TableCell className="text-right">{formatCurrency(totals.usd)}</TableCell>
                                 <TableCell className="text-right">{formatCurrency(totals.cny)}</TableCell>
                                 <TableCell className="print:hidden"></TableCell>
@@ -206,8 +216,8 @@ const CurrencyEntryTable = ({
                         <TableFooter>
                             <TableRow className="bg-muted font-bold">
                                 <TableCell colSpan={2} className="text-right print:font-lao">ລວມ (Total)</TableCell>
-                                <TableCell className="text-right">{formatCurrency(totals.kip)}</TableCell>
-                                <TableCell className="text-right">{formatCurrency(totals.baht)}</TableCell>
+                                <TableCell className="text-right">{formatCurrency(totals.lak)}</TableCell>
+                                <TableCell className="text-right">{formatCurrency(totals.thb)}</TableCell>
                                 <TableCell className="text-right">{formatCurrency(totals.usd)}</TableCell>
                                 <TableCell className="text-right">{formatCurrency(totals.cny)}</TableCell>
                             </TableRow>
@@ -275,7 +285,7 @@ export default function TourProgramClientPage({ initialProgram }: { initialProgr
     const [localProgram, setLocalProgram] = useState<TourProgram>(initialProgram);
     const [costItems, setCostItems] = useState<TourCostItem[]>([]);
     const [incomeItems, setIncomeItems] = useState<TourIncomeItem[]>([]);
-    const [printCurrencies, setPrintCurrencies] = useState<Currency[]>(['KIP']);
+    const [printCurrencies, setPrintCurrencies] = useState<Currency[]>(['LAK']);
     
     const [isSaving, setIsSaving] = useState(false);
     const [activeTab, setActiveTab] = useState<TabValue>('info');
@@ -368,24 +378,24 @@ export default function TourProgramClientPage({ initialProgram }: { initialProgr
 
     const summaryData = useMemo(() => {
         const totalCosts = costItems.reduce((acc, item) => {
-            acc.kip += item.kip || 0;
-            acc.baht += item.baht || 0;
+            acc.lak += item.lak || 0;
+            acc.thb += item.thb || 0;
             acc.usd += item.usd || 0;
             acc.cny += item.cny || 0;
             return acc;
-        }, { kip: 0, baht: 0, usd: 0, cny: 0 });
+        }, { lak: 0, thb: 0, usd: 0, cny: 0 });
 
          const totalIncomes = incomeItems.reduce((acc, item) => {
-            acc.kip += item.kip || 0;
-            acc.baht += item.baht || 0;
+            acc.lak += item.lak || 0;
+            acc.thb += item.thb || 0;
             acc.usd += item.usd || 0;
             acc.cny += item.cny || 0;
             return acc;
-        }, { kip: 0, baht: 0, usd: 0, cny: 0 });
+        }, { lak: 0, thb: 0, usd: 0, cny: 0 });
 
         const profit = {
-            kip: totalIncomes.kip - totalCosts.kip,
-            baht: totalIncomes.baht - totalCosts.baht,
+            lak: totalIncomes.lak - totalCosts.lak,
+            thb: totalIncomes.thb - totalCosts.thb,
             usd: totalIncomes.usd - totalCosts.usd,
             cny: totalIncomes.cny - totalCosts.cny,
         };
@@ -460,6 +470,7 @@ export default function TourProgramClientPage({ initialProgram }: { initialProgr
     
     const ProgramInfoCard = () => (
          <Card className="print:hidden">
+<<<<<<< HEAD
             <CardHeader className="flex flex-row justify-between items-start">
                 <div>
                     <CardTitle>ລາຍລະອຽດໂປຣແກຣມ ແລະ ຂໍ້ມູນກຸ່ມ</CardTitle>
@@ -472,6 +483,14 @@ export default function TourProgramClientPage({ initialProgram }: { initialProgr
                     <Save className="mr-2 h-4 w-4" />
                     {isSaving ? 'ກຳລັງບັນທຶກ' : 'ບັນທຶກການປ່ຽນແປງ'}
                 </Button>
+=======
+            <CardHeader>
+                <CardTitle>ລາຍລະອຽດໂປຣແກຣມ ແລະ ຂໍ້ມູນກຸ່ມ</CardTitle>
+                <CardDescription>
+                    ວັນທີສ້າງ: {localProgram.createdAt ? format(localProgram.createdAt, "PPP") : '-'}
+                     {isSaving && <span className="ml-4 text-blue-500 animate-pulse">ກຳລັງບັນທึก...</span>}
+                </CardDescription>
+>>>>>>> a426d290bda97e938a49db9fc1d42c4280364a2d
             </CardHeader>
             <CardContent className="space-y-6">
                  <div className="grid md:grid-cols-3 gap-6">
@@ -655,14 +674,14 @@ export default function TourProgramClientPage({ initialProgram }: { initialProgr
               <Card className="print:hidden">
                   <CardHeader>
                       <CardTitle>ສະຫຼຸບຜົນປະກອບການ</CardTitle>
-                      <CardDescription>ສະຫຼຸບລາຍຮັບ, ຕົ້ນທຶນ, ແລະกำไร/ขาดทุน สำหรับໂປຣແກຣມນີ້</CardDescription>
+                      <CardDescription>ສະຫຼຸບລາຍຮັບ, ຕົ້ນທຶນ, และกำไร/ขาดทุน สำหรับໂປຣແກຣມນີ້</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6 print:p-0 print:space-y-2">
                        <div>
                           <h3 className="text-lg font-semibold mb-2 print:font-lao print:text-sm print:font-bold print:border-b print:pb-1">ລາຍຮັບ (Total Income)</h3>
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 print:grid-cols-4">
-                              <SummaryCard title="ລາຍຮັບ" value={summaryData.totalIncomes.kip} currency="KIP" />
-                              <SummaryCard title="ລາຍຮັບ" value={summaryData.totalIncomes.baht} currency="BAHT" />
+                              <SummaryCard title="ລາຍຮັບ" value={summaryData.totalIncomes.lak} currency="LAK" />
+                              <SummaryCard title="ລາຍຮັບ" value={summaryData.totalIncomes.thb} currency="THB" />
                               <SummaryCard title="ລາຍຮັບ" value={summaryData.totalIncomes.usd} currency="USD" />
                               <SummaryCard title="ລາຍຮັບ" value={summaryData.totalIncomes.cny} currency="CNY" />
                           </div>
@@ -670,8 +689,8 @@ export default function TourProgramClientPage({ initialProgram }: { initialProgr
                       <div>
                           <h3 className="text-lg font-semibold mb-2 print:font-lao print:text-sm print:font-bold print:border-b print:pb-1">ລາຍຈ່າຍ (Total Costs)</h3>
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 print:grid-cols-4">
-                              <SummaryCard title="ຕົ້ນທຶນ" value={summaryData.totalCosts.kip} currency="KIP" />
-                              <SummaryCard title="ຕົ້ນທຶນ" value={summaryData.totalCosts.baht} currency="BAHT" />
+                              <SummaryCard title="ຕົ້ນທຶນ" value={summaryData.totalCosts.lak} currency="LAK" />
+                              <SummaryCard title="ຕົ້ນທຶນ" value={summaryData.totalCosts.thb} currency="THB" />
                               <SummaryCard title="ຕົ້ນທຶນ" value={summaryData.totalCosts.usd} currency="USD" />
                               <SummaryCard title="ຕົ້ນທຶນ" value={summaryData.totalCosts.cny} currency="CNY" />
                           </div>
@@ -679,8 +698,8 @@ export default function TourProgramClientPage({ initialProgram }: { initialProgr
                       <div>
                           <h3 className="text-lg font-semibold mb-2 print:font-lao print:text-sm print:font-bold print:border-b print:pb-1">ກຳໄລ / ຂາດທຶນ (Profit / Loss)</h3>
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 print:grid-cols-4">
-                              {printCurrencies.includes('KIP') && <SummaryCard title="ກຳໄລ/ຂາດທຶນ" value={summaryData.profit.kip} currency="KIP" isProfit />}
-                              {printCurrencies.includes('BAHT') && <SummaryCard title="ກຳໄລ/ຂາດທຶນ" value={summaryData.profit.baht} currency="BAHT" isProfit />}
+                              {printCurrencies.includes('LAK') && <SummaryCard title="ກຳໄລ/ຂາດທຶນ" value={summaryData.profit.lak} currency="LAK" isProfit />}
+                              {printCurrencies.includes('THB') && <SummaryCard title="ກຳໄລ/ຂາດທຶນ" value={summaryData.profit.thb} currency="THB" isProfit />}
                               {printCurrencies.includes('USD') && <SummaryCard title="ກຳໄລ/ຂາດທຶນ" value={summaryData.profit.usd} currency="USD" isProfit />}
                               {printCurrencies.includes('CNY') && <SummaryCard title="ກຳໄລ/ຂາດທຶນ" value={summaryData.profit.cny} currency="CNY" isProfit />}
                           </div>
@@ -711,8 +730,8 @@ export default function TourProgramClientPage({ initialProgram }: { initialProgr
                             <TableRow>
                                 <TableHead className="w-1/3">ຜູ້ຮັບຜົນປະໂຫຍດ</TableHead>
                                 <TableHead className="w-[120px] text-center">ເປີເຊັນ (%)</TableHead>
-                                <TableHead className="text-right">KIP</TableHead>
-                                <TableHead className="text-right">BAHT</TableHead>
+                                <TableHead className="text-right">LAK</TableHead>
+                                <TableHead className="text-right">THB</TableHead>
                                 <TableHead className="text-right">USD</TableHead>
                                 <TableHead className="text-right">CNY</TableHead>
                                 <TableHead className="w-[50px] print:hidden"><span className="sr-only">Actions</span></TableHead>
@@ -736,8 +755,8 @@ export default function TourProgramClientPage({ initialProgram }: { initialProgr
                                             className="h-8 text-center"
                                         />
                                     </TableCell>
-                                    <TableCell className="text-right font-mono p-1">{formatCurrency(summaryData.profit.kip * item.percentage)}</TableCell>
-                                    <TableCell className="text-right font-mono p-1">{formatCurrency(summaryData.profit.baht * item.percentage)}</TableCell>
+                                    <TableCell className="text-right font-mono p-1">{formatCurrency(summaryData.profit.lak * item.percentage)}</TableCell>
+                                    <TableCell className="text-right font-mono p-1">{formatCurrency(summaryData.profit.thb * item.percentage)}</TableCell>
                                     <TableCell className="text-right font-mono p-1">{formatCurrency(summaryData.profit.usd * item.percentage)}</TableCell>
                                     <TableCell className="text-right font-mono p-1">{formatCurrency(summaryData.profit.cny * item.percentage)}</TableCell>
                                     <TableCell className="p-1 print:hidden">
@@ -752,8 +771,8 @@ export default function TourProgramClientPage({ initialProgram }: { initialProgr
                             <TableRow className="bg-muted font-bold">
                                 <TableCell>ລວມທັງໝົດ</TableCell>
                                 <TableCell className="text-center">{formatCurrency(totalPercentage * 100)}%</TableCell>
-                                <TableCell className="text-right font-mono">{formatCurrency(summaryData.profit.kip * totalPercentage)}</TableCell>
-                                <TableCell className="text-right font-mono">{formatCurrency(summaryData.profit.baht * totalPercentage)}</TableCell>
+                                <TableCell className="text-right font-mono">{formatCurrency(summaryData.profit.lak * totalPercentage)}</TableCell>
+                                <TableCell className="text-right font-mono">{formatCurrency(summaryData.profit.thb * totalPercentage)}</TableCell>
                                 <TableCell className="text-right font-mono">{formatCurrency(summaryData.profit.usd * totalPercentage)}</TableCell>
                                 <TableCell className="text-right font-mono">{formatCurrency(summaryData.profit.cny * totalPercentage)}</TableCell>
                                 <TableCell className="print:hidden"></TableCell>

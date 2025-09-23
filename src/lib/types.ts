@@ -17,7 +17,7 @@ export interface Transaction {
     date: Date; // Stored as Timestamp in Firestore, converted to Date on client
     amount: number;
     description: string;
-    // Fields for multi-currency support in tour business
+    // Fields for multi-currency support
     kip?: number;
     baht?: number;
     usd?: number;
@@ -96,8 +96,8 @@ export interface TourCostItem {
   programId: string;
   date: Date | null;
   detail: string;
-  kip: number;
-  baht: number;
+  lak: number;
+  thb: number;
   usd: number;
   cny: number;
   createdAt: Date;
@@ -108,8 +108,8 @@ export interface TourIncomeItem {
   programId: string;
   date: Date | null;
   detail: string;
-  kip: number;
-  baht: number;
+  lak: number;
+  thb: number;
   usd: number;
   cny: number;
   createdAt: Date;
@@ -164,11 +164,19 @@ export interface TourCosts {
     documents: DocumentFee[];
 }
 
+export interface CalculationSnapshot {
+    id: string;
+    savedAt: Date;
+    tourInfo: TourInfo;
+    allCosts: TourCosts;
+}
+
 export interface SavedCalculation {
     id: string;
     savedAt: Date;
     tourInfo: TourInfo;
     allCosts: TourCosts;
+    history?: CalculationSnapshot[];
 }
 
 export interface DocumentAccountSummary extends TourAccountSummary {}

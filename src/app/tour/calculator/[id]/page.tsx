@@ -1,24 +1,54 @@
 
-import { getCalculation, getAllCalculations } from '@/services/tourCalculatorService';
+
+import { getCalculation, getAllCalculations, saveCalculation } from '@/services/tourCalculatorService';
 import TourCalculatorClientPage from './client-page';
-import { Suspense } from 'react';
+import type { SavedCalculation } from '@/lib/types';
+import StaticExportWrapper from '@/components/StaticExportWrapper';
 
-// This tells Next.js to always render this page dynamically on the server
-export const dynamic = 'force-dynamic';
+export const dynamicParams = false;
 
-// This allows Next.js to know all possible IDs at build time for initial generation
 export async function generateStaticParams() {
-  const calculations = await getAllCalculations();
- 
-  return calculations.map((calc) => ({
-    id: calc.id,
-  }))
+    const calculations = await getAllCalculations();
+    const params = calculations.map((calc) => ({
+        id: calc.id,
+    }));
+    // Ensure the default page is also generated
+    if (!params.find(p => p.id === 'default')) {
+        params.push({ id: 'default' });
+    }
+    return params;
 }
 
+
 async function getCalculationData(id: string) {
-    const calculation = await getCalculation(id);
-    if (!calculation) {
-        return null;
+    let calculation = await getCalculation(id);
+    if (!calculation && id === 'default') {
+        const newCalculationData: Omit<SavedCalculation, 'id'| 'savedAt'> = {
+            tourInfo: {
+                mouContact: '',
+                groupCode: 'Default Group',
+                destinationCountry: '',
+                program: 'Default Calculation',
+                startDate: new Date(),
+                endDate: new Date(),
+                numDays: 1,
+                numNights: 0,
+                numPeople: 1,
+                travelerInfo: ''
+            },
+            allCosts: {
+                accommodations: [],
+                trips: [],
+                flights: [],
+                trainTickets: [],
+                entranceFees: [],
+                meals: [],
+                guides: [],
+                documents: [],
+            }
+        };
+        await saveCalculation(newCalculationData, 'default');
+        calculation = await getCalculation(id);
     }
     return calculation;
 }
@@ -45,8 +75,8 @@ export default async function TourProgramPage({ params }: { params: { id: string
     }
 
     return (
-        <Suspense fallback={<LoadingFallback />}>
+        <StaticExportWrapper fallback={<LoadingFallback/>}>
             <TourCalculatorClientPage initialCalculation={calculationData} />
-        </Suspense>
+        </StaticExportWrapper>
     );
 }

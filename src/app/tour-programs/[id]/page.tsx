@@ -2,18 +2,15 @@
 
 import { getTourProgram, getAllTourPrograms } from '@/services/tourProgramService';
 import TourProgramClientPage from './client-page';
+import StaticExportWrapper from '@/components/StaticExportWrapper';
 
-// export const dynamic = 'force-static';
-export const revalidate = 0; // Revalidate every 0 seconds (on every request)
+export const dynamicParams = false;
 
 export async function generateStaticParams() {
-  // This function is still useful for initial builds, 
-  // but revalidate=0 ensures new pages also work.
-  const programs = await getAllTourPrograms();
- 
-  return programs.map((program) => ({
-    id: program.id,
-  }))
+    const programs = await getAllTourPrograms();
+    return programs.map((program) => ({
+        id: program.id,
+    }));
 }
 
 async function getProgramData(id: string) {
@@ -36,5 +33,9 @@ export default async function TourProgramPage({ params }: { params: { id: string
         )
     }
 
-    return <TourProgramClientPage initialProgram={programData} />;
+    return (
+        <StaticExportWrapper>
+            <TourProgramClientPage initialProgram={programData} />
+        </StaticExportWrapper>
+    )
 }

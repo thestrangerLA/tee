@@ -1,10 +1,8 @@
 
-
 "use client"
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,11 +12,13 @@ import { useToast } from "@/hooks/use-toast";
 import { saveCalculation } from '@/services/tourCalculatorService';
 import type { SavedCalculation } from '@/lib/types';
 import { v4 as uuidv4 } from 'uuid';
+import { useClientRouter } from '@/hooks/useClientRouter';
+import StaticExportWrapper from '@/components/StaticExportWrapper';
 
 
-export default function NewCalculationPage() {
+function NewCalculationPageComponent() {
     const { toast } = useToast();
-    const router = useRouter();
+    const router = useClientRouter();
     const [groupCode, setGroupCode] = useState(`NewCalc-${uuidv4().substring(0, 4)}`);
     const [programName, setProgramName] = useState('New Calculation');
     const [isSaving, setIsSaving] = useState(false);
@@ -132,4 +132,12 @@ export default function NewCalculationPage() {
             </main>
         </div>
     );
+}
+
+export default function NewCalculationPage() {
+    return (
+        <StaticExportWrapper>
+            <NewCalculationPageComponent />
+        </StaticExportWrapper>
+    )
 }

@@ -9,7 +9,7 @@ import { ArrowLeft, BookOpen, Calendar as CalendarIcon, Printer, ChevronRight } 
 import { listenToDocumentTransactions } from '@/services/documentAccountancyService';
 import type { Transaction, CurrencyValues } from '@/lib/types';
 import { getMonth, format, setMonth, isWithinInterval, startOfYear, endOfYear, getYear } from 'date-fns';
-import { lo } from "date-fns/locale";
+
 import {
   Popover,
   PopoverContent,
@@ -99,7 +99,7 @@ export default function DocumentGeneralLedgerPage() {
                 <Button variant="outline" size="icon" className="h-8 w-8" asChild>
                     <Link href="/documents/reports">
                         <ArrowLeft className="h-4 w-4" />
-                        <span className="sr-only">ກັບໄປໜ้ารາຍງານ</span>
+                        <span className="sr-only">ກັບໄປໜ້ານາຍງານ</span>
                     </Link>
                 </Button>
                 <div className="flex items-center gap-2">
@@ -119,10 +119,10 @@ export default function DocumentGeneralLedgerPage() {
                                 <PopoverTrigger asChild>
                                     <Button id="start-date" variant={"outline"} className="w-[280px] justify-start text-left font-normal">
                                         <CalendarIcon className="mr-2 h-4 w-4" />
-                                        {startDate ? format(startDate, "PPP", { locale: lo }) : <span>ເລືອກວັນທີ</span>}
+                                        {startDate ? format(startDate, "PPP") : <span>ເລືອກວັນທີ</span>}
                                     </Button>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={startDate} onSelect={setStartDate} initialFocus locale={lo} /></PopoverContent>
+                                <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={startDate} onSelect={setStartDate} initialFocus  /></PopoverContent>
                             </Popover>
                         </div>
                         <div className="grid gap-2">
@@ -131,10 +131,10 @@ export default function DocumentGeneralLedgerPage() {
                                 <PopoverTrigger asChild>
                                     <Button id="end-date" variant={"outline"} className="w-[280px] justify-start text-left font-normal">
                                         <CalendarIcon className="mr-2 h-4 w-4" />
-                                        {endDate ? format(endDate, "PPP", { locale: lo }) : <span>ເລືອກວັນທີ</span>}
+                                        {endDate ? format(endDate, "PPP") : <span>ເລືອກວັນທີ</span>}
                                     </Button>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={endDate} onSelect={setEndDate} initialFocus locale={lo} /></PopoverContent>
+                                <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={endDate} onSelect={setEndDate} initialFocus  /></PopoverContent>
                             </Popover>
                         </div>
                         <div className="flex items-center gap-2 md:ml-auto">
@@ -202,7 +202,7 @@ export default function DocumentGeneralLedgerPage() {
                                     <Card className="hover:bg-muted/50 cursor-pointer">
                                         <CardContent className="p-4 flex items-center justify-between">
                                             <div className="font-semibold text-base">
-                                                {format(setMonth(new Date(year, month), month), 'LLLL yyyy', { locale: lo })}
+                                                {format(setMonth(new Date(year, month), month), 'LLLL yyyy')}
                                             </div>
                                             <div className="flex items-center gap-4">
                                                 <div className="hidden sm:grid grid-cols-4 gap-x-4 text-xs">

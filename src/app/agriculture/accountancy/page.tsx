@@ -14,7 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar"
 import { Textarea } from "@/components/ui/textarea"
 import { format, isSameDay, startOfMonth, endOfMonth, isWithinInterval, addMonths, subMonths, getMonth, getYear, setMonth, startOfDay, eachDayOfInterval, getDate } from "date-fns"
-import { lo } from "date-fns/locale"
+
 import {
   Table,
   TableBody,
@@ -433,7 +433,7 @@ export default function AgricultureAccountancyPage() {
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="outline" className="flex items-center gap-2">
-                        {format(historyDisplayMonth, "LLLL yyyy", { locale: lo })}
+                        {format(historyDisplayMonth, "LLLL yyyy")}
                         <ChevronDown className="h-4 w-4" />
                     </Button>
                 </DropdownMenuTrigger>
@@ -453,7 +453,7 @@ export default function AgricultureAccountancyPage() {
                                                 setHistoryDisplayMonth(newDate);
                                             }}
                                         >
-                                            {format(month, "LLLL", { locale: lo })}
+                                            {format(month, "LLLL")}
                                         </DropdownMenuItem>
                                     ))}
                                 </DropdownMenuSubContent>
@@ -567,7 +567,7 @@ export default function AgricultureAccountancyPage() {
                                                         className="w-full justify-start text-left font-normal"
                                                     >
                                                         <CalendarIcon className="mr-2 h-4 w-4" />
-                                                        {date ? format(date, "PPP", { locale: lo }) : <span>ເລືອກວັນທີ</span>}
+                                                        {date ? format(date, "PPP") : <span>ເລືອກວັນທີ</span>}
                                                     </Button>
                                                 </PopoverTrigger>
                                                 <PopoverContent className="w-auto p-0">
@@ -576,7 +576,7 @@ export default function AgricultureAccountancyPage() {
                                                         selected={date}
                                                         onSelect={setDate}
                                                         initialFocus
-                                                        locale={lo}
+                                                        
                                                     />
                                                 </PopoverContent>
                                             </Popover>
@@ -610,7 +610,7 @@ export default function AgricultureAccountancyPage() {
                                 <div>
                                     <CardTitle>ປະຫວັດທຸລະກຳ</CardTitle>
                                     <CardDescription>
-                                       ສະຫຼຸບທຸລະກຳລາຍວັນສຳລັບເດືອນ {format(historyDisplayMonth, "LLLL yyyy", { locale: lo })}
+                                       ສະຫຼຸບທຸລະກຳລາຍວັນສຳລັບເດືອນ {format(historyDisplayMonth, "LLLL yyyy")}
                                     </CardDescription>
                                 </div>
                                  <Button variant="ghost" size="icon">
@@ -724,7 +724,7 @@ export default function AgricultureAccountancyPage() {
                                     <PopoverTrigger asChild>
                                         <Button variant={"outline"} className="w-full justify-start text-left font-normal">
                                             <CalendarIcon className="mr-2 h-4 w-4" />
-                                            {editingTransaction.date ? format(editingTransaction.date, "PPP", { locale: lo }) : <span>ເລືອກວັນທີ</span>}
+                                            {editingTransaction.date ? format(editingTransaction.date, "PPP") : <span>ເລືອກວັນທີ</span>}
                                         </Button>
                                     </PopoverTrigger>
                                     <PopoverContent className="w-auto p-0">
@@ -733,14 +733,14 @@ export default function AgricultureAccountancyPage() {
                                             selected={editingTransaction.date}
                                             onSelect={(d) => setEditingTransaction({ ...editingTransaction, date: d || new Date() })}
                                             initialFocus
-                                            locale={lo}
+                                            
                                         />
                                     </PopoverContent>
                                 </Popover>
                             </div>
                             <div className="grid gap-3">
                                 <Label htmlFor="edit-amount">ຈຳນວນເງິນ</Label>
-                                <Input id="edit-amount" type="number" value={editingTransaction.amount} onChange={(e) => setEditingTransaction({ ...editingTransaction, amount: Number(e.target.value)})} required />
+                                <Input id="edit-amount" type="number" value={editingTransaction.amount || ''} onChange={(e) => setEditingTransaction({ ...editingTransaction, amount: Number(e.target.value)})} required />
                             </div>
                             <div className="grid gap-3">
                                 <Label htmlFor="edit-description">ຄຳອະທິບາຍ</Label>
@@ -770,7 +770,7 @@ export default function AgricultureAccountancyPage() {
                                 <Input 
                                     id="edit-summary-amount" 
                                     type="number" 
-                                    value={editingSummaryValue} 
+                                    value={editingSummaryValue || ''} 
                                     onChange={(e) => setEditingSummaryValue(Number(e.target.value))} 
                                     required 
                                 />
@@ -787,4 +787,7 @@ export default function AgricultureAccountancyPage() {
     );
 }
 
+<<<<<<< HEAD
     
+=======
+>>>>>>> a426d290bda97e938a49db9fc1d42c4280364a2d

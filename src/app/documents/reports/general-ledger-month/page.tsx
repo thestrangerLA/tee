@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect, useMemo, Suspense } from 'react';
@@ -10,7 +11,7 @@ import { ArrowLeft, BookOpen, Printer } from "lucide-react";
 import { listenToDocumentTransactions } from '@/services/documentAccountancyService';
 import type { Transaction, CurrencyValues } from '@/lib/types';
 import { getMonth, format, setMonth, isWithinInterval, startOfMonth, endOfMonth } from 'date-fns';
-import { lo } from "date-fns/locale";
+
 
 export const dynamic = 'force-dynamic';
 
@@ -101,7 +102,7 @@ function DocumentContent() {
         return null;
     }
 
-    const headerTitle = format(displayDate, 'LLLL yyyy', { locale: lo });
+    const headerTitle = format(displayDate, 'LLLL yyyy');
     
     return (
         <div className="flex min-h-screen w-full flex-col bg-muted/40 print:bg-white">
@@ -109,7 +110,7 @@ function DocumentContent() {
                 <Button variant="outline" size="icon" className="h-8 w-8" asChild>
                     <Link href="/documents/reports/general-ledger">
                         <ArrowLeft className="h-4 w-4" />
-                        <span className="sr-only">ກັບໄປໜ້ារາຍງານຫຼັກ</span>
+                        <span className="sr-only">ກັບໄປໜ້ານາຍງານຫຼັກ</span>
                     </Link>
                 </Button>
                 <div className="flex items-center gap-2">

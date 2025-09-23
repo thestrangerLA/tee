@@ -3,7 +3,6 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,11 +15,13 @@ import type { TourProgram, Currency } from '@/lib/types';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format, startOfDay } from 'date-fns';
-import { lo } from 'date-fns/locale';
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import StaticExportWrapper from '@/components/StaticExportWrapper';
+import { useClientRouter } from '@/hooks/useClientRouter';
 
 
-const currencies: Currency[] = ['KIP', 'BAHT', 'USD', 'CNY'];
+const currencies: Currency[] = ['LAK', 'THB', 'USD', 'CNY'];
 
 const CurrencyInput = ({ label, amount, currency, onAmountChange, onCurrencyChange }: {
     label: string;
@@ -52,9 +53,9 @@ const CurrencyInput = ({ label, amount, currency, onAmountChange, onCurrencyChan
 );
 
 
-export default function NewTourProgramPage() {
+function NewTourProgramPageComponent() {
     const { toast } = useToast();
-    const router = useRouter();
+    const router = useClientRouter();
     const [date, setDate] = useState<Date | undefined>(new Date());
     const [formData, setFormData] = useState<Omit<TourProgram, 'id' | 'createdAt' | 'date'>>({
         tourCode: '',
@@ -65,9 +66,9 @@ export default function NewTourProgramPage() {
         tourDates: '',
         durationDays: 0,
         price: 0,
-        priceCurrency: 'KIP',
+        priceCurrency: 'LAK',
         bankCharge: 0,
-        bankChargeCurrency: 'KIP',
+        bankChargeCurrency: 'LAK',
         totalPrice: 0,
     });
 
@@ -80,7 +81,7 @@ export default function NewTourProgramPage() {
         if (!date || !formData.programName) {
             toast({
                 title: "ຂໍ້ມູນບໍ່ຄົບຖ້ວນ",
-                description: "ກະລຸນາເລືອກວັນທີ ແລະ ໃສ່ຊື່ໂປຣແກຣມ",
+                description: "ກະລຸນາເລືอกວັນທີ ແລະ ໃສ່ຊື່ໂປຣແກຣມ",
                 variant: "destructive"
             });
             return;
@@ -137,11 +138,11 @@ export default function NewTourProgramPage() {
                                         <PopoverTrigger asChild>
                                             <Button variant={"outline"} className="w-full justify-start text-left font-normal">
                                                 <CalendarIcon className="mr-2 h-4 w-4" />
-                                                {date ? format(date, "PPP", { locale: lo }) : <span>ເລືອກວັນທີ</span>}
+                                                {date ? format(date, "PPP") : <span>ເລືອກວັນທີ</span>}
                                             </Button>
                                         </PopoverTrigger>
                                         <PopoverContent className="w-auto p-0">
-                                            <Calendar mode="single" selected={date} onSelect={setDate} initialFocus locale={lo} />
+                                            <Calendar mode="single" selected={date} onSelect={setDate} initialFocus  />
                                         </PopoverContent>
                                     </Popover>
                                 </div>
@@ -167,7 +168,7 @@ export default function NewTourProgramPage() {
                                 </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="pax">ຈຳນວນຄົນ (Pax)</Label>
-                                    <Input id="pax" name="pax" type="number" value={formData.pax} onChange={(e) => handleFormValueChange('pax', Number(e.target.value))} />
+                                    <Input id="pax" name="pax" type="number" value={formData.pax || ''} onChange={(e) => handleFormValueChange('pax', Number(e.target.value))} />
                                 </div>
                             </div>
                             
@@ -178,7 +179,7 @@ export default function NewTourProgramPage() {
                                 </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="durationDays">ໄລຍະເວລາ (ວັນ)</Label>
-                                    <Input id="durationDays" name="durationDays" type="number" value={formData.durationDays} onChange={(e) => handleFormValueChange('durationDays', Number(e.target.value))} />
+                                    <Input id="durationDays" name="durationDays" type="number" value={formData.durationDays || ''} onChange={(e) => handleFormValueChange('durationDays', Number(e.target.value))} />
                                 </div>
                             </div>
 
@@ -200,8 +201,8 @@ export default function NewTourProgramPage() {
                             </div>
                             
                             <div className="flex justify-end gap-2">
-                                <Button type="button" variant="outline" onClick={() => router.push('/tour-programs')}>ຍົກເລີກ</Button>
-                                <Button type="submit">ບັນທຶກ ແລະ ໄປຕໍ່</Button>
+                                <Button type="button" variant="outline" asChild><Link href="/tour-programs">ຍົກເລີກ</Link></Button>
+                                <Button type="submit">ບັນທຶກ และ ໄປຕໍ່</Button>
                             </div>
                         </form>
                     </CardContent>
@@ -211,4 +212,10 @@ export default function NewTourProgramPage() {
     );
 }
 
-    
+export default function NewTourProgramPage() {
+    return (
+        <StaticExportWrapper>
+            <NewTourProgramPageComponent />
+        </StaticExportWrapper>
+    )
+}

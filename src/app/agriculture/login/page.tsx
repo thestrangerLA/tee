@@ -1,8 +1,7 @@
 
 "use client"
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,18 +10,20 @@ import { useToast } from "@/hooks/use-toast";
 import { Leaf } from "lucide-react";
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
+import StaticExportWrapper from '@/components/StaticExportWrapper';
+import { useClientRouter } from '@/hooks/useClientRouter';
 
 
-export default function AgricultureLoginPage() {
+function LoginPage() {
     const [password, setPassword] = useState('');
-    const router = useRouter();
+    const router = useClientRouter();
     const { toast } = useToast();
 
     const handleLogin = (e: React.FormEvent) => {
         e.preventDefault();
         if (password === 'qwe') {
             sessionStorage.setItem('agriculture-auth', 'true');
-            router.push('/agriculture');
+            router.push('/agriculture/');
         } else {
             toast({
                 title: "รหัสผ่านไม่ถูกต้อง",
@@ -70,4 +71,12 @@ export default function AgricultureLoginPage() {
             </Card>
         </div>
     );
+}
+
+export default function AgricultureLoginPage() {
+    return (
+        <StaticExportWrapper>
+            <LoginPage />
+        </StaticExportWrapper>
+    )
 }

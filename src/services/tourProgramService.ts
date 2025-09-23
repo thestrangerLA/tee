@@ -148,8 +148,8 @@ export const addTourCostItem = async (programId: string) => {
         programId: programId,
         date: new Date(),
         detail: '',
-        kip: 0,
-        baht: 0,
+        lak: 0,
+        thb: 0,
         usd: 0,
         cny: 0,
     };
@@ -200,8 +200,8 @@ export const addTourIncomeItem = async (programId: string) => {
         programId: programId,
         date: new Date(),
         detail: '',
-        kip: 0,
-        baht: 0,
+        lak: 0,
+        thb: 0,
         usd: 0,
         cny: 0,
     };
