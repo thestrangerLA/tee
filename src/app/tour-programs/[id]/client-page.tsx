@@ -829,5 +829,3 @@ export default function TourProgramClientPage({ initialProgram }: { initialProgr
     </div>
   )
 }
-
-    
