@@ -65,7 +65,7 @@ const CurrencyEntryTable = ({
 }: { 
     items: (TourCostItem[] | TourIncomeItem[]),
     onAddItem: () => Promise<void>,
-    onUpdateItem: (id: string, field: keyof (TourCostItem | TourIncomeItem), value: any) => Promise<void>,
+    onUpdateItem: (id: string, field: keyof (TourCostItem | TourIncomeItem), value: any) => void,
     onDeleteItem: (id: string) => Promise<void>,
     title: string,
     description: string,
@@ -82,6 +82,11 @@ const CurrencyEntryTable = ({
             return acc;
         }, { kip: 0, baht: 0, usd: 0, cny: 0 });
     }, [items]);
+    
+     const handleItemChange = (id: string, field: keyof (TourCostItem | TourIncomeItem), value: any) => {
+        onUpdateItem(id, field, value);
+    };
+
 
     return (
         <Card className="print:shadow-none print:border-none">
@@ -124,7 +129,7 @@ const CurrencyEntryTable = ({
                                                 <Calendar
                                                     mode="single"
                                                     selected={item.date || undefined}
-                                                    onSelect={(date) => onUpdateItem(item.id, 'date', date || new Date())}
+                                                    onSelect={(date) => handleItemChange(item.id, 'date', date || new Date())}
                                                     initialFocus
                                                     locale={lo}
                                                 />
@@ -134,40 +139,45 @@ const CurrencyEntryTable = ({
                                     </TableCell>
                                      <TableCell className="p-1">
                                         <Input 
-                                            defaultValue={item.detail || ''} 
-                                            onBlur={(e) => onUpdateItem(item.id, 'detail', e.target.value)}
+                                            value={item.detail || ''} 
+                                            onChange={(e) => handleItemChange(item.id, 'detail', e.target.value)}
+                                            onBlur={(e) => updateTourCostItem(item.id, { detail: e.target.value })}
                                             className="h-8 print:border-none print:pl-0 print:font-lao print:text-sm"
                                         />
                                     </TableCell>
                                     <TableCell className="p-1">
                                         <Input
                                             type="text"
-                                            defaultValue={formatCurrency(item.kip)}
-                                            onBlur={(e) => onUpdateItem(item.id, 'kip', parseFormattedNumber(e.target.value))}
+                                            value={formatCurrency(item.kip)}
+                                            onChange={(e) => handleItemChange(item.id, 'kip', parseFormattedNumber(e.target.value))}
+                                            onBlur={(e) => updateTourCostItem(item.id, { kip: parseFormattedNumber(e.target.value) })}
                                             className="h-8 text-right print:border-none print:text-sm"
                                         />
                                     </TableCell>
                                      <TableCell className="p-1">
                                         <Input
                                             type="text"
-                                            defaultValue={formatCurrency(item.baht)}
-                                            onBlur={(e) => onUpdateItem(item.id, 'baht', parseFormattedNumber(e.target.value))}
+                                            value={formatCurrency(item.baht)}
+                                            onChange={(e) => handleItemChange(item.id, 'baht', parseFormattedNumber(e.target.value))}
+                                            onBlur={(e) => updateTourCostItem(item.id, { baht: parseFormattedNumber(e.target.value) })}
                                             className="h-8 text-right print:border-none print:text-sm"
                                         />
                                     </TableCell>
                                      <TableCell className="p-1">
                                         <Input
                                             type="text"
-                                            defaultValue={formatCurrency(item.usd)}
-                                            onBlur={(e) => onUpdateItem(item.id, 'usd', parseFormattedNumber(e.target.value))}
+                                            value={formatCurrency(item.usd)}
+                                            onChange={(e) => handleItemChange(item.id, 'usd', parseFormattedNumber(e.target.value))}
+                                            onBlur={(e) => updateTourCostItem(item.id, { usd: parseFormattedNumber(e.target.value) })}
                                             className="h-8 text-right print:border-none print:text-sm"
                                         />
                                     </TableCell>
                                      <TableCell className="p-1">
                                         <Input
                                             type="text"
-                                            defaultValue={formatCurrency(item.cny)}
-                                            onBlur={(e) => onUpdateItem(item.id, 'cny', parseFormattedNumber(e.target.value))}
+                                            value={formatCurrency(item.cny)}
+                                            onChange={(e) => handleItemChange(item.id, 'cny', parseFormattedNumber(e.target.value))}
+                                            onBlur={(e) => updateTourCostItem(item.id, { cny: parseFormattedNumber(e.target.value) })}
                                             className="h-8 text-right print:border-none print:text-sm"
                                         />
                                     </TableCell>
@@ -224,13 +234,12 @@ const SummaryCard = ({ title, value, currency, isProfit = false }: { title: stri
     );
 };
 
-const CurrencyInput = ({ label, amount, currency, onAmountChange, onCurrencyChange, disabled }: {
+const CurrencyInput = ({ label, amount, currency, onAmountChange, onCurrencyChange }: {
     label: string;
     amount: number;
     currency: Currency;
     onAmountChange: (value: number) => void;
     onCurrencyChange: (value: Currency) => void;
-    disabled?: boolean;
 }) => (
     <div className="grid gap-2">
         <Label htmlFor={label.toLowerCase()} className="print:hidden">{label}</Label>
@@ -242,9 +251,8 @@ const CurrencyInput = ({ label, amount, currency, onAmountChange, onCurrencyChan
                 value={amount || ''}
                 onChange={(e) => onAmountChange(Number(e.target.value))}
                 className="w-2/3 print:hidden"
-                disabled={disabled}
             />
-            <Select value={currency} onValueChange={(v) => onCurrencyChange(v as Currency)} disabled={disabled}>
+            <Select value={currency} onValueChange={(v) => onCurrencyChange(v as Currency)}>
                 <SelectTrigger className="w-1/3 print:hidden">
                     <SelectValue />
                 </SelectTrigger>
@@ -330,9 +338,8 @@ export default function TourProgramClientPage({ initialProgram }: { initialProgr
             await addTourCostItem(id);
         } catch (error) { toast({ title: "ເກີດຂໍ້ຜິດພາດໃນການເພີ່ມຕົ້ນທຶນ", variant: "destructive" }); }
     };
-     const handleUpdateCostItem = async (itemId: string, field: keyof TourCostItem, value: any) => {
-        try { await updateTourCostItem(itemId, { [field]: value }); } 
-        catch (error) { toast({ title: "ເກີດຂໍ້ຜິດພາດໃນການອັບເດດຕົ້ນທຶນ", variant: "destructive" }); }
+    const handleUpdateCostItem = (itemId: string, field: keyof TourCostItem, value: any) => {
+        setCostItems(prev => prev.map(item => item.id === itemId ? {...item, [field]: value} : item));
     };
     const handleDeleteCostItem = async (itemId: string) => {
         if (!window.confirm("ยืนยันการลบรายการต้นทุนนี้?")) return;
@@ -346,9 +353,8 @@ export default function TourProgramClientPage({ initialProgram }: { initialProgr
             await addTourIncomeItem(id);
         } catch (error) { toast({ title: "ເກີດຂໍ້ຜິດພາດໃນการเพิ่มรายรับ", variant: "destructive" }); }
     };
-     const handleUpdateIncomeItem = async (itemId: string, field: keyof TourIncomeItem, value: any) => {
-        try { await updateTourIncomeItem(itemId, { [field]: value }); } 
-        catch (error) { toast({ title: "เกิดข้อผิดพลาดในการอัปเดตรายรับ", variant: "destructive" }); }
+    const handleUpdateIncomeItem = (itemId: string, field: keyof TourIncomeItem, value: any) => {
+        setIncomeItems(prev => prev.map(item => item.id === itemId ? {...item, [field]: value} : item));
     };
     const handleDeleteIncomeItem = async (itemId: string) => {
         if (!window.confirm("ยืนยันการลบรายการรายรับนี้?")) return;
@@ -471,15 +477,15 @@ export default function TourProgramClientPage({ initialProgram }: { initialProgr
                  <div className="grid md:grid-cols-3 gap-6">
                      <div className="grid gap-2">
                         <Label htmlFor="programName">Tour Program</Label>
-                        <Input id="programName" value={localProgram.programName} onChange={(e) => handleProgramChange('programName', e.target.value)} />
+                        <Input id="programName" value={localProgram.programName || ''} onChange={(e) => handleProgramChange('programName', e.target.value)} />
                     </div>
                      <div className="grid gap-2">
                         <Label htmlFor="tourCode">Group Code</Label>
-                        <Input id="tourCode" value={localProgram.tourCode} onChange={(e) => handleProgramChange('tourCode', e.target.value)} />
+                        <Input id="tourCode" value={localProgram.tourCode || ''} onChange={(e) => handleProgramChange('tourCode', e.target.value)} />
                     </div>
                      <div className="grid gap-2">
                         <Label htmlFor="groupName">Nationality</Label>
-                        <Input id="groupName" value={localProgram.groupName} onChange={(e) => handleProgramChange('groupName', e.target.value)} />
+                        <Input id="groupName" value={localProgram.groupName || ''} onChange={(e) => handleProgramChange('groupName', e.target.value)} />
                     </div>
                     <div className="grid gap-2 md:col-span-3">
                         <Label htmlFor="tourDates">ວັນທີເດີນທາງ (Tour Dates)</Label>
@@ -487,15 +493,15 @@ export default function TourProgramClientPage({ initialProgram }: { initialProgr
                     </div>
                     <div className="grid gap-2">
                         <Label htmlFor="pax">ຈຳນວນຄົນ (Pax)</Label>
-                        <Input id="pax" type="number" value={localProgram.pax} onChange={(e) => handleProgramChange('pax', Number(e.target.value))} />
+                        <Input id="pax" type="number" value={localProgram.pax || ''} onChange={(e) => handleProgramChange('pax', Number(e.target.value) || 0)} />
                     </div>
                      <div className="grid gap-2">
                         <Label htmlFor="destination">ຈຸດໝາຍ</Label>
-                        <Input id="destination" value={localProgram.destination} onChange={(e) => handleProgramChange('destination', e.target.value)} />
+                        <Input id="destination" value={localProgram.destination || ''} onChange={(e) => handleProgramChange('destination', e.target.value)} />
                     </div>
                      <div className="grid gap-2">
                         <Label htmlFor="durationDays">ໄລຍະເວລາ (ວັນ)</Label>
-                        <Input id="durationDays" type="number" value={localProgram.durationDays} onChange={(e) => handleProgramChange('durationDays', Number(e.target.value))} />
+                        <Input id="durationDays" type="number" value={localProgram.durationDays || ''} onChange={(e) => handleProgramChange('durationDays', Number(e.target.value) || 0)} />
                     </div>
                 </div>
 
@@ -570,7 +576,7 @@ export default function TourProgramClientPage({ initialProgram }: { initialProgr
                   <CurrencyEntryTable 
                       items={incomeItems}
                       onAddItem={handleAddIncomeItem}
-                      onUpdateItem={handleUpdateIncomeItem as any}
+                      onUpdateItem={handleUpdateIncomeItem}
                       onDeleteItem={handleDeleteIncomeItem}
                       title="ຕາຕະລາງບັນທຶກລາຍຮັບ"
                       description="ບັນທຶກລາຍຮັບທັງໝົດຂອງໂປຣແກຣມນີ້"
@@ -585,7 +591,7 @@ export default function TourProgramClientPage({ initialProgram }: { initialProgr
                   <CurrencyEntryTable 
                       items={costItems}
                       onAddItem={handleAddCostItem}
-                      onUpdateItem={handleUpdateCostItem as any}
+                      onUpdateItem={handleUpdateCostItem}
                       onDeleteItem={handleDeleteCostItem}
                       title="ຕາຕະລາງຄຳນວນຕົ້ນທຶນ"
                       description="ບັນທຶກຄ່າໃຊ້ຈ່າຍທັງໝົດຂອງໂປຣແກຣມນີ້"
