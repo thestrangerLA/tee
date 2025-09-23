@@ -11,7 +11,7 @@ import {
 const calculatorStateDocRef = doc(db, 'cashCalculatorState', 'latest');
 
 const denominations = [100000, 50000, 20000, 10000, 5000, 2000, 1000];
-const initialCounts: Record<string, number> = { baht: 0, rate: 0 };
+const initialCounts: Record<string, number> = { baht: 0, rate: 0, usd: 0, usd_rate: 0 };
 denominations.forEach(d => initialCounts[d] = 0);
 
 const initialCalculatorState: Omit<CashCalculatorState, 'id'> = {
@@ -33,7 +33,11 @@ export const listenToCalculatorState = (callback: (state: CashCalculatorState) =
     
     const unsubscribe = onSnapshot(calculatorStateDocRef, (docSnapshot) => {
         if (docSnapshot.exists()) {
-            callback({ id: docSnapshot.id, ...docSnapshot.data() } as CashCalculatorState);
+            const data = docSnapshot.data();
+            // Ensure new fields exist
+            if (!data.counts.usd) data.counts.usd = 0;
+            if (!data.counts.usd_rate) data.counts.usd_rate = 0;
+            callback({ id: docSnapshot.id, ...data } as CashCalculatorState);
         } else {
              // This case should ideally not happen after calling ensureInitialState, but it's good practice for resilience.
              callback({ id: 'latest', ...initialCalculatorState });
@@ -45,3 +49,5 @@ export const listenToCalculatorState = (callback: (state: CashCalculatorState) =
 export const updateCalculatorState = async (newState: Partial<Omit<CashCalculatorState, 'id'>>) => {
     await setDoc(calculatorStateDocRef, newState, { merge: true });
 };
+
+    
