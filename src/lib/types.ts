@@ -169,6 +169,7 @@ export interface CalculationSnapshot {
     savedAt: Date;
     tourInfo: TourInfo;
     allCosts: TourCosts;
+    note: string;
 }
 
 export interface SavedCalculation {
