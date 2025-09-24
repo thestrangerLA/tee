@@ -27,7 +27,7 @@ export default function Home() {
               </CardContent>
             </Card>
           </Link>
-          <Link href="/agriculture/login/">
+          <Link href="/tee-work">
             <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-2xl font-bold font-headline">Tee's WORK</CardTitle>
@@ -36,19 +36,6 @@ export default function Home() {
               <CardContent>
                 <p className="text-muted-foreground">
                   ຈັດການສະຕັອກ, ບັນຊີ, ແລະ ຂໍ້ມູນອື່ນໆ
-                </p>
-              </CardContent>
-            </Card>
-          </Link>
-           <Link href="/documents">
-            <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-2xl font-bold font-headline">ທຸລະກິດ ເອກະສານ</CardTitle>
-                <FileText className="h-8 w-8 text-primary" />
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  ຈັດການຂໍ້ມູນເອກະສານ ແລະ ວີຊ່າ
                 </p>
               </CardContent>
             </Card>
