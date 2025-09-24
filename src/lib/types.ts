@@ -129,46 +129,4 @@ export interface TourAccountSummary {
     transfer: CurrencyValues;
 }
 
-// --- Component Prop Types ---
-export type Accommodation = { id: string; name: string; type: 'hotel' | 'guesthouse'; checkInDate?: Date; rooms: Room[]; };
-export type Room = { id: string; type: string; numRooms: number; numNights: number; price: number; currency: Currency; };
-export type Trip = { id: string; location: string; route: string; vehicleType: string; numVehicles: number; numDays: number; pricePerVehicle: number; currency: Currency; };
-export type Flight = { id: string; from: string; to: string; departureDate?: Date; departureTime: string; pricePerPerson: number; numPeople: number; currency: Currency; };
-export type TrainTicket = { id: string; from: string; to: string; departureDate?: Date; departureTime: string; ticketClass: string; numTickets: number; pricePerTicket: number; currency: Currency; };
-export type EntranceFee = { id: string; locationName: string; pax: number; numLocations: number; price: number; currency: Currency; };
-export type MealCost = { id: string; name: string; pax: number; breakfast: number; lunch: number; dinner: number; pricePerMeal: number; currency: Currency; };
-export type GuideFee = { id: string; guideName: string; numGuides: number; numDays: number; pricePerDay: number; currency: Currency; };
-export type DocumentFee = { id: string; documentName: string; pax: number; price: number; currency: Currency; };
-
-export interface TourInfo {
-    mouContact: string;
-    groupCode: string;
-    destinationCountry: string;
-    program: string;
-    startDate?: Date;
-    endDate?: Date;
-    numDays: number;
-    numNights: number;
-    numPeople: number;
-    travelerInfo: string;
-}
-
-export interface TourCosts {
-    accommodations: Accommodation[];
-    trips: Trip[];
-    flights: Flight[];
-    trainTickets: TrainTicket[];
-    entranceFees: EntranceFee[];
-    meals: MealCost[];
-    guides: GuideFee[];
-    documents: DocumentFee[];
-}
-
-export interface SavedCalculation {
-    id: string;
-    savedAt: Date;
-    tourInfo: TourInfo;
-    allCosts: TourCosts;
-}
-
 export interface DocumentAccountSummary extends TourAccountSummary {}
