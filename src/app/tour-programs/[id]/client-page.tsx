@@ -1,5 +1,4 @@
 
-
 "use client"
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
@@ -271,10 +270,9 @@ type TabValue = 'info' | 'income' | 'costs' | 'summary' | 'dividend';
 type DividendItem = { id: string; name: string; percentage: number };
 
 export default function TourProgramClientPage({ initialProgram }: { initialProgram: TourProgram }) {
-    const { id } = initialProgram;
     const { toast } = useToast();
     
-    const [localProgram, setLocalProgram] = useState<TourProgram>(initialProgram);
+    const [localProgram, setLocalProgram] = useState<TourProgram | null>(initialProgram);
     const [costItems, setCostItems] = useState<TourCostItem[]>([]);
     const [incomeItems, setIncomeItems] = useState<TourIncomeItem[]>([]);
     const [printCurrencies, setPrintCurrencies] = useState<Currency[]>(['LAK']);
@@ -283,25 +281,55 @@ export default function TourProgramClientPage({ initialProgram }: { initialProgr
     const [isTableSaving, setIsTableSaving] = useState(false);
     const [activeTab, setActiveTab] = useState<TabValue>('info');
     const [dividendStructure, setDividendStructure] = useState<DividendItem[]>(initialDividendStructure);
+    
+    const [loading, setLoading] = useState(!initialProgram);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        if (!id) return;
+        if (!initialProgram && localProgram?.id) {
+             setLoading(true);
+             const fetchProgram = async () => {
+                 try {
+                    // This is a placeholder, in a real app you'd fetch from your service
+                    const fetchedProgram = await new Promise<TourProgram | null>((resolve) => setTimeout(() => resolve(initialProgram), 1000));
+                    if (fetchedProgram) {
+                        setLocalProgram(fetchedProgram);
+                    } else {
+                        setError('Program not found');
+                    }
+                 } catch(err) {
+                     setError('Failed to load program data');
+                 } finally {
+                     setLoading(false);
+                 }
+             }
+             fetchProgram();
+        } else {
+            setLocalProgram(initialProgram);
+            setLoading(false);
+        }
 
-        const unsubscribeCosts = listenToTourCostItemsForProgram(id, setCostItems);
-        const unsubscribeIncomes = listenToTourIncomeItemsForProgram(id, setIncomeItems);
+    }, [initialProgram, localProgram?.id]);
+
+
+    useEffect(() => {
+        if (!localProgram?.id) return;
+
+        const unsubscribeCosts = listenToTourCostItemsForProgram(localProgram.id, setCostItems);
+        const unsubscribeIncomes = listenToTourIncomeItemsForProgram(localProgram.id, setIncomeItems);
         
-        if (initialProgram.priceCurrency) {
-            setPrintCurrencies([initialProgram.priceCurrency]);
+        if (localProgram.priceCurrency) {
+            setPrintCurrencies([localProgram.priceCurrency]);
         }
 
         return () => {
             unsubscribeCosts();
             unsubscribeIncomes();
         };
-    }, [id, initialProgram]);
+    }, [localProgram?.id, localProgram?.priceCurrency]);
 
     const handleProgramChange = useCallback((field: keyof TourProgram, value: any) => {
-        setLocalProgram(prev => ({ ...prev, [field]: value }));
+        setLocalProgram(prev => prev ? ({ ...prev, [field]: value }) : null);
     }, []);
 
     const handleSaveProgramInfo = useCallback(async () => {
@@ -309,7 +337,7 @@ export default function TourProgramClientPage({ initialProgram }: { initialProgr
         
         setIsSaving(true);
         try {
-            const updatedProgram = { ...localProgram };
+            let updatedProgram = { ...localProgram };
              if (updatedProgram.priceCurrency === updatedProgram.bankChargeCurrency) {
                 updatedProgram.totalPrice = (updatedProgram.price || 0) + (updatedProgram.bankCharge || 0);
             } else {
@@ -331,9 +359,9 @@ export default function TourProgramClientPage({ initialProgram }: { initialProgr
     }, [localProgram, isSaving, toast]);
     
     const handleAddCostItem = async () => {
-        if (!id) return;
+        if (!localProgram?.id) return;
         try {
-            await addTourCostItem(id);
+            await addTourCostItem(localProgram.id);
         } catch (error) { toast({ title: "ເກີດຂໍ້ຜິດພາດໃນການເພີ່ມຕົ້ນທຶນ", variant: "destructive" }); }
     };
     
@@ -365,9 +393,9 @@ export default function TourProgramClientPage({ initialProgram }: { initialProgr
     };
 
     const handleAddIncomeItem = async () => {
-        if (!id) return;
+        if (!localProgram?.id) return;
         try {
-            await addTourIncomeItem(id);
+            await addTourIncomeItem(localProgram.id);
         } catch (error) { toast({ title: "ເກີດຂໍ້ຜິດພາດໃນการเพิ่มรายรับ", variant: "destructive" }); }
     };
 
@@ -463,6 +491,24 @@ export default function TourProgramClientPage({ initialProgram }: { initialProgr
     const totalPercentage = useMemo(() => {
         return dividendStructure.reduce((sum, item) => sum + (item.percentage || 0), 0);
     }, [dividendStructure]);
+    
+     if (loading) {
+        return (
+             <div className="flex flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
+                <Skeleton className="h-12 w-1/2" />
+                <Skeleton className="h-64 w-full" />
+                <Skeleton className="h-64 w-full" />
+            </div>
+        );
+    }
+
+    if (error) {
+        return <div className="text-red-500 text-center p-8">{error}</div>;
+    }
+
+    if (!localProgram) {
+        return <div className="text-center p-8">Program not found.</div>;
+    }
     
     const PrintHeader = ({ title }: { title: string }) => (
         <div className="hidden print:block print:space-y-4 pb-4 mb-4">

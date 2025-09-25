@@ -37,6 +37,8 @@ export default async function TourProgramPage({
   params: { id: string } 
 }) {
   const { id } = params;
+  // We fetch the program here to pass it as an initial prop.
+  // The client component can use this to avoid an immediate re-fetch.
   const program = await getTourProgram(id);
 
   if (!program) {
