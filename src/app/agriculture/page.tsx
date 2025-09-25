@@ -28,12 +28,12 @@ export default function AgricultureDashboard() {
           <Link href="/stock">
             <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-2xl font-bold font-headline">ผู้จัดการสต็อกสินค้าเกษตร</CardTitle>
+                <CardTitle className="text-2xl font-bold font-headline">ຈັດການສະຕັອກສິນຄ້າ</CardTitle>
                 <Package className="h-8 w-8 text-primary" />
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  จัดการสต็อกสินค้าเกษตรทั้งหมดของคุณ, ติดตามระดับสต็อก, และจัดการราคา
+                  ຈັດການສະຕັອກສິນຄ້າກະເສດທັງໝົດ, ຕິດຕາມລະດັບສະຕັອກ ແລະ ຈັດການລາຄາ
                 </p>
               </CardContent>
             </Card>
@@ -41,12 +41,12 @@ export default function AgricultureDashboard() {
           <Link href="/agriculture/accountancy">
             <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-2xl font-bold font-headline">จัดการบัญชี</CardTitle>
+                <CardTitle className="text-2xl font-bold font-headline">ຈັດການບັນຊີ</CardTitle>
                 <Landmark className="h-8 w-8 text-primary" />
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  ติดตามรายรับ-รายจ่าย, จัดการธุรกรรม, และดูสรุปภาพรวมการเงิน
+                  ຕິດຕາມລາຍຮັບ-ລາຍຈ່າຍ, ຈັດການທຸລະກຳ, ແລະ ເບິ່ງສະຫຼຸບພາບລວມການເງິນ
                 </p>
               </CardContent>
             </Card>
@@ -54,12 +54,12 @@ export default function AgricultureDashboard() {
            <Link href="/transport">
             <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-2xl font-bold font-headline">บัญชีขนส่ง</CardTitle>
+                <CardTitle className="text-2xl font-bold font-headline">ບັນຊີຂົນສົ່ງ</CardTitle>
                 <Truck className="h-8 w-8 text-primary" />
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  บันทึกและติดตามค่าใช้จ่ายในการขนส่งสินค้าแต่ละประเภท
+                  ບັນທຶກ ແລະ ຕິດຕາມຄ່າໃຊ້ຈ່າຍໃນການຂົນສົ່ງສິນຄ້າແຕ່ລະປະເພດ
                 </p>
               </CardContent>
             </Card>
@@ -67,12 +67,12 @@ export default function AgricultureDashboard() {
           <Link href="/debtors">
             <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-2xl font-bold font-headline">ลูกหนี้/เจ้าหนี้ทั่วไป</CardTitle>
+                <CardTitle className="text-2xl font-bold font-headline">ລູກໜີ້/ເຈົ້າໜີ້ທົ່ວໄປ</CardTitle>
                 <Users className="h-8 w-8 text-primary" />
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  จัดการและติดตามรายการลูกหนี้และเจ้าหนี้ทั่วไป
+                  ຈັດການ ແລະ ຕິດຕາມລາຍການລູກໜີ້ ແລະ ເຈົ້າໜີ້ທົ່ວໄປ
                 </p>
               </CardContent>
             </Card>
@@ -80,12 +80,12 @@ export default function AgricultureDashboard() {
            <Link href="/drug-creditors">
             <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-2xl font-bold font-headline">ลูกหนี้ค่ายา</CardTitle>
+                <CardTitle className="text-2xl font-bold font-headline">ລູກໜີ້ຄ່າຢາ</CardTitle>
                 <Users className="h-8 w-8 text-rose-500" />
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  จัดการและติดตามรายการลูกหนี้ค่ายาโดยเฉพาะ
+                  ຈັດການ ແລະ ຕິດຕາມລາຍການລູກໜີ້ຄ່າຢາໂດຍສະເພາະ
                 </p>
               </CardContent>
             </Card>
@@ -93,12 +93,12 @@ export default function AgricultureDashboard() {
           <Link href="/tax">
             <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-2xl font-bold font-headline">คำนวณภาษี</CardTitle>
+                <CardTitle className="text-2xl font-bold font-headline">ຄິດໄລ່ພາສີ</CardTitle>
                 <Calculator className="h-8 w-8 text-primary" />
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  คำนวณภาษีเงินได้บุคคลธรรมดาตามอัตราก้าวหน้า
+                  ຄິດໄລ່ພາສີເງິນໄດ້ບຸກຄົນທຳມະດາຕາມອັດຕາກ້າວໜ້າ
                 </p>
               </CardContent>
             </Card>
@@ -106,12 +106,12 @@ export default function AgricultureDashboard() {
            <Link href="/reports">
             <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-2xl font-bold font-headline">สรุปยอดรายปี/รายเดือน</CardTitle>
+                <CardTitle className="text-2xl font-bold font-headline">ສະຫຼຸບຍອດລາຍປີ/ລາຍເດືອນ</CardTitle>
                 <BarChart className="h-8 w-8 text-primary" />
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  ดูสรุปรายรับ-รายจ่าย และกำไรสุทธิแบบรายเดือนและรายปี
+                  ເບິ່ງສະຫຼຸບລາຍຮັບ-ລາຍຈ່າຍ ແລະ ກຳໄລສຸດທິແບບລາຍເດືອນ ແລະ ລາຍປີ
                 </p>
               </CardContent>
             </Card>

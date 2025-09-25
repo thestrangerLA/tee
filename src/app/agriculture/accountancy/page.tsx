@@ -627,7 +627,7 @@ export default function AgricultureAccountancyPage() {
                                         <AccordionItem value={`item-${index}`} key={index}>
                                             <AccordionTrigger>
                                                 <div className="flex justify-between w-full pr-4">
-                                                    <div className="font-semibold">{`ວັນທີ ${format(summary.date, "d")}`}</div>
+                                                    <div className="font-semibold">{format(summary.date, "dd-MM")}</div>
                                                     <div className="flex gap-4">
                                                         <span className="text-green-600">ຮັບ: {formatCurrency(summary.income)}</span>
                                                         <span className="text-red-600">ຈ່າຍ: {formatCurrency(summary.expense)}</span>
