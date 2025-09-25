@@ -43,6 +43,17 @@ export const listenToTourPrograms = (callback: (items: TourProgram[]) => void) =
     return unsubscribe;
 };
 
+export const getAllTourProgramIds = async (): Promise<{ id: string }[]> => {
+    const q = query(programsCollectionRef);
+    const querySnapshot = await getDocs(q);
+    const ids = querySnapshot.docs.map(doc => ({ id: doc.id }));
+    if (ids.length === 0) {
+        // Fallback for build if no programs exist to prevent build failure.
+        return [{ id: 'default' }];
+    }
+    return ids;
+}
+
 export const getAllTourPrograms = async (): Promise<TourProgram[]> => {
     const q = query(programsCollectionRef);
     const querySnapshot = await getDocs(q);
@@ -224,3 +235,5 @@ export const deleteTourIncomeItem = async (id: string) => {
     const itemDoc = doc(db, 'tourIncomeItems', id);
     await deleteDoc(itemDoc);
 };
+
+    
