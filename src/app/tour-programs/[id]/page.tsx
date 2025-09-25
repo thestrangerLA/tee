@@ -1,41 +1,24 @@
-
-
-import { getTourProgram, getAllTourPrograms } from '@/services/tourProgramService';
-import TourProgramClientPage from './client-page';
-import StaticExportWrapper from '@/components/StaticExportWrapper';
-
-export const dynamicParams = false;
+// app/tour-programs/[id]/page.tsx
+// Replace your entire file with this minimal version first
 
 export async function generateStaticParams() {
-    const programs = await getAllTourPrograms();
-    return programs.map((program) => ({
-        id: program.id,
-    }));
+    console.log('generateStaticParams called');
+    return [
+        { id: 'test-1' },
+        { id: 'test-2' },
+        { id: 'test-3' }
+    ];
 }
 
-async function getProgramData(id: string) {
-    const program = await getTourProgram(id);
-    if (!program) {
-        return null;
-    }
-    return program;
-}
-
-export default async function TourProgramPage({ params }: { params: { id: string } }) {
-    const { id } = params;
-    const programData = await getProgramData(id);
-
-    if (!programData) {
-        return (
-             <div className="flex min-h-screen w-full flex-col items-center justify-center bg-muted/40">
-                <p>ບໍ່ພົບຂໍ້ມູນໂປຣແກຣມທົວ</p>
-             </div>
-        )
-    }
-
+export default function TourProgramPage({ 
+    params 
+}: { 
+    params: { id: string } 
+}) {
     return (
-        <StaticExportWrapper>
-            <TourProgramClientPage initialProgram={programData} />
-        </StaticExportWrapper>
-    )
+        <div>
+            <h1>Tour Program: {params.id}</h1>
+            <p>This is a test page</p>
+        </div>
+    );
 }
