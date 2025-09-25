@@ -309,7 +309,8 @@ export default function AgricultureAccountancyPage() {
                 expense,
                 transactions: transactionsForDay
             };
-        }).filter(summary => summary.transactions.length > 0); 
+        }).filter(summary => summary.transactions.length > 0)
+        .sort((a, b) => b.date.getTime() - a.date.getTime());
 
     }, [allTransactions, historyDisplayMonth]);
 
@@ -492,7 +493,7 @@ export default function AgricultureAccountancyPage() {
                 <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4 xl:grid-cols-9">
                      <SummaryCard title="ເງິນທຶນ" value={formatCurrency(accountSummary.capital)} icon={<Briefcase className="h-5 w-5 text-primary" />} onClick={() => openEditSummaryDialog('capital')} />
                      <SummaryCard title="ເງິນສົດ" value={formatCurrency(accountSummary.cash)} icon={<Wallet className="h-5 w-5 text-primary" />} />
-                     <SummaryCard title="ເງິນໂອນ" value={formatCurrency(accountSummary.transfer)} icon={<Landmark className="h-5 w-5 text-primary" />} onClick={() => openEditSummaryDialog('transfer')} />
+                     <SummaryCard title="ເງິນໂอน" value={formatCurrency(accountSummary.transfer)} icon={<Landmark className="h-5 w-5 text-primary" />} onClick={() => openEditSummaryDialog('transfer')} />
                      <SummaryCard title="ລວມເງິນ" value={formatCurrency(totalMoney)} icon={<Combine className="h-5 w-5 text-green-600" />} />
                      <SummaryCard title="ລູກໜີ້ທົ່ວໄປ" value={formatCurrency(totalDebtors)} icon={<Users className="h-5 w-5 text-yellow-600" />} />
                      <SummaryCard title="ຄ່າຂົນສົ່ງຄົງເຫຼືອ" value={formatCurrency(transportRemaining)} icon={<Truck className="h-5 w-5 text-red-600" />} />
@@ -627,7 +628,7 @@ export default function AgricultureAccountancyPage() {
                                         <AccordionItem value={`item-${index}`} key={index}>
                                             <AccordionTrigger>
                                                 <div className="flex justify-between w-full pr-4">
-                                                    <div className="font-semibold">{format(summary.date, "dd-MM")}</div>
+                                                    <div className="font-semibold">{format(summary.date, "dd-MM-yyyy")}</div>
                                                     <div className="flex gap-4">
                                                         <span className="text-green-600">ຮັບ: {formatCurrency(summary.income)}</span>
                                                         <span className="text-red-600">ຈ່າຍ: {formatCurrency(summary.expense)}</span>
@@ -786,3 +787,5 @@ export default function AgricultureAccountancyPage() {
         </div>
     );
 }
+
+    
