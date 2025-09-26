@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Package, Trash2, PlusCircle, Calendar as CalendarIcon, DollarSign } from "lucide-react";
+import { ArrowLeft, Package, Trash2, PlusCircle, Calendar as CalendarIcon, DollarSign, ArrowDown, ArrowUp } from "lucide-react";
 import Link from 'next/link';
 import {
   Table,
@@ -166,11 +166,18 @@ const AddItemDialog = ({ onAddItem }: { onAddItem: (item: Omit<MeatStockItem, 'i
     )
 }
 
-const StockAdjustmentDialog = ({ item, onAdjust }: { item: MeatStockItem, onAdjust: (id: string, change: number, type: 'stock-in' | 'sale', detail: string) => Promise<void> }) => {
+const StockAdjustmentDialog = ({ 
+    item, 
+    onAdjust, 
+    type 
+}: { 
+    item: MeatStockItem, 
+    onAdjust: (id: string, change: number, type: 'stock-in' | 'sale', detail: string) => Promise<void>,
+    type: 'stock-in' | 'sale'
+}) => {
     const { toast } = useToast();
     const [open, setOpen] = useState(false);
     const [quantity, setQuantity] = useState(0);
-    const [type, setType] = useState<'stock-in' | 'sale'>('sale');
     const [detail, setDetail] = useState('');
 
     const handleAdjust = async () => {
@@ -194,18 +201,17 @@ const StockAdjustmentDialog = ({ item, onAdjust }: { item: MeatStockItem, onAdju
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button variant="outline" size="sm">ປັບປຸງ</Button>
+                <Button variant={type === 'stock-in' ? 'outline' : 'destructive'} size="sm" className="h-8">
+                     {type === 'stock-in' ? <ArrowUp className="mr-2 h-4 w-4" /> : <ArrowDown className="mr-2 h-4 w-4" />}
+                    {type === 'stock-in' ? 'ຮັບເຂົ້າ' : 'ຂາຍອອກ'}
+                </Button>
             </DialogTrigger>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>ປັບປຸງສະຕັອກ: {item.name}</DialogTitle>
-                    <DialogDescription>ບັນທຶກການນຳເຂົ້າ ຫຼື ການຂາຍ.</DialogDescription>
+                    <DialogTitle>{type === 'stock-in' ? 'ຮັບສິນຄ້າເຂົ້າ' : 'ຂາຍສິນຄ້າອອກ'}: {item.name}</DialogTitle>
+                    <DialogDescription>ບັນທຶກການເຄື່ອນໄຫວສິນຄ້າ.</DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
-                    <div className="flex items-center gap-4">
-                        <Button variant={type === 'sale' ? 'default' : 'outline'} onClick={() => setType('sale')}>ຂາຍອອກ</Button>
-                        <Button variant={type === 'stock-in' ? 'default' : 'outline'} onClick={() => setType('stock-in')}>ນຳເຂົ້າ</Button>
-                    </div>
                      <div className="grid gap-2">
                         <Label htmlFor="quantity">ຈຳນວນ ({item.packageSize})</Label>
                         <Input id="quantity" type="number" value={quantity || ''} onChange={(e) => setQuantity(parseFloat(e.target.value) || 0)} />
@@ -347,7 +353,8 @@ export default function MeatStockPage() {
                                             <TableCell className={`text-right font-bold ${isLowStock ? 'text-orange-600' : ''}`}>{item.currentStock}</TableCell>
                                             <TableCell className="text-right">{formatCurrency(item.costPrice * item.currentStock)}</TableCell>
                                             <TableCell className="text-center space-x-2">
-                                                <StockAdjustmentDialog item={item} onAdjust={updateStockQuantity} />
+                                                <StockAdjustmentDialog item={item} onAdjust={updateStockQuantity} type="stock-in" />
+                                                <StockAdjustmentDialog item={item} onAdjust={updateStockQuantity} type="sale" />
                                                  <AlertDialog>
                                                     <AlertDialogTrigger asChild>
                                                         <Button variant="ghost" size="icon"><Trash2 className="h-4 w-4 text-red-500" /></Button>
