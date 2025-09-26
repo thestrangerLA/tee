@@ -275,7 +275,7 @@ export default function MeatStockPage() {
                 </div>
             </header>
             <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-                 <div className="grid gap-4 md:grid-cols-3">
+                 <div className="grid gap-4 md:grid-cols-1">
                      <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">ມູນຄ່າສະຕັອກທັງໝົດ</CardTitle>
@@ -284,26 +284,6 @@ export default function MeatStockPage() {
                         <CardContent>
                             <div className="text-2xl font-bold">{formatCurrency(totalStockValue)} KIP</div>
                             <p className="text-xs text-muted-foreground">ມູນຄ່າລວມຂອງສິນຄ້າທັງໝົດໃນຄັງ</p>
-                        </CardContent>
-                    </Card>
-                     <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">ສິນຄ້າສະຕັອກຕໍ່າ</CardTitle>
-                            <AlertTriangle className="h-4 w-4 text-orange-500" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">{stockItems.filter(item => item.currentStock <= item.lowStockThreshold).length}</div>
-                            <p className="text-xs text-muted-foreground">ລາຍການທີ່ຕ້ອງສັ່ງເພີ່ມ</p>
-                        </CardContent>
-                    </Card>
-                     <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">ສິນຄ້າໃກ້ໝົດອາຍຸ</CardTitle>
-                            <AlertTriangle className="h-4 w-4 text-red-500" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">{stockItems.filter(item => item.expiryDate && differenceInDays(item.expiryDate, startOfToday()) <= 7).length}</div>
-                            <p className="text-xs text-muted-foreground">ລາຍການທີ່ຄວນรีบขาย (ພາຍໃນ 7 ວັນ)</p>
                         </CardContent>
                     </Card>
                 </div>
