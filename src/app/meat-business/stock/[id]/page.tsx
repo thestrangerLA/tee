@@ -11,19 +11,13 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Package, Trash2, Edit } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { listenToMeatStockItem, listenToMeatStockLogs, updateMeatStockItem, deleteMeatStockLog, updateMeatStockLog, getAllMeatStockItemIds } from '@/services/meatStockService';
+import { listenToMeatStockItem, listenToMeatStockLogs, updateMeatStockItem, deleteMeatStockLog, updateMeatStockLog } from '@/services/meatStockService';
 import type { MeatStockItem, MeatStockLog } from '@/lib/types';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
-export async function generateStaticParams() {
-    const ids = await getAllMeatStockItemIds();
-    return ids.map((item) => ({
-        id: item.id,
-    }));
-}
 
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('lo-LA', { minimumFractionDigits: 0 }).format(value);
