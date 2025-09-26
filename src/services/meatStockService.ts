@@ -16,7 +16,8 @@ import {
     writeBatch,
     where,
     getDocs,
-    getDoc
+    getDoc,
+    increment
 } from 'firebase/firestore';
 
 const meatStockCollectionRef = collection(db, 'meatStockItems');
@@ -177,79 +178,61 @@ export const updateStockQuantity = async (id: string, change: number, type: 'sto
 export const deleteMeatStockLog = async (logId: string, itemId: string) => {
     await runTransaction(db, async (transaction) => {
         const logDocRef = doc(db, 'meatStockLogs', logId);
+        const itemDocRef = doc(db, 'meatStockItems', itemId);
+        
         const logDoc = await transaction.get(logDocRef);
-
         if (!logDoc.exists()) {
             throw new Error("Log entry not found.");
         }
 
+        const itemDoc = await transaction.get(itemDocRef);
+        if (!itemDoc.exists()) {
+             throw new Error("Stock Item not found.");
+        }
+
         const logToDelete = logDoc.data() as MeatStockLog;
-        const changeToReverse = -logToDelete.change; // The amount to adjust the stock by
+        const changeToReverse = -logToDelete.change; 
 
-        // 1. Delete the log entry
+        // Update the item's stock
+        transaction.update(itemDocRef, { currentStock: increment(changeToReverse) });
+        
+        // Delete the log
         transaction.delete(logDocRef);
-
-        // 2. Adjust the stock item's current quantity
-        const itemDocRef = doc(db, 'meatStockItems', itemId);
-        transaction.update(itemDocRef, { currentStock: changeToReverse });
-
-        // 3. Find all subsequent logs for this item and adjust their `newStock` value
-        const subsequentLogsQuery = query(
-            meatStockLogCollectionRef,
-            where("itemId", "==", itemId),
-            where("createdAt", ">", logToDelete.createdAt)
-        );
-        const subsequentLogsSnapshot = await getDocs(subsequentLogsQuery);
-        subsequentLogsSnapshot.forEach(logSnap => {
-            const newStockValue = (logSnap.data().newStock || 0) + changeToReverse;
-            transaction.update(logSnap.ref, { newStock: newStockValue });
-        });
     });
 };
 
 export const updateMeatStockLog = async (logId: string, itemId: string, updates: { change: number, detail: string }) => {
     await runTransaction(db, async (transaction) => {
         const logDocRef = doc(db, 'meatStockLogs', logId);
-        const logDoc = await transaction.get(logDocRef);
+        const itemDocRef = doc(db, 'meatStockItems', itemId);
 
+        const logDoc = await transaction.get(logDocRef);
         if (!logDoc.exists()) {
             throw new Error("Log entry not found.");
         }
 
+        const itemDoc = await transaction.get(itemDocRef);
+        if (!itemDoc.exists()) {
+            throw new Error("Stock Item not found.");
+        }
+        
         const originalLog = logDoc.data() as MeatStockLog;
         const oldChange = originalLog.change;
-        const newChange = updates.change;
         
-        if(originalLog.type === 'sale' && newChange > 0) {
-            throw new Error("Sale quantity must be negative.");
-        }
-        if(originalLog.type === 'stock-in' && newChange < 0) {
-            throw new Error("Stock-in quantity must be positive.");
-        }
-
+        // Ensure sale is negative and stock-in is positive
+        const newChange = originalLog.type === 'sale' ? -Math.abs(updates.change) : Math.abs(updates.change);
+        
         const difference = newChange - oldChange;
 
-        // 1. Update the log entry itself
+        if (difference !== 0) {
+            transaction.update(itemDocRef, { currentStock: increment(difference) });
+        }
+        
         transaction.update(logDocRef, { 
             change: newChange, 
             detail: updates.detail,
-            newStock: originalLog.newStock + difference // Update its own newStock
-        });
-
-        // 2. Adjust the stock item's current quantity
-        const itemDocRef = doc(db, 'meatStockItems', itemId);
-        transaction.update(itemDocRef, { currentStock: difference });
-
-        // 3. Find all subsequent logs and adjust their `newStock` value by the difference
-        const subsequentLogsQuery = query(
-            meatStockLogCollectionRef,
-            where("itemId", "==", itemId),
-            where("createdAt", ">", originalLog.createdAt)
-        );
-        const subsequentLogsSnapshot = await getDocs(subsequentLogsQuery);
-        subsequentLogsSnapshot.forEach(logSnap => {
-            const newStockValue = (logSnap.data().newStock || 0) + difference;
-            transaction.update(logSnap.ref, { newStock: newStockValue });
+            // newStock is now just informational and doesn't need to be perfectly in sync for calculations
+            newStock: increment(difference) 
         });
     });
 };

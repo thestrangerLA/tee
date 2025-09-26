@@ -219,8 +219,8 @@ export default function MeatStockDetailPage() {
                                     type="number" 
                                     value={Math.abs(editingLog.change)} 
                                     onChange={(e) => {
-                                        const newChange = editingLog.type === 'sale' ? -Math.abs(Number(e.target.value)) : Math.abs(Number(e.target.value));
-                                        setEditingLog({...editingLog, change: newChange});
+                                        const newAbsValue = Math.abs(Number(e.target.value)) || 0;
+                                        setEditingLog({...editingLog, change: newAbsValue});
                                     }}
                                 />
                             </div>
