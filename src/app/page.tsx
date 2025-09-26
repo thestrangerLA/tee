@@ -1,6 +1,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Leaf, FerrisWheel, Briefcase, FileText, Calculator } from "lucide-react"
+import { Leaf, FerrisWheel, Briefcase, FileText, Calculator, Drumstick } from "lucide-react"
 import Link from 'next/link'
 
 export default function Home() {
@@ -36,6 +36,19 @@ export default function Home() {
               <CardContent>
                 <p className="text-muted-foreground">
                   ຈັດການສະຕັອກ, ບັນຊີ, ແລະ ຂໍ້ມູນອື່ນໆ
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+          <Link href="/meat-business">
+            <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-2xl font-bold font-headline">ທຸລະກິດຊີ້ນ</CardTitle>
+                <Drumstick className="h-8 w-8 text-primary" />
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  ຈັດການຂໍ້ມູນທຸລະກິດຊີ້ນ
                 </p>
               </CardContent>
             </Card>
