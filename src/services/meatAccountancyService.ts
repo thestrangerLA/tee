@@ -1,6 +1,6 @@
 
 import { db } from '@/lib/firebase';
-import type { DocumentAccountSummary, Transaction, CurrencyValues } from '@/lib/types';
+import type { DocumentAccountSummary, Transaction } from '@/lib/types';
 import { 
     doc, 
     onSnapshot, 
@@ -11,7 +11,6 @@ import {
     orderBy,
     addDoc,
     Timestamp,
-    runTransaction,
     updateDoc,
     deleteDoc,
     serverTimestamp
@@ -20,12 +19,10 @@ import {
 const summaryDocRef = doc(db, 'meat-business-accountSummary', 'latest');
 const transactionsCollectionRef = collection(db, 'meat-business-transactions');
 
-const initialCurrencyValues: CurrencyValues = { kip: 0, baht: 0, usd: 0, cny: 0 };
-
 const initialSummaryState: Omit<DocumentAccountSummary, 'id'> = {
-    capital: { ...initialCurrencyValues },
-    cash: { ...initialCurrencyValues },
-    transfer: { ...initialCurrencyValues },
+    capital: 0,
+    cash: 0,
+    transfer: 0,
 };
 
 // Function to ensure an initial state exists
@@ -44,9 +41,9 @@ export const listenToMeatAccountSummary = (callback: (summary: DocumentAccountSu
             const data = docSnapshot.data();
             callback({
                 id: docSnapshot.id,
-                capital: data.capital || { ...initialCurrencyValues },
-                cash: data.cash || { ...initialCurrencyValues },
-                transfer: data.transfer || { ...initialCurrencyValues },
+                capital: data.capital || 0,
+                cash: data.cash || 0,
+                transfer: data.transfer || 0,
             });
         } else {
             callback({ id: 'latest', ...initialSummaryState });
@@ -70,7 +67,8 @@ export const listenToMeatTransactions = (callback: (items: Transaction[]) => voi
             transactions.push({ 
                 id: doc.id, 
                 ...data,
-                date: (data.date as Timestamp).toDate()
+                date: (data.date as Timestamp).toDate(),
+                amount: data.kip || 0
             } as Transaction);
         });
         callback(transactions);
@@ -81,7 +79,9 @@ export const listenToMeatTransactions = (callback: (items: Transaction[]) => voi
 export const addMeatTransaction = async (transaction: Omit<Transaction, 'id' | 'businessType'>) => {
     const newTransactionRef = doc(transactionsCollectionRef);
     await setDoc(newTransactionRef, { 
-        ...transaction, 
+        description: transaction.description,
+        type: transaction.type,
+        kip: transaction.amount,
         businessType: 'meat-business',
         date: Timestamp.fromDate(transaction.date),
         createdAt: serverTimestamp()
@@ -90,10 +90,15 @@ export const addMeatTransaction = async (transaction: Omit<Transaction, 'id' | '
 
 export const updateMeatTransaction = async (id: string, updatedFields: Partial<Omit<Transaction, 'id'>>) => {
     const transactionDocRef = doc(transactionsCollectionRef, id);
-    const updateDataForFirestore = updatedFields.date 
-        ? { ...updatedFields, date: Timestamp.fromDate(updatedFields.date) }
-        : updatedFields;
-    await updateDoc(transactionDocRef, updateDataForFirestore);
+    const dataToUpdate: any = {
+        description: updatedFields.description,
+        type: updatedFields.type,
+        kip: updatedFields.amount,
+    };
+    if (updatedFields.date) {
+        dataToUpdate.date = Timestamp.fromDate(updatedFields.date);
+    }
+    await updateDoc(transactionDocRef, dataToUpdate);
 };
 
 export const deleteMeatTransaction = async (id: string) => {

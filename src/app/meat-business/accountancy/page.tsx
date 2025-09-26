@@ -20,18 +20,14 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { listenToMeatAccountSummary, updateMeatAccountSummary, listenToMeatTransactions, addMeatTransaction, updateMeatTransaction, deleteMeatTransaction } from '@/services/meatAccountancyService';
-import type { DocumentAccountSummary, Transaction, CurrencyValues } from '@/lib/types';
-
-const currencies: (keyof CurrencyValues)[] = ['kip', 'baht', 'usd', 'cny'];
-const initialCurrencyValues: CurrencyValues = { kip: 0, baht: 0, usd: 0, cny: 0 };
-
+import type { DocumentAccountSummary, Transaction } from '@/lib/types';
 
 const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('th-TH', { minimumFractionDigits: 0 }).format(value);
+    return new Intl.NumberFormat('lo-LA', { minimumFractionDigits: 0 }).format(value);
 }
 
-const SummaryCard = ({ title, values, icon, onClick, className }: { title: string, values: CurrencyValues, icon: React.ReactNode, onClick?: () => void, className?: string }) => (
-    <Card className={`${onClick ? 'cursor-pointer hover:bg-muted/80' : ''} ${className}`} onClick={onClick}>
+const SummaryCard = ({ title, value, icon, onClick, className }: { title: string, value: string, icon: React.ReactNode, onClick?: () => void, className?: string }) => (
+    <Card className={`${onClick ? 'cursor-pointer hover:bg-muted/80' : ''} ${className || ''}`} onClick={onClick}>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <div className="flex items-center gap-2">
                <CardTitle className="text-sm font-medium">{title}</CardTitle>
@@ -39,13 +35,8 @@ const SummaryCard = ({ title, values, icon, onClick, className }: { title: strin
             </div>
             {icon}
         </CardHeader>
-        <CardContent className="grid grid-cols-2 gap-x-4 gap-y-1">
-            {currencies.map(c => (
-                <div key={c} className="text-sm">
-                    <span className="font-semibold uppercase">{c}: </span>
-                    <span className={values[c] < 0 ? 'text-red-600' : ''}>{formatCurrency(values[c] || 0)}</span>
-                </div>
-            ))}
+        <CardContent>
+            <div className="text-2xl font-bold">{value}</div>
         </CardContent>
     </Card>
 );
@@ -55,14 +46,14 @@ export default function MeatAccountancyPage() {
     const [summary, setSummary] = useState<DocumentAccountSummary | null>(null);
     const [date, setDate] = useState<Date | undefined>(new Date());
     const [transactions, setTransactions] = useState<Transaction[]>([]);
-    const [newTransaction, setNewTransaction] = useState<Partial<Transaction>>({ type: 'expense', description: '', kip: 0, baht: 0, usd: 0, cny: 0 });
+    const [newTransaction, setNewTransaction] = useState<Partial<Transaction>>({ type: 'expense', description: '', amount: 0 });
     const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
     const [isFormVisible, setFormVisible] = useState(true);
     const [historyDisplayMonth, setHistoryDisplayMonth] = useState<Date>(new Date());
 
 
     const [editingField, setEditingField] = useState<'capital' | 'cash' | 'transfer' | null>(null);
-    const [editingValues, setEditingValues] = useState<CurrencyValues | null>(null);
+    const [editingValue, setEditingValue] = useState(0);
 
     useEffect(() => {
         const unsubscribeSummary = listenToMeatAccountSummary(setSummary);
@@ -74,11 +65,8 @@ export default function MeatAccountancyPage() {
     }, []);
 
     const totalBalance = useMemo(() => {
-        if (!summary) return { ...initialCurrencyValues };
-        return currencies.reduce((acc, curr) => {
-            acc[curr] = (summary.cash[curr] || 0) + (summary.transfer[curr] || 0);
-            return acc;
-        }, { ...initialCurrencyValues });
+        if (!summary) return 0;
+        return (summary.cash || 0) + (summary.transfer || 0);
     }, [summary]);
 
     const performanceData = useMemo(() => {
@@ -87,39 +75,23 @@ export default function MeatAccountancyPage() {
     
         const previousTransactions = transactions.filter(tx => tx.date < startOfSelectedMonth);
 
-        const broughtForward = currencies.reduce((acc, curr) => {
-            acc[curr] = previousTransactions.reduce((sum, tx) => {
-                 const amount = tx[curr] || 0;
-                 return tx.type === 'income' ? sum + amount : sum - amount;
-            }, 0);
-            return acc;
-        }, { ...initialCurrencyValues });
+        const broughtForward = previousTransactions.reduce((sum, tx) => {
+             const amount = tx.amount || 0;
+             return tx.type === 'income' ? sum + amount : sum - amount;
+        }, 0);
     
         const monthlyTransactions = transactions.filter(tx => isWithinInterval(tx.date, { start: startOfSelectedMonth, end: endOfSelectedMonth }));
         
-        const income = currencies.reduce((acc, curr) => {
-            acc[curr] = monthlyTransactions
-                .filter(tx => tx.type === 'income')
-                .reduce((sum, tx) => sum + (tx[curr] || 0), 0);
-            return acc;
-        }, { ...initialCurrencyValues });
+        const income = monthlyTransactions
+            .filter(tx => tx.type === 'income')
+            .reduce((sum, tx) => sum + (tx.amount || 0), 0);
             
-        const expense = currencies.reduce((acc, curr) => {
-            acc[curr] = monthlyTransactions
-                .filter(tx => tx.type === 'expense')
-                .reduce((sum, tx) => sum + (tx[curr] || 0), 0);
-            return acc;
-        }, { ...initialCurrencyValues });
+        const expense = monthlyTransactions
+            .filter(tx => tx.type === 'expense')
+            .reduce((sum, tx) => sum + (tx.amount || 0), 0);
     
-        const netProfit = currencies.reduce((acc, curr) => {
-            acc[curr] = income[curr] - expense[curr];
-            return acc;
-        }, { ...initialCurrencyValues });
-
-        const endingBalance = currencies.reduce((acc, curr) => {
-            acc[curr] = broughtForward[curr] + netProfit[curr];
-            return acc;
-        }, { ...initialCurrencyValues });
+        const netProfit = income - expense;
+        const endingBalance = broughtForward + netProfit;
         
         return { broughtForward, income, expense, netProfit, endingBalance };
     }, [transactions, historyDisplayMonth]);
@@ -137,20 +109,18 @@ export default function MeatAccountancyPage() {
                 acc[dayKey] = {
                     date: tx.date,
                     transactions: [],
-                    income: { ...initialCurrencyValues },
-                    expense: { ...initialCurrencyValues }
+                    income: 0,
+                    expense: 0
                 };
             }
             acc[dayKey].transactions.push(tx);
-            currencies.forEach(c => {
-                if (tx.type === 'income') {
-                    acc[dayKey].income[c] += tx[c] || 0;
-                } else {
-                    acc[dayKey].expense[c] += tx[c] || 0;
-                }
-            });
+            if (tx.type === 'income') {
+                acc[dayKey].income += tx.amount || 0;
+            } else {
+                acc[dayKey].expense += tx.amount || 0;
+            }
             return acc;
-        }, {} as Record<string, { date: Date, transactions: Transaction[], income: CurrencyValues, expense: CurrencyValues }>);
+        }, {} as Record<string, { date: Date, transactions: Transaction[], income: number, expense: number }>);
 
         return Object.values(grouped).sort((a, b) => b.date.getTime() - a.date.getTime());
     }, [transactions, historyDisplayMonth]);
@@ -158,8 +128,8 @@ export default function MeatAccountancyPage() {
 
     const handleAddTransaction = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!date || !newTransaction.description) {
-            toast({ title: "ຂໍ້ມູນບໍ່ຄົບ", description: "ກະລຸນາໃສ່ວັນທີ ແລະ ຄຳອະທິບາຍ", variant: "destructive" });
+        if (!date || !newTransaction.description || newTransaction.amount === undefined) {
+            toast({ title: "ຂໍ້ມູນບໍ່ຄົບ", description: "ກະລຸນາໃສ່ວັນທີ, ຄຳອະທິບາຍ ແລະ ຈຳນວນເງິນ", variant: "destructive" });
             return;
         }
         try {
@@ -167,14 +137,10 @@ export default function MeatAccountancyPage() {
                 date: startOfDay(date),
                 type: newTransaction.type || 'expense',
                 description: newTransaction.description || '',
-                amount: 0, // amount is not used in multi-currency
-                kip: Number(newTransaction.kip || 0),
-                baht: Number(newTransaction.baht || 0),
-                usd: Number(newTransaction.usd || 0),
-                cny: Number(newTransaction.cny || 0),
+                amount: Number(newTransaction.amount || 0),
             });
             toast({ title: "ເພີ່ມທຸລະກຳສຳເລັດ" });
-            setNewTransaction({ type: 'expense', description: '', kip: 0, baht: 0, usd: 0, cny: 0 });
+            setNewTransaction({ type: 'expense', description: '', amount: 0 });
             setDate(new Date());
         } catch (error) {
             console.error("Error adding transaction: ", error);
@@ -211,16 +177,16 @@ export default function MeatAccountancyPage() {
     const openEditDialog = (field: 'capital' | 'cash' | 'transfer') => {
         if (!summary) return;
         setEditingField(field);
-        setEditingValues(summary[field]);
+        setEditingValue(summary[field] || 0);
     };
 
     const handleSaveSummary = async () => {
-        if (!editingField || !editingValues) return;
+        if (!editingField || editingValue === null) return;
         try {
-            await updateMeatAccountSummary({ [editingField]: editingValues });
+            await updateMeatAccountSummary({ [editingField]: editingValue });
             toast({ title: "ບັນທຶກຍອດເງິນສຳເລັດ" });
             setEditingField(null);
-            setEditingValues(null);
+            setEditingValue(0);
         } catch (error) {
              console.error("Error saving summary: ", error);
              toast({ title: "ເກີດຂໍ້ຜິດພາດ", variant: "destructive" });
@@ -279,7 +245,7 @@ export default function MeatAccountancyPage() {
         switch(editingField) {
             case 'capital': return 'ແກ້ໄຂເງິນທຶນ';
             case 'cash': return 'ແກ້ໄຂເງິນສົດ';
-            case 'transfer': return 'ແກ້ໄຂເງິນໂอน';
+            case 'transfer': return 'ແກ້ໄຂເງິນໂອນ';
             default: return 'ແກ້ໄຂ';
         }
     }
@@ -295,10 +261,10 @@ export default function MeatAccountancyPage() {
             </header>
             <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4">
-                     <SummaryCard title="ເງິນທຶນ" values={summary.capital} icon={<Briefcase className="h-5 w-5 text-primary" />} onClick={() => openEditDialog('capital')} />
-                     <SummaryCard title="ເງິນສົດ" values={summary.cash} icon={<Wallet className="h-5 w-5 text-primary" />} onClick={() => openEditDialog('cash')} />
-                     <SummaryCard title="ເງິນໂอน" values={summary.transfer} icon={<Landmark className="h-5 w-5 text-primary" />} onClick={() => openEditDialog('transfer')} />
-                     <SummaryCard title="ລວມເງິນຄົງເຫຼືອ" values={totalBalance} icon={<Combine className="h-5 w-5 text-green-600" />} />
+                     <SummaryCard title="ເງິນທຶນ" value={formatCurrency(summary.capital)} icon={<Briefcase className="h-5 w-5 text-primary" />} onClick={() => openEditDialog('capital')} />
+                     <SummaryCard title="ເງິນສົດ" value={formatCurrency(summary.cash)} icon={<Wallet className="h-5 w-5 text-primary" />} onClick={() => openEditDialog('cash')} />
+                     <SummaryCard title="ເງິນໂอน" value={formatCurrency(summary.transfer)} icon={<Landmark className="h-5 w-5 text-primary" />} onClick={() => openEditDialog('transfer')} />
+                     <SummaryCard title="ລວມເງິນຄົງເຫຼືອ" value={formatCurrency(totalBalance)} icon={<Combine className="h-5 w-5 text-green-600" />} />
                 </div>
                  <Card>
                     <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
@@ -309,11 +275,11 @@ export default function MeatAccountancyPage() {
                         <MonthYearSelector />
                     </CardHeader>
                     <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <SummaryCard title="ຍອດຍົກມາ" values={performanceData.broughtForward} icon={<FileText className="h-5 w-5 text-primary" />} />
-                        <SummaryCard title="ລາຍຮັບ (ເດືອນ)" values={performanceData.income} icon={<ArrowUpCircle className="h-5 w-5 text-green-500" />} />
-                        <SummaryCard title="ລາຍຈ່າຍ (ເດືອນ)" values={performanceData.expense} icon={<ArrowDownCircle className="h-5 w-5 text-red-500" />} />
-                        <SummaryCard title="ກຳໄລ/ຂາດທຶນ (ເດືອນ)" values={performanceData.netProfit} icon={<Scale className="h-5 w-5 text-blue-500" />} />
-                        <SummaryCard title="ຍອດທ້າຍເດືອນ" values={performanceData.endingBalance} icon={<Banknote className="h-5 w-5 text-indigo-500" />} />
+                        <SummaryCard title="ຍອດຍົກມາ" value={formatCurrency(performanceData.broughtForward)} icon={<FileText className="h-5 w-5 text-primary" />} />
+                        <SummaryCard title="ລາຍຮັບ (ເດືອນ)" value={formatCurrency(performanceData.income)} icon={<ArrowUpCircle className="h-5 w-5 text-green-500" />} />
+                        <SummaryCard title="ລາຍຈ່າຍ (ເດືອນ)" value={formatCurrency(performanceData.expense)} icon={<ArrowDownCircle className="h-5 w-5 text-red-500" />} />
+                        <SummaryCard title="ກຳໄລ/ຂາດທຶນ (ເດືອນ)" value={formatCurrency(performanceData.netProfit)} icon={<Scale className="h-5 w-5 text-blue-500" />} />
+                        <SummaryCard title="ຍອດທ້າຍເດືອນ" value={formatCurrency(performanceData.endingBalance)} icon={<Banknote className="h-5 w-5 text-indigo-500" />} />
                     </CardContent>
                 </Card>
 
@@ -355,13 +321,9 @@ export default function MeatAccountancyPage() {
                                         <Label htmlFor="description">ຄຳອະທິບາຍ</Label>
                                         <Textarea id="description" value={newTransaction.description || ''} onChange={(e) => setNewTransaction(p => ({ ...p, description: e.target.value }))} required />
                                     </div>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        {currencies.map(c => (
-                                            <div key={c} className="grid gap-2">
-                                                <Label htmlFor={`new-${c}`} className="uppercase">{c}</Label>
-                                                <Input id={`new-${c}`} type="number" value={newTransaction[c] || ''} onChange={(e) => setNewTransaction(p => ({ ...p, [c]: e.target.value }))} placeholder="0" />
-                                            </div>
-                                        ))}
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="new-kip">ຈຳນວນເງິນ (KIP)</Label>
+                                        <Input id="new-kip" type="number" value={newTransaction.amount || ''} onChange={(e) => setNewTransaction(p => ({ ...p, amount: Number(e.target.value) }))} placeholder="0" />
                                     </div>
                                     <Button type="submit" className="w-full"><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມທຸລະກຳ</Button>
                                 </form>
@@ -376,7 +338,6 @@ export default function MeatAccountancyPage() {
                                 <CardTitle>ປະຫວັດທຸລະກຳ</CardTitle>
                                 <CardDescription>ສະແດງລາຍການສຳລັບເດືອນທີ່ເລືอก</CardDescription>
                             </div>
-                            <MonthYearSelector />
                         </CardHeader>
                         <CardContent>
                              {dailySummaries.length > 0 ? (
@@ -387,8 +348,8 @@ export default function MeatAccountancyPage() {
                                         <div className="flex justify-between w-full pr-4">
                                             <div className="font-semibold">{`ວັນທີ ${format(summary.date, "d MMMM yyyy")}`}</div>
                                             <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
-                                                <span className="text-green-600">ຮັບ: {currencies.map(c => `${formatCurrency(summary.income[c])} ${c.toUpperCase()}`).join(' / ')}</span>
-                                                <span className="text-red-600">ຈ່າຍ: {currencies.map(c => `${formatCurrency(summary.expense[c])} ${c.toUpperCase()}`).join(' / ')}</span>
+                                                <span className="text-green-600">ຮັບ: {formatCurrency(summary.income)} KIP</span>
+                                                <span className="text-red-600">ຈ່າຍ: {formatCurrency(summary.expense)} KIP</span>
                                             </div>
                                         </div>
                                     </AccordionTrigger>
@@ -397,7 +358,7 @@ export default function MeatAccountancyPage() {
                                             <TableHeader>
                                                 <TableRow>
                                                     <TableHead>ຄຳອະທິບາຍ</TableHead>
-                                                    {currencies.map(c => <TableHead key={c} className="text-right uppercase">{c}</TableHead>)}
+                                                    <TableHead className="text-right">ຈຳນວນເງິນ (KIP)</TableHead>
                                                     <TableHead><span className="sr-only">Actions</span></TableHead>
                                                 </TableRow>
                                             </TableHeader>
@@ -405,9 +366,7 @@ export default function MeatAccountancyPage() {
                                                 {summary.transactions.map(tx => (
                                                     <TableRow key={tx.id} className={tx.type === 'income' ? 'bg-green-50/50' : 'bg-red-50/50'}>
                                                         <TableCell className="font-medium">{tx.description}</TableCell>
-                                                        {currencies.map(c => (
-                                                            <TableCell key={c} className="text-right font-mono">{(tx[c] || 0) > 0 ? formatCurrency(tx[c]!) : '-'}</TableCell>
-                                                        ))}
+                                                        <TableCell className={`text-right font-semibold ${tx.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>{formatCurrency(tx.amount || 0)}</TableCell>
                                                         <TableCell className="text-right">
                                                             <DropdownMenu>
                                                                 <DropdownMenuTrigger asChild><Button variant="ghost" className="h-8 w-8 p-0"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
@@ -452,13 +411,9 @@ export default function MeatAccountancyPage() {
                                 </PopoverContent>
                             </Popover>
                             <Textarea value={editingTransaction.description} onChange={(e) => setEditingTransaction(p => p ? { ...p, description: e.target.value } : null)} />
-                            <div className="grid grid-cols-2 gap-4">
-                                {currencies.map(c => (
-                                    <div key={c} className="grid gap-2">
-                                        <Label htmlFor={`edit-${c}`} className="uppercase">{c}</Label>
-                                        <Input id={`edit-${c}`} type="number" value={editingTransaction[c] || ''} onChange={(e) => setEditingTransaction(p => p ? { ...p, [c]: Number(e.target.value) } : null)} />
-                                    </div>
-                                ))}
+                            <div className="grid gap-2">
+                                <Label htmlFor="edit-amount">ຈຳນວນເງິນ (KIP)</Label>
+                                <Input id="edit-amount" type="number" value={editingTransaction.amount || ''} onChange={(e) => setEditingTransaction(p => p ? { ...p, amount: Number(e.target.value) } : null)} />
                             </div>
                         </div>
                         <DialogFooter>
@@ -469,17 +424,15 @@ export default function MeatAccountancyPage() {
                 </Dialog>
             )}
 
-            {editingField && editingValues && (
+            {editingField && (
                  <Dialog open={!!editingField} onOpenChange={(isOpen) => !isOpen && setEditingField(null)}>
                     <DialogContent className="sm:max-w-md">
                         <DialogHeader><DialogTitle>{getDialogTitle()}</DialogTitle></DialogHeader>
-                        <div className="grid grid-cols-2 gap-4 py-4">
-                             {currencies.map(c => (
-                                <div key={c} className="grid gap-2">
-                                    <Label htmlFor={`summary-${c}`} className="uppercase">{c}</Label>
-                                    <Input id={`summary-${c}`} type="number" value={editingValues[c] || ''} onChange={(e) => setEditingValues(p => p ? { ...p, [c]: Number(e.target.value) } : null)} />
-                                </div>
-                            ))}
+                        <div className="grid gap-4 py-4">
+                             <div className="grid gap-2">
+                                <Label htmlFor="summary-amount" className="uppercase">ຈຳນວນເງິນ (KIP)</Label>
+                                <Input id="summary-amount" type="number" value={editingValue || ''} onChange={(e) => setEditingValue(Number(e.target.value))} />
+                            </div>
                         </div>
                         <DialogFooter>
                             <Button variant="outline" onClick={() => setEditingField(null)}>ຍົກເລີກ</Button>
@@ -491,5 +444,4 @@ export default function MeatAccountancyPage() {
         </div>
     );
 }
-
     

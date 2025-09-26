@@ -1,6 +1,5 @@
 
 
-
 export type StockItem = {
   id: string;
   name: string;
@@ -72,7 +71,7 @@ export interface DrugCreditorEntry {
   createdAt: Date;
 }
 
-export type Currency = 'USD' | 'THB' | 'LAK' | 'CNY';
+export type Currency = 'LAK';
 
 export interface TourProgram {
   id: string;
@@ -98,9 +97,6 @@ export interface TourCostItem {
   date: Date | null;
   detail: string;
   lak: number;
-  thb: number;
-  usd: number;
-  cny: number;
   createdAt: Date;
 }
 
@@ -110,24 +106,18 @@ export interface TourIncomeItem {
   date: Date | null;
   detail: string;
   lak: number;
-  thb: number;
-  usd: number;
-  cny: number;
   createdAt: Date;
 }
 
 export type CurrencyValues = {
     kip: number;
-    baht: number;
-    usd: number;
-    cny: number;
 };
 
 export interface TourAccountSummary {
     id: string;
-    capital: CurrencyValues;
-    cash: CurrencyValues;
-    transfer: CurrencyValues;
+    capital: number;
+    cash: number;
+    transfer: number;
 }
 
 export interface DocumentAccountSummary extends TourAccountSummary {}
