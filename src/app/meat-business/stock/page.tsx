@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Package, Trash2, PlusCircle, Calendar as CalendarIcon, AlertTriangle, CheckCircle2, DollarSign } from "lucide-react";
+import { ArrowLeft, Package, Trash2, PlusCircle, Calendar as CalendarIcon, DollarSign } from "lucide-react";
 import Link from 'next/link';
 import {
   Table,
@@ -46,8 +46,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import type { MeatStockItem } from '@/lib/types';
-import { listenToMeatStockItems, addMeatStockItem, deleteMeatStockItem, updateStockQuantity } from '@/services/meatStockService';
+import type { MeatStockItem, MeatStockLog } from '@/lib/types';
+import { listenToMeatStockItems, addMeatStockItem, deleteMeatStockItem, updateStockQuantity, listenToAllMeatStockLogs } from '@/services/meatStockService';
 import { format, differenceInDays, isBefore, startOfToday } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { useClientRouter } from '@/hooks/useClientRouter';
@@ -246,16 +246,39 @@ const ExpiryStatusBadge = ({ expiryDate }: { expiryDate: Date | null }) => {
 
 export default function MeatStockPage() {
     const [stockItems, setStockItems] = useState<MeatStockItem[]>([]);
+    const [stockLogs, setStockLogs] = useState<MeatStockLog[]>([]);
     const { toast } = useToast();
 
     useEffect(() => {
-        const unsubscribe = listenToMeatStockItems(setStockItems);
-        return () => unsubscribe();
+        const unsubscribeItems = listenToMeatStockItems(setStockItems);
+        const unsubscribeLogs = listenToAllMeatStockLogs(setStockLogs);
+        return () => {
+            unsubscribeItems();
+            unsubscribeLogs();
+        }
     }, []);
     
     const totalStockValue = useMemo(() => {
         return stockItems.reduce((acc, item) => acc + (item.costPrice * item.currentStock), 0);
     }, [stockItems]);
+
+    const itemMovement = useMemo(() => {
+        const movements: Record<string, { stockIn: number, stockOut: number }> = {};
+        stockItems.forEach(item => {
+            movements[item.id] = { stockIn: 0, stockOut: 0 };
+        });
+
+        stockLogs.forEach(log => {
+            if (movements[log.itemId]) {
+                if (log.type === 'stock-in') {
+                    movements[log.itemId].stockIn += log.change;
+                } else if (log.type === 'sale') {
+                    movements[log.itemId].stockOut += Math.abs(log.change);
+                }
+            }
+        });
+        return movements;
+    }, [stockItems, stockLogs]);
 
     return (
         <div className="flex min-h-screen w-full flex-col bg-muted/40">
@@ -299,9 +322,9 @@ export default function MeatStockPage() {
                                     <TableHead>SKU</TableHead>
                                     <TableHead>ຊື່ສິນຄ້າ</TableHead>
                                     <TableHead>ສະຖານະ</TableHead>
+                                    <TableHead className="text-right">ຮັບເຂົ້າ</TableHead>
+                                    <TableHead className="text-right">ຂາຍອອກ</TableHead>
                                     <TableHead className="text-right">ຈຳນວນ (ຄົງເຫຼືອ)</TableHead>
-                                    <TableHead className="text-right">ຕົ້ນທຶນ</TableHead>
-                                    <TableHead className="text-right">ລາຄາຂາຍ</TableHead>
                                     <TableHead className="text-right">ມູນຄ່າລວມ</TableHead>
                                     <TableHead className="text-center">ຈັດການ</TableHead>
                                 </TableRow>
@@ -309,6 +332,7 @@ export default function MeatStockPage() {
                             <TableBody>
                                 {stockItems.length > 0 ? stockItems.map(item => {
                                     const isLowStock = item.currentStock <= item.lowStockThreshold;
+                                    const movements = itemMovement[item.id] || { stockIn: 0, stockOut: 0 };
                                     return (
                                         <TableRow key={item.id} className={isLowStock ? 'bg-orange-50' : ''}>
                                             <TableCell className="font-mono">{item.sku}</TableCell>
@@ -318,9 +342,9 @@ export default function MeatStockPage() {
                                                 </Link>
                                             </TableCell>
                                             <TableCell><ExpiryStatusBadge expiryDate={item.expiryDate} /></TableCell>
+                                            <TableCell className="text-right text-green-600">{movements.stockIn}</TableCell>
+                                            <TableCell className="text-right text-red-600">{movements.stockOut}</TableCell>
                                             <TableCell className={`text-right font-bold ${isLowStock ? 'text-orange-600' : ''}`}>{item.currentStock}</TableCell>
-                                            <TableCell className="text-right">{formatCurrency(item.costPrice)}</TableCell>
-                                            <TableCell className="text-right">{formatCurrency(item.sellingPrice)}</TableCell>
                                             <TableCell className="text-right">{formatCurrency(item.costPrice * item.currentStock)}</TableCell>
                                             <TableCell className="text-center space-x-2">
                                                 <StockAdjustmentDialog item={item} onAdjust={updateStockQuantity} />

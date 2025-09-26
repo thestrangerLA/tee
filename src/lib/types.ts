@@ -124,6 +124,17 @@ export interface MeatStockItem {
   createdAt: Date;
 }
 
+export interface MeatStockLog {
+  id: string;
+  itemId: string;
+  change: number;
+  newStock: number;
+  type: 'stock-in' | 'sale';
+  detail: string;
+  createdAt: Date;
+}
+
+
 export type CurrencyValues = {
     kip: number;
 };

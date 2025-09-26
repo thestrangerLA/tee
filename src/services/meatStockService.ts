@@ -1,6 +1,6 @@
 
 import { db } from '@/lib/firebase';
-import type { MeatStockItem } from '@/lib/types';
+import type { MeatStockItem, MeatStockLog } from '@/lib/types';
 import { 
     collection, 
     addDoc, 
@@ -58,6 +58,24 @@ export const listenToMeatStockItem = (id: string, callback: (item: MeatStockItem
     return unsubscribe;
 };
 
+export const listenToAllMeatStockLogs = (callback: (logs: MeatStockLog[]) => void) => {
+    const q = query(meatStockLogCollectionRef, orderBy('createdAt', 'desc'));
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const logs: MeatStockLog[] = [];
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            logs.push({
+                id: doc.id,
+                ...data,
+                createdAt: (data.createdAt as Timestamp)?.toDate() || new Date()
+            } as MeatStockLog);
+        });
+        callback(logs);
+    });
+    return unsubscribe;
+};
+
+
 export const listenToMeatStockLogs = (itemId: string, callback: (logs: any[]) => void) => {
     const q = query(
         meatStockLogCollectionRef, 
@@ -85,8 +103,21 @@ export const addMeatStockItem = async (item: Omit<MeatStockItem, 'id' | 'created
         expiryDate: item.expiryDate ? Timestamp.fromDate(item.expiryDate) : null,
         createdAt: serverTimestamp()
     });
+
+    if (item.currentStock > 0) {
+        await addDoc(meatStockLogCollectionRef, {
+            itemId: docRef.id,
+            change: item.currentStock,
+            newStock: item.currentStock,
+            type: 'stock-in',
+            detail: 'Initial stock',
+            createdAt: serverTimestamp()
+        });
+    }
+
     return docRef.id;
 };
+
 
 export const updateMeatStockItem = async (id: string, updatedFields: Partial<Omit<MeatStockItem, 'id' | 'createdAt'>>) => {
     const itemDoc = doc(db, 'meatStockItems', id);
@@ -102,7 +133,17 @@ export const updateMeatStockItem = async (id: string, updatedFields: Partial<Omi
 };
 
 export const deleteMeatStockItem = async (id: string) => {
-    await deleteDoc(doc(db, 'meatStockItems', id));
+    const batch = writeBatch(db);
+    
+    // Delete item
+    batch.delete(doc(db, 'meatStockItems', id));
+
+    // Delete logs
+    const logsQuery = query(meatStockLogCollectionRef, where("itemId", "==", id));
+    const logsSnapshot = await getDocs(logsQuery);
+    logsSnapshot.forEach(logDoc => batch.delete(logDoc.ref));
+
+    await batch.commit();
 };
 
 export const updateStockQuantity = async (id: string, change: number, type: 'stock-in' | 'sale', detail: string) => {
