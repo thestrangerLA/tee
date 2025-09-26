@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -11,11 +11,12 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Package, Trash2, Edit } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { listenToMeatStockItem, listenToMeatStockLogs, updateMeatStockItem } from '@/services/meatStockService';
-import type { MeatStockItem } from '@/lib/types';
+import { listenToMeatStockItem, listenToMeatStockLogs, updateMeatStockItem, deleteMeatStockLog, updateMeatStockLog } from '@/services/meatStockService';
+import type { MeatStockItem, MeatStockLog } from '@/lib/types';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('lo-LA', { minimumFractionDigits: 0 }).format(value);
@@ -27,9 +28,11 @@ export default function MeatStockDetailPage() {
     const { toast } = useToast();
 
     const [item, setItem] = useState<MeatStockItem | null>(null);
-    const [logs, setLogs] = useState<any[]>([]);
+    const [logs, setLogs] = useState<MeatStockLog[]>([]);
     const [isEditing, setIsEditing] = useState(false);
     const [editData, setEditData] = useState<Partial<MeatStockItem>>({});
+    
+    const [editingLog, setEditingLog] = useState<MeatStockLog | null>(null);
 
     useEffect(() => {
         if (!id) return;
@@ -55,6 +58,32 @@ export default function MeatStockDetailPage() {
         } catch (error) {
             console.error("Failed to save item:", error);
             toast({ title: "ເກີດຂໍ້ຜິດພາດ", variant: "destructive" });
+        }
+    };
+    
+     const handleDeleteLog = async (logId: string, itemId: string) => {
+        if (!window.confirm("ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລົບປະຫວັດລາຍການນີ້? ການກະທຳນີ້ຈະອັບເດດຍອດສະຕັອກຄືນໃໝ່.")) {
+            return;
+        }
+        try {
+            await deleteMeatStockLog(logId, itemId);
+            toast({ title: "ລົບປະຫວັດສຳເລັດ" });
+        } catch (error: any) {
+            toast({ title: "ເກີດຂໍ້ຜິດພາດ", description: error.message, variant: "destructive" });
+        }
+    };
+    
+    const handleUpdateLog = async () => {
+        if (!editingLog) return;
+        try {
+            await updateMeatStockLog(editingLog.id, editingLog.itemId, {
+                change: editingLog.change,
+                detail: editingLog.detail,
+            });
+            toast({ title: "ອັບເດດປະຫວັດສຳເລັດ" });
+            setEditingLog(null);
+        } catch (error: any) {
+             toast({ title: "ເກີດຂໍ້ຜິດພາດ", description: error.message, variant: "destructive" });
         }
     };
     
@@ -136,6 +165,7 @@ export default function MeatStockDetailPage() {
                                     <TableHead>ລາຍລະອຽດ</TableHead>
                                     <TableHead className="text-right">ຈຳນວນປ່ຽນແປງ</TableHead>
                                     <TableHead className="text-right">ຈຳນວນຄົງເຫຼືອ</TableHead>
+                                    <TableHead className="text-center">ການດຳເນີນການ</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -152,10 +182,18 @@ export default function MeatStockDetailPage() {
                                             {log.change}
                                         </TableCell>
                                         <TableCell className="text-right font-bold">{log.newStock}</TableCell>
+                                        <TableCell className="text-center">
+                                             <Button variant="ghost" size="icon" onClick={() => setEditingLog(log)}>
+                                                <Edit className="h-4 w-4" />
+                                            </Button>
+                                            <Button variant="ghost" size="icon" onClick={() => handleDeleteLog(log.id, log.itemId)}>
+                                                <Trash2 className="h-4 w-4 text-red-500" />
+                                            </Button>
+                                        </TableCell>
                                     </TableRow>
                                 )) : (
                                     <TableRow>
-                                        <TableCell colSpan={5} className="h-24 text-center">ບໍ່ມີປະຫວັດການເຄື່ອນໄຫວ</TableCell>
+                                        <TableCell colSpan={6} className="h-24 text-center">ບໍ່ມີປະຫວັດການເຄື່ອນໄຫວ</TableCell>
                                     </TableRow>
                                 )}
                             </TableBody>
@@ -163,6 +201,45 @@ export default function MeatStockDetailPage() {
                     </CardContent>
                 </Card>
             </main>
+
+            {editingLog && (
+                <Dialog open={!!editingLog} onOpenChange={(isOpen) => !isOpen && setEditingLog(null)}>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>ແກ້ໄຂປະຫວັດ</DialogTitle>
+                            <DialogDescription>
+                                ລະວັງ: ການປ່ຽນຈຳນວນຈະສົ່ງຜົນກະທົບຕໍ່ຍອດສະຕັອກທັງໝົດ.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="grid gap-4 py-4">
+                            <div className="grid gap-2">
+                                <Label htmlFor="log-quantity">ຈຳນວນ</Label>
+                                <Input 
+                                    id="log-quantity" 
+                                    type="number" 
+                                    value={Math.abs(editingLog.change)} 
+                                    onChange={(e) => {
+                                        const newChange = editingLog.type === 'sale' ? -Math.abs(Number(e.target.value)) : Math.abs(Number(e.target.value));
+                                        setEditingLog({...editingLog, change: newChange});
+                                    }}
+                                />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="log-detail">ລາຍລະອຽດ</Label>
+                                <Input 
+                                    id="log-detail" 
+                                    value={editingLog.detail} 
+                                    onChange={(e) => setEditingLog({...editingLog, detail: e.target.value})} 
+                                />
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => setEditingLog(null)}>ຍົກເລີກ</Button>
+                            <Button onClick={handleUpdateLog}>ບັນທຶກ</Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+            )}
         </div>
     );
 }
