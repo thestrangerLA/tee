@@ -1,5 +1,6 @@
 
 
+
 export type StockItem = {
   id: string;
   name: string;
@@ -22,7 +23,7 @@ export interface Transaction {
     baht?: number;
     usd?: number;
     cny?: number;
-    businessType?: 'agriculture' | 'tour' | 'documents';
+    businessType?: 'agriculture' | 'tour' | 'documents' | 'meat-business';
 }
 
 export interface AccountSummary {
@@ -130,3 +131,5 @@ export interface TourAccountSummary {
 }
 
 export interface DocumentAccountSummary extends TourAccountSummary {}
+
+    
