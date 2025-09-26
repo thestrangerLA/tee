@@ -17,11 +17,6 @@ export interface Transaction {
     date: Date; // Stored as Timestamp in Firestore, converted to Date on client
     amount: number;
     description: string;
-    // Fields for multi-currency support
-    kip?: number;
-    baht?: number;
-    usd?: number;
-    cny?: number;
     businessType?: 'agriculture' | 'tour' | 'documents' | 'meat-business';
 }
 
@@ -71,7 +66,7 @@ export interface DrugCreditorEntry {
   createdAt: Date;
 }
 
-export type Currency = 'LAK';
+export type Currency = 'LAK' | 'THB' | 'USD' | 'CNY';
 
 export interface TourProgram {
   id: string;
@@ -97,6 +92,9 @@ export interface TourCostItem {
   date: Date | null;
   detail: string;
   lak: number;
+  thb: number;
+  usd: number;
+  cny: number;
   createdAt: Date;
 }
 
@@ -106,6 +104,23 @@ export interface TourIncomeItem {
   date: Date | null;
   detail: string;
   lak: number;
+  thb: number;
+  usd: number;
+  cny: number;
+  createdAt: Date;
+}
+
+export interface MeatStockItem {
+  id: string;
+  sku: string;
+  name: string; // ประเภทสินค้า / ส่วนของเนื้อ
+  packageSize: string; // ขนาดบรรจุ (e.g., "500g", "1kg")
+  costPrice: number; // ต้นทุน
+  sellingPrice: number; // ราคาขาย
+  currentStock: number; // จำนวนคงเหลือ (หน่วยเป็นแพ็ค)
+  lowStockThreshold: number; // new field for low stock alert
+  expiryDate: Date | null; // วันหมดอายุ
+  supplier: string; // (optional)
   createdAt: Date;
 }
 
@@ -121,5 +136,3 @@ export interface TourAccountSummary {
 }
 
 export interface DocumentAccountSummary extends TourAccountSummary {}
-
-    
