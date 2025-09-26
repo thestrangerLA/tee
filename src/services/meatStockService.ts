@@ -13,7 +13,10 @@ import {
     serverTimestamp,
     Timestamp,
     runTransaction,
-    writeBatch
+    writeBatch,
+    where,
+    getDocs,
+    getDoc
 } from 'firebase/firestore';
 
 const meatStockCollectionRef = collection(db, 'meatStockItems');
@@ -37,12 +40,52 @@ export const listenToMeatStockItems = (callback: (items: MeatStockItem[]) => voi
     return unsubscribe;
 };
 
-export const addMeatStockItem = async (item: Omit<MeatStockItem, 'id' | 'createdAt'>) => {
-    await addDoc(meatStockCollectionRef, {
+export const listenToMeatStockItem = (id: string, callback: (item: MeatStockItem | null) => void) => {
+    const itemDocRef = doc(db, 'meatStockItems', id);
+    const unsubscribe = onSnapshot(itemDocRef, (docSnapshot) => {
+        if (docSnapshot.exists()) {
+            const data = docSnapshot.data();
+            callback({
+                id: docSnapshot.id,
+                ...data,
+                expiryDate: (data.expiryDate as Timestamp)?.toDate() || null,
+                createdAt: (data.createdAt as Timestamp)?.toDate()
+            } as MeatStockItem);
+        } else {
+            callback(null);
+        }
+    });
+    return unsubscribe;
+};
+
+export const listenToMeatStockLogs = (itemId: string, callback: (logs: any[]) => void) => {
+    const q = query(
+        meatStockLogCollectionRef, 
+        where("itemId", "==", itemId), 
+        orderBy('createdAt', 'desc')
+    );
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const logs: any[] = [];
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            logs.push({
+                id: doc.id,
+                ...data,
+                createdAt: (data.createdAt as Timestamp)?.toDate() || new Date()
+            });
+        });
+        callback(logs);
+    });
+    return unsubscribe;
+};
+
+export const addMeatStockItem = async (item: Omit<MeatStockItem, 'id' | 'createdAt'>): Promise<string> => {
+    const docRef = await addDoc(meatStockCollectionRef, {
         ...item,
         expiryDate: item.expiryDate ? Timestamp.fromDate(item.expiryDate) : null,
         createdAt: serverTimestamp()
     });
+    return docRef.id;
 };
 
 export const updateMeatStockItem = async (id: string, updatedFields: Partial<Omit<MeatStockItem, 'id' | 'createdAt'>>) => {
@@ -89,3 +132,30 @@ export const updateStockQuantity = async (id: string, change: number, type: 'sto
         });
     });
 };
+
+export const getAllMeatStockItemIds = async (): Promise<{ id: string }[]> => {
+    const q = query(meatStockCollectionRef);
+    const querySnapshot = await getDocs(q);
+    const ids = querySnapshot.docs.map(doc => ({ id: doc.id }));
+    if (ids.length === 0) {
+        return [{ id: 'default' }];
+    }
+    return ids;
+};
+
+export const getMeatStockItem = async (id: string): Promise<MeatStockItem | null> => {
+    const docRef = doc(db, 'meatStockItems', id);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+        const data = docSnap.data();
+        return {
+            id: docSnap.id,
+            ...data,
+            expiryDate: (data.expiryDate as Timestamp)?.toDate(),
+            createdAt: (data.createdAt as Timestamp)?.toDate(),
+        } as MeatStockItem;
+    } else {
+        return null;
+    }
+}

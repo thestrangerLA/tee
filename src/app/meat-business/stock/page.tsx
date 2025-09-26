@@ -47,9 +47,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import type { MeatStockItem } from '@/lib/types';
-import { listenToMeatStockItems, addMeatStockItem, updateMeatStockItem, deleteMeatStockItem, updateStockQuantity } from '@/services/meatStockService';
+import { listenToMeatStockItems, addMeatStockItem, deleteMeatStockItem, updateStockQuantity } from '@/services/meatStockService';
 import { format, differenceInDays, isBefore, startOfToday } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
+import { useClientRouter } from '@/hooks/useClientRouter';
 
 
 const formatCurrency = (value: number) => {
@@ -57,8 +58,9 @@ const formatCurrency = (value: number) => {
 };
 
 
-const AddItemDialog = ({ onAddItem }: { onAddItem: (item: Omit<MeatStockItem, 'id'|'createdAt'>) => Promise<void> }) => {
+const AddItemDialog = ({ onAddItem }: { onAddItem: (item: Omit<MeatStockItem, 'id'|'createdAt'>) => Promise<string> }) => {
     const { toast } = useToast();
+    const router = useClientRouter();
     const [open, setOpen] = useState(false);
     const [expiryDate, setExpiryDate] = useState<Date | undefined>();
 
@@ -83,11 +85,12 @@ const AddItemDialog = ({ onAddItem }: { onAddItem: (item: Omit<MeatStockItem, 'i
         }
 
         try {
-            await onAddItem(newItem);
+            const newItemId = await onAddItem(newItem);
             toast({ title: "Success", description: "New item added to stock." });
             setOpen(false);
             e.currentTarget.reset();
             setExpiryDate(undefined);
+            router.push(`/meat-business/stock/${newItemId}`);
         } catch (error) {
             console.error("Error adding item:", error);
             toast({ title: "Error", description: "Could not add item.", variant: "destructive" });
@@ -155,7 +158,7 @@ const AddItemDialog = ({ onAddItem }: { onAddItem: (item: Omit<MeatStockItem, 'i
                     </div>
                     <DialogFooter>
                         <Button type="button" variant="outline" onClick={() => setOpen(false)}>ຍົກເລີກ</Button>
-                        <Button type="submit">ບັນທຶກ</Button>
+                        <Button type="submit">ບັນທຶກ ແລະ ເປີດໜ້າລາຍລະອຽດ</Button>
                     </DialogFooter>
                 </form>
             </DialogContent>
@@ -243,30 +246,12 @@ const ExpiryStatusBadge = ({ expiryDate }: { expiryDate: Date | null }) => {
 
 export default function MeatStockPage() {
     const [stockItems, setStockItems] = useState<MeatStockItem[]>([]);
-    const [editingItem, setEditingItem] = useState<MeatStockItem | null>(null);
     const { toast } = useToast();
 
     useEffect(() => {
         const unsubscribe = listenToMeatStockItems(setStockItems);
         return () => unsubscribe();
     }, []);
-
-    const handleUpdateField = async (id: string, field: keyof MeatStockItem, value: any) => {
-        try {
-            await updateMeatStockItem(id, { [field]: value });
-             toast({
-                title: "ອັບເດດສຳເລັດ",
-                description: "ຂໍ້ມູນສິນຄ້າຖືກບັນທຶກແລ້ວ.",
-            });
-        } catch (error) {
-            console.error("Failed to update item:", error);
-             toast({
-                title: "ເກີດຂໍ້ຜິດພາດ",
-                description: "ບໍ່ສາມາດບັນທຶກການປ່ຽນແປງໄດ້.",
-                variant: "destructive",
-            });
-        }
-    };
     
     const totalStockValue = useMemo(() => {
         return stockItems.reduce((acc, item) => acc + (item.costPrice * item.currentStock), 0);
@@ -347,7 +332,11 @@ export default function MeatStockPage() {
                                     return (
                                         <TableRow key={item.id} className={isLowStock ? 'bg-orange-50' : ''}>
                                             <TableCell className="font-mono">{item.sku}</TableCell>
-                                            <TableCell className="font-medium">{item.name} ({item.packageSize})</TableCell>
+                                            <TableCell className="font-medium hover:underline">
+                                                <Link href={`/meat-business/stock/${item.id}`}>
+                                                   {item.name} ({item.packageSize})
+                                                </Link>
+                                            </TableCell>
                                             <TableCell><ExpiryStatusBadge expiryDate={item.expiryDate} /></TableCell>
                                             <TableCell className={`text-right font-bold ${isLowStock ? 'text-orange-600' : ''}`}>{item.currentStock}</TableCell>
                                             <TableCell className="text-right">{formatCurrency(item.costPrice)}</TableCell>
