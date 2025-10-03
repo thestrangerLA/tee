@@ -2,7 +2,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, Drumstick, Landmark, Package } from "lucide-react"
+import { ArrowLeft, Drumstick, Landmark, Package, FilePieChart } from "lucide-react"
 import Link from 'next/link'
 import { Button } from "@/components/ui/button"
 
@@ -46,6 +46,19 @@ export default function MeatBusinessPage() {
               <CardContent>
                 <p className="text-muted-foreground">
                   ຈັດການສະຕັອກສິນຄ້າ ແລະ ຕິດຕາມລະດັບສະຕັອກ
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+           <Link href="/meat-business/reports">
+            <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-2xl font-bold font-headline">ສະຫຼຸບຍອດທຸລະກິດ</CardTitle>
+                <FilePieChart className="h-8 w-8 text-primary" />
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  ເບິ່ງສະຫຼຸບຜົນປະກອບການ ແລະ ປະຫວັດຮັບ-ຈ່າຍທົ່ວໄປ
                 </p>
               </CardContent>
             </Card>
