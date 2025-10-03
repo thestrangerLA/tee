@@ -18,6 +18,7 @@ import {
     where
 } from 'firebase/firestore';
 
+// A generic business type to be used by services that share collections
 type BusinessType = 'agriculture' | 'tour';
 
 const getCollectionRefs = (businessType: BusinessType) => {
@@ -55,25 +56,20 @@ export const listenToAllTransactions = (callback: (items: Transaction[]) => void
 // Transaction Functions
 export const listenToTransactions = (businessType: BusinessType, callback: (items: Transaction[]) => void) => {
     const { transactionsCollectionRef } = getCollectionRefs(businessType);
-    // The query was causing a crash because it required a composite index.
-    // To fix this immediately, we'll fetch ordered by date and filter on the client.
     const q = query(transactionsCollectionRef, orderBy('date', 'desc'));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
         const transactions: Transaction[] = [];
         querySnapshot.forEach((doc) => {
             const data = doc.data();
-            // Perform client-side filtering
-            if (data.businessType === businessType) {
-                transactions.push({ 
-                    id: doc.id, 
-                    ...data,
-                    date: (data.date as Timestamp).toDate() // Convert Firestore Timestamp to JS Date
-                } as Transaction);
-            }
+            transactions.push({ 
+                id: doc.id, 
+                ...data,
+                date: (data.date as Timestamp).toDate() // Convert Firestore Timestamp to JS Date
+            } as Transaction);
         });
         callback(transactions);
     }, (error) => {
-        console.error("Error in snapshot listener:", error);
+        console.error(`Error in snapshot listener for ${businessType}:`, error);
     });
     return unsubscribe;
 };
@@ -108,7 +104,7 @@ export const deleteTransaction = async (businessType: BusinessType, id: string) 
 };
 
 // Account Summary Functions
-export const listenToAccountSummary = (businessType: BusinessType, callback: (summary: AccountSummary | null) => void) => {
+export const listenToAccountSummary = (businessType: 'agriculture', callback: (summary: AccountSummary | null) => void) => {
     const { accountSummaryDocRef } = getCollectionRefs(businessType);
     const unsubscribe = onSnapshot(accountSummaryDocRef, (docSnapshot) => {
         if (docSnapshot.exists()) {
@@ -123,11 +119,14 @@ export const listenToAccountSummary = (businessType: BusinessType, callback: (su
         } else {
             callback(null);
         }
+    }, (error) => {
+        console.error(`Error listening to account summary for ${businessType}:`, error);
+        callback(null); // Send back null on error
     });
     return unsubscribe;
 };
 
-export const updateAccountSummary = async (businessType: BusinessType, summary: Partial<Omit<AccountSummary, 'id'>>) => {
+export const updateAccountSummary = async (businessType: 'agriculture', summary: Partial<Omit<AccountSummary, 'id'>>) => {
     const { accountSummaryDocRef } = getCollectionRefs(businessType);
     await setDoc(accountSummaryDocRef, summary, { merge: true });
 };
