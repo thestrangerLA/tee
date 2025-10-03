@@ -20,7 +20,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { listenToMeatAccountSummary, updateMeatAccountSummary, listenToMeatTransactions, addMeatTransaction, updateMeatTransaction, deleteMeatTransaction } from '@/services/meatAccountancyService';
-import type { DocumentAccountSummary, Transaction } from '@/lib/types';
+import { listenToMeatCalculatorState, updateMeatCalculatorState } from '@/services/meatCashCalculatorService';
+import type { DocumentAccountSummary, Transaction, CashCalculatorState } from '@/lib/types';
 
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('lo-LA', { minimumFractionDigits: 0 }).format(value);
@@ -40,6 +41,100 @@ const SummaryCard = ({ title, value, icon, onClick, className }: { title: string
         </CardContent>
     </Card>
 );
+
+const CashCalculatorCard = ({ onTotalChange }: { onTotalChange: (total: number) => void }) => {
+    const denominations = [100000, 50000, 20000, 10000, 5000, 2000, 1000];
+    const initialCounts: Record<string, number> = { baht: 0, rate: 0, usd: 0, usd_rate: 0, ...denominations.reduce((acc, d) => ({...acc, [d]: 0}), {}) };
+    
+    const [calculatorState, setCalculatorState] = useState<CashCalculatorState>({ id: 'latest', counts: initialCounts });
+    const [isCalculatorVisible, setCalculatorVisible] = useState(true);
+
+    useEffect(() => {
+        const unsubscribe = listenToMeatCalculatorState(setCalculatorState);
+        return () => unsubscribe();
+    }, []);
+
+    const totalKip = useMemo(() => {
+        const kipFromNotes = denominations.reduce((sum, d) => sum + (d * (calculatorState.counts[d] || 0)), 0);
+        const kipFromBaht = (calculatorState.counts.baht || 0) * (calculatorState.counts.rate || 0);
+        const kipFromUsd = (calculatorState.counts.usd || 0) * (calculatorState.counts.usd_rate || 0);
+        return kipFromNotes + kipFromBaht + kipFromUsd;
+    }, [calculatorState.counts, denominations]);
+
+    useEffect(() => {
+        onTotalChange(totalKip);
+    }, [totalKip, onTotalChange]);
+
+    const handleCountChange = async (key: string, value: string) => {
+        const newCounts = { ...calculatorState.counts, [key]: Number(value) || 0 };
+        await updateMeatCalculatorState({ counts: newCounts }); 
+    };
+
+    const handleReset = async () => {
+        await updateMeatCalculatorState({ counts: initialCounts });
+    };
+
+    return (
+        <Card>
+            <CardHeader className="cursor-pointer" onClick={() => setCalculatorVisible(!isCalculatorVisible)}>
+                <div className="flex justify-between items-center">
+                    <CardTitle>ເຄື່ອງຄິດໄລ່ເງິນສົດ</CardTitle>
+                    <Button variant="ghost" size="icon">
+                        {isCalculatorVisible ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                        <span className="sr-only">Toggle Calculator</span>
+                    </Button>
+                </div>
+            </CardHeader>
+            {isCalculatorVisible && (
+                <CardContent>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>ທະນະບັດ (KIP)</TableHead>
+                                <TableHead>ຈຳນວນ (ໃບ)</TableHead>
+                                <TableHead className="text-right">ລວມ (KIP)</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {denominations.map(d => (
+                                <TableRow key={d}>
+                                    <TableCell className="font-medium">{d.toLocaleString()}</TableCell>
+                                    <TableCell>
+                                        <Input type="number" value={calculatorState.counts[d] || ''} onChange={e => handleCountChange(String(d), e.target.value)} className="w-24 h-8" />
+                                    </TableCell>
+                                    <TableCell className="text-right">{(d * (calculatorState.counts[d] || 0)).toLocaleString()}</TableCell>
+                                </TableRow>
+                            ))}
+                             <TableRow>
+                                <TableCell className="font-medium">BAHT</TableCell>
+                                <TableCell><Input type="number" value={calculatorState.counts.baht || ''} onChange={e => handleCountChange('baht', e.target.value)} className="w-24 h-8" /></TableCell>
+                                <TableCell rowSpan={2} className="text-right align-bottom">{(calculatorState.counts.baht * calculatorState.counts.rate).toLocaleString()}</TableCell>
+                            </TableRow>
+                             <TableRow>
+                                <TableCell className="font-medium">Rate</TableCell>
+                                <TableCell><Input type="number" value={calculatorState.counts.rate || ''} onChange={e => handleCountChange('rate', e.target.value)} className="w-24 h-8" /></TableCell>
+                            </TableRow>
+                             <TableRow>
+                                <TableCell className="font-medium">USD</TableCell>
+                                <TableCell><Input type="number" value={calculatorState.counts.usd || ''} onChange={e => handleCountChange('usd', e.target.value)} className="w-24 h-8" /></TableCell>
+                                <TableCell rowSpan={2} className="text-right align-bottom">{(calculatorState.counts.usd * calculatorState.counts.usd_rate).toLocaleString()}</TableCell>
+                            </TableRow>
+                             <TableRow>
+                                <TableCell className="font-medium">Rate</TableCell>
+                                <TableCell><Input type="number" value={calculatorState.counts.usd_rate || ''} onChange={e => handleCountChange('usd_rate', e.target.value)} className="w-24 h-8" /></TableCell>
+                            </TableRow>
+                             <TableRow className="bg-muted/50 font-bold">
+                                <TableCell colSpan={2}>ລວມທັງໝົດ (KIP)</TableCell>
+                                <TableCell className="text-right text-lg">{totalKip.toLocaleString()}</TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
+                    <Button onClick={handleReset} variant="outline" className="mt-4 w-full">ຣີເຊັດ</Button>
+                </CardContent>
+            )}
+        </Card>
+    );
+};
 
 export default function MeatAccountancyPage() {
     const { toast } = useToast();
@@ -63,6 +158,13 @@ export default function MeatAccountancyPage() {
             unsubscribeTransactions();
         };
     }, []);
+    
+    const handleCalculatorTotalChange = async (totalKip: number) => {
+        if (summary && totalKip !== summary.cash) {
+            await updateMeatAccountSummary({ cash: totalKip });
+        }
+    };
+
 
     const totalBalance = useMemo(() => {
         if (!summary) return 0;
@@ -262,7 +364,7 @@ export default function MeatAccountancyPage() {
             <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4">
                      <SummaryCard title="ເງິນທຶນ" value={formatCurrency(summary.capital)} icon={<Briefcase className="h-5 w-5 text-primary" />} onClick={() => openEditDialog('capital')} />
-                     <SummaryCard title="ເງິນສົດ" value={formatCurrency(summary.cash)} icon={<Wallet className="h-5 w-5 text-primary" />} onClick={() => openEditDialog('cash')} />
+                     <SummaryCard title="ເງິນສົດ" value={formatCurrency(summary.cash)} icon={<Wallet className="h-5 w-5 text-primary" />} />
                      <SummaryCard title="ເງິນໂอน" value={formatCurrency(summary.transfer)} icon={<Landmark className="h-5 w-5 text-primary" />} onClick={() => openEditDialog('transfer')} />
                      <SummaryCard title="ລວມເງິນຄົງເຫຼືອ" value={formatCurrency(totalBalance)} icon={<Combine className="h-5 w-5 text-green-600" />} />
                 </div>
@@ -330,6 +432,7 @@ export default function MeatAccountancyPage() {
                             </CardContent>
                            )}
                         </Card>
+                        <CashCalculatorCard onTotalChange={handleCalculatorTotalChange} />
                     </div>
 
                      <Card className="lg:col-span-2">
@@ -444,4 +547,3 @@ export default function MeatAccountancyPage() {
         </div>
     );
 }
-    
