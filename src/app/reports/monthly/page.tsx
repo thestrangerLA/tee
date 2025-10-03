@@ -5,9 +5,13 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Printer, AlertCircle } from "lucide-react";
-import { listenToAllTransactions } from '@/services/accountancyService';
-import type { Transaction } from '@/lib/types';
+import { Printer, AlertCircle, Wallet, Users, Truck, UserMinus, PiggyBank, Combine } from "lucide-react";
+import { listenToAllTransactions, listenToAccountSummary } from '@/services/accountancyService';
+import { listenToDebtorCreditorEntries } from '@/services/debtorCreditorService';
+import { listenToTransportEntries } from '@/services/transportService';
+import { listenToAllDrugCreditorEntries } from '@/services/drugCreditorService';
+
+import type { Transaction, AccountSummary, DebtorCreditorEntry, TransportEntry, DrugCreditorEntry } from '@/lib/types';
 import { format, isWithinInterval, startOfMonth, endOfMonth, isValid, getYear, getMonth } from 'date-fns';
 
 import { useClientSearchParams } from '@/hooks/useClientSearchParams';
@@ -31,8 +35,22 @@ function ErrorDisplay({ message }: { message: string }) {
     );
 }
 
+const PrintSummaryCard = ({ title, value, icon }: { title: string; value: string; icon: React.ReactNode }) => (
+    <div className="border rounded-lg p-2 flex flex-col items-center justify-center text-center">
+        {icon}
+        <h4 className="text-xs font-semibold mt-1">{title}</h4>
+        <p className="text-sm font-bold">{value}</p>
+    </div>
+);
+
+
 function MonthlyReportPageComponent() {
     const [transactions, setTransactions] = useState<Transaction[]>([]);
+    const [accountSummary, setAccountSummary] = useState<AccountSummary | null>(null);
+    const [debtorEntries, setDebtorEntries] = useState<DebtorCreditorEntry[]>([]);
+    const [transportEntries, setTransportEntries] = useState<TransportEntry[]>([]);
+    const [drugCreditorEntries, setDrugCreditorEntries] = useState<DrugCreditorEntry[]>([]);
+    
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     
@@ -57,17 +75,29 @@ function MonthlyReportPageComponent() {
         setLoading(true);
         setError(null);
         try {
-            const unsubscribe = listenToAllTransactions(
-                (newTransactions) => { setTransactions(newTransactions); setLoading(false); },
-            );
-            return () => unsubscribe();
+            const unsubTransactions = listenToAllTransactions(setTransactions);
+            const unsubSummary = listenToAccountSummary('agriculture', setAccountSummary);
+            const unsubDebtors = listenToDebtorCreditorEntries(setDebtorEntries);
+            const unsubTransport = listenToTransportEntries(setTransportEntries);
+            const unsubDrugCreditors = listenToAllDrugCreditorEntries(setDrugCreditorEntries);
+            
+            const timer = setTimeout(() => setLoading(false), 1500); // Give time for all listeners to fetch initial data
+
+            return () => {
+                unsubTransactions();
+                unsubSummary();
+                unsubDebtors();
+                unsubTransport();
+                unsubDrugCreditors();
+                clearTimeout(timer);
+            };
         } catch (err) {
-            console.error('Error setting up transaction listener:', err);
+            console.error('Error setting up listeners:', err);
             setError('ບໍ່ສາມາດເຊື່ອມຕໍ່ກັບລະບົບຖານຂໍ້ມູນໄດ້');
             setLoading(false);
         }
     }, []);
-    
+
     const reportData = useMemo(() => {
         if (!isValidParams) return { transactions: [], income: 0, expense: 0, net: 0 };
         const startDate = startOfMonth(displayDate);
@@ -78,6 +108,33 @@ function MonthlyReportPageComponent() {
         const net = income - expense;
         return { transactions: monthlyTransactions, income, expense, net };
     }, [transactions, displayDate, isValidParams]);
+    
+    const summaryCardData = useMemo(() => {
+        const totalMoney = (accountSummary?.cash || 0) + (accountSummary?.transfer || 0);
+
+        const totalDebtors = debtorEntries
+            .filter(e => e.type === 'debtor' && !e.isPaid)
+            .reduce((sum, entry) => sum + entry.amount, 0);
+
+        const transportRemaining = transportEntries
+            .reduce((total, row) => {
+                let remaining = 0;
+                if (!row.finished) remaining += (row.amount || 0);
+                return total + remaining;
+            }, 0);
+        
+        const drugCreditorsPayable = drugCreditorEntries
+            .filter(e => !e.isPaid)
+            .reduce((sum, entry) => {
+                const profit = (entry.sellingPrice || 0) - (entry.cost || 0);
+                const share40 = profit * 0.4;
+                return sum + (entry.cost || 0) + share40;
+            }, 0);
+
+        const grandTotalMoney = totalMoney + totalDebtors + transportRemaining + drugCreditorsPayable;
+
+        return { totalMoney, totalDebtors, transportRemaining, drugCreditorsPayable, grandTotalMoney };
+    }, [accountSummary, debtorEntries, transportEntries, drugCreditorEntries]);
 
     if (error) return <ErrorDisplay message={error} />;
     if (!isValidParams) return <ErrorDisplay message="ພາລາມີເຕີ້ປີ ຫຼື ເດືອນບໍ່ຖືກຕ້ອງ" />;
@@ -112,6 +169,17 @@ function MonthlyReportPageComponent() {
                 <div className="hidden print:block text-center mb-4">
                     <h1 className="text-xl font-bold">ລາຍງານປະຈຳເດືອນ (ທຸລະກິດກະສິກຳ)</h1>
                     <p className="text-sm text-muted-foreground">ສຳລັບເດືອນ {headerTitle}</p>
+                </div>
+
+                <div className="hidden print:block mb-4">
+                    <h2 className="text-lg font-bold text-center mb-2">ສະຫຼຸບຍອດທຸລະກິດ</h2>
+                     <div className="grid grid-cols-5 gap-2">
+                        <PrintSummaryCard title="ລວມເງິນ" value={formatCurrency(summaryCardData.totalMoney)} icon={<Combine className="h-5 w-5 text-green-600" />} />
+                        <PrintSummaryCard title="ລູກໜີ້ທົ່ວໄປ" value={formatCurrency(summaryCardData.totalDebtors)} icon={<Users className="h-5 w-5 text-yellow-600" />} />
+                        <PrintSummaryCard title="ຄ່າຂົນສົ່ງ" value={formatCurrency(summaryCardData.transportRemaining)} icon={<Truck className="h-5 w-5 text-red-600" />} />
+                        <PrintSummaryCard title="ລູກໜີ້ຄ່າຢາ" value={formatCurrency(summaryCardData.drugCreditorsPayable)} icon={<UserMinus className="h-5 w-5 text-rose-500" />} />
+                        <PrintSummaryCard title="ລວມທັງໝົດ" value={formatCurrency(summaryCardData.grandTotalMoney)} icon={<PiggyBank className="h-5 w-5 text-blue-600" />} />
+                    </div>
                 </div>
                 
                 <Card className="print:shadow-none print:border-none">
@@ -169,3 +237,5 @@ export default function MonthlyReportPageWrapper() {
         </StaticExportWrapper>
     )
 }
+
+    
