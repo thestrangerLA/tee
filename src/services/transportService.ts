@@ -47,8 +47,10 @@ export const listenToTransportEntries = (callback: (items: TransportEntry[]) => 
     return unsubscribe;
 };
 
-export const addTransportEntry = async (type: 'ANS' | 'HAL' | 'MX', date: Date) => {
-    const newEntry = createInitialRowState(type, date);
+export const addTransportEntry = async (type: 'ANS' | 'HAL' | 'MX', dateForMonth: Date) => {
+    // Use the provided date but set it to the current day of that month, or just use the date as is.
+    // Let's use the provided date directly to ensure it belongs to the selected month.
+    const newEntry = createInitialRowState(type, dateForMonth);
     await addDoc(transportCollectionRef, {
         ...newEntry,
         date: Timestamp.fromDate(newEntry.date),
@@ -71,3 +73,4 @@ export const deleteTransportEntry = async (id: string) => {
     const transportDoc = doc(db, 'transportEntries', id);
     await deleteDoc(transportDoc);
 };
+
