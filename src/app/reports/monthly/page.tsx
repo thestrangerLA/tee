@@ -5,13 +5,14 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Printer, AlertCircle, Wallet, Users, Truck, UserMinus, PiggyBank, Combine } from "lucide-react";
+import { Printer, AlertCircle, Wallet, Users, Truck, UserMinus, PiggyBank, Combine, DollarSign, Tags } from "lucide-react";
 import { listenToAllTransactions, listenToAccountSummary } from '@/services/accountancyService';
 import { listenToDebtorCreditorEntries } from '@/services/debtorCreditorService';
 import { listenToTransportEntries } from '@/services/transportService';
 import { listenToAllDrugCreditorEntries } from '@/services/drugCreditorService';
+import { listenToStockItems } from '@/services/stockService';
 
-import type { Transaction, AccountSummary, DebtorCreditorEntry, TransportEntry, DrugCreditorEntry } from '@/lib/types';
+import type { Transaction, AccountSummary, DebtorCreditorEntry, TransportEntry, DrugCreditorEntry, StockItem } from '@/lib/types';
 import { format, isWithinInterval, startOfMonth, endOfMonth, isValid, getYear, getMonth } from 'date-fns';
 
 import { useClientSearchParams } from '@/hooks/useClientSearchParams';
@@ -50,6 +51,7 @@ function MonthlyReportPageComponent() {
     const [debtorEntries, setDebtorEntries] = useState<DebtorCreditorEntry[]>([]);
     const [transportEntries, setTransportEntries] = useState<TransportEntry[]>([]);
     const [drugCreditorEntries, setDrugCreditorEntries] = useState<DrugCreditorEntry[]>([]);
+    const [stockItems, setStockItems] = useState<StockItem[]>([]);
     
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
@@ -80,6 +82,7 @@ function MonthlyReportPageComponent() {
             const unsubDebtors = listenToDebtorCreditorEntries(setDebtorEntries);
             const unsubTransport = listenToTransportEntries(setTransportEntries);
             const unsubDrugCreditors = listenToAllDrugCreditorEntries(setDrugCreditorEntries);
+            const unsubStock = listenToStockItems(setStockItems);
             
             const timer = setTimeout(() => setLoading(false), 1500); // Give time for all listeners to fetch initial data
 
@@ -89,6 +92,7 @@ function MonthlyReportPageComponent() {
                 unsubDebtors();
                 unsubTransport();
                 unsubDrugCreditors();
+                unsubStock();
                 clearTimeout(timer);
             };
         } catch (err) {
@@ -136,6 +140,21 @@ function MonthlyReportPageComponent() {
         return { totalMoney, totalDebtors, transportRemaining, drugCreditorsPayable, grandTotalMoney };
     }, [accountSummary, debtorEntries, transportEntries, drugCreditorEntries]);
 
+    const stockValueData = useMemo(() => {
+        const totalStockValueKip = stockItems.reduce((acc, item) => acc + item.currentStock * item.costPrice, 0);
+        
+        const valuePerCategoryKip = stockItems.reduce((acc, item) => {
+            const value = item.currentStock * item.costPrice;
+            if (!acc[item.category]) {
+                acc[item.category] = 0;
+            }
+            acc[item.category] += value;
+            return acc;
+        }, {} as Record<string, number>);
+
+        return { totalStockValueKip, valuePerCategoryKip };
+    }, [stockItems]);
+
     if (error) return <ErrorDisplay message={error} />;
     if (!isValidParams) return <ErrorDisplay message="ພາລາມີເຕີ້ປີ ຫຼື ເດືອນບໍ່ຖືກຕ້ອງ" />;
     if (loading) {
@@ -158,7 +177,7 @@ function MonthlyReportPageComponent() {
             <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 print:hidden">
                 <h1 className="text-xl font-bold tracking-tight">ລາຍງານປະຈຳເດືອນ: {headerTitle}</h1>
                 <div className="ml-auto">
-                    <Button onClick={handlePrint} variant="outline" size="sm" disabled={reportData.transactions.length === 0}>
+                    <Button onClick={handlePrint} variant="outline" size="sm">
                         <Printer className="mr-2 h-4 w-4" />
                         ພິມ
                     </Button>
@@ -179,6 +198,25 @@ function MonthlyReportPageComponent() {
                         <PrintSummaryCard title="ຄ່າຂົນສົ່ງ" value={formatCurrency(summaryCardData.transportRemaining)} icon={<Truck className="h-5 w-5 text-red-600" />} />
                         <PrintSummaryCard title="ລູກໜີ້ຄ່າຢາ" value={formatCurrency(summaryCardData.drugCreditorsPayable)} icon={<UserMinus className="h-5 w-5 text-rose-500" />} />
                         <PrintSummaryCard title="ລວມທັງໝົດ" value={formatCurrency(summaryCardData.grandTotalMoney)} icon={<PiggyBank className="h-5 w-5 text-blue-600" />} />
+                    </div>
+                </div>
+
+                <div className="hidden print:block mb-4 space-y-2">
+                    <h2 className="text-lg font-bold text-center mb-2">ສະຫຼຸບຍອດສະຕັອກ (ກີບ)</h2>
+                    <PrintSummaryCard 
+                        title="ມູນຄ່າສະຕັອກທັງໝົດ" 
+                        value={formatCurrency(stockValueData.totalStockValueKip)} 
+                        icon={<DollarSign className="h-5 w-5 text-primary" />} 
+                    />
+                    <div className="grid grid-cols-4 gap-2">
+                        {Object.entries(stockValueData.valuePerCategoryKip).sort(([a], [b]) => a.localeCompare(b)).map(([category, value]) => (
+                            <PrintSummaryCard
+                                key={category}
+                                title={category}
+                                value={formatCurrency(value)}
+                                icon={<Tags className="h-4 w-4 text-muted-foreground" />}
+                            />
+                        ))}
                     </div>
                 </div>
                 
@@ -237,5 +275,3 @@ export default function MonthlyReportPageWrapper() {
         </StaticExportWrapper>
     )
 }
-
-    
