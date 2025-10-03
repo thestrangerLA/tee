@@ -239,7 +239,7 @@ function MonthlyReportPageComponent() {
                             </Table>
                         </div>
                         
-                        <div>
+                        <div className="print:hidden">
                             <h3 className="text-lg font-semibold my-4 print:my-2 print:text-base print:border-b print:pb-1">ລາຍລະອຽດທຸລະກຳ</h3>
                             {reportData.transactions.length > 0 ? (
                                 <Table>
