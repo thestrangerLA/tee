@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { ArrowLeft, BarChart, ArrowUpCircle, ArrowDownCircle, Scale, Minus } from "lucide-react";
+import { ArrowLeft, BarChart, ArrowUpCircle, ArrowDownCircle, Scale, Minus, Printer } from "lucide-react";
 import { listenToAllTransactions } from '@/services/accountancyService';
 import type { Transaction } from '@/lib/types';
 import { getYear, getMonth, format } from 'date-fns';
@@ -186,6 +186,7 @@ export default function ReportsPage() {
                                                         <TableHead className="text-right text-green-600">ລາຍຮັບ</TableHead>
                                                         <TableHead className="text-right text-red-600">ລາຍຈ່າຍ</TableHead>
                                                         <TableHead className="text-right">ກຳໄລ/ຂາດທຶນສຸດທິ</TableHead>
+                                                        <TableHead className="text-right">ການດຳເນີນການ</TableHead>
                                                     </TableRow>
                                                 </TableHeader>
                                                 <TableBody>
@@ -197,6 +198,14 @@ export default function ReportsPage() {
                                                             <TableCell className="text-right">{formatCurrency(monthSummary.income)}</TableCell>
                                                             <TableCell className="text-right">{formatCurrency(monthSummary.expense)}</TableCell>
                                                             <TableCell className={`text-right font-semibold ${monthSummary.net >= 0 ? '' : 'text-red-600'}`}>{formatCurrency(monthSummary.net)}</TableCell>
+                                                            <TableCell className="text-right">
+                                                                <Button variant="outline" size="sm" asChild>
+                                                                    <Link href={`/reports/monthly?year=${yearSummary.year}&month=${monthSummary.month}`} target="_blank">
+                                                                        <Printer className="mr-2 h-4 w-4" />
+                                                                        ພິມ
+                                                                    </Link>
+                                                                </Button>
+                                                            </TableCell>
                                                          </TableRow>
                                                     ))}
                                                 </TableBody>
