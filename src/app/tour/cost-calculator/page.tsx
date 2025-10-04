@@ -34,7 +34,7 @@ export interface SavedCalculation {
 }
 
 
-export default function TourListPage() {
+export default function TourCostCalculatorListPage() {
     const router = useRouter();
     const { toast } = useToast();
     const firestore = getFirestore(db.app);
