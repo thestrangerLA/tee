@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect, useMemo } from 'react';
@@ -9,11 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PlusCircle, Calendar as CalendarIcon, Calculator, Pencil, Trash2, LogIn } from 'lucide-react';
+import { PlusCircle, Calendar as CalendarIcon, Calculator, Pencil, Trash2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { getFirestore, collection, query, orderBy, onSnapshot, addDoc, deleteDoc, doc, serverTimestamp, Timestamp } from 'firebase/firestore';
-import { getAuth, onAuthStateChanged, User, signInAnonymously } from 'firebase/auth';
-import { db } from '@/lib/firebase'; // Use the existing firebase instance
+import { db } from '@/lib/firebase';
 
 // Define the shape of a calculation document from Firestore
 export interface SavedCalculation {
@@ -38,9 +36,6 @@ export interface SavedCalculation {
 export default function TourListPage() {
     const router = useRouter();
     const { toast } = useToast();
-    const [user, setUser] = useState<User | null>(null);
-    const [isUserLoading, setIsUserLoading] = useState(true);
-    const auth = getAuth(db.app);
     const firestore = getFirestore(db.app);
 
     const [savedCalculations, setSavedCalculations] = useState<SavedCalculation[]>([]);
@@ -51,18 +46,10 @@ export default function TourListPage() {
     const [availableYears, setAvailableYears] = useState<string[]>([]);
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-            setUser(user);
-            setIsUserLoading(false);
-        });
-        return () => unsubscribe();
-    }, [auth]);
-
-    useEffect(() => {
-        if (!user || !firestore) return;
+        if (!firestore) return;
 
         setCalculationsLoading(true);
-        const calculationsColRef = collection(firestore, 'users', user.uid, 'calculations');
+        const calculationsColRef = collection(firestore, 'calculations');
         const q = query(calculationsColRef, orderBy('savedAt', 'desc'));
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -72,7 +59,7 @@ export default function TourListPage() {
         });
 
         return () => unsubscribe();
-    }, [user, firestore]);
+    }, [firestore]);
 
     const toDate = (date: any): Date | undefined => {
       if (!date) return undefined;
@@ -135,10 +122,10 @@ export default function TourListPage() {
     }, [savedCalculations, selectedYear]);
 
     const handleAddNewCalculation = async () => {
-        if (!user || !firestore) {
+        if (!firestore) {
             toast({
-                title: "User not authenticated",
-                description: "Please log in to create a new calculation.",
+                title: "Firestore not available",
+                description: "Please try again later.",
                 variant: "destructive"
             });
             return;
@@ -169,7 +156,7 @@ export default function TourListPage() {
                 documents: [],
             },
         };
-        const calculationsColRef = collection(firestore, 'users', user.uid, 'calculations');
+        const calculationsColRef = collection(firestore, 'calculations');
         const newDocRef = await addDoc(calculationsColRef, newCalculationData);
         if(newDocRef){
           router.push(`/tour/cost-calculator/${newDocRef.id}`);
@@ -182,12 +169,12 @@ export default function TourListPage() {
     
     const handleDeleteCalculation = async (e: React.MouseEvent, id: string) => {
         e.stopPropagation(); // Prevent row click event
-        if (!user || !firestore) {
-             toast({ title: "Error", description: "User not authenticated.", variant: "destructive" });
+        if (!firestore) {
+             toast({ title: "Error", description: "Firestore not available.", variant: "destructive" });
              return;
         }
         if (window.confirm("ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບຂໍ້ມູນການຄຳນວນນີ້?")) {
-            const docRef = doc(firestore, 'users', user.uid, 'calculations', id);
+            const docRef = doc(firestore, 'calculations', id);
             await deleteDoc(docRef);
             toast({
                 title: "ລຶບຂໍ້ມູນສຳເລັດ",
@@ -195,35 +182,6 @@ export default function TourListPage() {
             });
         }
     };
-
-    if (isUserLoading) {
-      return (
-          <div className="flex items-center justify-center h-screen">
-              <p>Loading...</p>
-          </div>
-      )
-    }
-
-    if (!user) {
-        return (
-            <div className="flex items-center justify-center h-screen">
-                <Card className="p-8 text-center">
-                    <CardHeader>
-                        <CardTitle>ກະລຸນາລັອກອິນ</CardTitle>
-                        <CardDescription>ທ່ານຕ້ອງລັອກອິນກ່ອນຈຶ່ງຈະສາມາດເບິ່ງຂໍ້ມູນໄດ້.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                         {auth && (
-                            <Button onClick={() => signInAnonymously(auth)}>
-                                <LogIn className="mr-2 h-4 w-4"/>
-                                ລັອກອິນແບບບໍ່ລະບຸຊື່
-                            </Button>
-                        )}
-                    </CardContent>
-                </Card>
-            </div>
-        )
-    }
 
 
     return (
