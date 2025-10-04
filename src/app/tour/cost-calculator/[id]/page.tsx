@@ -86,7 +86,9 @@ const toDate = (date: DateValue): Date | undefined => {
   if (date instanceof Timestamp) {
     return date.toDate();
   }
-  return date as Date;
+  // This handles if it's already a Date object or a string that can be parsed.
+  // It will return an Invalid Date for unparsable strings, which `format` can handle.
+  return new Date(date as Date);
 };
 
 
@@ -393,6 +395,9 @@ export default function TourCalculatorPage() {
            </div>
         );
    }
+   
+    const startDate = toDate(tourInfo.startDate);
+    const endDate = toDate(tourInfo.endDate);
 
     return (
         <div className="flex min-h-screen w-full flex-col">
@@ -436,7 +441,13 @@ export default function TourCalculatorPage() {
                                     <div className="flex justify-between"><strong className="font-semibold">Program:</strong><span>{tourInfo.program}</span></div>
                                 </div>
                                 <div className="space-y-0.5">
-                                    <div className="flex justify-between"><strong className="font-semibold">Travel Dates:</strong><span>{tourInfo.startDate ? format(toDate(tourInfo.startDate)!, "dd/MM/yy") : ''} - {tourInfo.endDate ? format(toDate(tourInfo.endDate)!, "dd/MM/yy") : ''}</span></div>
+                                    <div className="flex justify-between">
+                                        <strong className="font-semibold">Travel Dates:</strong>
+                                        <span>
+                                            {startDate && !isNaN(startDate.getTime()) ? format(startDate, "dd/MM/yy") : ''}
+                                            {endDate && !isNaN(endDate.getTime()) ? ` - ${format(endDate, "dd/MM/yy")}` : ''}
+                                        </span>
+                                    </div>
                                     <div className="flex justify-between"><strong className="font-semibold">Duration:</strong><span>{tourInfo.numDays} Days, {tourInfo.numNights} Nights</span></div>
                                     <div className="flex justify-between"><strong className="font-semibold">Pax:</strong><span>{tourInfo.numPeople}</span></div>
                                     <div className="flex justify-between"><strong className="font-semibold">Traveler Info:</strong><span>{tourInfo.travelerInfo}</span></div>
@@ -477,11 +488,11 @@ export default function TourCalculatorPage() {
                                                 <PopoverTrigger asChild>
                                                     <Button variant={"outline"} className="justify-start text-left font-normal bg-input">
                                                         <CalendarIcon className="mr-2 h-4 w-4" />
-                                                        {toDate(tourInfo.startDate) ? format(toDate(tourInfo.startDate)!, "dd/MM/yyyy") : <span>mm/dd/yyyy</span>}
+                                                        {startDate && !isNaN(startDate.getTime()) ? format(startDate, "dd/MM/yyyy") : <span>mm/dd/yyyy</span>}
                                                     </Button>
                                                 </PopoverTrigger>
                                                 <PopoverContent className="w-auto p-0">
-                                                    <Calendar mode="single" selected={toDate(tourInfo.startDate)} onSelect={date => setTourInfo({...tourInfo, startDate: date})} initialFocus locale={th} />
+                                                    <Calendar mode="single" selected={startDate} onSelect={date => setTourInfo({...tourInfo, startDate: date})} initialFocus locale={th} />
                                                 </PopoverContent>
                                             </Popover>
                                         </div>
@@ -490,11 +501,11 @@ export default function TourCalculatorPage() {
                                                 <PopoverTrigger asChild>
                                                     <Button variant={"outline"} className="justify-start text-left font-normal bg-input">
                                                         <CalendarIcon className="mr-2 h-4 w-4" />
-                                                        {toDate(tourInfo.endDate) ? format(toDate(tourInfo.endDate)!, "dd/MM/yyyy") : <span>mm/dd/yyyy</span>}
+                                                        {endDate && !isNaN(endDate.getTime()) ? format(endDate, "dd/MM/yyyy") : <span>mm/dd/yyyy</span>}
                                                     </Button>
                                                 </PopoverTrigger>
                                                 <PopoverContent className="w-auto p-0">
-                                                    <Calendar mode="single" selected={toDate(tourInfo.endDate)} onSelect={date => setTourInfo({...tourInfo, endDate: date})} initialFocus locale={th} />
+                                                    <Calendar mode="single" selected={endDate} onSelect={date => setTourInfo({...tourInfo, endDate: date})} initialFocus locale={th} />
                                                 </PopoverContent>
                                             </Popover>
                                         </div>
@@ -562,7 +573,7 @@ export default function TourCalculatorPage() {
                                                                     <PopoverTrigger asChild>
                                                                         <Button variant={"outline"} className="w-full justify-start text-left font-normal">
                                                                             <CalendarIcon className="mr-2 h-4 w-4" />
-                                                                            {toDate(acc.checkInDate) ? format(toDate(acc.checkInDate)!, "dd/MM/yyyy") : <span>mm/dd/yyyy</span>}
+                                                                            {acc.checkInDate && !isNaN(toDate(acc.checkInDate)!.getTime()) ? format(toDate(acc.checkInDate)!, "dd/MM/yyyy") : <span>mm/dd/yyyy</span>}
                                                                         </Button>
                                                                     </PopoverTrigger>
                                                                     <PopoverContent className="w-auto p-0">
@@ -723,7 +734,7 @@ export default function TourCalculatorPage() {
                                                                         <PopoverTrigger asChild>
                                                                             <Button variant={"outline"} className="w-[180px] justify-start text-left font-normal">
                                                                                 <CalendarIcon className="mr-2 h-4 w-4" />
-                                                                                {toDate(flight.departureDate) ? format(toDate(flight.departureDate)!, "dd/MM/yyyy") : <span>mm/dd/yyyy</span>}
+                                                                                {flight.departureDate && !isNaN(toDate(flight.departureDate)!.getTime()) ? format(toDate(flight.departureDate)!, "dd/MM/yyyy") : <span>mm/dd/yyyy</span>}
                                                                             </Button>
                                                                         </PopoverTrigger>
                                                                         <PopoverContent className="w-auto p-0">
@@ -797,7 +808,7 @@ export default function TourCalculatorPage() {
                                                                         <PopoverTrigger asChild>
                                                                             <Button variant={"outline"} className="w-[180px] justify-start text-left font-normal">
                                                                                 <CalendarIcon className="mr-2 h-4 w-4" />
-                                                                                {toDate(ticket.departureDate) ? format(toDate(ticket.departureDate)!, "dd/MM/yyyy") : <span>mm/dd/yyyy</span>}
+                                                                                 {ticket.departureDate && !isNaN(toDate(ticket.departureDate)!.getTime()) ? format(toDate(ticket.departureDate)!, "dd/MM/yyyy") : <span>mm/dd/yyyy</span>}
                                                                             </Button>
                                                                         </PopoverTrigger>
                                                                         <PopoverContent className="w-auto p-0">
@@ -1116,3 +1127,5 @@ export default function TourCalculatorPage() {
         </div>
     );
 }
+
+    
