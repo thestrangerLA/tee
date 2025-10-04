@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -11,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { ArrowLeft, Save, Trash2, MapPin, Calendar as CalendarIcon, BedDouble, Truck, Plane, TrainFront, PlusCircle, Camera, UtensilsCrossed, Users, FileText, Clock, Eye, EyeOff, Printer, LogIn } from "lucide-react";
+import { ArrowLeft, Save, Trash2, MapPin, Calendar as CalendarIcon, BedDouble, Truck, Plane, TrainFront, PlusCircle, Camera, UtensilsCrossed, Users, FileText, Clock, Eye, EyeOff, Printer } from "lucide-react";
 import { format } from 'date-fns';
 import { th } from 'date-fns/locale';
 import { TotalCostCard } from '@/components/tour/TotalCostCard';
@@ -20,7 +21,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { ExchangeRateCard } from '@/components/tour/ExchangeRateCard';
 import { doc, setDoc, serverTimestamp, Timestamp, deleteDoc, getFirestore } from 'firebase/firestore';
-import { signInAnonymously, getAuth, onAuthStateChanged, User } from 'firebase/auth';
 import { useDocument } from 'react-firebase-hooks/firestore';
 import { db } from '@/lib/firebase';
 
@@ -111,15 +111,12 @@ export default function TourCalculatorPage() {
     const params = useParams();
     const calculationId = params.id as string;
     
-    const [user, setUser] = useState<User | null>(null);
-    const [isUserLoading, setIsUserLoading] = useState(true);
-    const auth = getAuth();
-    const firestore = getFirestore();
+    const firestore = getFirestore(db.app);
 
     const calculationDocRef = useMemo(() => {
-        if (!user || !firestore || !calculationId) return null;
-        return doc(firestore, 'users', user.uid, 'calculations', calculationId);
-    }, [user, firestore, calculationId]);
+        if (!firestore || !calculationId) return null;
+        return doc(firestore, 'calculations', calculationId);
+    }, [firestore, calculationId]);
 
     const [calculationData, calculationLoading, error] = useDocument(calculationDocRef);
 
@@ -135,14 +132,6 @@ export default function TourCalculatorPage() {
     
     const [itemVisibility, setItemVisibility] = useState<Record<string, boolean>>({});
 
-    useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-            setUser(user);
-            setIsUserLoading(false);
-        });
-        return () => unsubscribe();
-    }, [auth]);
-    
     useEffect(() => {
         if (calculationData) {
             const data = calculationData.data()
@@ -160,15 +149,12 @@ export default function TourCalculatorPage() {
     }, [calculationData]);
     
     useEffect(() => {
-        if (!isUserLoading && !user) {
-            toast({ title: "Authentication required", description: "Please log in to view this page.", variant: "destructive" });
-        }
         if (error) {
             console.error("Error loading calculation:", error);
             toast({ title: "Error", description: "Calculation not found or you don't have permission.", variant: "destructive" });
             router.push('/');
         }
-    }, [isUserLoading, user, error, router, toast]);
+    }, [error, router, toast]);
     
     const handleDataChange = useCallback(async () => {
         if (!calculationDocRef || calculationLoading) return;
@@ -236,12 +222,12 @@ export default function TourCalculatorPage() {
     // Auto-save on change
     useEffect(() => {
         const handler = setTimeout(() => {
-            if (!calculationLoading && user) {
+            if (!calculationLoading) {
                 handleDataChange();
             }
         }, 2000); // Debounce time
         return () => clearTimeout(handler);
-    }, [tourInfo, allCosts, calculationLoading, user, handleDataChange]);
+    }, [tourInfo, allCosts, calculationLoading, handleDataChange]);
 
 
     // Specific Component Logic
@@ -392,33 +378,12 @@ export default function TourCalculatorPage() {
         );
     };
 
-    if (isUserLoading || calculationLoading) {
+    if (calculationLoading) {
         return (
             <div className="flex flex-col items-center justify-center h-screen">
                 <p className="text-2xl font-semibold mb-4">Loading...</p>
             </div>
         );
-    }
-    
-    if (!user) {
-         return (
-            <div className="flex items-center justify-center h-screen">
-                <Card className="p-8 text-center">
-                    <CardHeader>
-                        <CardTitle>ກະລຸນາລັອກອິນ</CardTitle>
-                        <CardDescription>ທ່ານຕ້ອງລັອກອິນກ່ອນຈຶ່ງຈະສາມາດເບິ່ງ ຫຼື ແກ້ໄຂຂໍ້ມູນໄດ້.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        {auth && (
-                            <Button onClick={() => signInAnonymously(auth)}>
-                                <LogIn className="mr-2 h-4 w-4"/>
-                                ລັອກອິນແບບບໍ່ລະບຸຊື່
-                            </Button>
-                        )}
-                    </CardContent>
-                </Card>
-            </div>
-         );
     }
 
     if (error) {
