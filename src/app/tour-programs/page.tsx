@@ -1,337 +1,327 @@
-
 "use client"
 
 import { useState, useEffect, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { format } from 'date-fns';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, FileText, PlusCircle, MoreHorizontal, ChevronDown, Calendar as CalendarIcon, Filter } from "lucide-react";
-import { listenToTourPrograms, deleteTourProgram, updateTourProgram } from '@/services/tourProgramService';
-import type { TourProgram } from '@/lib/types';
-import { format, getYear, getMonth, startOfDay } from 'date-fns';
-
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator
-} from "@/components/ui/dropdown-menu";
-import { useToast } from "@/hooks/use-toast";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { useClientRouter } from '@/hooks/useClientRouter';
-import StaticExportWrapper from '@/components/StaticExportWrapper';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { PlusCircle, Calendar as CalendarIcon, Calculator, Pencil, Trash2, LogIn } from 'lucide-react';
+import { useToast } from "@/hooks/use-toast";
+import { getFirestore, collection, query, orderBy, onSnapshot, addDoc, deleteDoc, doc, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { getAuth, onAuthStateChanged, User, signInAnonymously } from 'firebase/auth';
+import { db } from '@/lib/firebase'; // Use the existing firebase instance
 
-
-const formatCurrency = (value: number | null | undefined, currency: string) => {
-    if (value === null || value === undefined || isNaN(value)) return '-';
-    return new Intl.NumberFormat('th-TH', { minimumFractionDigits: 0 }).format(value) + ` ${currency}`;
-};
-
-function TourProgramsListPageComponent() {
-    const { toast } = useToast();
-    const [allPrograms, setAllPrograms] = useState<TourProgram[]>([]);
-    const [selectedYear, setSelectedYear] = useState<number | null>(2025);
-    const [selectedGroupCode, setSelectedGroupCode] = useState<string | null>(null);
-    const router = useClientRouter();
-
-    useEffect(() => {
-        const unsubscribe = listenToTourPrograms(setAllPrograms);
-        return () => unsubscribe();
-    }, []);
-
-    const handleRowClick = (id: string) => {
-        router.push(`/tour-programs/${id}`);
+// Define the shape of a calculation document from Firestore
+export interface SavedCalculation {
+    id: string;
+    savedAt: any; // Firestore Timestamp
+    tourInfo: {
+        mouContact?: string;
+        groupCode?: string;
+        destinationCountry?: string;
+        program?: string;
+        startDate?: any;
+        endDate?: any;
+        numDays?: number;
+        numNights?: number;
+        numPeople?: number;
+        travelerInfo?: string;
     };
-    
-    const filteredPrograms = useMemo(() => {
-        return allPrograms.filter(p => {
-            const isYearMatch = selectedYear === null || getYear(p.date) === selectedYear;
-            const isGroupCodeMatch = !selectedGroupCode || p.tourCode === selectedGroupCode;
-            return isYearMatch && isGroupCodeMatch;
-        });
-    }, [allPrograms, selectedYear, selectedGroupCode]);
-
-    const programsByMonth = useMemo(() => {
-        if (selectedYear === null) {
-            return filteredPrograms.reduce((acc, program) => {
-                const year = getYear(program.date);
-                const month = getMonth(program.date);
-                const key = `${year}-${month}`;
-                if (!acc[key]) {
-                    acc[key] = { year, month, programs: [] };
-                }
-                acc[key].programs.push(program);
-                return acc;
-            }, {} as Record<string, { year: number, month: number, programs: TourProgram[] }>);
-        }
-        return filteredPrograms.reduce((acc, program) => {
-            const month = getMonth(program.date);
-            if (!acc[month]) {
-                acc[month] = [];
-            }
-            acc[month].push(program);
-            return acc;
-        }, {} as Record<number, TourProgram[]>);
-
-    }, [filteredPrograms, selectedYear]);
-    
-    const allGroupCodes = useMemo(() => {
-        const codes = allPrograms
-            .map(p => p.tourCode)
-            .filter((code, index, self) => code && self.indexOf(code) === index);
-        return ['01-all', ...codes.sort()];
-    }, [allPrograms]);
-
-
-    const handleDeleteProgram = async (programId: string, programName: string) => {
-        if (!window.confirm(`ເຈົ້າແນ່ໃຈບໍ່ວ່າต้องการลบໂປຣແກຣມ "${programName}"? ການກະທຳນີ້ຈະລົບລາຍຮັບ ແລະ ລາຍຈ່າຍທັງໝົດທີ່ກ່ຽວຂ້ອງ และ ບໍ່ສາມາດย้อนกลับໄດ້`)) {
-            return;
-        }
-        try {
-            await deleteTourProgram(programId);
-            toast({
-                title: "ລົບໂປຣແກຣມສຳເລັດ",
-                description: `ໂປຣແກຣມ "${programName}" ຖືກລົບແລ້ວ`,
-            });
-        } catch (error) {
-            console.error("Error deleting program:", error);
-            toast({
-                title: "ເກີດຂໍ້ຜິດພາດ",
-                description: "ບໍ່ສາມາດລົບໂປຣແກຣມໄດ້",
-                variant: "destructive",
-            });
-        }
-    };
-    
-     const handleUpdateProgramDate = async (programId: string, newDate: Date | undefined) => {
-        if (!newDate) return;
-        try {
-            await updateTourProgram(programId, { date: startOfDay(newDate) });
-            toast({
-                title: "ອัปเดตວັນທີສຳເລັດ",
-            });
-        } catch (error) {
-            console.error("Error updating program date:", error);
-            toast({
-                title: "ເກີດຂໍ້ຜິດພາດ",
-                description: "ບໍ່ສາມາດອัปเดตວັນທີໄດ້",
-                variant: "destructive",
-            });
-        }
-    };
-    
-    const YearSelector = () => {
-        const years = [2025, 2024];
-
-        return (
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="flex items-center gap-2">
-                        <CalendarIcon className="h-4 w-4" />
-                        <span>{selectedYear ? `ປີ ${selectedYear + 543}` : 'ທຸກໆປີ'}</span>
-                        <ChevronDown className="h-4 w-4 opacity-50" />
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                     <DropdownMenuItem onClick={() => setSelectedYear(null)}>
-                        ທຸກໆປີ
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    {years.map(year => (
-                        <DropdownMenuItem key={year} onClick={() => setSelectedYear(year)}>
-                            {`ປີ ${year + 543}`}
-                        </DropdownMenuItem>
-                    ))}
-                </DropdownMenuContent>
-            </DropdownMenu>
-        );
-    };
-
-
-    const GroupCodeSelector = () => (
-         <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="flex items-center gap-2">
-                    <Filter className="h-4 w-4" />
-                    <span>{selectedGroupCode || 'ທັງໝົດ'}</span>
-                    <ChevronDown className="h-4 w-4 opacity-50" />
-                </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setSelectedGroupCode(null)}>
-                    ທັງໝົດ
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                {allGroupCodes.map(code => (
-                    <DropdownMenuItem key={code} onClick={() => setSelectedGroupCode(code === '01-all' ? null : code)}>
-                        {code}
-                    </DropdownMenuItem>
-                ))}
-            </DropdownMenuContent>
-        </DropdownMenu>
-    );
-    
-    const renderProgramRows = (programs: TourProgram[]) => (
-         <Table>
-            <TableHeader>
-                <TableRow>
-                    <TableHead>ວັນທີ</TableHead>
-                    <TableHead>ລະຫັດກຸ່ມ</TableHead>
-                    <TableHead>ໂປຣແກຣມທົວ</TableHead>
-                    <TableHead>ສັນຊາດ</TableHead>
-                    <TableHead>ຈຸດໝາຍ</TableHead>
-                    <TableHead className="text-right">จำนวนຄົນ</TableHead>
-                    <TableHead><span className="sr-only">Actions</span></TableHead>
-                </TableRow>
-            </TableHeader>
-            <TableBody>
-            {programs.map(program => (
-                <TableRow key={program.id} className="group">
-                    <TableCell>
-                        <Popover>
-                            <PopoverTrigger asChild>
-                                <Button
-                                    variant={"outline"}
-                                    className="w-[150px] justify-start text-left font-normal"
-                                >
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {program.date ? format(program.date, "dd/MM/yyyy") : <span>ເລືອກວັນທີ</span>}
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0">
-                                <Calendar
-                                    mode="single"
-                                    selected={program.date}
-                                    onSelect={(date) => handleUpdateProgramDate(program.id, date)}
-                                    initialFocus
-                                    
-                                />
-                            </PopoverContent>
-                        </Popover>
-                    </TableCell>
-                    <TableCell onClick={() => handleRowClick(program.id)} className="cursor-pointer">{program.tourCode}</TableCell>
-                    <TableCell onClick={() => handleRowClick(program.id)} className="cursor-pointer font-medium">{program.programName}</TableCell>
-                    <TableCell onClick={() => handleRowClick(program.id)} className="cursor-pointer">{program.groupName}</TableCell>
-                    <TableCell onClick={() => handleRowClick(program.id)} className="cursor-pointer">{program.destination}</TableCell>
-                    <TableCell onClick={() => handleRowClick(program.id)} className="cursor-pointer text-right">{program.pax}</TableCell>
-                    <TableCell className="text-right">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100">
-                                    <span className="sr-only">Open menu</span>
-                                    <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuLabel>ການດຳເນີນການ</DropdownMenuLabel>
-                                <DropdownMenuItem onClick={() => handleRowClick(program.id)}>
-                                    ເບິ່ງ/ແກ້ໄຂ
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                    className="text-red-600"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleDeleteProgram(program.id, program.programName)
-                                    }}
-                                >
-                                    ລົບ
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </TableCell>
-                </TableRow>
-            ))}
-            </TableBody>
-        </Table>
-    );
-
-
-    return (
-        <div className="flex min-h-screen w-full flex-col bg-muted/40">
-            <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
-                <Button variant="outline" size="icon" className="h-8 w-8" asChild>
-                    <Link href="/tour">
-                        <ArrowLeft className="h-4 w-4" />
-                        <span className="sr-only">ກັບໄປໜ້າຫຼັກ</span>
-                    </Link>
-                </Button>
-                <div className="flex items-center gap-2">
-                    <FileText className="h-6 w-6 text-primary" />
-                    <h1 className="text-xl font-bold tracking-tight font-headline">ໂປຣແກຣມທົວທັງໝົດ</h1>
-                </div>
-                 <div className="ml-auto flex items-center gap-4">
-                    <YearSelector />
-                    <GroupCodeSelector />
-                    <Link href="/tour-programs/new">
-                        <Button size="sm">
-                            <PlusCircle className="mr-2 h-4 w-4" />
-                            ເພີ່ມໂປຣແກຣມທົວ
-                        </Button>
-                    </Link>
-                </div>
-            </header>
-            <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>ລາຍການໂປຣແກຣມທົວ {selectedYear ? `ປີ ${selectedYear + 543}` : 'ທັງໝົດ'}</CardTitle>
-                        <CardDescription>
-                            ຈັດການ, ສ້າງ ແລະ ແກ້ໄຂໂປຣແກຣມທົວສຳລັບລູກຄ້າ
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                         {filteredPrograms.length > 0 ? (
-                             <Accordion type="single" collapsible className="w-full" defaultValue="item-0">
-                                {selectedYear !== null ? 
-                                    Object.entries(programsByMonth).sort(([a], [b]) => Number(a) - Number(b)).map(([month, programs]) => (
-                                        <AccordionItem value={`month-${month}`} key={month}>
-                                            <AccordionTrigger className="bg-muted/50 px-4 rounded-md text-base font-semibold">
-                                                {format(new Date(selectedYear, Number(month)), 'LLLL')}
-                                            </AccordionTrigger>
-                                            <AccordionContent className="pt-2">
-                                                <div className="overflow-x-auto">
-                                                    {renderProgramRows(programs as TourProgram[])}
-                                                </div>
-                                            </AccordionContent>
-                                        </AccordionItem>
-                                    ))
-                                : 
-                                    Object.values(programsByMonth as Record<string, { year: number, month: number, programs: TourProgram[] }>)
-                                    .sort((a,b) => (b.year - a.year) || (b.month - a.month))
-                                    .map(({year, month, programs}) => (
-                                        <AccordionItem value={`${year}-${month}`} key={`${year}-${month}`}>
-                                            <AccordionTrigger className="bg-muted/50 px-4 rounded-md text-base font-semibold">
-                                                  {format(new Date(year, month), 'LLLL yyyy')}
-                                            </AccordionTrigger>
-                                             <AccordionContent className="pt-2">
-                                                <div className="overflow-x-auto">
-                                                    {renderProgramRows(programs)}
-                                                </div>
-                                            </AccordionContent>
-                                        </AccordionItem>
-                                    ))
-                                }
-                            </Accordion>
-                         ) : (
-                            <div className="text-center text-muted-foreground py-16">
-                                ບໍ່ມີໂປຣແກຣມທົວສຳລັບ {selectedYear ? `ປີ ${selectedYear + 543}`: 'ตัวกรองที่เลือก'}
-                            </div>
-                         )}
-                    </CardContent>
-                </Card>
-            </main>
-        </div>
-    )
+    allCosts?: any;
 }
 
-export default function TourProgramsPage() {
+
+export default function TourListPage() {
+    const router = useRouter();
+    const { toast } = useToast();
+    const [user, setUser] = useState<User | null>(null);
+    const [isUserLoading, setIsUserLoading] = useState(true);
+    const auth = getAuth();
+    const firestore = getFirestore();
+
+    const [savedCalculations, setSavedCalculations] = useState<SavedCalculation[]>([]);
+    const [calculationsLoading, setCalculationsLoading] = useState(true);
+
+    const [groupedCalculations, setGroupedCalculations] = useState<Record<string, SavedCalculation[]>>({});
+    const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
+    const [availableYears, setAvailableYears] = useState<string[]>([]);
+
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            setUser(user);
+            setIsUserLoading(false);
+        });
+        return () => unsubscribe();
+    }, [auth]);
+
+    useEffect(() => {
+        if (!user || !firestore) return;
+
+        setCalculationsLoading(true);
+        const calculationsColRef = collection(firestore, 'users', user.uid, 'calculations');
+        const q = query(calculationsColRef, orderBy('savedAt', 'desc'));
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const calcs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SavedCalculation));
+            setSavedCalculations(calcs);
+            setCalculationsLoading(false);
+        });
+
+        return () => unsubscribe();
+    }, [user, firestore]);
+
+    const toDate = (date: any): Date | undefined => {
+      if (!date) return undefined;
+      if (date instanceof Timestamp) {
+        return date.toDate();
+      }
+      return date as Date;
+    };
+
+    useEffect(() => {
+        if (savedCalculations && savedCalculations.length > 0) {
+            const years = [...new Set(savedCalculations.map(c => {
+                const savedAtDate = toDate(c.savedAt);
+                return savedAtDate ? new Date(savedAtDate).getFullYear().toString() : '';
+            }).filter(Boolean))];
+            
+            const currentYear = new Date().getFullYear().toString();
+            if (!years.includes(currentYear)) {
+                years.push(currentYear);
+            }
+            setAvailableYears(years.sort((a, b) => parseInt(b) - parseInt(a)));
+        } else {
+             setAvailableYears([new Date().getFullYear().toString()]);
+        }
+    }, [savedCalculations]);
+
+    useEffect(() => {
+        if (savedCalculations) {
+            const filtered = savedCalculations.filter(c => {
+                const savedAtDate = toDate(c.savedAt);
+                return savedAtDate ? new Date(savedAtDate).getFullYear().toString() === selectedYear : false;
+            });
+
+            const grouped = filtered.reduce((acc, calc) => {
+                const savedAtDate = toDate(calc.savedAt);
+                if (!savedAtDate) return acc;
+                const month = format(new Date(savedAtDate), 'MMMM yyyy');
+                if (!acc[month]) {
+                    acc[month] = [];
+                }
+                acc[month].push(calc);
+                // Calculations are already sorted by Firestore query
+                return acc;
+            }, {} as Record<string, SavedCalculation[]>);
+
+            const sortedGroupKeys = Object.keys(grouped).sort((a, b) => {
+                // Sort by date object to handle month and year sorting correctly
+                return new Date(b).getTime() - new Date(a).getTime();
+            });
+
+            const sortedGroupedCalculations: Record<string, SavedCalculation[]> = {};
+            for(const key of sortedGroupKeys) {
+                sortedGroupedCalculations[key] = grouped[key];
+            }
+
+            setGroupedCalculations(sortedGroupedCalculations);
+        } else {
+            setGroupedCalculations({});
+        }
+    }, [savedCalculations, selectedYear]);
+
+    const handleAddNewCalculation = async () => {
+        if (!user || !firestore) {
+            toast({
+                title: "User not authenticated",
+                description: "Please log in to create a new calculation.",
+                variant: "destructive"
+            });
+            return;
+        }
+
+        const newCalculationData = {
+            savedAt: serverTimestamp(),
+            tourInfo: {
+                mouContact: '',
+                groupCode: `LTH${format(new Date(),'yyyyMMddHHmmss')}`,
+                destinationCountry: '',
+                program: '',
+                startDate: null,
+                endDate: null,
+                numDays: 1,
+                numNights: 0,
+                numPeople: 1,
+                travelerInfo: ''
+            },
+            allCosts: {
+                accommodations: [],
+                trips: [],
+                flights: [],
+                trainTickets: [],
+                entranceFees: [],
+                meals: [],
+                guides: [],
+                documents: [],
+            },
+        };
+        const calculationsColRef = collection(firestore, 'users', user.uid, 'calculations');
+        const newDocRef = await addDoc(calculationsColRef, newCalculationData);
+        if(newDocRef){
+          router.push(`/tour/cost-calculator/${newDocRef.id}`);
+        }
+    };
+    
+    const navigateToCalculation = (id: string) => {
+        router.push(`/tour/cost-calculator/${id}`);
+    }
+    
+    const handleDeleteCalculation = async (e: React.MouseEvent, id: string) => {
+        e.stopPropagation(); // Prevent row click event
+        if (!user || !firestore) {
+             toast({ title: "Error", description: "User not authenticated.", variant: "destructive" });
+             return;
+        }
+        if (window.confirm("ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບຂໍ້ມູນການຄຳນວນນີ້?")) {
+            const docRef = doc(firestore, 'users', user.uid, 'calculations', id);
+            await deleteDoc(docRef);
+            toast({
+                title: "ລຶບຂໍ້ມູນສຳເລັດ",
+                description: "ການຄຳນວນໄດ້ຖືກລຶບອອກແລ້ວ."
+            });
+        }
+    };
+
+    if (isUserLoading) {
+      return (
+          <div className="flex items-center justify-center h-screen">
+              <p>Loading...</p>
+          </div>
+      )
+    }
+
+    if (!user) {
+        return (
+            <div className="flex items-center justify-center h-screen">
+                <Card className="p-8 text-center">
+                    <CardHeader>
+                        <CardTitle>ກະລຸນາລັອກອິນ</CardTitle>
+                        <CardDescription>ທ່ານຕ້ອງລັອກອິນກ່ອນຈຶ່ງຈະສາມາດເບິ່ງຂໍ້ມູນໄດ້.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                         {auth && (
+                            <Button onClick={() => signInAnonymously(auth)}>
+                                <LogIn className="mr-2 h-4 w-4"/>
+                                ລັອກອິນແບບບໍ່ລະບຸຊື່
+                            </Button>
+                        )}
+                    </CardContent>
+                </Card>
+            </div>
+        )
+    }
+
+
     return (
-        <StaticExportWrapper>
-            <TourProgramsListPageComponent />
-        </StaticExportWrapper>
-    )
+        <div className="flex min-h-screen w-full flex-col bg-background">
+             <header className="sticky top-0 z-30 flex h-20 items-center gap-4 bg-primary px-4 text-primary-foreground sm:px-6">
+                <div className="flex-1">
+                    <h1 className="text-xl font-bold tracking-tight flex items-center gap-2">
+                        <Calculator className="h-6 w-6"/>
+                        ລາຍການຄຳນວນທັງໝົດ
+                    </h1>
+                </div>
+                 <div className="flex items-center gap-2">
+                     <div className="flex items-center gap-2">
+                        <CalendarIcon className="h-5 w-5"/>
+                        <Select value={selectedYear} onValueChange={setSelectedYear}>
+                            <SelectTrigger className="w-[120px] bg-primary text-primary-foreground border-primary-foreground">
+                                <SelectValue placeholder="ເລືอกປີ" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {availableYears.map(year => (
+                                    <SelectItem key={year} value={year}>ປີ {parseInt(year) + 543}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                     </div>
+                    <Button onClick={handleAddNewCalculation}>
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        ເພີ່ມການຄຳນວນໃໝ່
+                    </Button>
+                </div>
+            </header>
+            <main className="flex w-full flex-1 flex-col gap-8 p-4 sm:px-6 sm:py-4">
+                 <div className="w-full max-w-screen-xl mx-auto flex flex-col gap-4">
+                     {calculationsLoading ? (
+                        <Card>
+                            <CardContent className="p-10 text-center text-muted-foreground">
+                                <p>Loading calculations...</p>
+                            </CardContent>
+                        </Card>
+                     ) : Object.keys(groupedCalculations).length > 0 ? (
+                        <Accordion type="multiple" defaultValue={Object.keys(groupedCalculations)} className="w-full space-y-4">
+                            {Object.entries(groupedCalculations).map(([month, calcs]) => (
+                                <AccordionItem value={month} key={month} className="border-none">
+                                     <Card className="overflow-hidden">
+                                        <AccordionTrigger className="px-6 py-4 bg-card hover:no-underline">
+                                            <h2 className="text-lg font-semibold">{month}</h2>
+                                        </AccordionTrigger>
+                                        <AccordionContent className="p-0">
+                                            <div className="overflow-x-auto">
+                                                <table className="w-full text-sm">
+                                                    <thead className="bg-muted/50">
+                                                        <tr className="text-left">
+                                                            <th className="p-3 font-medium">ວັນທີບັນທຶກ</th>
+                                                            <th className="p-3 font-medium">Group Code</th>
+                                                            <th className="p-3 font-medium">ໂປຣແກຣມ</th>
+                                                            <th className="p-3 font-medium">ຈຸດໝາຍ</th>
+                                                            <th className="p-3 font-medium">ຈຳນວນຄົນ</th>
+                                                            <th className="p-3 font-medium text-right">ການກະທຳ</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {calcs.map(calc => {
+                                                            const savedAtDate = toDate(calc.savedAt);
+                                                            return (
+                                                            <tr key={calc.id} className="border-b border-muted/50 last:border-b-0 cursor-pointer hover:bg-muted/30" onClick={() => navigateToCalculation(calc.id)}>
+                                                                <td className="p-3">{savedAtDate ? format(savedAtDate, 'dd/MM/yyyy') : '...'}</td>
+                                                                <td className="p-3">{calc.tourInfo?.groupCode}</td>
+                                                                <td className="p-3">{calc.tourInfo?.program}</td>
+                                                                <td className="p-3">{calc.tourInfo?.destinationCountry}</td>
+                                                                <td className="p-3">{calc.tourInfo?.numPeople}</td>
+                                                                <td className="p-3 text-right">
+                                                                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); navigateToCalculation(calc.id); }}>
+                                                                        <Pencil className="h-4 w-4 text-blue-500" />
+                                                                    </Button>
+                                                                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => handleDeleteCalculation(e, calc.id)}>
+                                                                        <Trash2 className="h-4 w-4 text-red-500" />
+                                                                    </Button>
+                                                                </td>
+                                                            </tr>
+                                                            );
+                                                        })}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </AccordionContent>
+                                    </Card>
+                                </AccordionItem>
+                            ))}
+                        </Accordion>
+                    ) : (
+                         <Card>
+                            <CardContent className="p-10 text-center text-muted-foreground">
+                                <p>ບໍ່ມີຂໍ້ມູນການຄຳນວນໃນປີ {parseInt(selectedYear) + 543}.</p>
+                                <p>ກົດ "ເພີ່ມການຄຳນວນໃໝ່" ເພື່ອເລີ່ມຕົ້ນ.</p>
+                             </CardContent>
+                        </Card>
+                    )}
+                </div>
+            </main>
+        </div>
+    );
 }
