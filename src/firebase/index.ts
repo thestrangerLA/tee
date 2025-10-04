@@ -1,5 +1,6 @@
 
-// This is a placeholder file to prevent build errors.
-// The user-provided code expects custom hooks from this module.
-// We will need to implement the actual logic for useUser, useFirestore, etc.
+// This file is intentionally left blank. 
+// Firebase is initialized in src/lib/firebase.ts and services should import from there.
 export {};
+
+    

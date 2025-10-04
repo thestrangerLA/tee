@@ -48,3 +48,5 @@ export const TotalCostCard = ({ totalsByCategory }: { totalsByCategory: any }) =
         </Card>
     );
 };
+
+    

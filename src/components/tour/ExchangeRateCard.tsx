@@ -53,3 +53,5 @@ export const ExchangeRateCard = ({ grandTotals }: { grandTotals: Record<Currency
         </Card>
     )
 }
+
+    

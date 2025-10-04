@@ -21,7 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { ExchangeRateCard } from '@/components/tour/ExchangeRateCard';
 import { doc, setDoc, serverTimestamp, Timestamp, deleteDoc, getFirestore } from 'firebase/firestore';
-import { Auth, signInAnonymously, getAuth, onAuthStateChanged, User } from 'firebase/auth';
+import { signInAnonymously, getAuth, onAuthStateChanged, User } from 'firebase/auth';
 import { useDocument } from 'react-firebase-hooks/firestore';
 import { db } from '@/lib/firebase';
 
@@ -128,7 +128,8 @@ export default function TourCalculatorPage() {
     const params = useParams();
     const calculationId = params.id as string;
     
-    const { user, isUserLoading } = useUser();
+    const [user, setUser] = useState<User | null>(null);
+    const [isUserLoading, setIsUserLoading] = useState(true);
     const auth = getAuth();
     const firestore = getFirestore();
 
@@ -151,6 +152,14 @@ export default function TourCalculatorPage() {
     
     const [itemVisibility, setItemVisibility] = useState<Record<string, boolean>>({});
 
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            setUser(user);
+            setIsUserLoading(false);
+        });
+        return () => unsubscribe();
+    }, [auth]);
+    
     useEffect(() => {
         if (calculationData) {
             const data = calculationData.data()
@@ -1159,3 +1168,6 @@ export default function TourCalculatorPage() {
         </div>
     );
 }
+
+
+    
