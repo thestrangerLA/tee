@@ -86,9 +86,8 @@ const toDate = (date: DateValue): Date | undefined => {
   if (date instanceof Timestamp) {
     return date.toDate();
   }
-  // This handles if it's already a Date object or a string that can be parsed.
-  // It will return an Invalid Date for unparsable strings, which `format` can handle.
-  return new Date(date as Date);
+  const parsedDate = new Date(date as Date);
+  return isNaN(parsedDate.getTime()) ? undefined : parsedDate;
 };
 
 
@@ -444,8 +443,8 @@ export default function TourCalculatorPage() {
                                     <div className="flex justify-between">
                                         <strong className="font-semibold">Travel Dates:</strong>
                                         <span>
-                                            {startDate && !isNaN(startDate.getTime()) ? format(startDate, "dd/MM/yy") : ''}
-                                            {endDate && !isNaN(endDate.getTime()) ? ` - ${format(endDate, "dd/MM/yy")}` : ''}
+                                            {startDate ? format(startDate, "dd/MM/yy") : ''}
+                                            {endDate ? ` - ${format(endDate, "dd/MM/yy")}` : ''}
                                         </span>
                                     </div>
                                     <div className="flex justify-between"><strong className="font-semibold">Duration:</strong><span>{tourInfo.numDays} Days, {tourInfo.numNights} Nights</span></div>
@@ -488,7 +487,7 @@ export default function TourCalculatorPage() {
                                                 <PopoverTrigger asChild>
                                                     <Button variant={"outline"} className="justify-start text-left font-normal bg-input">
                                                         <CalendarIcon className="mr-2 h-4 w-4" />
-                                                        {startDate && !isNaN(startDate.getTime()) ? format(startDate, "dd/MM/yyyy") : <span>mm/dd/yyyy</span>}
+                                                        {startDate ? format(startDate, "dd/MM/yyyy") : <span>mm/dd/yyyy</span>}
                                                     </Button>
                                                 </PopoverTrigger>
                                                 <PopoverContent className="w-auto p-0">
@@ -501,7 +500,7 @@ export default function TourCalculatorPage() {
                                                 <PopoverTrigger asChild>
                                                     <Button variant={"outline"} className="justify-start text-left font-normal bg-input">
                                                         <CalendarIcon className="mr-2 h-4 w-4" />
-                                                        {endDate && !isNaN(endDate.getTime()) ? format(endDate, "dd/MM/yyyy") : <span>mm/dd/yyyy</span>}
+                                                        {endDate ? format(endDate, "dd/MM/yyyy") : <span>mm/dd/yyyy</span>}
                                                     </Button>
                                                 </PopoverTrigger>
                                                 <PopoverContent className="w-auto p-0">
@@ -540,7 +539,7 @@ export default function TourCalculatorPage() {
                                 <CardDescription>ເພີ່ມ ແລະ ຈັດການຄ່າໃຊ້ຈ່າຍຕ່າງໆ</CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <Accordion type="multiple" className="w-full grid md:grid-cols-2 gap-4 items-start" defaultValue={['ຄ່າທີ່ພັກ', 'ຄ່າຂົນສົ່ງ', 'ຄ່າປີ້ຍົນ', 'ຄ່າປີ້ລົດໄຟ', 'ຄ່າເຂົ້າຊົມສະຖານທີ່', 'ຄ່າອາຫານ', 'ຄ່າໄກ້', 'ຄ່າເອກະສານ'].map(t => t.toLowerCase().replace(/\s/g, '-'))}>
+                                <Accordion type="multiple" className="w-full flex flex-col gap-4" defaultValue={['ຄ່າທີ່ພັກ', 'ຄ່າຂົນສົ່ງ', 'ຄ່າປີ້ຍົນ', 'ຄ່າປີ້ລົດໄຟ', 'ຄ່າເຂົ້າຊົມສະຖານທີ່', 'ຄ່າອາຫານ', 'ຄ່າໄກ້', 'ຄ່າເອກະສານ'].map(t => t.toLowerCase().replace(/\s/g, '-'))}>
                                     {/* Accommodation */}
                                     <CostCategoryContent 
                                         title="ຄ່າທີ່ພັກ" 
@@ -573,7 +572,7 @@ export default function TourCalculatorPage() {
                                                                     <PopoverTrigger asChild>
                                                                         <Button variant={"outline"} className="w-full justify-start text-left font-normal">
                                                                             <CalendarIcon className="mr-2 h-4 w-4" />
-                                                                            {acc.checkInDate && !isNaN(toDate(acc.checkInDate)!.getTime()) ? format(toDate(acc.checkInDate)!, "dd/MM/yyyy") : <span>mm/dd/yyyy</span>}
+                                                                            {acc.checkInDate && toDate(acc.checkInDate) ? format(toDate(acc.checkInDate)!, "dd/MM/yyyy") : <span>mm/dd/yyyy</span>}
                                                                         </Button>
                                                                     </PopoverTrigger>
                                                                     <PopoverContent className="w-auto p-0">
@@ -734,7 +733,7 @@ export default function TourCalculatorPage() {
                                                                         <PopoverTrigger asChild>
                                                                             <Button variant={"outline"} className="w-[180px] justify-start text-left font-normal">
                                                                                 <CalendarIcon className="mr-2 h-4 w-4" />
-                                                                                {flight.departureDate && !isNaN(toDate(flight.departureDate)!.getTime()) ? format(toDate(flight.departureDate)!, "dd/MM/yyyy") : <span>mm/dd/yyyy</span>}
+                                                                                {flight.departureDate && toDate(flight.departureDate) ? format(toDate(flight.departureDate)!, "dd/MM/yyyy") : <span>mm/dd/yyyy</span>}
                                                                             </Button>
                                                                         </PopoverTrigger>
                                                                         <PopoverContent className="w-auto p-0">
@@ -808,7 +807,7 @@ export default function TourCalculatorPage() {
                                                                         <PopoverTrigger asChild>
                                                                             <Button variant={"outline"} className="w-[180px] justify-start text-left font-normal">
                                                                                 <CalendarIcon className="mr-2 h-4 w-4" />
-                                                                                 {ticket.departureDate && !isNaN(toDate(ticket.departureDate)!.getTime()) ? format(toDate(ticket.departureDate)!, "dd/MM/yyyy") : <span>mm/dd/yyyy</span>}
+                                                                                 {ticket.departureDate && toDate(ticket.departureDate) ? format(toDate(ticket.departureDate)!, "dd/MM/yyyy") : <span>mm/dd/yyyy</span>}
                                                                             </Button>
                                                                         </PopoverTrigger>
                                                                         <PopoverContent className="w-auto p-0">
