@@ -1,9 +1,7 @@
-
 "use client"
 
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { format } from 'date-fns';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -40,7 +38,7 @@ export default function TourListPage() {
     const { toast } = useToast();
     const [user, setUser] = useState<User | null>(null);
     const [isUserLoading, setIsUserLoading] = useState(true);
-    const auth = getAuth(db.app);
+    const auth = getAuth();
     const firestore = getFirestore(db.app);
 
     const [savedCalculations, setSavedCalculations] = useState<SavedCalculation[]>([]);

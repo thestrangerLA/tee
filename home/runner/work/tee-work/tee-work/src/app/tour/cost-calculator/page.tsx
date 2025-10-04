@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -114,11 +113,11 @@ export default function TourCalculatorPage() {
     
     const [user, setUser] = useState<User | null>(null);
     const [isUserLoading, setIsUserLoading] = useState(true);
-    const auth = getAuth(db.app);
-    const firestore = getFirestore(db.app);
+    const auth = getAuth();
+    const firestore = getFirestore();
 
     const calculationDocRef = useMemo(() => {
-        if (!user || !calculationId) return null;
+        if (!user || !firestore || !calculationId) return null;
         return doc(firestore, 'users', user.uid, 'calculations', calculationId);
     }, [user, firestore, calculationId]);
 
@@ -1152,4 +1151,3 @@ export default function TourCalculatorPage() {
         </div>
     );
 }
-
