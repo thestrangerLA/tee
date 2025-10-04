@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PlusCircle, Calendar as CalendarIcon, Calculator, Pencil, Trash2 } from 'lucide-react';
+import { PlusCircle, Calendar as CalendarIcon, Calculator, Pencil, Trash2, ArrowLeft } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { getFirestore, collection, query, orderBy, onSnapshot, addDoc, deleteDoc, doc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -188,6 +188,12 @@ export default function TourCostCalculatorListPage() {
     return (
         <div className="flex min-h-screen w-full flex-col bg-background">
              <header className="sticky top-0 z-30 flex h-20 items-center gap-4 bg-primary px-4 text-primary-foreground sm:px-6">
+                <Button variant="outline" size="icon" className="h-8 w-8 bg-transparent text-primary-foreground border-primary-foreground hover:bg-primary-foreground/10" asChild>
+                    <Link href="/tour">
+                        <ArrowLeft className="h-4 w-4" />
+                        <span className="sr-only">ກັບໄປໜ້າຫຼັກ</span>
+                    </Link>
+                </Button>
                 <div className="flex-1">
                     <h1 className="text-xl font-bold tracking-tight flex items-center gap-2">
                         <Calculator className="h-6 w-6"/>
