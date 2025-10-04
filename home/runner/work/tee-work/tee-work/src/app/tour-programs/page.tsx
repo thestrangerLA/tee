@@ -50,7 +50,7 @@ export default function TourListPage() {
         if (!firestore) return;
 
         setCalculationsLoading(true);
-        const calculationsColRef = collection(firestore, 'calculations');
+        const calculationsColRef = collection(firestore, 'tourCalculations');
         const q = query(calculationsColRef, orderBy('savedAt', 'desc'));
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -157,7 +157,7 @@ export default function TourListPage() {
                 documents: [],
             },
         };
-        const calculationsColRef = collection(firestore, 'calculations');
+        const calculationsColRef = collection(firestore, 'tourCalculations');
         const newDocRef = await addDoc(calculationsColRef, newCalculationData);
         if(newDocRef){
           router.push(`/tour/cost-calculator/${newDocRef.id}`);
@@ -175,7 +175,7 @@ export default function TourListPage() {
              return;
         }
         if (window.confirm("ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບຂໍ້ມູນການຄຳນວນນີ້?")) {
-            const docRef = doc(firestore, 'calculations', id);
+            const docRef = doc(firestore, 'tourCalculations', id);
             await deleteDoc(docRef);
             toast({
                 title: "ລຶບຂໍ້ມູນສຳເລັດ",
@@ -285,3 +285,6 @@ export default function TourListPage() {
         </div>
     );
 }
+
+
+    

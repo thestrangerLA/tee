@@ -29,7 +29,7 @@ import { db } from '@/lib/firebase';
 type Currency = 'USD' | 'THB' | 'LAK' | 'CNY';
 
 const currencySymbols: Record<Currency, string> = {
-    USD: '$ (ດอลລár)',
+    USD: '$ (ดอลลár)',
     THB: '฿ (ບາດ)',
     LAK: '₭ (ກີບ)',
     CNY: '¥ (ຢວນ)',
@@ -115,7 +115,7 @@ export default function TourCalculatorPage() {
 
     const calculationDocRef = useMemo(() => {
         if (!firestore || !calculationId) return null;
-        return doc(firestore, 'calculations', calculationId);
+        return doc(firestore, 'tourCalculations', calculationId);
     }, [firestore, calculationId]);
 
     const [calculationData, calculationLoading, error] = useDocument(calculationDocRef);
@@ -1117,3 +1117,4 @@ export default function TourCalculatorPage() {
     );
 }
 
+    
