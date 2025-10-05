@@ -37,16 +37,12 @@ export function ExchangeRateCard({ grandTotals, rates, onRatesChange, profitPerc
     useEffect(() => { setIsClient(true); }, []);
 
 
-    const handleRateChange = (from: Currency, to: Currency, value: string, isIndependent: boolean = false) => {
+    const handleRateChange = (from: Currency, to: Currency, value: string) => {
         const numericValue = parseFloat(value) || 0;
         
         onRatesChange({
             ...rates,
             [from]: { ...rates[from], [to]: numericValue },
-            // Conditionally update inverse rate
-            ...(!isIndependent && {
-                [to]: { ...rates[to], [from]: numericValue === 0 ? 0 : 1 / numericValue }
-            })
         });
     };
     
@@ -143,15 +139,15 @@ export function ExchangeRateCard({ grandTotals, rates, onRatesChange, profitPerc
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-2 p-2 border rounded-md">
                                     <Label className="md:col-span-3 font-semibold">1 LAK =</Label>
                                     <div className="flex items-center gap-1">
-                                        <Input type="number" value={rates.LAK?.USD?.toFixed(6) || ''} onChange={e => handleRateChange('LAK', 'USD', e.target.value, true)} className="h-8"/>
+                                        <Input type="number" value={rates.LAK?.USD?.toFixed(6) || ''} onChange={e => handleRateChange('LAK', 'USD', e.target.value)} className="h-8"/>
                                         <Label className="text-xs">USD</Label>
                                     </div>
                                     <div className="flex items-center gap-1">
-                                        <Input type="number" value={rates.LAK?.THB?.toFixed(6) || ''} onChange={e => handleRateChange('LAK', 'THB', e.target.value, true)} className="h-8"/>
+                                        <Input type="number" value={rates.LAK?.THB?.toFixed(6) || ''} onChange={e => handleRateChange('LAK', 'THB', e.target.value)} className="h-8"/>
                                         <Label className="text-xs">THB</Label>
                                     </div>
                                     <div className="flex items-center gap-1">
-                                        <Input type="number" value={rates.LAK?.CNY?.toFixed(6) || ''} onChange={e => handleRateChange('LAK', 'CNY', e.target.value, true)} className="h-8"/>
+                                        <Input type="number" value={rates.LAK?.CNY?.toFixed(6) || ''} onChange={e => handleRateChange('LAK', 'CNY', e.target.value)} className="h-8"/>
                                         <Label className="text-xs">CNY</Label>
                                     </div>
                                 </div>
