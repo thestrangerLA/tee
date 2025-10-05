@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Landmark, Wallet, PlusCircle, Calendar as CalendarIcon, ChevronDown, ChevronUp, MoreHorizontal, Pencil, Trash2, Briefcase, Combine, ArrowUpCircle, ArrowDownCircle, Scale, FileText, Banknote, Minus, Equal } from "lucide-react"
+import { ArrowLeft, Landmark, Wallet, PlusCircle, Calendar as CalendarIcon, ChevronDown, ChevronUp, MoreHorizontal, Pencil, Trash2, Briefcase, Combine, ArrowUpCircle, ArrowDownCircle, Scale, FileText, Banknote, Minus, Equal, Coins } from "lucide-react"
 import Link from 'next/link'
 import { useToast } from "@/hooks/use-toast"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
@@ -198,6 +198,11 @@ export default function MeatAccountancyPage() {
         return { broughtForward, income, expense, netProfit, endingBalance };
     }, [transactions, historyDisplayMonth]);
 
+    const remainingMoney = useMemo(() => {
+        if (!summary) return 0;
+        return summary.capital - performanceData.endingBalance;
+    }, [summary, performanceData.endingBalance]);
+
 
      const dailySummaries = useMemo(() => {
         const start = startOfMonth(historyDisplayMonth);
@@ -376,12 +381,13 @@ export default function MeatAccountancyPage() {
                         </div>
                         <MonthYearSelector />
                     </CardHeader>
-                    <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
                         <SummaryCard title="ຍອດຍົກມາ" value={formatCurrency(performanceData.broughtForward)} icon={<FileText className="h-5 w-5 text-primary" />} />
                         <SummaryCard title="ລາຍຮັບ (ເດືອນ)" value={formatCurrency(performanceData.income)} icon={<ArrowUpCircle className="h-5 w-5 text-green-500" />} />
                         <SummaryCard title="ລາຍຈ່າຍ (ເດືອນ)" value={formatCurrency(performanceData.expense)} icon={<ArrowDownCircle className="h-5 w-5 text-red-500" />} />
                         <SummaryCard title="ກຳໄລ/ຂາດທຶນ (ເດືອນ)" value={formatCurrency(performanceData.netProfit)} icon={<Scale className="h-5 w-5 text-blue-500" />} />
                         <SummaryCard title="ຍອດທ້າຍເດືອນ" value={formatCurrency(performanceData.endingBalance)} icon={<Banknote className="h-5 w-5 text-indigo-500" />} />
+                        <SummaryCard title="ເງິນຍັງເຫຼືອ" value={formatCurrency(remainingMoney)} icon={<Coins className="h-5 w-5 text-yellow-600" />} />
                     </CardContent>
                 </Card>
 
