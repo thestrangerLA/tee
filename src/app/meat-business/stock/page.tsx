@@ -218,6 +218,10 @@ export default function MeatStockPage() {
         return stockItems.reduce((acc, item) => acc + (item.costPrice * item.currentStock * item.packageSize), 0);
     }, [stockItems]);
 
+    const totalSaleValue = useMemo(() => {
+        return stockItems.reduce((acc, item) => acc + (item.sellingPrice * item.currentStock * item.packageSize), 0);
+    }, [stockItems]);
+
     const itemMovement = useMemo(() => {
         const movements: Record<string, { stockIn: number, stockOut: number }> = {};
         stockItems.forEach(item => {
@@ -254,7 +258,7 @@ export default function MeatStockPage() {
                 </div>
             </header>
             <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-                 <div className="grid gap-4 md:grid-cols-1">
+                 <div className="grid gap-4 md:grid-cols-2">
                      <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">ມູນຄ່າສະຕັອກທັງໝົດ</CardTitle>
@@ -262,7 +266,17 @@ export default function MeatStockPage() {
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">{formatCurrency(totalStockValue)} KIP</div>
-                            <p className="text-xs text-muted-foreground">ມູນຄ່າລວມຂອງສິນຄ້າທັງໝົດໃນຄັງ</p>
+                            <p className="text-xs text-muted-foreground">ມູນຄ່າລວມຂອງສິນຄ້າທັງໝົດໃນຄັງ (ຕາມຕົ້ນທຶນ)</p>
+                        </CardContent>
+                    </Card>
+                     <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">ມູນຄ່າລວມຂາຍໄດ້</CardTitle>
+                            <DollarSign className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold text-green-600">{formatCurrency(totalSaleValue)} KIP</div>
+                            <p className="text-xs text-muted-foreground">ມູນຄ່າລວມຂອງສິນຄ້າທັງໝົດໃນຄັງ (ຕາມລາຄາຂາຍ)</p>
                         </CardContent>
                     </Card>
                 </div>
