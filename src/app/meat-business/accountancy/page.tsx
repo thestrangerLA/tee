@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Landmark, Wallet, PlusCircle, Calendar as CalendarIcon, ChevronDown, ChevronUp, MoreHorizontal, Pencil, Trash2, Briefcase, Combine, ArrowUpCircle, ArrowDownCircle, Scale, FileText, Banknote, Minus, Equal, Coins } from "lucide-react"
+import { ArrowLeft, Landmark, Wallet, PlusCircle, Calendar as CalendarIcon, ChevronDown, ChevronUp, MoreHorizontal, Pencil, Trash2, Briefcase, Combine, ArrowUpCircle, ArrowDownCircle, Scale, FileText, Banknote, Minus, Equal, Coins, MinusCircle } from "lucide-react"
 import Link from 'next/link'
 import { useToast } from "@/hooks/use-toast"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
@@ -203,6 +203,9 @@ export default function MeatAccountancyPage() {
         return summary.capital + performanceData.endingBalance;
     }, [summary, performanceData.endingBalance]);
 
+    const differenceAmount = useMemo(() => {
+        return totalBalance - remainingMoney;
+    }, [totalBalance, remainingMoney]);
 
      const dailySummaries = useMemo(() => {
         const start = startOfMonth(historyDisplayMonth);
@@ -367,11 +370,12 @@ export default function MeatAccountancyPage() {
                 <h1 className="text-xl font-bold tracking-tight">ຈັດການບັນຊີ (ທຸລະກິດຊີ້ນ)</h1>
             </header>
             <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4">
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5 xl:grid-cols-5">
                      <SummaryCard title="ເງິນທຶນ" value={formatCurrency(summary.capital)} icon={<Briefcase className="h-5 w-5 text-primary" />} onClick={() => openEditDialog('capital')} />
                      <SummaryCard title="ເງິນສົດ" value={formatCurrency(summary.cash)} icon={<Wallet className="h-5 w-5 text-primary" />} />
                      <SummaryCard title="ເງິນໂອນ" value={formatCurrency(summary.transfer)} icon={<Landmark className="h-5 w-5 text-primary" />} onClick={() => openEditDialog('transfer')} />
                      <SummaryCard title="ລວມເງິນຄົງເຫຼືອ" value={formatCurrency(totalBalance)} icon={<Combine className="h-5 w-5 text-green-600" />} />
+                     <SummaryCard title="ສ່ວນຕ່າງ" value={formatCurrency(differenceAmount)} icon={<MinusCircle className="h-5 w-5 text-indigo-500" />} />
                 </div>
                  <Card>
                     <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
