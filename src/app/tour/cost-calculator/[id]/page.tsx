@@ -84,10 +84,10 @@ export interface SavedCalculation {
 }
 
 const initialRates: ExchangeRates = {
-    USD: { THB: 36.7, LAK: 21800, CNY: 7.25 },
-    THB: { USD: 1 / 36.7, LAK: 690, CNY: 0.19 },
-    LAK: { USD: 1 / 21800, THB: 1 / 690, CNY: 1 / 3000 },
-    CNY: { USD: 1 / 7.25, THB: 5.1, LAK: 3000 },
+    USD: { THB: 36.0, LAK: 22000, CNY: 7.4 },
+    THB: { USD: 0.0370, LAK: 690, CNY: 0.1900 },
+    CNY: { USD: 0.1379, THB: 5.1, LAK: 3000 },
+    LAK: { USD: 0.000055, THB: 0.0014, CNY: 0.000333 },
 };
 
 const toDate = (date: DateValue): Date | undefined => {
@@ -157,9 +157,11 @@ export default function TourCalculatorPage() {
                     accommodations: [], trips: [], flights: [], trainTickets: [],
                     entranceFees: [], meals: [], guides: [], documents: []
                 });
+                // Only set exchangeRates if they exist in the data, otherwise keep default initialRates
                 if (data.exchangeRates) {
                     setExchangeRates(data.exchangeRates);
                 }
+                // Only set profitPercentage if it exists in the data
                 if (data.profitPercentage !== undefined) {
                     setProfitPercentage(data.profitPercentage);
                 }
