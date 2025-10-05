@@ -19,7 +19,7 @@ import { TotalCostCard } from '@/components/tour/TotalCostCard';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { ExchangeRateCard } from '@/components/tour/ExchangeRateCard';
+import { ExchangeRateCard, ExchangeRates } from '@/components/tour/ExchangeRateCard';
 import { doc, setDoc, serverTimestamp, Timestamp, deleteDoc, getFirestore } from 'firebase/firestore';
 import { useDocument } from 'react-firebase-hooks/firestore';
 import { db } from '@/lib/firebase';
@@ -79,7 +79,16 @@ export interface SavedCalculation {
     savedAt: DateValue;
     tourInfo: TourInfo;
     allCosts: TourCosts;
+    exchangeRates?: ExchangeRates;
+    profitPercentage?: number;
 }
+
+const initialRates: ExchangeRates = {
+    USD: { THB: 36.7, LAK: 21800, CNY: 7.25 },
+    THB: { USD: 1 / 36.7, LAK: 690, CNY: 0.19 },
+    LAK: { USD: 1 / 21800, THB: 1 / 690, CNY: 1 / 3000 },
+    CNY: { USD: 1 / 7.25, THB: 5.1, LAK: 3000 },
+};
 
 const toDate = (date: DateValue): Date | undefined => {
   if (!date) return undefined;
@@ -130,12 +139,15 @@ export default function TourCalculatorPage() {
         accommodations: [], trips: [], flights: [], trainTickets: [],
         entranceFees: [], meals: [], guides: [], documents: []
     });
+
+    const [exchangeRates, setExchangeRates] = useState<ExchangeRates>(initialRates);
+    const [profitPercentage, setProfitPercentage] = useState<number>(20);
     
     const [itemVisibility, setItemVisibility] = useState<Record<string, boolean>>({});
 
     useEffect(() => {
         if (calculationData) {
-            const data = calculationData.data()
+            const data = calculationData.data() as SavedCalculation | undefined;
             if (data) {
                 setTourInfo(data.tourInfo || {
                     mouContact: '', groupCode: '', destinationCountry: '', program: '',
@@ -145,6 +157,12 @@ export default function TourCalculatorPage() {
                     accommodations: [], trips: [], flights: [], trainTickets: [],
                     entranceFees: [], meals: [], guides: [], documents: []
                 });
+                 if (data.exchangeRates) {
+                    setExchangeRates(data.exchangeRates);
+                }
+                if (data.profitPercentage !== undefined) {
+                    setProfitPercentage(data.profitPercentage);
+                }
             }
         }
     }, [calculationData]);
@@ -163,6 +181,8 @@ export default function TourCalculatorPage() {
         const dataToSave = {
             tourInfo: JSON.parse(JSON.stringify(tourInfo)),
             allCosts: JSON.parse(JSON.stringify(allCosts)),
+            exchangeRates: JSON.parse(JSON.stringify(exchangeRates)),
+            profitPercentage: profitPercentage,
             savedAt: serverTimestamp(),
         };
 
@@ -172,7 +192,7 @@ export default function TourCalculatorPage() {
             console.error("Error saving document: ", e);
         }
 
-    }, [calculationDocRef, tourInfo, allCosts, calculationLoading]);
+    }, [calculationDocRef, tourInfo, allCosts, calculationLoading, exchangeRates, profitPercentage]);
 
     const toggleItemVisibility = (itemId: string) => {
         setItemVisibility(prev => ({ ...prev, [itemId]: !prev[itemId] }));
@@ -219,17 +239,6 @@ export default function TourCalculatorPage() {
             variant: "destructive"
         });
     };
-    
-    // Auto-save on change
-    useEffect(() => {
-        const handler = setTimeout(() => {
-            if (!calculationLoading) {
-                handleDataChange();
-            }
-        }, 2000); // Debounce time
-        return () => clearTimeout(handler);
-    }, [tourInfo, allCosts, calculationLoading, handleDataChange]);
-
 
     // Specific Component Logic
     const addAccommodation = () => addItem('accommodations', { id: uuidv4(), name: '', type: 'hotel', rooms: [{ id: uuidv4(), type: 'เตียงเดี่ยว', numRooms: 1, numNights: 1, price: 0, currency: 'USD' }] });
@@ -1119,7 +1128,13 @@ export default function TourCalculatorPage() {
                                 </CardContent>
                             </Card>
                         </div>
-                        <ExchangeRateCard grandTotals={grandTotals} />
+                        <ExchangeRateCard 
+                            grandTotals={grandTotals} 
+                            rates={exchangeRates} 
+                            onRatesChange={setExchangeRates}
+                            profitPercentage={profitPercentage}
+                            onProfitPercentageChange={setProfitPercentage}
+                         />
                     </div>
                 </div>
             </main>
