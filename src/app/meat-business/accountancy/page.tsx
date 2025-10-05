@@ -200,7 +200,7 @@ export default function MeatAccountancyPage() {
 
     const remainingMoney = useMemo(() => {
         if (!summary) return 0;
-        return summary.capital - performanceData.endingBalance;
+        return summary.capital + performanceData.endingBalance;
     }, [summary, performanceData.endingBalance]);
 
 
@@ -370,14 +370,14 @@ export default function MeatAccountancyPage() {
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4">
                      <SummaryCard title="ເງິນທຶນ" value={formatCurrency(summary.capital)} icon={<Briefcase className="h-5 w-5 text-primary" />} onClick={() => openEditDialog('capital')} />
                      <SummaryCard title="ເງິນສົດ" value={formatCurrency(summary.cash)} icon={<Wallet className="h-5 w-5 text-primary" />} />
-                     <SummaryCard title="ເງິນໂอน" value={formatCurrency(summary.transfer)} icon={<Landmark className="h-5 w-5 text-primary" />} onClick={() => openEditDialog('transfer')} />
+                     <SummaryCard title="ເງິນໂອນ" value={formatCurrency(summary.transfer)} icon={<Landmark className="h-5 w-5 text-primary" />} onClick={() => openEditDialog('transfer')} />
                      <SummaryCard title="ລວມເງິນຄົງເຫຼືອ" value={formatCurrency(totalBalance)} icon={<Combine className="h-5 w-5 text-green-600" />} />
                 </div>
                  <Card>
                     <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                         <div>
                             <CardTitle>ສະຫຼຸບຜົນປະກອບການ</CardTitle>
-                            <CardDescription>ສຳລັບເດືອນທີ່ເລືอก</CardDescription>
+                            <CardDescription>ສຳລັບເດືອນທີ່ເລືອກ</CardDescription>
                         </div>
                         <MonthYearSelector />
                     </CardHeader>
@@ -445,7 +445,7 @@ export default function MeatAccountancyPage() {
                         <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                              <div>
                                 <CardTitle>ປະຫວັດທຸລະກຳ</CardTitle>
-                                <CardDescription>ສະແດງລາຍການສຳລັບເດືອນທີ່ເລືอก</CardDescription>
+                                <CardDescription>ສະແດງລາຍການສຳລັບເດືອນທີ່ເລືອກ</CardDescription>
                             </div>
                         </CardHeader>
                         <CardContent>
