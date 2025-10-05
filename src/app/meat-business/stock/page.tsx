@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Package, Trash2, PlusCircle, Calendar as CalendarIcon, DollarSign, ArrowDown, ArrowUp } from "lucide-react";
+import { ArrowLeft, Package, Trash2, PlusCircle, DollarSign, ArrowDown, ArrowUp } from "lucide-react";
 import Link from 'next/link';
 import {
   Table,
@@ -41,15 +41,11 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import type { MeatStockItem, MeatStockLog } from '@/lib/types';
 import { listenToMeatStockItems, addMeatStockItem, deleteMeatStockItem, updateStockQuantity, listenToAllMeatStockLogs } from '@/services/meatStockService';
-import { format, differenceInDays, isBefore, startOfToday } from 'date-fns';
-import { Badge } from '@/components/ui/badge';
 import { useClientRouter } from '@/hooks/useClientRouter';
 
 
@@ -62,7 +58,6 @@ const AddItemDialog = ({ onAddItem }: { onAddItem: (item: Omit<MeatStockItem, 'i
     const { toast } = useToast();
     const router = useClientRouter();
     const [open, setOpen] = useState(false);
-    const [expiryDate, setExpiryDate] = useState<Date | undefined>();
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -70,13 +65,10 @@ const AddItemDialog = ({ onAddItem }: { onAddItem: (item: Omit<MeatStockItem, 'i
         const newItem = {
             sku: formData.get('sku') as string,
             name: formData.get('name') as string,
-            packageSize: formData.get('packageSize') as string,
+            packageSize: parseFloat(formData.get('packageSize') as string) || 1,
             costPrice: parseFloat(formData.get('costPrice') as string) || 0,
             sellingPrice: parseFloat(formData.get('sellingPrice') as string) || 0,
             currentStock: parseFloat(formData.get('currentStock') as string) || 0,
-            lowStockThreshold: parseFloat(formData.get('lowStockThreshold') as string) || 5,
-            expiryDate: expiryDate || null,
-            supplier: formData.get('supplier') as string || '',
         };
 
         if (!newItem.sku || !newItem.name) {
@@ -89,7 +81,6 @@ const AddItemDialog = ({ onAddItem }: { onAddItem: (item: Omit<MeatStockItem, 'i
             toast({ title: "Success", description: "New item added to stock." });
             setOpen(false);
             e.currentTarget.reset();
-            setExpiryDate(undefined);
             router.push(`/meat-business/stock/${newItemId}`);
         } catch (error) {
             console.error("Error adding item:", error);
@@ -120,20 +111,8 @@ const AddItemDialog = ({ onAddItem }: { onAddItem: (item: Omit<MeatStockItem, 'i
                             <Input id="name" name="name" required />
                         </div>
                          <div className="grid gap-2">
-                            <Label htmlFor="packageSize">ຂະໜາດບັນຈຸ</Label>
-                            <Input id="packageSize" name="packageSize" placeholder="e.g., 500g, 1kg" />
-                        </div>
-                         <div className="grid gap-2">
-                            <Label htmlFor="expiryDate">ວັນໝົດອາຍຸ</Label>
-                             <Popover>
-                                <PopoverTrigger asChild>
-                                    <Button variant={"outline"} className="justify-start text-left font-normal">
-                                        <CalendarIcon className="mr-2 h-4 w-4" />
-                                        {expiryDate ? format(expiryDate, "PPP") : <span>ເລືອກວັນທີ</span>}
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={expiryDate} onSelect={setExpiryDate} /></PopoverContent>
-                            </Popover>
+                            <Label htmlFor="packageSize">ຂະໜາດບັນຈຸ (ຕົວຄູນ)</Label>
+                            <Input id="packageSize" name="packageSize" type="number" step="0.01" defaultValue="1" />
                         </div>
                          <div className="grid gap-2">
                             <Label htmlFor="costPrice">ຕົ້ນทุน</Label>
@@ -146,14 +125,6 @@ const AddItemDialog = ({ onAddItem }: { onAddItem: (item: Omit<MeatStockItem, 'i
                          <div className="grid gap-2">
                             <Label htmlFor="currentStock">ຈຳນວນນຳເຂົ້າສະຕັອກ</Label>
                             <Input id="currentStock" name="currentStock" type="number" step="0.01" />
-                        </div>
-                         <div className="grid gap-2">
-                            <Label htmlFor="lowStockThreshold">ຈຸດແຈ້ງເຕືອນສະຕັອກຕໍ່າ</Label>
-                            <Input id="lowStockThreshold" name="lowStockThreshold" type="number" defaultValue="5" />
-                        </div>
-                         <div className="grid gap-2 col-span-2">
-                            <Label htmlFor="supplier">Supplier</Label>
-                            <Input id="supplier" name="supplier" />
                         </div>
                     </div>
                     <DialogFooter>
@@ -213,7 +184,7 @@ const StockAdjustmentDialog = ({
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                      <div className="grid gap-2">
-                        <Label htmlFor="quantity">ຈຳນວນ ({item.packageSize})</Label>
+                        <Label htmlFor="quantity">ຈຳນວນ</Label>
                         <Input id="quantity" type="number" value={quantity || ''} onChange={(e) => setQuantity(parseFloat(e.target.value) || 0)} />
                     </div>
                     <div className="grid gap-2">
@@ -230,31 +201,10 @@ const StockAdjustmentDialog = ({
     )
 }
 
-const ExpiryStatusBadge = ({ expiryDate }: { expiryDate: Date | null }) => {
-    if (!expiryDate) {
-        return <Badge variant="secondary">ບໍ່ມີຂໍ້ມູນ</Badge>;
-    }
-    const today = startOfToday();
-    const daysUntilExpiry = differenceInDays(expiryDate, today);
-
-    if (isBefore(expiryDate, today)) {
-        return <Badge variant="destructive">ໝົດອາຍຸແລ້ວ</Badge>;
-    }
-    if (daysUntilExpiry <= 3) {
-        return <Badge className="bg-orange-500 text-white">ໃກ້ໝົດອາຍຸ</Badge>;
-    }
-    if (daysUntilExpiry <= 7) {
-        return <Badge className="bg-yellow-500 text-white">ໃກ້ໝົດອາຍຸ</Badge>;
-    }
-    return <Badge variant="outline">ສົດ</Badge>;
-}
-
-
 export default function MeatStockPage() {
     const [stockItems, setStockItems] = useState<MeatStockItem[]>([]);
     const [stockLogs, setStockLogs] = useState<MeatStockLog[]>([]);
-    const { toast } = useToast();
-
+    
     useEffect(() => {
         const unsubscribeItems = listenToMeatStockItems(setStockItems);
         const unsubscribeLogs = listenToAllMeatStockLogs(setStockLogs);
@@ -327,30 +277,32 @@ export default function MeatStockPage() {
                                 <TableRow>
                                     <TableHead>SKU</TableHead>
                                     <TableHead>ຊື່ສິນຄ້າ</TableHead>
-                                    <TableHead>ສະຖານະ</TableHead>
+                                    <TableHead className="text-right">ຂະໜາດບັນຈຸ</TableHead>
                                     <TableHead className="text-right">ຮັບເຂົ້າ</TableHead>
                                     <TableHead className="text-right">ຂາຍອອກ</TableHead>
                                     <TableHead className="text-right">ຈຳນວນ (ຄົງເຫຼືອ)</TableHead>
+                                    <TableHead className="text-right">ລວມທັງໝົດ</TableHead>
                                     <TableHead className="text-right">ມູນຄ່າລວມ</TableHead>
                                     <TableHead className="text-center">ຈັດການ</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {stockItems.length > 0 ? stockItems.map(item => {
-                                    const isLowStock = item.currentStock <= item.lowStockThreshold;
                                     const movements = itemMovement[item.id] || { stockIn: 0, stockOut: 0 };
+                                    const totalUnits = item.currentStock * item.packageSize;
                                     return (
-                                        <TableRow key={item.id} className={isLowStock ? 'bg-orange-50' : ''}>
+                                        <TableRow key={item.id}>
                                             <TableCell className="font-mono">{item.sku}</TableCell>
                                             <TableCell className="font-medium hover:underline">
                                                 <Link href={`/meat-business/stock/${item.id}`}>
-                                                   {item.name} ({item.packageSize})
+                                                   {item.name}
                                                 </Link>
                                             </TableCell>
-                                            <TableCell><ExpiryStatusBadge expiryDate={item.expiryDate} /></TableCell>
+                                            <TableCell className="text-right">{item.packageSize}</TableCell>
                                             <TableCell className="text-right text-green-600">{movements.stockIn}</TableCell>
                                             <TableCell className="text-right text-red-600">{movements.stockOut}</TableCell>
-                                            <TableCell className={`text-right font-bold ${isLowStock ? 'text-orange-600' : ''}`}>{item.currentStock}</TableCell>
+                                            <TableCell className="text-right font-bold">{item.currentStock}</TableCell>
+                                            <TableCell className="text-right font-bold text-blue-600">{totalUnits}</TableCell>
                                             <TableCell className="text-right">{formatCurrency(item.costPrice * item.currentStock)}</TableCell>
                                             <TableCell className="text-center space-x-2">
                                                 <StockAdjustmentDialog item={item} onAdjust={updateStockQuantity} type="stock-in" />
@@ -377,7 +329,7 @@ export default function MeatStockPage() {
                                     )
                                 }) : (
                                     <TableRow>
-                                        <TableCell colSpan={8} className="text-center h-24">ບໍ່ມີຂໍ້ມູນສິນຄ້າ</TableCell>
+                                        <TableCell colSpan={9} className="text-center h-24">ບໍ່ມີຂໍ້ມູນສິນຄ້າ</TableCell>
                                     </TableRow>
                                 )}
                             </TableBody>

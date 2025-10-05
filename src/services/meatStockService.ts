@@ -32,7 +32,6 @@ export const listenToMeatStockItems = (callback: (items: MeatStockItem[]) => voi
             items.push({ 
                 id: doc.id, 
                 ...data,
-                expiryDate: (data.expiryDate as Timestamp)?.toDate() || null,
                 createdAt: (data.createdAt as Timestamp)?.toDate()
             } as MeatStockItem);
         });
@@ -49,7 +48,6 @@ export const listenToMeatStockItem = (id: string, callback: (item: MeatStockItem
             callback({
                 id: docSnapshot.id,
                 ...data,
-                expiryDate: (data.expiryDate as Timestamp)?.toDate() || null,
                 createdAt: (data.createdAt as Timestamp)?.toDate()
             } as MeatStockItem);
         } else {
@@ -101,7 +99,6 @@ export const listenToMeatStockLogs = (itemId: string, callback: (logs: any[]) =>
 export const addMeatStockItem = async (item: Omit<MeatStockItem, 'id' | 'createdAt'>): Promise<string> => {
     const docRef = await addDoc(meatStockCollectionRef, {
         ...item,
-        expiryDate: item.expiryDate ? Timestamp.fromDate(item.expiryDate) : null,
         createdAt: serverTimestamp()
     });
 
@@ -123,12 +120,6 @@ export const addMeatStockItem = async (item: Omit<MeatStockItem, 'id' | 'created
 export const updateMeatStockItem = async (id: string, updatedFields: Partial<Omit<MeatStockItem, 'id' | 'createdAt'>>) => {
     const itemDoc = doc(db, 'meatStockItems', id);
     const dataToUpdate: any = { ...updatedFields };
-
-    if (updatedFields.expiryDate && updatedFields.expiryDate instanceof Date) {
-        dataToUpdate.expiryDate = Timestamp.fromDate(updatedFields.expiryDate as Date);
-    } else if (updatedFields.expiryDate === null) {
-        dataToUpdate.expiryDate = null;
-    }
 
     await updateDoc(itemDoc, dataToUpdate);
 };
@@ -257,7 +248,6 @@ export const getMeatStockItem = async (id: string): Promise<MeatStockItem | null
         return {
             id: docSnap.id,
             ...data,
-            expiryDate: (data.expiryDate as Timestamp)?.toDate(),
             createdAt: (data.createdAt as Timestamp)?.toDate(),
         } as MeatStockItem;
     } else {

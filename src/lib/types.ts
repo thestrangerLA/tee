@@ -113,14 +113,11 @@ export interface TourIncomeItem {
 export interface MeatStockItem {
   id: string;
   sku: string;
-  name: string; // ประเภทสินค้า / ส่วนของเนื้อ
-  packageSize: string; // ขนาดบรรจุ (e.g., "500g", "1kg")
-  costPrice: number; // ต้นทุน
-  sellingPrice: number; // ราคาขาย
-  currentStock: number; // จำนวนคงเหลือ (หน่วยเป็นแพ็ค)
-  lowStockThreshold: number; // new field for low stock alert
-  expiryDate: Date | null; // วันหมดอายุ
-  supplier: string; // (optional)
+  name: string; 
+  packageSize: number; 
+  costPrice: number; 
+  sellingPrice: number; 
+  currentStock: number; 
   createdAt: Date;
 }
 

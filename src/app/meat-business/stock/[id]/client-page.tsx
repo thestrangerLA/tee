@@ -131,11 +131,7 @@ export default function MeatStockClientPage({ initialItem }: { initialItem: Meat
                         </div>
                         <div className="grid gap-2">
                             <Label>ຂະໜາດບັນຈຸ</Label>
-                            <Input value={editData.packageSize || ''} onChange={(e) => setEditData({...editData, packageSize: e.target.value})} disabled={!isEditing} />
-                        </div>
-                        <div className="grid gap-2">
-                            <Label>Supplier</Label>
-                            <Input value={editData.supplier || ''} onChange={(e) => setEditData({...editData, supplier: e.target.value})} disabled={!isEditing} />
+                            <Input type="number" value={editData.packageSize || ''} onChange={(e) => setEditData({...editData, packageSize: parseFloat(e.target.value) || 1})} disabled={!isEditing} />
                         </div>
                         <div className="grid gap-2">
                             <Label>ຕົ້ນทุน</Label>
@@ -144,10 +140,6 @@ export default function MeatStockClientPage({ initialItem }: { initialItem: Meat
                          <div className="grid gap-2">
                             <Label>ລາຄາຂາຍ</Label>
                             <Input type="number" value={editData.sellingPrice || ''} onChange={(e) => setEditData({...editData, sellingPrice: parseFloat(e.target.value) || 0})} disabled={!isEditing} />
-                        </div>
-                         <div className="grid gap-2">
-                            <Label>ຈຸດແຈ້ງເຕືອນສະຕັອກຕໍ່າ</Label>
-                            <Input type="number" value={editData.lowStockThreshold || ''} onChange={(e) => setEditData({...editData, lowStockThreshold: parseInt(e.target.value) || 0})} disabled={!isEditing} />
                         </div>
                     </CardContent>
                 </Card>
