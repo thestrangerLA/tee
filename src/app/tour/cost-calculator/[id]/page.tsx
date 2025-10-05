@@ -157,7 +157,7 @@ export default function TourCalculatorPage() {
                     accommodations: [], trips: [], flights: [], trainTickets: [],
                     entranceFees: [], meals: [], guides: [], documents: []
                 });
-                 if (data.exchangeRates) {
+                if (data.exchangeRates) {
                     setExchangeRates(data.exchangeRates);
                 }
                 if (data.profitPercentage !== undefined) {
@@ -178,7 +178,7 @@ export default function TourCalculatorPage() {
     const handleDataChange = useCallback(async () => {
         if (!calculationDocRef || calculationLoading) return;
         
-        const dataToSave = {
+        const dataToSave: Partial<SavedCalculation> = {
             tourInfo: JSON.parse(JSON.stringify(tourInfo)),
             allCosts: JSON.parse(JSON.stringify(allCosts)),
             exchangeRates: JSON.parse(JSON.stringify(exchangeRates)),
@@ -190,6 +190,7 @@ export default function TourCalculatorPage() {
             await setDoc(calculationDocRef, dataToSave, { merge: true });
         } catch (e) {
             console.error("Error saving document: ", e);
+            throw e; // Re-throw to be caught by the caller
         }
 
     }, [calculationDocRef, tourInfo, allCosts, calculationLoading, exchangeRates, profitPercentage]);
@@ -202,12 +203,20 @@ export default function TourCalculatorPage() {
         setAllCosts(prev => ({ ...prev, [category]: data }));
     }, []);
     
-    const handleSaveCalculation = () => {
-        handleDataChange();
-        toast({
-            title: "ບັນທຶກການຄຳນວນສຳເລັດ",
-            description: `ຂໍ້ມູນ ${tourInfo.groupCode || 'ບໍ່ມີຊື່'} ໄດ້ຖືກບັນທຶກແລ້ວ.`,
-        });
+    const handleSaveCalculation = async () => {
+        try {
+            await handleDataChange();
+            toast({
+                title: "ບັນທຶກການຄຳນວນສຳເລັດ",
+                description: `ຂໍ້ມູນ ${tourInfo.groupCode || 'ບໍ່ມີຊື່'} ໄດ້ຖືກບັນທຶກແລ້ວ.`,
+            });
+        } catch (e) {
+            toast({
+                title: "Error Saving",
+                description: "Could not save the calculation.",
+                variant: "destructive"
+            });
+        }
     };
     
     const handleDeleteCalculation = async () => {
@@ -239,7 +248,7 @@ export default function TourCalculatorPage() {
             variant: "destructive"
         });
     };
-
+    
     // Specific Component Logic
     const addAccommodation = () => addItem('accommodations', { id: uuidv4(), name: '', type: 'hotel', rooms: [{ id: uuidv4(), type: 'เตียงเดี่ยว', numRooms: 1, numNights: 1, price: 0, currency: 'USD' }] });
     const addRoom = (accId: string) => {
