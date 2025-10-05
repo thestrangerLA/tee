@@ -130,15 +130,15 @@ export default function MeatStockClientPage({ initialItem }: { initialItem: Meat
                             <Input value={editData.name || ''} onChange={(e) => setEditData({...editData, name: e.target.value})} disabled={!isEditing} />
                         </div>
                         <div className="grid gap-2">
-                            <Label>ຂະໜາດບັນຈຸ</Label>
+                            <Label>ຂະໜາດບັນຈຸ (kg/ຖົງ)</Label>
                             <Input type="number" value={editData.packageSize || ''} onChange={(e) => setEditData({...editData, packageSize: parseFloat(e.target.value) || 1})} disabled={!isEditing} />
                         </div>
                         <div className="grid gap-2">
-                            <Label>ຕົ້ນทุน</Label>
+                            <Label>ຕົ້ນทุน (ຕໍ່ kg)</Label>
                             <Input type="number" value={editData.costPrice || ''} onChange={(e) => setEditData({...editData, costPrice: parseFloat(e.target.value) || 0})} disabled={!isEditing} />
                         </div>
                          <div className="grid gap-2">
-                            <Label>ລາຄາຂາຍ</Label>
+                            <Label>ລາຄາຂາຍ (ຕໍ່ kg)</Label>
                             <Input type="number" value={editData.sellingPrice || ''} onChange={(e) => setEditData({...editData, sellingPrice: parseFloat(e.target.value) || 0})} disabled={!isEditing} />
                         </div>
                     </CardContent>
@@ -156,8 +156,8 @@ export default function MeatStockClientPage({ initialItem }: { initialItem: Meat
                                     <TableHead>ວັນທີ</TableHead>
                                     <TableHead>ປະເພດ</TableHead>
                                     <TableHead>ລາຍລະອຽດ</TableHead>
-                                    <TableHead className="text-right">ຈຳນວນປ່ຽນແປງ</TableHead>
-                                    <TableHead className="text-right">ຈຳນວນຄົງເຫຼືອ</TableHead>
+                                    <TableHead className="text-right">ຈຳນວນປ່ຽນແປງ (ຖົງ)</TableHead>
+                                    <TableHead className="text-right">ຈຳນວນຄົງເຫຼືອ (ຖົງ)</TableHead>
                                     <TableHead className="text-center">ການດຳເນີນການ</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -206,7 +206,7 @@ export default function MeatStockClientPage({ initialItem }: { initialItem: Meat
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
                             <div className="grid gap-2">
-                                <Label htmlFor="log-quantity">ຈຳນວນ</Label>
+                                <Label htmlFor="log-quantity">ຈຳນວນ (ຖົງ)</Label>
                                 <Input 
                                     id="log-quantity" 
                                     type="number" 

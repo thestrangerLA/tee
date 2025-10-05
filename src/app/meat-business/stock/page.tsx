@@ -111,19 +111,19 @@ const AddItemDialog = ({ onAddItem }: { onAddItem: (item: Omit<MeatStockItem, 'i
                             <Input id="name" name="name" required />
                         </div>
                          <div className="grid gap-2">
-                            <Label htmlFor="packageSize">ຂະໜາດບັນຈຸ (ຕົວຄູນ)</Label>
+                            <Label htmlFor="packageSize">ຂະໜາດບັນຈຸ (kg/ຖົງ)</Label>
                             <Input id="packageSize" name="packageSize" type="number" step="0.01" defaultValue="1" />
                         </div>
                          <div className="grid gap-2">
-                            <Label htmlFor="costPrice">ຕົ້ນทุน</Label>
+                            <Label htmlFor="costPrice">ຕົ້ນทุน (ຕໍ່ kg)</Label>
                             <Input id="costPrice" name="costPrice" type="number" step="0.01" />
                         </div>
                          <div className="grid gap-2">
-                            <Label htmlFor="sellingPrice">ລາຄາຂາຍ</Label>
+                            <Label htmlFor="sellingPrice">ລາຄາຂາຍ (ຕໍ່ kg)</Label>
                             <Input id="sellingPrice" name="sellingPrice" type="number" step="0.01" />
                         </div>
                          <div className="grid gap-2">
-                            <Label htmlFor="currentStock">ຈຳນວນນຳເຂົ້າສະຕັອກ</Label>
+                            <Label htmlFor="currentStock">ຈຳນວນນຳເຂົ້າສະຕັອກ (ຖົງ)</Label>
                             <Input id="currentStock" name="currentStock" type="number" step="0.01" />
                         </div>
                     </div>
@@ -184,7 +184,7 @@ const StockAdjustmentDialog = ({
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                      <div className="grid gap-2">
-                        <Label htmlFor="quantity">ຈຳນວນ</Label>
+                        <Label htmlFor="quantity">ຈຳນວນ (ຖົງ)</Label>
                         <Input id="quantity" type="number" value={quantity || ''} onChange={(e) => setQuantity(parseFloat(e.target.value) || 0)} />
                     </div>
                     <div className="grid gap-2">
@@ -215,7 +215,7 @@ export default function MeatStockPage() {
     }, []);
     
     const totalStockValue = useMemo(() => {
-        return stockItems.reduce((acc, item) => acc + (item.costPrice * item.currentStock), 0);
+        return stockItems.reduce((acc, item) => acc + (item.costPrice * item.currentStock * item.packageSize), 0);
     }, [stockItems]);
 
     const itemMovement = useMemo(() => {
@@ -277,11 +277,11 @@ export default function MeatStockPage() {
                                 <TableRow>
                                     <TableHead>SKU</TableHead>
                                     <TableHead>ຊື່ສິນຄ້າ</TableHead>
-                                    <TableHead className="text-right">ຂະໜາດບັນຈຸ</TableHead>
-                                    <TableHead className="text-right">ຮັບເຂົ້າ</TableHead>
-                                    <TableHead className="text-right">ຂາຍອອກ</TableHead>
-                                    <TableHead className="text-right">ຈຳນວນ (ຄົງເຫຼືອ)</TableHead>
-                                    <TableHead className="text-right">ລວມທັງໝົດ</TableHead>
+                                    <TableHead className="text-right">ຂະໜາດບັນຈຸ (kg/ຖົງ)</TableHead>
+                                    <TableHead className="text-right">ຮັບເຂົ້າ (ຖົງ)</TableHead>
+                                    <TableHead className="text-right">ຂາຍອອກ (ຖົງ)</TableHead>
+                                    <TableHead className="text-right">ຈຳນວນຄົງເຫຼືອ (ຖົງ)</TableHead>
+                                    <TableHead className="text-right">ລວມທັງໝົດ (kg)</TableHead>
                                     <TableHead className="text-right">ມູນຄ່າລວມ</TableHead>
                                     <TableHead className="text-center">ຈັດການ</TableHead>
                                 </TableRow>
@@ -302,8 +302,8 @@ export default function MeatStockPage() {
                                             <TableCell className="text-right text-green-600">{movements.stockIn}</TableCell>
                                             <TableCell className="text-right text-red-600">{movements.stockOut}</TableCell>
                                             <TableCell className="text-right font-bold">{item.currentStock}</TableCell>
-                                            <TableCell className="text-right font-bold text-blue-600">{totalUnits}</TableCell>
-                                            <TableCell className="text-right">{formatCurrency(item.costPrice * item.currentStock)}</TableCell>
+                                            <TableCell className="text-right font-bold text-blue-600">{totalUnits.toFixed(2)}</TableCell>
+                                            <TableCell className="text-right">{formatCurrency(item.costPrice * totalUnits)}</TableCell>
                                             <TableCell className="text-center space-x-2">
                                                 <StockAdjustmentDialog item={item} onAdjust={updateStockQuantity} type="stock-in" />
                                                 <StockAdjustmentDialog item={item} onAdjust={updateStockQuantity} type="sale" />
