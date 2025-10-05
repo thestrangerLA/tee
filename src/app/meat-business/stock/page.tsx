@@ -283,6 +283,7 @@ export default function MeatStockPage() {
                                     <TableHead className="text-right">ຈຳນວນຄົງເຫຼືອ (ຖົງ)</TableHead>
                                     <TableHead className="text-right">ລວມທັງໝົດ (kg)</TableHead>
                                     <TableHead className="text-right">ມູນຄ່າລວມ</TableHead>
+                                    <TableHead className="text-right">ມູນຄ່າລວມຂາຍໄດ້</TableHead>
                                     <TableHead className="text-center">ຈັດການ</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -290,6 +291,8 @@ export default function MeatStockPage() {
                                 {stockItems.length > 0 ? stockItems.map(item => {
                                     const movements = itemMovement[item.id] || { stockIn: 0, stockOut: 0 };
                                     const totalUnits = item.currentStock * item.packageSize;
+                                    const totalCostValue = item.costPrice * totalUnits;
+                                    const totalSaleValue = item.sellingPrice * totalUnits;
                                     return (
                                         <TableRow key={item.id}>
                                             <TableCell className="font-mono">{item.sku}</TableCell>
@@ -303,7 +306,8 @@ export default function MeatStockPage() {
                                             <TableCell className="text-right text-red-600">{movements.stockOut}</TableCell>
                                             <TableCell className="text-right font-bold">{item.currentStock}</TableCell>
                                             <TableCell className="text-right font-bold text-blue-600">{totalUnits.toFixed(2)}</TableCell>
-                                            <TableCell className="text-right">{formatCurrency(item.costPrice * totalUnits)}</TableCell>
+                                            <TableCell className="text-right">{formatCurrency(totalCostValue)}</TableCell>
+                                            <TableCell className="text-right">{formatCurrency(totalSaleValue)}</TableCell>
                                             <TableCell className="text-center space-x-2">
                                                 <StockAdjustmentDialog item={item} onAdjust={updateStockQuantity} type="stock-in" />
                                                 <StockAdjustmentDialog item={item} onAdjust={updateStockQuantity} type="sale" />
@@ -329,7 +333,7 @@ export default function MeatStockPage() {
                                     )
                                 }) : (
                                     <TableRow>
-                                        <TableCell colSpan={9} className="text-center h-24">ບໍ່ມີຂໍ້ມູນສິນຄ້າ</TableCell>
+                                        <TableCell colSpan={10} className="text-center h-24">ບໍ່ມີຂໍ້ມູນສິນຄ້າ</TableCell>
                                     </TableRow>
                                 )}
                             </TableBody>
