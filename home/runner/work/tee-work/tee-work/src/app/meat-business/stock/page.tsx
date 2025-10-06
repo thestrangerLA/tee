@@ -341,7 +341,7 @@ export default function MeatStockPage() {
                     <h1 className="text-xl font-bold tracking-tight">ຈັດການສະຕັອກ (ທຸລະກິດຊີ້ນ)</h1>
                 </div>
                  <div className="ml-auto flex items-center gap-2">
-                    <Button variant="outline" onClick={handlePrint}><Printer className="mr-2 h-4 w-4" />ພິມ</Button>
+                    <Button variant="outline" size="sm" onClick={handlePrint}><Printer className="mr-2 h-4 w-4" />ພິມ</Button>
                     <AddItemDialog onAddItem={addMeatStockItem} />
                 </div>
             </header>
@@ -401,7 +401,7 @@ export default function MeatStockPage() {
                                     <TableHead className="w-[50px] print:hidden">
                                         <Checkbox
                                             onCheckedChange={(checked) => handleSelectAll(!!checked)}
-                                            checked={Object.keys(selectedItems).length > 0 && Object.keys(selectedItems).length === filteredStockItems.length}
+                                            checked={Object.keys(selectedItems).length > 0 && Object.keys(selectedItems).length === filteredStockItems.length && filteredStockItems.length > 0}
                                             indeterminate={Object.keys(selectedItems).length > 0 && Object.keys(selectedItems).length < filteredStockItems.length}
                                         />
                                     </TableHead>
@@ -425,7 +425,7 @@ export default function MeatStockPage() {
                                     const totalSaleValueItem = item.sellingPrice * totalUnits;
                                     const isSelected = selectedItems[item.id] || false;
                                     return (
-                                        <TableRow key={item.id} data-state={isSelected ? "selected" : undefined} className={Object.keys(selectedItems).length > 0 && !isSelected ? 'print:hidden' : 'print:table-row'}>
+                                        <TableRow key={item.id} data-state={isSelected ? "selected" : undefined} className={(Object.keys(selectedItems).length > 0 && !isSelected) ? 'print:hidden' : ''}>
                                             <TableCell className="print:hidden">
                                                 <Checkbox
                                                     checked={isSelected}
@@ -481,5 +481,3 @@ export default function MeatStockPage() {
         </div>
     );
 }
-
-    
