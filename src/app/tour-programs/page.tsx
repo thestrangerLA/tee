@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, MoreHorizontal } from "lucide-react";
+import { PlusCircle, MoreHorizontal, ArrowLeft } from "lucide-react";
 import { listenToTourPrograms, deleteTourProgram } from '@/services/tourProgramService';
 import type { TourProgram } from '@/lib/types';
 import { format } from 'date-fns';
@@ -50,6 +50,12 @@ export default function TourProgramsPage() {
     return (
         <div className="flex min-h-screen w-full flex-col bg-muted/40">
              <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
+                <Button variant="outline" size="icon" className="h-8 w-8" asChild>
+                    <Link href="/tour">
+                        <ArrowLeft className="h-4 w-4" />
+                        <span className="sr-only">ກັບໄປໜ້າຫຼັກ</span>
+                    </Link>
+                </Button>
                 <h1 className="text-xl font-semibold">ໂປຣແກຣມທົວທັງໝົດ</h1>
                 <div className="ml-auto">
                     <Button asChild size="sm">
@@ -99,8 +105,8 @@ export default function TourProgramsPage() {
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent align="end">
                                                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                        <DropdownMenuItem onSelect={() => navigateToDetail(program.id)}>Edit</DropdownMenuItem>
-                                                        <DropdownMenuItem onSelect={() => handleDelete(program.id)} className="text-red-500">Delete</DropdownMenuItem>
+                                                        <DropdownMenuItem onSelect={(e) => { e.stopPropagation(); navigateToDetail(program.id); }}>Edit</DropdownMenuItem>
+                                                        <DropdownMenuItem onSelect={(e) => { e.stopPropagation(); handleDelete(program.id); }} className="text-red-500">Delete</DropdownMenuItem>
                                                     </DropdownMenuContent>
                                                 </DropdownMenu>
                                             </TableCell>
@@ -121,4 +127,3 @@ export default function TourProgramsPage() {
         </div>
     );
 }
-
