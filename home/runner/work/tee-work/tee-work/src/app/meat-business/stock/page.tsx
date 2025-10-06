@@ -425,7 +425,7 @@ export default function MeatStockPage() {
                                     const totalSaleValueItem = item.sellingPrice * totalUnits;
                                     const isSelected = selectedItems[item.id] || false;
                                     return (
-                                        <TableRow key={item.id} data-state={isSelected ? "selected" : undefined} className={isSelected ? 'print:table-row' : 'print:hidden'}>
+                                        <TableRow key={item.id} data-state={isSelected ? "selected" : undefined} className={Object.keys(selectedItems).length > 0 && !isSelected ? 'print:hidden' : 'print:table-row'}>
                                             <TableCell className="print:hidden">
                                                 <Checkbox
                                                     checked={isSelected}
@@ -481,3 +481,5 @@ export default function MeatStockPage() {
         </div>
     );
 }
+
+    
