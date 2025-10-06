@@ -352,7 +352,7 @@ export default function TourProgramClientPage({ initialProgram }: { initialProgr
             toast({ title: "ບັນທຶກຂໍ້ມູນໂປຣແກຣມແລ້ວ" });
         } catch (error) {
              console.error("Failed to save program info:", error);
-            toast({ title: "ເກີດຂໍ້ຜິດພາດໃນการບັນທຶກ", variant: "destructive" });
+            toast({ title: "ເກີດຂໍ້ຜິດພາດໃນການບັນທຶກ", variant: "destructive" });
         } finally {
             setIsSaving(false);
         }
@@ -389,7 +389,7 @@ export default function TourProgramClientPage({ initialProgram }: { initialProgr
     const handleDeleteCostItem = async (itemId: string) => {
         if (!window.confirm("ยืนยันการลบรายการต้นทุนนี้?")) return;
         try { await deleteTourCostItem(itemId); toast({title: "ลบรายการต้นทุนสำเร็จ"}); } 
-        catch (error) { toast({ title: "ເກີດຂໍ້ຜິດພາດໃນการลบต้นทุน", variant: "destructive" }); }
+        catch (error) { toast({ title: "ເກີດຂໍ້ຜິດພາດໃນການລົບຕົ້ນທຶນ", variant: "destructive" }); }
     };
 
     const handleAddIncomeItem = async () => {
@@ -414,7 +414,7 @@ export default function TourProgramClientPage({ initialProgram }: { initialProgr
             toast({title: "ບັນທຶກລາຍຮັບສຳເລັດ"});
         } catch (error) {
             console.error("Error saving income items", error);
-            toast({title: "ເກີດຂໍ້ຜິດພາດໃນการບັນທຶກລາຍຮັບ", variant: "destructive"})
+            toast({title: "ເກີດຂໍ້ຜິດພາດໃນການບັນທຶກລາຍຮັບ", variant: "destructive"})
         } finally {
             setIsTableSaving(false);
         }
