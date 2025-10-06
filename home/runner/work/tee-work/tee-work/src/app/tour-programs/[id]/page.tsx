@@ -64,5 +64,3 @@ export default async function TourProgramPage({
 
   return <TourProgramClientPage initialProgram={program} />;
 }
-
-    
