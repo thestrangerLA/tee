@@ -20,10 +20,15 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { ExchangeRateCard, ExchangeRates } from '@/components/tour/ExchangeRateCard';
-import { doc, setDoc, serverTimestamp, Timestamp, deleteDoc, getFirestore } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, Timestamp, deleteDoc, getFirestore, collection, getDocs } from 'firebase/firestore';
 import { useDocument } from 'react-firebase-hooks/firestore';
 import { db } from '@/lib/firebase';
 
+export async function generateStaticParams() {
+  // Return a default route to satisfy static export requirements.
+  // The actual data fetching will happen on the client.
+  return [{ id: 'default' }];
+}
 
 // Types
 type Currency = 'USD' | 'THB' | 'LAK' | 'CNY';
