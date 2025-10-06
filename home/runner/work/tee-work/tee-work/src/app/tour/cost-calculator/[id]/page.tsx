@@ -1,5 +1,4 @@
 
-
 "use client"
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -26,18 +25,9 @@ import { useDocument } from 'react-firebase-hooks/firestore';
 import { db } from '@/lib/firebase';
 
 export async function generateStaticParams() {
-  const firestore = getFirestore(db.app);
-  const calculationsColRef = collection(firestore, 'tourCalculations');
-  const snapshot = await getDocs(calculationsColRef);
-  const paths = snapshot.docs.map(doc => ({
-    id: doc.id,
-  }));
-  
-  if (paths.length === 0) {
-    return [{ id: 'default' }];
-  }
-
-  return paths;
+  // Return a default route to satisfy static export requirements.
+  // The actual data fetching will happen on the client.
+  return [{ id: 'default' }];
 }
 
 // Types
