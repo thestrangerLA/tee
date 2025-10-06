@@ -1,6 +1,6 @@
 
 import type { Metadata } from 'next';
-import { getAllMeatStockItemIds, getMeatStockItem } from '@/services/meatStockService';
+import { getMeatStockItem } from '@/services/meatStockService';
 import MeatStockClientPage from './client-page';
 import { Skeleton } from '@/components/ui/skeleton';
 

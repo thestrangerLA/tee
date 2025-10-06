@@ -1,6 +1,6 @@
 
 import type { Metadata } from 'next';
-import { getTourCostCalculation, getAllTourCostCalculationIds } from '@/services/tourProgramService';
+import { getTourCostCalculation } from '@/services/tourProgramService';
 import TourCalculatorClientPage from './client-page';
 import { Skeleton } from '@/components/ui/skeleton';
 

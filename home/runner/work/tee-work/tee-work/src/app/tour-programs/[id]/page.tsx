@@ -1,26 +1,25 @@
 
 import type { Metadata } from 'next';
-import { getAllTourProgramIds, getTourProgram } from '@/services/tourProgramService';
+import { getTourProgram } from '@/services/tourProgramService';
 import TourProgramClientPage from './client-page';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export const dynamicParams = true; // Allow new pages to be generated on demand
 
-// This function tells Next.js which pages to build at build time.
+// This function is required when using "output: export" in next.config.js
 export async function generateStaticParams() {
-  // We will only pre-build a 'default' page.
-  // Other pages will be generated on-demand at request time.
-  return [{ id: 'default' }];
+    // We will only pre-build a 'default' page.
+    // Other pages will be generated on-demand at request time.
+    return [{ id: 'default' }];
 }
 
 // Optional: Generate metadata for each page
 export async function generateMetadata(
   { params }: { params: { id: string } }
 ): Promise<Metadata> {
-  if (params.id === 'default') {
-      return { title: 'Tour Program' };
-  }
-
+    if (params.id === 'default') {
+        return { title: 'Tour Program' };
+    }
   const program = await getTourProgram(params.id);
   
   if (!program) {
