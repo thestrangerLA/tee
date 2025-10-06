@@ -1,57 +1,50 @@
 
 import type { Metadata } from 'next';
-import { getMeatStockItem } from '@/services/meatStockService';
+import { getAllMeatStockItemIds, getMeatStockItem } from '@/services/meatStockService';
 import MeatStockClientPage from './client-page';
-import { Skeleton } from '@/components/ui/skeleton';
 
-export const dynamicParams = true; // Allow new pages to be generated on demand
+export const dynamic = 'force-static';
+export const dynamicParams = true;
 
-// This function tells Next.js which pages to build at build time.
 export async function generateStaticParams() {
-  // We will only pre-build a 'default' page.
-  // Other pages will be generated on-demand at request time.
-  return [{ id: 'default' }];
+  try {
+    const ids = await getAllMeatStockItemIds();
+    if (ids.length === 0) {
+      return [{ id: 'default' }];
+    }
+    return ids;
+  } catch (error) {
+    console.error("Error fetching static params for meat stock:", error);
+    return [{ id: 'default' }];
+  }
 }
 
-// Optional: Generate metadata for each page
-export async function generateMetadata(
-  { params }: { params: { id: string } }
-): Promise<Metadata> {
-  // Avoid fetching data here if it's for a 'default' build page
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   if (params.id === 'default') {
-    return { title: 'Stock Item' };
+      return { title: 'Stock Item' };
   }
-  
   const item = await getMeatStockItem(params.id);
   
   if (!item) {
-    return {
-      title: 'Stock Item Not Found',
-    }
+    return { title: 'Stock Item Not Found' };
   }
 
   return {
     title: `Stock: ${item.name}`,
     description: `Details for stock item: ${item.name}`,
-  }
+  };
 }
 
-// Page component (Server Component)
-export default async function MeatStockPage({ 
-  params 
-}: { 
-  params: { id: string } 
-}) {
+export default async function MeatStockPage({ params }: { params: { id: string } }) {
   const { id } = params;
 
-  // Handle the 'default' case for static export
   if (id === 'default') {
       return (
             <div className="flex flex-col items-center justify-center h-screen">
                 <p className="text-2xl font-semibold mb-4">Loading Stock Item...</p>
-                <p>Please wait while we fetch the details.</p>
+                <p>This is a placeholder page for static export.</p>
             </div>
-      )
+      );
   }
   
   const item = await getMeatStockItem(id);

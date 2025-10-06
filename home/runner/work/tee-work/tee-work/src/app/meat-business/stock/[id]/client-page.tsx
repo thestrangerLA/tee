@@ -34,16 +34,9 @@ export default function MeatStockClientPage({ initialItem }: { initialItem: Meat
 
     useEffect(() => {
         if (!id) return;
-        // The listener for the item itself is commented out because we get initial data
-        // and updates aren't critical in real-time on this specific details page.
-        // const unsubscribeItem = listenToMeatStockItem(id, (data) => {
-        //     setItem(data);
-        //     setEditData(data || {});
-        // });
         const unsubscribeLogs = listenToMeatStockLogs(id, setLogs);
 
         return () => {
-            // unsubscribeItem();
             unsubscribeLogs();
         };
     }, [id]);
@@ -54,7 +47,6 @@ export default function MeatStockClientPage({ initialItem }: { initialItem: Meat
             await updateMeatStockItem(id, editData);
             toast({ title: "ອັບເດດສຳເລັດ" });
             setIsEditing(false);
-            // Refresh local state after saving
             setItem(prev => prev ? { ...prev, ...editData } : null);
         } catch (error) {
             console.error("Failed to save item:", error);
