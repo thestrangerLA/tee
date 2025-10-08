@@ -2,6 +2,7 @@
 import type { Metadata } from 'next';
 import { getTourProgram, getAllTourProgramIds } from '@/services/tourProgramService';
 import TourProgramClientPage from './client-page';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export const dynamic = 'force-static';
 export const dynamicParams = true;

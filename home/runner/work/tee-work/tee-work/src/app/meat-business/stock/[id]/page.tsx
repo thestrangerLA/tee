@@ -2,10 +2,12 @@
 import type { Metadata } from 'next';
 import { getAllMeatStockItemIds, getMeatStockItem } from '@/services/meatStockService';
 import MeatStockClientPage from './client-page';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export const dynamic = 'force-static';
 export const dynamicParams = true;
 
+// This function tells Next.js which pages to build at build time.
 export async function generateStaticParams() {
   try {
     const ids = await getAllMeatStockItemIds();
@@ -19,23 +21,33 @@ export async function generateStaticParams() {
   }
 }
 
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+// Optional: Generate metadata for each page
+export async function generateMetadata(
+  { params }: { params: { id: string } }
+): Promise<Metadata> {
   if (params.id === 'default') {
       return { title: 'Stock Item' };
   }
   const item = await getMeatStockItem(params.id);
   
   if (!item) {
-    return { title: 'Stock Item Not Found' };
+    return {
+      title: 'Stock Item Not Found',
+    }
   }
 
   return {
     title: `Stock: ${item.name}`,
     description: `Details for stock item: ${item.name}`,
-  };
+  }
 }
 
-export default async function MeatStockPage({ params }: { params: { id: string } }) {
+// Page component (Server Component)
+export default async function MeatStockPage({ 
+  params 
+}: { 
+  params: { id: string } 
+}) {
   const { id } = params;
 
   if (id === 'default') {
