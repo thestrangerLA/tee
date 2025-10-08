@@ -71,6 +71,9 @@ export const getAllTourPrograms = async (): Promise<TourProgram[]> => {
 }
 
 export const getTourProgram = async (id: string): Promise<TourProgram | null> => {
+    if (id === 'default') {
+        return null;
+    }
     const docRef = doc(db, 'tourPrograms', id);
     const docSnap = await getDoc(docRef);
 
@@ -236,43 +239,6 @@ export const deleteTourIncomeItem = async (id: string) => {
     await deleteDoc(itemDoc);
 };
 
-
-export const getTourCostCalculation = async (id: string): Promise<SavedCalculation | null> => {
-    const firestore = getFirestore(db.app);
-    const docRef = doc(firestore, 'tourCalculations', id);
-    const docSnap = await getDoc(docRef);
-
-    if (docSnap.exists()) {
-        const data = docSnap.data();
-        const tourInfo = data.tourInfo || {};
-        if (tourInfo.startDate) tourInfo.startDate = tourInfo.startDate.toDate().toISOString();
-        if (tourInfo.endDate) tourInfo.endDate = tourInfo.endDate.toDate().toISOString();
-
-        const allCosts = data.allCosts || {};
-        const processDateFields = (items: any[]) => {
-          return items?.map(item => {
-            if (item.checkInDate) item.checkInDate = item.checkInDate.toDate().toISOString();
-            if (item.departureDate) item.departureDate = item.departureDate.toDate().toISOString();
-            return item;
-          }) || [];
-        }
-        allCosts.accommodations = processDateFields(allCosts.accommodations);
-        allCosts.flights = processDateFields(allCosts.flights);
-        allCosts.trainTickets = processDateFields(allCosts.trainTickets);
-
-        return {
-            id: docSnap.id,
-            tourInfo,
-            allCosts,
-            exchangeRates: data.exchangeRates,
-            profitPercentage: data.profitPercentage,
-            savedAt: data.savedAt?.toDate().toISOString(),
-        } as SavedCalculation;
-    } else {
-        return null;
-    }
-}
-
 interface SavedCalculation {
     id: string;
     savedAt: any;
@@ -281,4 +247,3 @@ interface SavedCalculation {
     exchangeRates?: any;
     profitPercentage?: number;
 }
-    

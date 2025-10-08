@@ -1,6 +1,6 @@
 
 import type { Metadata } from 'next';
-import { getFirestore, collection, getDocs } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { SavedCalculation } from './client-page';
 import TourCalculatorClientPage from './client-page';
