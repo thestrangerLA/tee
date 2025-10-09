@@ -116,6 +116,29 @@ export const addMeatStockItem = async (item: Omit<MeatStockItem, 'id' | 'created
     return docRef.id;
 };
 
+export const addMultipleMeatStockItems = async (items: Omit<MeatStockItem, 'id' | 'createdAt'>[]): Promise<void> => {
+    const batch = writeBatch(db);
+
+    items.forEach(item => {
+        const itemDocRef = doc(meatStockCollectionRef);
+        batch.set(itemDocRef, { ...item, createdAt: serverTimestamp() });
+
+        if (item.currentStock > 0) {
+            const logDocRef = doc(meatStockLogCollectionRef);
+            batch.set(logDocRef, {
+                itemId: itemDocRef.id,
+                change: item.currentStock,
+                newStock: item.currentStock,
+                type: 'stock-in',
+                detail: 'Slaughter Round',
+                createdAt: serverTimestamp()
+            });
+        }
+    });
+
+    await batch.commit();
+};
+
 
 export const updateMeatStockItem = async (id: string, updatedFields: Partial<Omit<MeatStockItem, 'id' | 'createdAt'>>) => {
     const itemDoc = doc(db, 'meatStockItems', id);
@@ -240,6 +263,9 @@ export const getAllMeatStockItemIds = async (): Promise<{ id: string }[]> => {
 };
 
 export const getMeatStockItem = async (id: string): Promise<MeatStockItem | null> => {
+    if (id === 'default') {
+        return null;
+    }
     const docRef = doc(db, 'meatStockItems', id);
     const docSnap = await getDoc(docRef);
 
