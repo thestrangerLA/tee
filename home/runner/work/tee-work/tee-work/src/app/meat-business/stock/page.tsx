@@ -97,7 +97,7 @@ const AddItemDialog = ({ onAddItem }: { onAddItem: (item: Omit<MeatStockItem, 'i
     return (
          <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button size="sm" variant="outline"><PlusCircle className="mr-2 h-4 w-4"/>ເພີ່ມສິນຄ້າດ່ຽວ</Button>
+                <Button size="sm"><PlusCircle className="mr-2 h-4 w-4"/>ເພີ່ມສິນຄ້າ</Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-2xl">
                 <form onSubmit={handleSubmit}>
@@ -159,16 +159,8 @@ const AddSlaughterRoundDialog = ({ onAddMultipleItems, onAddItem }: { onAddMulti
     const [items, setItems] = useState<SlaughterItem[]>([]);
     const [roundDate, setRoundDate] = useState<Date | undefined>(new Date());
 
-    const handleAddItemRow = () => {
-        setItems([...items, { tempId: uuidv4(), sku: '', name: '', packageSize: 1, costPrice: 0, currentStock: 0, sellingPrice: 0 }]);
-    };
-
     const handleItemChange = (tempId: string, field: keyof Omit<SlaughterItem, 'tempId'>, value: string | number) => {
         setItems(items.map(item => item.tempId === tempId ? { ...item, [field]: value } : item));
-    };
-
-    const handleRemoveItemRow = (tempId: string) => {
-        setItems(items.filter(item => item.tempId !== tempId));
     };
 
     const handleSaveSlaughterRound = async () => {
@@ -222,6 +214,9 @@ const AddSlaughterRoundDialog = ({ onAddMultipleItems, onAddItem }: { onAddMulti
                             <Calendar mode="single" selected={roundDate} onSelect={setRoundDate} initialFocus />
                         </PopoverContent>
                     </Popover>
+                </div>
+                 <div className="mt-4">
+                  <AddItemDialog onAddItem={onAddItem} />
                 </div>
                 
                 <DialogFooter>
@@ -485,3 +480,4 @@ export default function MeatStockPage() {
         </div>
     );
 }
+
