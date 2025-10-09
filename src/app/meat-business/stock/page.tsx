@@ -60,7 +60,7 @@ const formatCurrency = (value: number) => {
 };
 
 
-const AddItemDialog = ({ onAddItem }: { onAddItem: (item: Omit<MeatStockItem, 'id'|'createdAt'>) => Promise<string> }) => {
+const AddItemDialog = ({ onAddItem, slaughterRoundDetail }: { onAddItem: (item: Omit<MeatStockItem, 'id'|'createdAt'>, detail?: string) => Promise<string>, slaughterRoundDetail?: string }) => {
     const { toast } = useToast();
     const router = useClientRouter();
     const [open, setOpen] = useState(false);
@@ -83,11 +83,10 @@ const AddItemDialog = ({ onAddItem }: { onAddItem: (item: Omit<MeatStockItem, 'i
         }
 
         try {
-            const newItemId = await onAddItem(newItem);
+            const newItemId = await onAddItem(newItem, slaughterRoundDetail);
             toast({ title: "Success", description: "New item added to stock." });
             setOpen(false);
             e.currentTarget.reset();
-            router.push(`/meat-business/stock/${newItemId}`);
         } catch (error) {
             console.error("Error adding item:", error);
             toast({ title: "Error", description: "Could not add item.", variant: "destructive" });
@@ -97,12 +96,12 @@ const AddItemDialog = ({ onAddItem }: { onAddItem: (item: Omit<MeatStockItem, 'i
     return (
          <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button size="sm"><PlusCircle className="mr-2 h-4 w-4"/>ເພີ່ມສິນຄ້າ</Button>
+                <Button size="sm" variant="outline" className="h-8"><PlusCircle className="mr-2 h-4 w-4"/>ເພີ່ມສິນຄ້າ</Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-2xl">
                 <form onSubmit={handleSubmit}>
                     <DialogHeader>
-                        <DialogTitle>ເພີ່ມສິນຄ້າໃໝ່</DialogTitle>
+                        <DialogTitle>ເພີ່ມສິນຄ້າໃໝ່ {slaughterRoundDetail && `ໃນ ${slaughterRoundDetail}`}</DialogTitle>
                         <DialogDescription>
                            ປ້ອນລາຍລະອຽດຂອງຊີ້ນແພັກໃໝ່.
                         </DialogDescription>
@@ -135,7 +134,7 @@ const AddItemDialog = ({ onAddItem }: { onAddItem: (item: Omit<MeatStockItem, 'i
                     </div>
                     <DialogFooter>
                         <Button type="button" variant="outline" onClick={() => setOpen(false)}>ຍົກເລີກ</Button>
-                        <Button type="submit">ບັນທຶກ ແລະ ເປີດໜ້າລາຍລະອຽດ</Button>
+                        <Button type="submit">ບັນທຶກ</Button>
                     </DialogFooter>
                 </form>
             </DialogContent>
@@ -143,52 +142,31 @@ const AddItemDialog = ({ onAddItem }: { onAddItem: (item: Omit<MeatStockItem, 'i
     )
 }
 
-type SlaughterItem = {
-    tempId: string;
-    sku: string;
-    name: string;
-    packageSize: number;
-    costPrice: number;
-    currentStock: number;
-    sellingPrice: number;
-}
 
 const AddSlaughterRoundDialog = ({ onAddMultipleItems }: { onAddMultipleItems: (items: Omit<MeatStockItem, 'id'|'createdAt'>[], date: Date) => Promise<void> }) => {
     const { toast } = useToast();
     const [open, setOpen] = useState(false);
-    const [items, setItems] = useState<SlaughterItem[]>([]);
     const [roundDate, setRoundDate] = useState<Date | undefined>(new Date());
-
-    const handleAddItemRow = () => {
-        setItems([...items, { tempId: uuidv4(), sku: '', name: '', packageSize: 1, costPrice: 0, currentStock: 0, sellingPrice: 0 }]);
-    };
-
-    const handleItemChange = (tempId: string, field: keyof Omit<SlaughterItem, 'tempId'>, value: string | number) => {
-        setItems(items.map(item => item.tempId === tempId ? { ...item, [field]: value } : item));
-    };
-
-    const handleRemoveItemRow = (tempId: string) => {
-        setItems(items.filter(item => item.tempId !== tempId));
-    };
-
+    
     const handleSaveSlaughterRound = async () => {
         if (!roundDate) {
             toast({ title: "ກະລຸນາເລືອກວັນທີ", variant: "destructive" });
             return;
         }
-        const validItems = items.filter(item => item.sku && item.name && item.currentStock > 0);
-        if (validItems.length === 0) {
-            toast({ title: "ບໍ່ມີລາຍການ", description: "ກະລຸນາເພີ່ມລາຍການ ແລະ ປ້ອນຂໍ້ມູນໃຫ້ຄົບຖ້ວນ", variant: "destructive" });
-            return;
-        }
-
-        const itemsToAdd = validItems.map(({ tempId, ...rest }) => rest);
 
         try {
-            await onAddMultipleItems(itemsToAdd, roundDate);
-            toast({ title: "ສຳເລັດ", description: `ເພີ່ມສິນຄ້າຈາກຮອບຂ້າ ${format(roundDate, 'dd/MM/yyyy')} ສຳເລັດແລ້ວ.` });
+            const dummyItem: Omit<MeatStockItem, 'id'|'createdAt'> = {
+                sku: `ROUND-${format(roundDate, 'yyyyMMdd')}`,
+                name: `ຮອບຂ້າ ${format(roundDate, 'dd/MM/yyyy')}`,
+                packageSize: 0,
+                costPrice: 0,
+                sellingPrice: 0,
+                currentStock: 0,
+            }
+            await addMeatStockItem(dummyItem, `ຮອບຂ້າທີ່ ${format(roundDate, 'dd/MM/yyyy')}`);
+
+            toast({ title: "ສຳເລັດ", description: `ສ້າງຮອບຂ້າ ${format(roundDate, 'dd/MM/yyyy')} ສຳເລັດແລ້ວ.` });
             setOpen(false);
-            setItems([]);
             setRoundDate(new Date());
         } catch (error) {
             console.error("Error adding slaughter round:", error);
@@ -200,16 +178,16 @@ const AddSlaughterRoundDialog = ({ onAddMultipleItems }: { onAddMultipleItems: (
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button size="sm" variant="secondary"><PlusCircle className="mr-2 h-4 w-4"/>ເພີ່ມຮອບຂ້າ</Button>
+                <Button size="sm"><PlusCircle className="mr-2 h-4 w-4"/>ເພີ່ມຮອບຂ້າ</Button>
             </DialogTrigger>
-            <DialogContent className="max-w-4xl">
+            <DialogContent className="max-w-md">
                 <DialogHeader>
-                    <DialogTitle>ເພີ່ມສິນຄ້າຈາກຮອບຂ້າໃໝ່</DialogTitle>
+                    <DialogTitle>ເພີ່ມຮອບຂ້າໃໝ່</DialogTitle>
                     <DialogDescription>
-                        ເພີ່ມສິນຄ້າຫຼາຍລາຍການພ້ອມກັນຈາກການຂ້າຮອບດຽວ.
+                        ເລືອກວັນທີເພື່ອສ້າງຮອບຂ້າໃໝ່.
                     </DialogDescription>
                 </DialogHeader>
-                 <div className="grid gap-2 w-full sm:w-1/3">
+                 <div className="grid gap-2 w-full pt-4">
                     <Label htmlFor="round-date">ວັນທີຂອງຮອບຂ້າ</Label>
                     <Popover>
                         <PopoverTrigger asChild>
@@ -223,38 +201,10 @@ const AddSlaughterRoundDialog = ({ onAddMultipleItems }: { onAddMultipleItems: (
                         </PopoverContent>
                     </Popover>
                 </div>
-                <div className="max-h-[50vh] overflow-y-auto pr-2">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>SKU</TableHead>
-                                <TableHead>ຊື່ສິນຄ້າ</TableHead>
-                                <TableHead>ຂະໜາດ (kg)</TableHead>
-                                <TableHead>ຕົ້ນทุน (kg)</TableHead>
-                                <TableHead>ຈຳນວນ (ຖົງ)</TableHead>
-                                <TableHead></TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {items.map((item) => (
-                                <TableRow key={item.tempId}>
-                                    <TableCell><Input value={item.sku} onChange={(e) => handleItemChange(item.tempId, 'sku', e.target.value)} /></TableCell>
-                                    <TableCell><Input value={item.name} onChange={(e) => handleItemChange(item.tempId, 'name', e.target.value)} /></TableCell>
-                                    <TableCell><Input type="number" value={item.packageSize} onChange={(e) => handleItemChange(item.tempId, 'packageSize', parseFloat(e.target.value) || 1)} /></TableCell>
-                                    <TableCell><Input type="number" value={item.costPrice} onChange={(e) => handleItemChange(item.tempId, 'costPrice', parseFloat(e.target.value) || 0)} /></TableCell>
-                                    <TableCell><Input type="number" value={item.currentStock} onChange={(e) => handleItemChange(item.tempId, 'currentStock', parseInt(e.target.value) || 0)} /></TableCell>
-                                    <TableCell><Button variant="ghost" size="icon" onClick={() => handleRemoveItemRow(item.tempId)}><Trash2 className="h-4 w-4 text-red-500"/></Button></TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </div>
-                 <Button variant="outline" onClick={handleAddItemRow} className="mt-2">
-                    <PlusCircle className="mr-2 h-4 w-4"/> ເພີ່ມແຖວ
-                </Button>
+                
                 <DialogFooter>
                     <Button type="button" variant="outline" onClick={() => setOpen(false)}>ຍົກເລີກ</Button>
-                    <Button onClick={handleSaveSlaughterRound}>ບັນທຶກຮອບຂ້າ</Button>
+                    <Button onClick={handleSaveSlaughterRound}>ສ້າງຮອບຂ້າ</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
@@ -353,7 +303,9 @@ export default function MeatStockPage() {
         
         const itemLogMap: Record<string, string> = {};
         stockLogs.filter(log => log.type === 'stock-in' && log.detail.startsWith('ຮອບຂ້າທີ່')).forEach(log => {
-            itemLogMap[log.itemId] = log.detail;
+            if (!itemLogMap[log.itemId]) { // Only map the first (creation) log
+                itemLogMap[log.itemId] = log.detail;
+            }
         });
 
         const filteredItems = stockItems.filter(item =>
@@ -362,6 +314,14 @@ export default function MeatStockPage() {
         );
 
         filteredItems.forEach(item => {
+            if (item.name.startsWith('ຮອບຂ້າ') && item.currentStock === 0 && item.packageSize === 0) {
+                const roundName = item.name.replace('ຮອບຂ້າ ', 'ຮອບຂ້າທີ່ ');
+                if (!rounds[roundName]) {
+                    rounds[roundName] = { date: item.createdAt, items: [] };
+                }
+                return;
+            }
+
             const detail = itemLogMap[item.id];
             if (detail) {
                 if (!rounds[detail]) {
@@ -369,16 +329,22 @@ export default function MeatStockPage() {
                 }
                 rounds[detail].items.push(item);
             } else {
-                 if (!rounds['individual']) {
-                    rounds['individual'] = { date: new Date(0), items: [] };
+                 if (!rounds['ຮອບຂ້າທີ່ 1 05/10/25']) {
+                    rounds['ຮອບຂ້າທີ່ 1 05/10/25'] = { date: new Date(0), items: [] };
                 }
-                rounds['individual'].items.push(item);
+                rounds['ຮອບຂ້າທີ່ 1 05/10/25'].items.push(item);
+            }
+        });
+
+        stockLogs.forEach(log => {
+             if (log.detail.startsWith('ຮອບຂ້າທີ່') && !rounds[log.detail]) {
+                rounds[log.detail] = { date: log.createdAt, items: [] };
             }
         });
 
         return Object.entries(rounds).sort(([keyA, valA], [keyB, valB]) => {
-            if (keyA === 'individual') return 1;
-            if (keyB === 'individual') return -1;
+            if (keyA === 'ຮອບຂ້າທີ່ 1 05/10/25') return 1;
+            if (keyB === 'ຮອບຂ້າທີ່ 1 05/10/25') return -1;
             return valB.date.getTime() - valA.date.getTime();
         });
 
@@ -399,7 +365,6 @@ export default function MeatStockPage() {
                 </div>
                  <div className="ml-auto flex items-center gap-2">
                     <AddSlaughterRoundDialog onAddMultipleItems={addMultipleMeatStockItems} />
-                    <AddItemDialog onAddItem={addMeatStockItem} />
                 </div>
             </header>
             <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
@@ -449,8 +414,13 @@ export default function MeatStockPage() {
                         <Accordion type="single" collapsible className="w-full" defaultValue={slaughterRounds[0]?.[0]}>
                             {slaughterRounds.map(([detail, round]) => (
                                 <AccordionItem value={detail} key={detail}>
-                                    <AccordionTrigger className="text-lg font-semibold bg-muted/50 px-4 rounded-md">
-                                        {detail === 'individual' ? 'ສິນຄ້າອື່ນໆ' : detail}
+                                    <AccordionTrigger className="text-lg font-semibold bg-muted/50 px-4 rounded-md hover:no-underline">
+                                        <div className="flex justify-between items-center w-full">
+                                            <span>{detail}</span>
+                                            <div onClick={(e) => e.stopPropagation()}>
+                                                <AddItemDialog onAddItem={addMeatStockItem} slaughterRoundDetail={detail} />
+                                            </div>
+                                        </div>
                                     </AccordionTrigger>
                                     <AccordionContent className="pt-2">
                                         <Table>
@@ -466,7 +436,7 @@ export default function MeatStockPage() {
                                                 </TableRow>
                                             </TableHeader>
                                             <TableBody>
-                                                {round.items.map(item => {
+                                                {round.items.length > 0 ? round.items.map(item => {
                                                     const totalUnits = item.currentStock * item.packageSize;
                                                     const totalCostValue = item.costPrice * totalUnits;
                                                     return (
@@ -498,7 +468,11 @@ export default function MeatStockPage() {
                                                             </TableCell>
                                                         </TableRow>
                                                     )
-                                                })}
+                                                }) : (
+                                                    <TableRow>
+                                                        <TableCell colSpan={7} className="text-center h-24">ບໍ່ມີສິນຄ້າໃນຮອບຂ້ານີ້</TableCell>
+                                                    </TableRow>
+                                                )}
                                             </TableBody>
                                         </Table>
                                     </AccordionContent>
