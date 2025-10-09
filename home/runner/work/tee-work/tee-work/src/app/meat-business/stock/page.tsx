@@ -197,7 +197,15 @@ const AddSlaughterRoundDialog = ({ onAddMultipleItems }: { onAddMultipleItems: (
                             </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0">
-                            <Calendar mode="single" selected={roundDate} onSelect={setRoundDate} initialFocus />
+                            <Calendar
+                                mode="single"
+                                selected={roundDate}
+                                onSelect={setRoundDate}
+                                initialFocus
+                                fromYear={2023}
+                                toYear={2026}
+                                captionLayout="dropdown-nav"
+                             />
                         </PopoverContent>
                     </Popover>
                 </div>
