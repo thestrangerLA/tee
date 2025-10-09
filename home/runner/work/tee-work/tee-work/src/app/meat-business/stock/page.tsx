@@ -97,7 +97,7 @@ const AddItemDialog = ({ onAddItem }: { onAddItem: (item: Omit<MeatStockItem, 'i
     return (
          <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button size="sm"><PlusCircle className="mr-2 h-4 w-4"/>ເພີ່ມສິນຄ້າ</Button>
+                <Button size="sm" variant="outline"><PlusCircle className="mr-2 h-4 w-4"/>ເພີ່ມສິນຄ້າດ່ຽວ</Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-2xl">
                 <form onSubmit={handleSubmit}>
@@ -153,7 +153,7 @@ type SlaughterItem = {
     sellingPrice: number;
 }
 
-const AddSlaughterRoundDialog = ({ onAddMultipleItems }: { onAddMultipleItems: (items: Omit<MeatStockItem, 'id'|'createdAt'>[], date: Date) => Promise<void> }) => {
+const AddSlaughterRoundDialog = ({ onAddMultipleItems, onAddItem }: { onAddMultipleItems: (items: Omit<MeatStockItem, 'id'|'createdAt'>[], date: Date) => Promise<void>; onAddItem: (item: Omit<MeatStockItem, 'id'|'createdAt'>) => Promise<string>; }) => {
     const { toast } = useToast();
     const [open, setOpen] = useState(false);
     const [items, setItems] = useState<SlaughterItem[]>([]);
@@ -200,7 +200,7 @@ const AddSlaughterRoundDialog = ({ onAddMultipleItems }: { onAddMultipleItems: (
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button size="sm" variant="secondary"><PlusCircle className="mr-2 h-4 w-4"/>ເພີ່ມຮອບຂ້າ</Button>
+                <Button size="sm"><PlusCircle className="mr-2 h-4 w-4"/>ເພີ່ມຮອບຂ້າ</Button>
             </DialogTrigger>
             <DialogContent className="max-w-4xl">
                 <DialogHeader>
@@ -249,9 +249,12 @@ const AddSlaughterRoundDialog = ({ onAddMultipleItems }: { onAddMultipleItems: (
                         </TableBody>
                     </Table>
                 </div>
-                 <Button variant="outline" onClick={handleAddItemRow} className="mt-2">
-                    <PlusCircle className="mr-2 h-4 w-4"/> ເພີ່ມແຖວ
-                </Button>
+                 <div className="mt-2 flex gap-2">
+                    <Button variant="outline" onClick={handleAddItemRow}>
+                        <PlusCircle className="mr-2 h-4 w-4"/> ເພີ່ມແຖວ
+                    </Button>
+                    <AddItemDialog onAddItem={onAddItem} />
+                </div>
                 <DialogFooter>
                     <Button type="button" variant="outline" onClick={() => setOpen(false)}>ຍົກເລີກ</Button>
                     <Button onClick={handleSaveSlaughterRound}>ບັນທຶກຮອບຂ້າ</Button>
@@ -369,16 +372,16 @@ export default function MeatStockPage() {
                 }
                 rounds[detail].items.push(item);
             } else {
-                 if (!rounds['individual']) {
-                    rounds['individual'] = { date: new Date(0), items: [] };
+                 if (!rounds['ຮອບຂ້າທີ່ 1 05/10/25']) {
+                    rounds['ຮອບຂ້າທີ່ 1 05/10/25'] = { date: new Date(0), items: [] };
                 }
-                rounds['individual'].items.push(item);
+                rounds['ຮອບຂ້າທີ່ 1 05/10/25'].items.push(item);
             }
         });
 
         return Object.entries(rounds).sort(([keyA, valA], [keyB, valB]) => {
-            if (keyA === 'individual') return 1;
-            if (keyB === 'individual') return -1;
+            if (keyA === 'ຮອບຂ້າທີ່ 1 05/10/25') return 1;
+            if (keyB === 'ຮອບຂ້າທີ່ 1 05/10/25') return -1;
             return valB.date.getTime() - valA.date.getTime();
         });
 
@@ -398,8 +401,7 @@ export default function MeatStockPage() {
                     <h1 className="text-xl font-bold tracking-tight">ຈັດການສະຕັອກ (ທຸລະກິດຊີ້ນ)</h1>
                 </div>
                  <div className="ml-auto flex items-center gap-2">
-                    <AddSlaughterRoundDialog onAddMultipleItems={addMultipleMeatStockItems} />
-                    <AddItemDialog onAddItem={addMeatStockItem} />
+                    <AddSlaughterRoundDialog onAddMultipleItems={addMultipleMeatStockItems} onAddItem={addMeatStockItem} />
                 </div>
             </header>
             <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
@@ -450,7 +452,7 @@ export default function MeatStockPage() {
                             {slaughterRounds.map(([detail, round]) => (
                                 <AccordionItem value={detail} key={detail}>
                                     <AccordionTrigger className="text-lg font-semibold bg-muted/50 px-4 rounded-md">
-                                        {detail === 'individual' ? 'ສິນຄ້າອື່ນໆ' : detail}
+                                        {detail}
                                     </AccordionTrigger>
                                     <AccordionContent className="pt-2">
                                         <Table>

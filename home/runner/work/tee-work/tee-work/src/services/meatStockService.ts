@@ -120,7 +120,7 @@ export const addMeatStockItem = async (item: Omit<MeatStockItem, 'id' | 'created
 
 export const addMultipleMeatStockItems = async (items: Omit<MeatStockItem, 'id' | 'createdAt'>[], roundDate: Date): Promise<void> => {
     const batch = writeBatch(db);
-    const detailText = `ຮອບຂ້າທີ່ ${format(roundDate, 'yyyy-MM-dd')}`;
+    const detailText = `ຮອບຂ້າທີ່ ${format(roundDate, 'dd/MM/yyyy')}`;
 
     items.forEach(item => {
         const itemDocRef = doc(meatStockCollectionRef);
