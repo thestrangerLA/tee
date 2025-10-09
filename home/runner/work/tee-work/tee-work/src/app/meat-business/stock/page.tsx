@@ -524,7 +524,7 @@ export default function MeatStockPage() {
                                                     const totalUnits = item.currentStock * item.packageSize;
                                                     const totalCostValue = item.costPrice * totalUnits;
                                                     return (
-                                                        <TableRow key={item.id} className={totalUnits === 0 ? 'bg-red-100' : ''}>
+                                                        <TableRow key={item.id} className={item.currentStock === 0 ? 'bg-red-100' : ''}>
                                                             <TableCell className="font-mono">{item.sku}</TableCell>
                                                             <TableCell className="font-medium hover:underline">
                                                                 <Link href={`/meat-business/stock/${item.id}`}>{item.name}</Link>
@@ -572,4 +572,3 @@ export default function MeatStockPage() {
         </div>
     );
 }
-
