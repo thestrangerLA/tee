@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import { useState, useEffect, useMemo } from 'react';
@@ -154,9 +155,6 @@ const AddSlaughterRoundDialog = ({ onAddMultipleItems }: { onAddMultipleItems: (
         }
 
         try {
-            // Since we removed the table, we'll pass an empty array, 
-            // but the service creates the round detail anyway.
-            // Let's create one dummy item to ensure the round is created.
             const dummyItem: Omit<MeatStockItem, 'id'|'createdAt'> = {
                 sku: `ROUND-${format(roundDate, 'yyyyMMdd')}`,
                 name: `ຮອບຂ້າ ${format(roundDate, 'dd/MM/yyyy')}`,
@@ -316,10 +314,10 @@ export default function MeatStockPage() {
         );
 
         filteredItems.forEach(item => {
-            // Check if the item is just a placeholder for a round and has no stock
-             if (item.name.startsWith('ຮອບຂ້າ') && item.currentStock === 0 && item.packageSize === 0) {
-                if (!rounds[item.name]) {
-                    rounds[item.name] = { date: item.createdAt, items: [] };
+            if (item.name.startsWith('ຮອບຂ້າ') && item.currentStock === 0 && item.packageSize === 0) {
+                const roundName = item.name.replace('ຮອບຂ້າ ', 'ຮອບຂ້າທີ່ ');
+                if (!rounds[roundName]) {
+                    rounds[roundName] = { date: item.createdAt, items: [] };
                 }
                 return;
             }
@@ -338,7 +336,6 @@ export default function MeatStockPage() {
             }
         });
 
-        // Ensure all log details create a round, even if no items are associated yet
         stockLogs.forEach(log => {
              if (log.detail.startsWith('ຮອບຂ້າທີ່') && !rounds[log.detail]) {
                 rounds[log.detail] = { date: log.createdAt, items: [] };
@@ -368,6 +365,10 @@ export default function MeatStockPage() {
                 </div>
                  <div className="ml-auto flex items-center gap-2">
                     <AddSlaughterRoundDialog onAddMultipleItems={addMultipleMeatStockItems} />
+                    <Button onClick={() => window.print()} variant="outline" size="sm">
+                        <Printer className="mr-2 h-4 w-4" />
+                        ພິມ
+                    </Button>
                 </div>
             </header>
             <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
@@ -443,7 +444,7 @@ export default function MeatStockPage() {
                                                     const totalUnits = item.currentStock * item.packageSize;
                                                     const totalCostValue = item.costPrice * totalUnits;
                                                     return (
-                                                        <TableRow key={item.id}>
+                                                        <TableRow key={item.id} className={totalUnits === 0 ? 'bg-red-100' : ''}>
                                                             <TableCell className="font-mono">{item.sku}</TableCell>
                                                             <TableCell className="font-medium hover:underline">
                                                                 <Link href={`/meat-business/stock/${item.id}`}>{item.name}</Link>
