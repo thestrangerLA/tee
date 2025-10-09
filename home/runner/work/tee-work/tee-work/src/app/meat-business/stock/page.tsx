@@ -223,38 +223,7 @@ const AddSlaughterRoundDialog = ({ onAddMultipleItems, onAddItem }: { onAddMulti
                         </PopoverContent>
                     </Popover>
                 </div>
-                <div className="max-h-[50vh] overflow-y-auto pr-2">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>SKU</TableHead>
-                                <TableHead>ຊື່ສິນຄ້າ</TableHead>
-                                <TableHead>ຂະໜາດ (kg)</TableHead>
-                                <TableHead>ຕົ້ນทุน (kg)</TableHead>
-                                <TableHead>ຈຳນວນ (ຖົງ)</TableHead>
-                                <TableHead></TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {items.map((item) => (
-                                <TableRow key={item.tempId}>
-                                    <TableCell><Input value={item.sku} onChange={(e) => handleItemChange(item.tempId, 'sku', e.target.value)} /></TableCell>
-                                    <TableCell><Input value={item.name} onChange={(e) => handleItemChange(item.tempId, 'name', e.target.value)} /></TableCell>
-                                    <TableCell><Input type="number" value={item.packageSize} onChange={(e) => handleItemChange(item.tempId, 'packageSize', parseFloat(e.target.value) || 1)} /></TableCell>
-                                    <TableCell><Input type="number" value={item.costPrice} onChange={(e) => handleItemChange(item.tempId, 'costPrice', parseFloat(e.target.value) || 0)} /></TableCell>
-                                    <TableCell><Input type="number" value={item.currentStock} onChange={(e) => handleItemChange(item.tempId, 'currentStock', parseInt(e.target.value) || 0)} /></TableCell>
-                                    <TableCell><Button variant="ghost" size="icon" onClick={() => handleRemoveItemRow(item.tempId)}><Trash2 className="h-4 w-4 text-red-500"/></Button></TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </div>
-                 <div className="mt-2 flex gap-2">
-                    <Button variant="outline" onClick={handleAddItemRow}>
-                        <PlusCircle className="mr-2 h-4 w-4"/> ເພີ່ມແຖວ
-                    </Button>
-                    <AddItemDialog onAddItem={onAddItem} />
-                </div>
+                
                 <DialogFooter>
                     <Button type="button" variant="outline" onClick={() => setOpen(false)}>ຍົກເລີກ</Button>
                     <Button onClick={handleSaveSlaughterRound}>ບັນທຶກຮອບຂ້າ</Button>
