@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import { useState, useEffect, useMemo } from 'react';
@@ -10,7 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Package, Trash2, PlusCircle, DollarSign, ArrowDown, ArrowUp, Printer, Search, ChevronDown } from "lucide-react";
+import { ArrowLeft, Package, Trash2, PlusCircle, DollarSign, ArrowDown, ArrowUp, Printer, Search, ChevronDown, Calendar as CalendarIcon } from "lucide-react";
 import Link from 'next/link';
 import {
   Table,
@@ -40,25 +41,17 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSub,
-  DropdownMenuSubTrigger,
-  DropdownMenuPortal,
-  DropdownMenuSubContent,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import type { MeatStockItem, MeatStockLog } from '@/lib/types';
 import { listenToMeatStockItems, addMeatStockItem, deleteMeatStockItem, updateStockQuantity, listenToAllMeatStockLogs, addMultipleMeatStockItems } from '@/services/meatStockService';
 import { useClientRouter } from '@/hooks/useClientRouter';
-import { format, startOfMonth, endOfMonth, isWithinInterval, getYear, setMonth, getMonth } from 'date-fns';
+import { format } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
 
 
@@ -157,15 +150,17 @@ type SlaughterItem = {
     packageSize: number;
     costPrice: number;
     currentStock: number;
+    sellingPrice: number;
 }
 
-const AddSlaughterRoundDialog = ({ onAddMultipleItems }: { onAddMultipleItems: (items: Omit<MeatStockItem, 'id'|'createdAt'|'sellingPrice'>[]) => Promise<void> }) => {
+const AddSlaughterRoundDialog = ({ onAddMultipleItems }: { onAddMultipleItems: (items: Omit<MeatStockItem, 'id'|'createdAt'>[], date: Date) => Promise<void> }) => {
     const { toast } = useToast();
     const [open, setOpen] = useState(false);
     const [items, setItems] = useState<SlaughterItem[]>([]);
+    const [roundDate, setRoundDate] = useState<Date | undefined>(new Date());
 
     const handleAddItemRow = () => {
-        setItems([...items, { tempId: uuidv4(), sku: '', name: '', packageSize: 1, costPrice: 0, currentStock: 0 }]);
+        setItems([...items, { tempId: uuidv4(), sku: '', name: '', packageSize: 1, costPrice: 0, currentStock: 0, sellingPrice: 0 }]);
     };
 
     const handleItemChange = (tempId: string, field: keyof Omit<SlaughterItem, 'tempId'>, value: string | number) => {
@@ -177,19 +172,24 @@ const AddSlaughterRoundDialog = ({ onAddMultipleItems }: { onAddMultipleItems: (
     };
 
     const handleSaveSlaughterRound = async () => {
+        if (!roundDate) {
+            toast({ title: "ກະລຸນາເລືອກວັນທີ", variant: "destructive" });
+            return;
+        }
         const validItems = items.filter(item => item.sku && item.name && item.currentStock > 0);
         if (validItems.length === 0) {
             toast({ title: "ບໍ່ມີລາຍການ", description: "ກະລຸນາເພີ່ມລາຍການ ແລະ ປ້ອນຂໍ້ມູນໃຫ້ຄົບຖ້ວນ", variant: "destructive" });
             return;
         }
 
-        const itemsToAdd = validItems.map(({ tempId, ...rest }) => ({ ...rest, sellingPrice: 0 }));
+        const itemsToAdd = validItems.map(({ tempId, ...rest }) => rest);
 
         try {
-            await onAddMultipleItems(itemsToAdd);
-            toast({ title: "ສຳເລັດ", description: "ເພີ່ມສິນຄ້າຈາກຮອບຂ້າໃໝ່ສຳເລັດແລ້ວ." });
+            await onAddMultipleItems(itemsToAdd, roundDate);
+            toast({ title: "ສຳເລັດ", description: `ເພີ່ມສິນຄ້າຈາກຮອບຂ້າ ${format(roundDate, 'dd/MM/yyyy')} ສຳເລັດແລ້ວ.` });
             setOpen(false);
             setItems([]);
+            setRoundDate(new Date());
         } catch (error) {
             console.error("Error adding slaughter round:", error);
             toast({ title: "ຜິດພາດ", description: "ບໍ່ສາມາດບັນທຶກຂໍ້ມູນຮອບຂ້າໄດ້", variant: "destructive" });
@@ -206,10 +206,24 @@ const AddSlaughterRoundDialog = ({ onAddMultipleItems }: { onAddMultipleItems: (
                 <DialogHeader>
                     <DialogTitle>ເພີ່ມສິນຄ້າຈາກຮອບຂ້າໃໝ່</DialogTitle>
                     <DialogDescription>
-                        ເພີ່ມສິນຄ້າຫຼາຍລາຍການພ້ອມກັນຈາກການຂ້າຮອບດຽວ. ລະບົບຈະສ້າງປະຫວັດການນຳເຂົ້າສະຕັອກໃຫ້ອັດຕະໂນມັດ.
+                        ເພີ່ມສິນຄ້າຫຼາຍລາຍການພ້ອມກັນຈາກການຂ້າຮອບດຽວ.
                     </DialogDescription>
                 </DialogHeader>
-                <div className="max-h-[60vh] overflow-y-auto pr-2">
+                 <div className="grid gap-2 w-full sm:w-1/3">
+                    <Label htmlFor="round-date">ວັນທີຂອງຮອບຂ້າ</Label>
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <Button id="round-date" variant={"outline"} className="justify-start text-left font-normal">
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {roundDate ? format(roundDate, "dd/MM/yyyy") : <span>ເລືອກວັນທີ</span>}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                            <Calendar mode="single" selected={roundDate} onSelect={setRoundDate} initialFocus />
+                        </PopoverContent>
+                    </Popover>
+                </div>
+                <div className="max-h-[50vh] overflow-y-auto pr-2">
                     <Table>
                         <TableHeader>
                             <TableRow>
@@ -315,13 +329,7 @@ const StockAdjustmentDialog = ({
 export default function MeatStockPage() {
     const [stockItems, setStockItems] = useState<MeatStockItem[]>([]);
     const [stockLogs, setStockLogs] = useState<MeatStockLog[]>([]);
-    const [displayMonth, setDisplayMonth] = useState<Date>(new Date());
     const [searchQuery, setSearchQuery] = useState("");
-    const [selectedItems, setSelectedItems] = useState<Record<string, boolean>>({});
-
-    const handlePrint = () => {
-        window.print();
-    };
     
     useEffect(() => {
         const unsubscribeItems = listenToMeatStockItems(setStockItems);
@@ -340,91 +348,41 @@ export default function MeatStockPage() {
         return stockItems.reduce((acc, item) => acc + (item.sellingPrice * item.currentStock * item.packageSize), 0);
     }, [stockItems]);
 
-    const itemMovement = useMemo(() => {
-        const movements: Record<string, { stockIn: number, stockOut: number }> = {};
-        stockItems.forEach(item => {
-            movements[item.id] = { stockIn: 0, stockOut: 0 };
+    const slaughterRounds = useMemo(() => {
+        const rounds: Record<string, { date: Date, items: MeatStockItem[] }> = {};
+        
+        const itemLogMap: Record<string, string> = {};
+        stockLogs.filter(log => log.type === 'stock-in' && log.detail.startsWith('ຮອບຂ້າທີ່')).forEach(log => {
+            itemLogMap[log.itemId] = log.detail;
         });
 
-        const start = startOfMonth(displayMonth);
-        const end = endOfMonth(displayMonth);
-        const monthlyLogs = stockLogs.filter(log => isWithinInterval(log.createdAt, { start, end }));
-
-        monthlyLogs.forEach(log => {
-            if (movements[log.itemId]) {
-                if (log.type === 'stock-in') {
-                    movements[log.itemId].stockIn += log.change;
-                } else if (log.type === 'sale') {
-                    movements[log.itemId].stockOut += Math.abs(log.change);
-                }
-            }
-        });
-        return movements;
-    }, [stockItems, stockLogs, displayMonth]);
-    
-     const filteredStockItems = useMemo(() => {
-        return stockItems.filter(item =>
+        const filteredItems = stockItems.filter(item =>
             item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             item.sku.toLowerCase().includes(searchQuery.toLowerCase())
         );
-    }, [stockItems, searchQuery]);
 
-    const handleSelectAll = (checked: boolean) => {
-        const newSelectedItems: Record<string, boolean> = {};
-        if (checked) {
-            filteredStockItems.forEach(item => {
-                newSelectedItems[item.id] = true;
-            });
-        }
-        setSelectedItems(newSelectedItems);
-    };
+        filteredItems.forEach(item => {
+            const detail = itemLogMap[item.id];
+            if (detail) {
+                if (!rounds[detail]) {
+                    rounds[detail] = { date: item.createdAt, items: [] };
+                }
+                rounds[detail].items.push(item);
+            } else {
+                 if (!rounds['individual']) {
+                    rounds['individual'] = { date: new Date(0), items: [] };
+                }
+                rounds['individual'].items.push(item);
+            }
+        });
 
-    const handleSelectItem = (itemId: string, checked: boolean) => {
-        setSelectedItems(prev => ({
-            ...prev,
-            [itemId]: checked
-        }));
-    };
-    
-    const MonthYearSelector = () => {
-        const years = Array.from({ length: 5 }, (_, i) => getYear(new Date()) - 2 + i);
-        const months = Array.from({ length: 12 }, (_, i) => setMonth(new Date(), i));
+        return Object.entries(rounds).sort(([keyA, valA], [keyB, valB]) => {
+            if (keyA === 'individual') return 1;
+            if (keyB === 'individual') return -1;
+            return valB.date.getTime() - valA.date.getTime();
+        });
 
-        return (
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="flex items-center gap-2">
-                        {format(displayMonth, "LLLL yyyy")}
-                        <ChevronDown className="h-4 w-4" />
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                    {years.map(year => (
-                         <DropdownMenuSub key={year}>
-                            <DropdownMenuSubTrigger>
-                                <span>{year + 543}</span>
-                            </DropdownMenuSubTrigger>
-                            <DropdownMenuPortal>
-                                <DropdownMenuSubContent>
-                                    {months.map(month => (
-                                        <DropdownMenuItem 
-                                            key={getMonth(month)} 
-                                            onClick={() => {
-                                                const newDate = new Date(year, getMonth(month), 1);
-                                                setDisplayMonth(newDate);
-                                            }}
-                                        >
-                                            {format(month, "LLLL")}
-                                        </DropdownMenuItem>
-                                    ))}
-                                </DropdownMenuSubContent>
-                             </DropdownMenuPortal>
-                        </DropdownMenuSub>
-                    ))}
-                </DropdownMenuContent>
-            </DropdownMenu>
-        );
-    };
+    }, [stockItems, stockLogs, searchQuery]);
 
     return (
         <div className="flex min-h-screen w-full flex-col bg-muted/40 print:bg-white">
@@ -440,13 +398,12 @@ export default function MeatStockPage() {
                     <h1 className="text-xl font-bold tracking-tight">ຈັດການສະຕັອກ (ທຸລະກິດຊີ້ນ)</h1>
                 </div>
                  <div className="ml-auto flex items-center gap-2">
-                    <Button variant="outline" size="sm" onClick={handlePrint}><Printer className="mr-2 h-4 w-4" />ພິມ</Button>
                     <AddSlaughterRoundDialog onAddMultipleItems={addMultipleMeatStockItems} />
                     <AddItemDialog onAddItem={addMeatStockItem} />
                 </div>
             </header>
             <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-                 <div className="grid gap-4 md:grid-cols-2 print:hidden">
+                 <div className="grid gap-4 md:grid-cols-2">
                      <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">ມູນຄ່າສະຕັອກທັງໝົດ</CardTitle>
@@ -469,112 +426,88 @@ export default function MeatStockPage() {
                     </Card>
                 </div>
                 <Card>
-                    <CardHeader className="print:hidden">
+                    <CardHeader>
                         <div className="flex justify-between items-center">
                             <div>
                                 <CardTitle>ລາຍການສິນຄ້າໃນຄັງ</CardTitle>
-                                <CardDescription>ຕິດຕາມ ແລະ ຈັດການສະຕັອກຊີ້ນຂອງທ່ານ</CardDescription>
+                                <CardDescription>ກຸ່ມສິນຄ້າຕາມຮອບຂ້າ. ກົດເພື່ອເປີດ-ປິດລາຍການ.</CardDescription>
                             </div>
-                             <div className="flex items-center gap-4">
-                                <div className="relative">
-                                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                                    <Input
-                                    type="search"
-                                    placeholder="ຄົ້ນຫາ..."
-                                    className="pl-8 sm:w-[300px] md:w-[200px] lg:w-[300px]"
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    />
-                                </div>
-                                <MonthYearSelector />
+                             <div className="relative">
+                                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                type="search"
+                                placeholder="ຄົ້ນຫາ..."
+                                className="pl-8 sm:w-[300px] md:w-[200px] lg:w-[300px]"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                />
                             </div>
                         </div>
                     </CardHeader>
                     <CardContent>
-                        <div className="hidden print:block text-center mb-4">
-                            <h1 className="text-xl font-bold">ລາຍງານສະຕັອກສິນຄ້າ (ທຸລະກິດຊີ້ນ)</h1>
-                            <p className="text-sm">ປະຈຳເດືອນ {format(displayMonth, 'LLLL yyyy')}</p>
-                        </div>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead className="w-[50px] print:hidden">
-                                        <Checkbox
-                                            onCheckedChange={(checked) => handleSelectAll(!!checked)}
-                                            checked={Object.keys(selectedItems).length > 0 && Object.keys(selectedItems).length === filteredStockItems.length && filteredStockItems.length > 0}
-                                            indeterminate={Object.keys(selectedItems).length > 0 && Object.keys(selectedItems).length < filteredStockItems.length}
-                                        />
-                                    </TableHead>
-                                    <TableHead>SKU</TableHead>
-                                    <TableHead>ຊື່ສິນຄ້າ</TableHead>
-                                    <TableHead className="text-right">ຂະໜາດບັນຈຸ (kg/ຖົງ)</TableHead>
-                                    <TableHead className="text-right">ຮັບເຂົ້າ (ຖົງ)</TableHead>
-                                    <TableHead className="text-right">ຂາຍອອກ (ຖົງ)</TableHead>
-                                    <TableHead className="text-right">ຈຳນວນຄົງເຫຼືອ (ຖົງ)</TableHead>
-                                    <TableHead className="text-right">ລວມທັງໝົດ (kg)</TableHead>
-                                    <TableHead className="text-right print:hidden">ມູນຄ່າລວມ</TableHead>
-                                    <TableHead className="text-right print:hidden">ມູນຄ່າລວມຂາຍໄດ້</TableHead>
-                                    <TableHead className="text-center print:hidden">ຈັດການ</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {filteredStockItems.length > 0 ? filteredStockItems.map(item => {
-                                    const movements = itemMovement[item.id] || { stockIn: 0, stockOut: 0 };
-                                    const totalUnits = item.currentStock * item.packageSize;
-                                    const totalCostValue = item.costPrice * totalUnits;
-                                    const totalSaleValueItem = item.sellingPrice * totalUnits;
-                                    const isSelected = selectedItems[item.id] || false;
-                                    return (
-                                        <TableRow key={item.id} data-state={isSelected ? "selected" : undefined} className={(Object.keys(selectedItems).length > 0 && !isSelected) ? 'print:hidden' : ''}>
-                                            <TableCell className="print:hidden">
-                                                <Checkbox
-                                                    checked={isSelected}
-                                                    onCheckedChange={(checked) => handleSelectItem(item.id, !!checked)}
-                                                />
-                                            </TableCell>
-                                            <TableCell className="font-mono">{item.sku}</TableCell>
-                                            <TableCell className="font-medium hover:underline">
-                                                <Link href={`/meat-business/stock/${item.id}`}>
-                                                   {item.name}
-                                                </Link>
-                                            </TableCell>
-                                            <TableCell className="text-right">{item.packageSize}</TableCell>
-                                            <TableCell className="text-right text-green-600">{movements.stockIn}</TableCell>
-                                            <TableCell className="text-right text-red-600">{movements.stockOut}</TableCell>
-                                            <TableCell className="text-right font-bold">{item.currentStock}</TableCell>
-                                            <TableCell className="text-right font-bold text-blue-600">{totalUnits.toFixed(2)}</TableCell>
-                                            <TableCell className="text-right print:hidden">{formatCurrency(totalCostValue)}</TableCell>
-                                            <TableCell className="text-right print:hidden">{formatCurrency(totalSaleValueItem)}</TableCell>
-                                            <TableCell className="text-center space-x-2 print:hidden">
-                                                <StockAdjustmentDialog item={item} onAdjust={updateStockQuantity} type="stock-in" />
-                                                <StockAdjustmentDialog item={item} onAdjust={updateStockQuantity} type="sale" />
-                                                 <AlertDialog>
-                                                    <AlertDialogTrigger asChild>
-                                                        <Button variant="ghost" size="icon"><Trash2 className="h-4 w-4 text-red-500" /></Button>
-                                                    </AlertDialogTrigger>
-                                                    <AlertDialogContent>
-                                                        <AlertDialogHeader>
-                                                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                                            <AlertDialogDescription>
-                                                               This action cannot be undone. This will permanently delete the item and its logs.
-                                                            </AlertDialogDescription>
-                                                        </AlertDialogHeader>
-                                                        <AlertDialogFooter>
-                                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                            <AlertDialogAction onClick={() => deleteMeatStockItem(item.id)}>Delete</AlertDialogAction>
-                                                        </AlertDialogFooter>
-                                                    </AlertDialogContent>
-                                                </AlertDialog>
-                                            </TableCell>
-                                        </TableRow>
-                                    )
-                                }) : (
-                                    <TableRow>
-                                        <TableCell colSpan={11} className="text-center h-24">ບໍ່ມີຂໍ້ມູນສິນຄ້າ</TableCell>
-                                    </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
+                        {slaughterRounds.length > 0 ? (
+                        <Accordion type="single" collapsible className="w-full" defaultValue={slaughterRounds[0]?.[0]}>
+                            {slaughterRounds.map(([detail, round]) => (
+                                <AccordionItem value={detail} key={detail}>
+                                    <AccordionTrigger className="text-lg font-semibold bg-muted/50 px-4 rounded-md">
+                                        {detail === 'individual' ? 'ສິນຄ້າອື່ນໆ' : detail}
+                                    </AccordionTrigger>
+                                    <AccordionContent className="pt-2">
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead>SKU</TableHead>
+                                                    <TableHead>ຊື່ສິນຄ້າ</TableHead>
+                                                    <TableHead className="text-right">ຂະໜາດ (kg)</TableHead>
+                                                    <TableHead className="text-right">ຄົງເຫຼືອ (ຖົງ)</TableHead>
+                                                    <TableHead className="text-right">ລວມ (kg)</TableHead>
+                                                    <TableHead className="text-right">ມູນຄ່າລວມ</TableHead>
+                                                    <TableHead className="text-center">ຈັດການ</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {round.items.map(item => {
+                                                    const totalUnits = item.currentStock * item.packageSize;
+                                                    const totalCostValue = item.costPrice * totalUnits;
+                                                    return (
+                                                        <TableRow key={item.id}>
+                                                            <TableCell className="font-mono">{item.sku}</TableCell>
+                                                            <TableCell className="font-medium hover:underline">
+                                                                <Link href={`/meat-business/stock/${item.id}`}>{item.name}</Link>
+                                                            </TableCell>
+                                                            <TableCell className="text-right">{item.packageSize}</TableCell>
+                                                            <TableCell className="text-right font-bold">{item.currentStock}</TableCell>
+                                                            <TableCell className="text-right font-bold text-blue-600">{totalUnits.toFixed(2)}</TableCell>
+                                                            <TableCell className="text-right">{formatCurrency(totalCostValue)}</TableCell>
+                                                            <TableCell className="text-center space-x-2">
+                                                                <StockAdjustmentDialog item={item} onAdjust={updateStockQuantity} type="stock-in" />
+                                                                <StockAdjustmentDialog item={item} onAdjust={updateStockQuantity} type="sale" />
+                                                                <AlertDialog>
+                                                                    <AlertDialogTrigger asChild><Button variant="ghost" size="icon"><Trash2 className="h-4 w-4 text-red-500" /></Button></AlertDialogTrigger>
+                                                                    <AlertDialogContent>
+                                                                        <AlertDialogHeader>
+                                                                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                                                            <AlertDialogDescription>This action cannot be undone. This will permanently delete the item and its logs.</AlertDialogDescription>
+                                                                        </AlertDialogHeader>
+                                                                        <AlertDialogFooter>
+                                                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                            <AlertDialogAction onClick={() => deleteMeatStockItem(item.id)}>Delete</AlertDialogAction>
+                                                                        </AlertDialogFooter>
+                                                                    </AlertDialogContent>
+                                                                </AlertDialog>
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    )
+                                                })}
+                                            </TableBody>
+                                        </Table>
+                                    </AccordionContent>
+                                </AccordionItem>
+                            ))}
+                        </Accordion>
+                        ) : (
+                             <div className="text-center h-24 content-center">ບໍ່ມີຂໍ້ມູນສິນຄ້າ</div>
+                        )}
                     </CardContent>
                 </Card>
             </main>

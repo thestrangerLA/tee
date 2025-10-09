@@ -1,4 +1,5 @@
 
+
 import { db } from '@/lib/firebase';
 import type { MeatStockItem, MeatStockLog } from '@/lib/types';
 import { 
@@ -19,6 +20,7 @@ import {
     getDoc,
     increment
 } from 'firebase/firestore';
+import { format } from 'date-fns';
 
 const meatStockCollectionRef = collection(db, 'meatStockItems');
 const meatStockLogCollectionRef = collection(db, 'meatStockLogs');
@@ -116,12 +118,13 @@ export const addMeatStockItem = async (item: Omit<MeatStockItem, 'id' | 'created
     return docRef.id;
 };
 
-export const addMultipleMeatStockItems = async (items: Omit<MeatStockItem, 'id' | 'createdAt'>[]): Promise<void> => {
+export const addMultipleMeatStockItems = async (items: Omit<MeatStockItem, 'id' | 'createdAt'>[], roundDate: Date): Promise<void> => {
     const batch = writeBatch(db);
+    const detailText = `ຮອບຂ້າທີ່ ${format(roundDate, 'yyyy-MM-dd')}`;
 
     items.forEach(item => {
         const itemDocRef = doc(meatStockCollectionRef);
-        batch.set(itemDocRef, { ...item, createdAt: serverTimestamp() });
+        batch.set(itemDocRef, { ...item, createdAt: Timestamp.fromDate(roundDate) });
 
         if (item.currentStock > 0) {
             const logDocRef = doc(meatStockLogCollectionRef);
@@ -130,8 +133,8 @@ export const addMultipleMeatStockItems = async (items: Omit<MeatStockItem, 'id' 
                 change: item.currentStock,
                 newStock: item.currentStock,
                 type: 'stock-in',
-                detail: 'Slaughter Round',
-                createdAt: serverTimestamp()
+                detail: detailText,
+                createdAt: Timestamp.fromDate(roundDate)
             });
         }
     });
