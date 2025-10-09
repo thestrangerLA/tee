@@ -41,6 +41,16 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuPortal,
+  DropdownMenuSubContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -51,7 +61,7 @@ import { useToast } from "@/hooks/use-toast";
 import type { MeatStockItem, MeatStockLog } from '@/lib/types';
 import { listenToMeatStockItems, addMeatStockItem, deleteMeatStockItem, updateStockQuantity, listenToAllMeatStockLogs, addMultipleMeatStockItems } from '@/services/meatStockService';
 import { useClientRouter } from '@/hooks/useClientRouter';
-import { format } from 'date-fns';
+import { format, isWithinInterval, startOfMonth, endOfMonth, getYear, setMonth, getMonth, parse } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
 
 
@@ -288,6 +298,7 @@ export default function MeatStockPage() {
     const [stockItems, setStockItems] = useState<MeatStockItem[]>([]);
     const [stockLogs, setStockLogs] = useState<MeatStockLog[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
+    const [displayMonth, setDisplayMonth] = useState<Date>(new Date());
     
     useEffect(() => {
         const unsubscribeItems = listenToMeatStockItems(setStockItems);
@@ -308,10 +319,12 @@ export default function MeatStockPage() {
 
     const slaughterRounds = useMemo(() => {
         const rounds: Record<string, { date: Date, items: MeatStockItem[] }> = {};
+        const start = startOfMonth(displayMonth);
+        const end = endOfMonth(displayMonth);
         
         const itemLogMap: Record<string, string> = {};
         stockLogs.filter(log => log.type === 'stock-in' && log.detail.startsWith('ຮອບຂ້າທີ່')).forEach(log => {
-            if (!itemLogMap[log.itemId]) { // Only map the first (creation) log
+            if (!itemLogMap[log.itemId]) {
                 itemLogMap[log.itemId] = log.detail;
             }
         });
@@ -324,39 +337,97 @@ export default function MeatStockPage() {
         filteredItems.forEach(item => {
             if (item.name.startsWith('ຮອບຂ້າ') && item.currentStock === 0 && item.packageSize === 0) {
                 const roundName = item.name.replace('ຮອບຂ້າ ', 'ຮອບຂ້າທີ່ ');
-                if (!rounds[roundName]) {
-                    rounds[roundName] = { date: item.createdAt, items: [] };
+                 if (!rounds[roundName]) {
+                    const dateMatch = roundName.match(/(\d{2}\/\d{2}\/\d{4})/);
+                    const roundDate = dateMatch ? parse(dateMatch[1], 'dd/MM/yyyy', new Date()) : item.createdAt;
+                    if (isWithinInterval(roundDate, { start, end })) {
+                        rounds[roundName] = { date: roundDate, items: [] };
+                    }
                 }
                 return;
             }
 
             const detail = itemLogMap[item.id];
             if (detail) {
-                if (!rounds[detail]) {
-                    rounds[detail] = { date: item.createdAt, items: [] };
+                 if (!rounds[detail]) {
+                    const dateMatch = detail.match(/(\d{2}\/\d{2}\/\d{4})/);
+                    const roundDate = dateMatch ? parse(dateMatch[1], 'dd/MM/yyyy', new Date()) : item.createdAt;
+                    if (isWithinInterval(roundDate, { start, end })) {
+                         rounds[detail] = { date: roundDate, items: [] };
+                    } else {
+                        return; // Skip if not in the selected month
+                    }
                 }
-                rounds[detail].items.push(item);
-            } else {
+                if (rounds[detail]) {
+                    rounds[detail].items.push(item);
+                }
+            } else if (isWithinInterval(item.createdAt, { start, end })) { // Handle items without a slaughter round detail
                  if (!rounds['ຮອບຂ້າທີ່ 1 05/10/25']) {
-                    rounds['ຮອບຂ້າທີ່ 1 05/10/25'] = { date: new Date(0), items: [] };
+                    rounds['ຮອບຂ້າທີ່ 1 05/10/25'] = { date: new Date(2025, 9, 5), items: [] };
                 }
                 rounds['ຮອບຂ້າທີ່ 1 05/10/25'].items.push(item);
             }
         });
 
+        // Ensure all rounds for the month are included, even if they have no items yet.
         stockLogs.forEach(log => {
              if (log.detail.startsWith('ຮອບຂ້າທີ່') && !rounds[log.detail]) {
-                rounds[log.detail] = { date: log.createdAt, items: [] };
+                const dateMatch = log.detail.match(/(\d{2}\/\d{2}\/\d{4})/);
+                const roundDate = dateMatch ? parse(dateMatch[1], 'dd/MM/yyyy', new Date()) : log.createdAt;
+                 if (isWithinInterval(roundDate, { start, end })) {
+                    rounds[log.detail] = { date: roundDate, items: [] };
+                }
             }
         });
 
-        return Object.entries(rounds).sort(([keyA, valA], [keyB, valB]) => {
-            if (keyA === 'ຮອບຂ້າທີ່ 1 05/10/25') return 1;
-            if (keyB === 'ຮອບຂ້າທີ່ 1 05/10/25') return -1;
+
+        return Object.entries(rounds).sort(([, valA], [, valB]) => {
             return valB.date.getTime() - valA.date.getTime();
         });
 
-    }, [stockItems, stockLogs, searchQuery]);
+    }, [stockItems, stockLogs, searchQuery, displayMonth]);
+    
+    const MonthYearSelector = () => {
+        const years = Array.from({ length: 5 }, (_, i) => getYear(new Date()) - 2 + i);
+        years.push(2025, 2026);
+        const uniqueYears = [...new Set(years)].sort();
+        const months = Array.from({ length: 12 }, (_, i) => setMonth(new Date(), i));
+
+        return (
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="flex items-center gap-2">
+                        {format(displayMonth, "LLLL yyyy")}
+                        <ChevronDown className="h-4 w-4" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    {uniqueYears.map(year => (
+                         <DropdownMenuSub key={year}>
+                            <DropdownMenuSubTrigger>
+                                <span>{year + 543}</span>
+                            </DropdownMenuSubTrigger>
+                            <DropdownMenuPortal>
+                                <DropdownMenuSubContent>
+                                    {months.map(month => (
+                                        <DropdownMenuItem 
+                                            key={getMonth(month)} 
+                                            onClick={() => {
+                                                const newDate = new Date(year, getMonth(month), 1);
+                                                setDisplayMonth(newDate);
+                                            }}
+                                        >
+                                            {format(month, "LLLL")}
+                                        </DropdownMenuItem>
+                                    ))}
+                                </DropdownMenuSubContent>
+                             </DropdownMenuPortal>
+                        </DropdownMenuSub>
+                    ))}
+                </DropdownMenuContent>
+            </DropdownMenu>
+        );
+    };
 
     return (
         <div className="flex min-h-screen w-full flex-col bg-muted/40 print:bg-white">
@@ -372,6 +443,7 @@ export default function MeatStockPage() {
                     <h1 className="text-xl font-bold tracking-tight">ຈັດການສະຕັອກ (ທຸລະກິດຊີ້ນ)</h1>
                 </div>
                  <div className="ml-auto flex items-center gap-2">
+                    <MonthYearSelector />
                     <AddSlaughterRoundDialog onAddMultipleItems={addMultipleMeatStockItems} />
                     <Button onClick={() => window.print()} variant="outline" size="sm">
                         <Printer className="mr-2 h-4 w-4" />
@@ -406,7 +478,7 @@ export default function MeatStockPage() {
                     <CardHeader>
                         <div className="flex justify-between items-center">
                             <div>
-                                <CardTitle>ລາຍການສິນຄ້າໃນຄັງ</CardTitle>
+                                <CardTitle>ລາຍການສິນຄ້າໃນຄັງ ({slaughterRounds.length} ຮອບຂ້າ)</CardTitle>
                                 <CardDescription>ກຸ່ມສິນຄ້າຕາມຮອບຂ້າ. ກົດເພື່ອເປີດ-ປິດລາຍການ.</CardDescription>
                             </div>
                              <div className="relative">
@@ -492,7 +564,7 @@ export default function MeatStockPage() {
                             ))}
                         </Accordion>
                         ) : (
-                             <div className="text-center h-24 content-center">ບໍ່ມີຂໍ້ມູນສິນຄ້າ</div>
+                             <div className="text-center h-24 content-center">ບໍ່ມີຂໍ້ມູນສິນຄ້າໃນເດືອນນີ້</div>
                         )}
                     </CardContent>
                 </Card>
@@ -500,3 +572,4 @@ export default function MeatStockPage() {
         </div>
     );
 }
+
