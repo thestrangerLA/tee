@@ -98,9 +98,10 @@ export const listenToMeatStockLogs = (itemId: string, callback: (logs: any[]) =>
     return unsubscribe;
 };
 
-export const addMeatStockItem = async (item: Omit<MeatStockItem, 'id' | 'createdAt'>, detail?: string): Promise<string> => {
+export const addMeatStockItem = async (item: Omit<MeatStockItem, 'id' | 'createdAt' | 'isFinished'>, detail?: string): Promise<string> => {
     const docRef = await addDoc(meatStockCollectionRef, {
         ...item,
+        isFinished: item.isFinished || false,
         createdAt: serverTimestamp()
     });
 
@@ -118,7 +119,7 @@ export const addMeatStockItem = async (item: Omit<MeatStockItem, 'id' | 'created
     return docRef.id;
 };
 
-export const addMultipleMeatStockItems = async (items: Omit<MeatStockItem, 'id' | 'createdAt'>[], roundDate: Date): Promise<void> => {
+export const addMultipleMeatStockItems = async (items: Omit<MeatStockItem, 'id' | 'createdAt'|'isFinished'>[], roundDate: Date): Promise<void> => {
     const batch = writeBatch(db);
     const detailText = `ຮອບຂ້າທີ່ ${format(roundDate, 'dd/MM/yyyy')}`;
 

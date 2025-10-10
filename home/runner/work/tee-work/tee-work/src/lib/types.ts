@@ -135,13 +135,16 @@ export interface MeatStockLog {
 
 export type CurrencyValues = {
     kip: number;
+    baht: number;
+    usd: number;
+    cny: number;
 };
 
 export interface TourAccountSummary {
     id: string;
-    capital: number;
-    cash: number;
-    transfer: number;
+    capital: CurrencyValues;
+    cash: CurrencyValues;
+    transfer: CurrencyValues;
 }
 
 export interface DocumentAccountSummary extends TourAccountSummary {}
