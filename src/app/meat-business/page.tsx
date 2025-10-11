@@ -23,46 +23,7 @@ export default function MeatBusinessPage() {
         </div>
       </header>
       <main className="flex flex-1 flex-col items-center justify-center gap-8 p-4">
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5 w-full max-w-7xl">
-          <Link href="/meat-business/accountancy">
-            <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-2xl font-bold font-headline">ຈັດການບັນຊີ</CardTitle>
-                <Landmark className="h-8 w-8 text-primary" />
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  ຕິດຕາມລາຍຮັບ-ລາຍຈ່າຍ และ ສະຫຼຸບພາບລວມການເງິນ
-                </p>
-              </CardContent>
-            </Card>
-          </Link>
-          <Link href="/meat-business/stock">
-            <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-2xl font-bold font-headline">ຈັດການສະຕັອກ</CardTitle>
-                <Package className="h-8 w-8 text-primary" />
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  ຈັດການສະຕັອກສິນຄ້າ ແລະ ຕິດຕາມລະດັບສະຕັອກ
-                </p>
-              </CardContent>
-            </Card>
-          </Link>
-           <Link href="/meat-business/reports">
-            <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-2xl font-bold font-headline">ສະຫຼຸບຍອດທຸລະກິດ</CardTitle>
-                <FilePieChart className="h-8 w-8 text-primary" />
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  ເບິ່ງສະຫຼຸບຜົນປະກອບການ ແລະ ປະຫວັດຮັບ-ຈ່າຍທົ່ວໄປ
-                </p>
-              </CardContent>
-            </Card>
-          </Link>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2 w-full max-w-4xl">
            <Link href="/meat-business/sps-meat">
             <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
