@@ -104,16 +104,7 @@ export default function Home() {
                 ) : <p className="text-muted-foreground">ບໍ່ມີຂໍ້ມູນ</p>}
             </BusinessCard>
 
-            <BusinessCard title="SPS Meat" href="/meat-business" icon={<Drumstick className="h-8 w-8 text-primary" />}>
-                 {loading ? <Skeleton className="h-24 w-full" /> : meatSummary ? (
-                    <div className="space-y-1 text-sm">
-                       <p className="font-semibold text-muted-foreground">ຍອດເງິນລວມ:</p>
-                       <p>KIP: <span className="font-mono font-semibold">{formatCurrency(meatTotal)}</span></p>
-                    </div>
-                ) : <p className="text-muted-foreground">ບໍ່ມີຂໍ້ມູນ</p>}
-            </BusinessCard>
-
-            <BusinessCard title="SAKARIN Meat" href="/meat-business" icon={<Drumstick className="h-8 w-8 text-primary" />}>
+            <BusinessCard title="ທຸລະກິດຊີ້ນ" href="/meat-business" icon={<Drumstick className="h-8 w-8 text-primary" />}>
                  {loading ? <Skeleton className="h-24 w-full" /> : meatSummary ? (
                     <div className="space-y-1 text-sm">
                        <p className="font-semibold text-muted-foreground">ຍອດເງິນລວມ:</p>
@@ -134,7 +125,7 @@ export default function Home() {
              <BusinessCard title="ທຸລະກິດ ເອກະສານ" href="/documents" icon={<FileText className="h-8 w-8 text-primary" />}>
                 {loading ? <Skeleton className="h-24 w-full" /> : docSummary ? (
                     <div className="space-y-1 text-sm">
-                       <p className="font-semibold text-muted-foreground">ຍອດເງິນລວມ:</p>
+                       <p className="font-semibold text-muted-foreground">ຍอดເງິນລວມ:</p>
                        <p>KIP: <span className="font-mono font-semibold">{formatCurrency(docTotals.kip)}</span></p>
                        <p>THB: <span className="font-mono font-semibold">{formatCurrency(docTotals.baht)}</span></p>
                        <p>USD: <span className="font-mono font-semibold">{formatCurrency(docTotals.usd)}</span></p>
