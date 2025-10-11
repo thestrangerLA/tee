@@ -116,7 +116,11 @@ export default function MeatStockClientPage({ initialItem }: { initialItem: Meat
                     <CardHeader>
                         <CardTitle>ລາຍລະອຽດສິນຄ້າ</CardTitle>
                     </CardHeader>
-                    <CardContent className="grid md:grid-cols-3 gap-6">
+                    <CardContent className="grid md:grid-cols-3 lg:grid-cols-4 gap-6">
+                        <div className="grid gap-2">
+                            <Label>SKU</Label>
+                            <Input value={editData.sku || ''} onChange={(e) => setEditData({...editData, sku: e.target.value})} disabled={!isEditing} />
+                        </div>
                         <div className="grid gap-2">
                             <Label>ຊື່ສິນຄ້າ</Label>
                             <Input value={editData.name || ''} onChange={(e) => setEditData({...editData, name: e.target.value})} disabled={!isEditing} />
