@@ -1,5 +1,4 @@
 
-
 "use client"
 
 import { useState, useEffect, useMemo } from 'react';
@@ -60,10 +59,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import type { MeatStockItem, MeatStockLog } from '@/lib/types';
-import { listenToMeatStockItems, addMeatStockItem, deleteMeatStockItem, updateStockQuantity, listenToAllMeatStockLogs, addMultipleMeatStockItems, updateMeatStockItem } from '@/services/meatStockService';
+import { listenToSpsMeatStockItems, addSpsMeatStockItem, deleteSpsMeatStockItem, updateSpsStockQuantity, listenToAllSpsMeatStockLogs, addMultipleSpsMeatStockItems, updateSpsMeatStockItem } from '@/services/spsMeatStockService';
 import { useClientRouter } from '@/hooks/useClientRouter';
 import { format, isWithinInterval, startOfMonth, endOfMonth, getYear, setMonth, getMonth, parse } from 'date-fns';
-import { v4 as uuidv4 } from 'uuid';
 
 
 const formatCurrency = (value: number) => {
@@ -175,7 +173,7 @@ const AddSlaughterRoundDialog = ({ onAddMultipleItems }: { onAddMultipleItems: (
                 currentStock: 0,
                 isFinished: false,
             }
-            await addMeatStockItem(dummyItem, `ຮອບຂ້າທີ່ ${format(roundDate, 'dd/MM/yyyy')}`);
+            await addSpsMeatStockItem(dummyItem, `ຮອບຂ້າທີ່ ${format(roundDate, 'dd/MM/yyyy')}`);
 
             toast({ title: "ສຳເລັດ", description: `ສ້າງຮອບຂ້າ ${format(roundDate, 'dd/MM/yyyy')} ສຳເລັດແລ້ວ.` });
             setOpen(false);
@@ -296,15 +294,15 @@ const StockAdjustmentDialog = ({
     )
 }
 
-export default function MeatStockPage() {
+export default function SpsMeatStockPage() {
     const [stockItems, setStockItems] = useState<MeatStockItem[]>([]);
     const [stockLogs, setStockLogs] = useState<MeatStockLog[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [displayMonth, setDisplayMonth] = useState<Date>(new Date());
     
     useEffect(() => {
-        const unsubscribeItems = listenToMeatStockItems(setStockItems);
-        const unsubscribeLogs = listenToAllMeatStockLogs(setStockLogs);
+        const unsubscribeItems = listenToSpsMeatStockItems(setStockItems);
+        const unsubscribeLogs = listenToAllSpsMeatStockLogs(setStockLogs);
         return () => {
             unsubscribeItems();
             unsubscribeLogs();
@@ -395,7 +393,7 @@ export default function MeatStockPage() {
         });
 
     }, [stockItems, stockLogs, searchQuery, displayMonth]);
-
+    
     const aggregatedStock = useMemo(() => {
         const summary: Record<string, { name: string, stock: number, totalKg: number, packageSize: number }> = {};
         
@@ -420,9 +418,9 @@ export default function MeatStockPage() {
             ...data
         })).sort((a,b) => a.sku.localeCompare(b.sku));
     }, [stockItems]);
-    
+
     const handleSetRoundFinished = async (roundId: string, isFinished: boolean) => {
-        await updateMeatStockItem(roundId, { isFinished });
+        await updateSpsMeatStockItem(roundId, { isFinished });
     };
 
     const MonthYearSelector = () => {
@@ -471,18 +469,18 @@ export default function MeatStockPage() {
         <div className="flex min-h-screen w-full flex-col bg-muted/40 print:bg-white">
             <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 print:hidden">
                 <Button variant="outline" size="icon" className="h-8 w-8" asChild>
-                    <Link href="/meat-business">
+                    <Link href="/meat-business/sps-meat">
                         <ArrowLeft className="h-4 w-4" />
                         <span className="sr-only">ກັບໄປໜ້າຫຼັກ</span>
                     </Link>
                 </Button>
                 <div className="flex items-center gap-2">
                     <Package className="h-6 w-6 text-primary" />
-                    <h1 className="text-xl font-bold tracking-tight">ຈັດການສະຕັອກ (ທຸລະກິດຊີ້ນ)</h1>
+                    <h1 className="text-xl font-bold tracking-tight">ຈັດການສະຕັອກ (SPS Meat)</h1>
                 </div>
                  <div className="ml-auto flex items-center gap-2">
                     <MonthYearSelector />
-                    <AddSlaughterRoundDialog onAddMultipleItems={addMultipleMeatStockItems} />
+                    <AddSlaughterRoundDialog onAddMultipleItems={addMultipleSpsMeatStockItems} />
                     <Button onClick={() => window.print()} variant="outline" size="sm">
                         <Printer className="mr-2 h-4 w-4" />
                         ພິມ
@@ -512,7 +510,7 @@ export default function MeatStockPage() {
                         </CardContent>
                     </Card>
                 </div>
-                <Card>
+                 <Card>
                     <CardHeader>
                         <CardTitle>ລວມສິນຄ້າທັງໝົດ</CardTitle>
                         <CardDescription>ລວມຍອດສິນຄ້າຄົງເຫຼືອທັງໝົດໂດຍບໍ່ແຍກຮອບຂ້າ</CardDescription>
@@ -576,7 +574,7 @@ export default function MeatStockPage() {
                                                     <Checkbox id={`finish-${round.id}`} checked={round.isFinished} onCheckedChange={(checked) => handleSetRoundFinished(round.id, !!checked)} />
                                                     <Label htmlFor={`finish-${round.id}`}>ສຳເລັດ</Label>
                                                 </div>
-                                                <AddItemDialog onAddItem={addMeatStockItem} slaughterRoundDetail={detail} />
+                                                <AddItemDialog onAddItem={addSpsMeatStockItem} slaughterRoundDetail={detail} />
                                             </div>
                                         </div>
                                     </AccordionTrigger>
@@ -601,15 +599,15 @@ export default function MeatStockPage() {
                                                         <TableRow key={item.id} className={item.currentStock === 0 ? 'bg-red-100' : ''}>
                                                             <TableCell className="font-mono">{item.sku}</TableCell>
                                                             <TableCell className="font-medium hover:underline">
-                                                                <Link href={`/meat-business/stock/${item.id}`}>{item.name}</Link>
+                                                                <Link href={`/meat-business/sps-meat/stock/${item.id}`}>{item.name}</Link>
                                                             </TableCell>
                                                             <TableCell className="text-right">{item.packageSize}</TableCell>
                                                             <TableCell className="text-right font-bold">{item.currentStock}</TableCell>
                                                             <TableCell className="text-right font-bold text-blue-600">{totalUnits.toFixed(2)}</TableCell>
                                                             <TableCell className="text-right">{formatCurrency(totalCostValue)}</TableCell>
                                                             <TableCell className="text-center space-x-2">
-                                                                <StockAdjustmentDialog item={item} onAdjust={updateStockQuantity} type="stock-in" />
-                                                                <StockAdjustmentDialog item={item} onAdjust={updateStockQuantity} type="sale" />
+                                                                <StockAdjustmentDialog item={item} onAdjust={updateSpsStockQuantity} type="stock-in" />
+                                                                <StockAdjustmentDialog item={item} onAdjust={updateSpsStockQuantity} type="sale" />
                                                                 <AlertDialog>
                                                                     <AlertDialogTrigger asChild><Button variant="ghost" size="icon"><Trash2 className="h-4 w-4 text-red-500" /></Button></AlertDialogTrigger>
                                                                     <AlertDialogContent>
@@ -619,7 +617,7 @@ export default function MeatStockPage() {
                                                                         </AlertDialogHeader>
                                                                         <AlertDialogFooter>
                                                                             <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                                            <AlertDialogAction onClick={() => deleteMeatStockItem(item.id)}>Delete</AlertDialogAction>
+                                                                            <AlertDialogAction onClick={() => deleteSpsMeatStockItem(item.id)}>Delete</AlertDialogAction>
                                                                         </AlertDialogFooter>
                                                                     </AlertDialogContent>
                                                                 </AlertDialog>
