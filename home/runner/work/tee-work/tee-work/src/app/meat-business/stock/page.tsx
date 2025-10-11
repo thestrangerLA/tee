@@ -585,8 +585,7 @@ export default function MeatStockPage() {
                                                     <TableHead className="text-right">ຄົງເຫຼືອ (ຖົງ)</TableHead>
                                                     <TableHead className="text-right">ລວມ (kg)</TableHead>
                                                     <TableHead className="text-right">ມູນຄ່າລວມ</TableHead>
-                                                    <TableHead className="text-center w-[100px]">ສຳເລັດ</TableHead>
-                                                    <TableHead className="text-center w-[200px]">ຈັດການ</TableHead>
+                                                    <TableHead className="text-center w-[250px]">ຈັດການ</TableHead>
                                                 </TableRow>
                                             </TableHeader>
                                             <TableBody>
@@ -603,10 +602,11 @@ export default function MeatStockPage() {
                                                             <TableCell className="text-right font-bold">{item.currentStock}</TableCell>
                                                             <TableCell className="text-right font-bold text-blue-600">{totalUnits.toFixed(2)}</TableCell>
                                                             <TableCell className="text-right">{formatCurrency(totalCostValue)}</TableCell>
-                                                            <TableCell className="text-center">
-                                                                <Checkbox checked={item.isFinished} onCheckedChange={(checked) => handleSetItemFinished(item.id, !!checked)} />
-                                                            </TableCell>
-                                                            <TableCell className="text-center space-x-2">
+                                                            <TableCell className="text-center space-x-1">
+                                                                <div className="flex items-center justify-center gap-1">
+                                                                    <Checkbox id={`finish-item-${item.id}`} checked={item.isFinished} onCheckedChange={(checked) => handleSetItemFinished(item.id, !!checked)} />
+                                                                    <Label htmlFor={`finish-item-${item.id}`} className="text-xs">ສຳເລັດ</Label>
+                                                                </div>
                                                                 <StockAdjustmentDialog item={item} onAdjust={updateStockQuantity} type="stock-in" />
                                                                 <StockAdjustmentDialog item={item} onAdjust={updateStockQuantity} type="sale" />
                                                                 <AlertDialog>
@@ -627,7 +627,7 @@ export default function MeatStockPage() {
                                                     )
                                                 }) : (
                                                     <TableRow>
-                                                        <TableCell colSpan={8} className="text-center h-24">ບໍ່ມີສິນຄ້າໃນຮອບຂ້ານີ້</TableCell>
+                                                        <TableCell colSpan={7} className="text-center h-24">ບໍ່ມີສິນຄ້າໃນຮອບຂ້ານີ້</TableCell>
                                                     </TableRow>
                                                 )}
                                             </TableBody>
@@ -646,3 +646,6 @@ export default function MeatStockPage() {
     );
 }
 
+
+
+    
