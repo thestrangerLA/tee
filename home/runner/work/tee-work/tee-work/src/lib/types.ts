@@ -119,7 +119,7 @@ export interface MeatStockItem {
   sellingPrice: number; 
   currentStock: number; 
   createdAt: Date;
-  isFinished?: boolean; // Added for slaughter round status
+  isFinished?: boolean;
 }
 
 export interface MeatStockLog {

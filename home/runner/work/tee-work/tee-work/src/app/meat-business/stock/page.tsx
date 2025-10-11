@@ -356,14 +356,12 @@ export default function MeatStockPage() {
 
             const detail = itemLogMap[item.id];
             
-            // Check if item belongs to an existing round for the month
             if (detail && rounds[detail]) {
                 rounds[detail].items.push(item);
                 rounds[detail].totalCost += item.currentStock * item.packageSize * item.costPrice;
                 rounds[detail].totalSale += item.currentStock * item.packageSize * item.sellingPrice;
             } 
-            // Handle items created in the current month but not assigned to a slaughter round
-            else if (!detail && isWithinInterval(item.createdAt, { start, end })) {
+            else if (isWithinInterval(item.createdAt, { start, end })) { // Fallback for items created in the month without a round
                 const defaultRoundName = 'Uncategorized';
                 if (!rounds[defaultRoundName]) {
                     rounds[defaultRoundName] = { 
@@ -392,7 +390,7 @@ export default function MeatStockPage() {
     const aggregatedStock = useMemo(() => {
         const summary: Record<string, { name: string, stock: number, totalKg: number, packageSize: number }> = {};
         
-        stockItems.forEach(item => {
+        stockItems.filter(item => !item.isFinished).forEach(item => {
             if(item.packageSize === 0) return; // Skip slaughter round placeholders
 
             if (summary[item.sku]) {
@@ -416,6 +414,10 @@ export default function MeatStockPage() {
     
     const handleSetRoundFinished = async (roundId: string, isFinished: boolean) => {
         await updateMeatStockItem(roundId, { isFinished });
+    };
+
+    const handleSetItemFinished = async (itemId: string, isFinished: boolean) => {
+        await updateMeatStockItem(itemId, { isFinished });
     };
 
     const MonthYearSelector = () => {
@@ -566,8 +568,8 @@ export default function MeatStockPage() {
                                                     <span>ມູນຄ່າຂາຍ: <span className="font-semibold text-green-600">{formatCurrency(round.totalSale)}</span></span>
                                                 </div>
                                                 <div className="flex items-center space-x-2">
-                                                    <Checkbox id={`finish-${round.id}`} checked={round.isFinished} onCheckedChange={(checked) => handleSetRoundFinished(round.id, !!checked)} />
-                                                    <Label htmlFor={`finish-${round.id}`}>ສຳເລັດ</Label>
+                                                    <Checkbox id={`finish-round-${round.id}`} checked={round.isFinished} onCheckedChange={(checked) => handleSetRoundFinished(round.id, !!checked)} />
+                                                    <Label htmlFor={`finish-round-${round.id}`}>ສຳເລັດຮອບ</Label>
                                                 </div>
                                                 <AddItemDialog onAddItem={addMeatStockItem} slaughterRoundDetail={detail} />
                                             </div>
@@ -583,7 +585,8 @@ export default function MeatStockPage() {
                                                     <TableHead className="text-right">ຄົງເຫຼືອ (ຖົງ)</TableHead>
                                                     <TableHead className="text-right">ລວມ (kg)</TableHead>
                                                     <TableHead className="text-right">ມູນຄ່າລວມ</TableHead>
-                                                    <TableHead className="text-center">ຈັດການ</TableHead>
+                                                    <TableHead className="text-center w-[100px]">ສຳເລັດ</TableHead>
+                                                    <TableHead className="text-center w-[200px]">ຈັດການ</TableHead>
                                                 </TableRow>
                                             </TableHeader>
                                             <TableBody>
@@ -600,6 +603,9 @@ export default function MeatStockPage() {
                                                             <TableCell className="text-right font-bold">{item.currentStock}</TableCell>
                                                             <TableCell className="text-right font-bold text-blue-600">{totalUnits.toFixed(2)}</TableCell>
                                                             <TableCell className="text-right">{formatCurrency(totalCostValue)}</TableCell>
+                                                            <TableCell className="text-center">
+                                                                <Checkbox checked={item.isFinished} onCheckedChange={(checked) => handleSetItemFinished(item.id, !!checked)} />
+                                                            </TableCell>
                                                             <TableCell className="text-center space-x-2">
                                                                 <StockAdjustmentDialog item={item} onAdjust={updateStockQuantity} type="stock-in" />
                                                                 <StockAdjustmentDialog item={item} onAdjust={updateStockQuantity} type="sale" />
@@ -621,7 +627,7 @@ export default function MeatStockPage() {
                                                     )
                                                 }) : (
                                                     <TableRow>
-                                                        <TableCell colSpan={7} className="text-center h-24">ບໍ່ມີສິນຄ້າໃນຮອບຂ້ານີ້</TableCell>
+                                                        <TableCell colSpan={8} className="text-center h-24">ບໍ່ມີສິນຄ້າໃນຮອບຂ້ານີ້</TableCell>
                                                     </TableRow>
                                                 )}
                                             </TableBody>
@@ -639,3 +645,4 @@ export default function MeatStockPage() {
         </div>
     );
 }
+
