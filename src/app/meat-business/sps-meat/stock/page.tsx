@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import { useState, useEffect, useMemo } from 'react';
@@ -333,27 +334,33 @@ export default function SpsMeatStockPage() {
             item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             item.sku.toLowerCase().includes(searchQuery.toLowerCase())
         );
-
+        
+        // Ensure all rounds for the month are created first, even if empty
         filteredItems.forEach(item => {
-            // This is a slaughter round placeholder item
             if (item.name.startsWith('ຮອບຂ້າ') && item.packageSize === 0) {
                 const roundName = item.name.replace('ຮອບຂ້າ ', 'ຮອບຂ້າທີ່ ');
-                 if (!rounds[roundName]) {
-                    const dateMatch = roundName.match(/(\d{2}\/\d{2}\/\d{4})/);
-                    const roundDate = dateMatch ? parse(dateMatch[1], 'dd/MM/yyyy', new Date()) : item.createdAt;
-                    if (isWithinInterval(roundDate, { start, end })) {
-                        rounds[roundName] = { date: roundDate, items: [], id: item.id, isFinished: !!item.isFinished, totalCost: 0, totalSale: 0 };
-                    }
+                const dateMatch = roundName.match(/(\d{2}\/\d{2}\/\d{4})/);
+                const roundDate = dateMatch ? parse(dateMatch[1], 'dd/MM/yyyy', new Date()) : item.createdAt;
+
+                if (isWithinInterval(roundDate, { start, end }) && !rounds[roundName]) {
+                    rounds[roundName] = { date: roundDate, items: [], id: item.id, isFinished: !!item.isFinished, totalCost: 0, totalSale: 0 };
                 }
-                return;
+            }
+        });
+
+        filteredItems.forEach(item => {
+            if (item.name.startsWith('ຮອບຂ້າ') && item.packageSize === 0) {
+                return; // Skip placeholder items
             }
 
             const detail = itemLogMap[item.id];
-            if (detail && rounds[detail]) { // Ensure round exists for the selected month
+            
+            if (detail && rounds[detail]) {
                 rounds[detail].items.push(item);
                 rounds[detail].totalCost += item.currentStock * item.packageSize * item.costPrice;
                 rounds[detail].totalSale += item.currentStock * item.packageSize * item.sellingPrice;
-            } else if (!detail && isWithinInterval(item.createdAt, { start, end })) { // Handle items without a slaughter round detail for selected month
+            } 
+            else if (isWithinInterval(item.createdAt, { start, end })) { // Fallback for items created in the month without a round
                 const defaultRoundName = 'Uncategorized';
                 if (!rounds[defaultRoundName]) {
                     rounds[defaultRoundName] = { 
@@ -371,21 +378,6 @@ export default function SpsMeatStockPage() {
             }
         });
 
-        // Ensure all rounds for the month are included, even if they have no items yet.
-        filteredItems.forEach(item => {
-            if (item.name.startsWith('ຮອບຂ້າ') && item.packageSize === 0) {
-                const roundName = item.name.replace('ຮອບຂ້າ ', 'ຮອບຂ້າທີ່ ');
-                if (!rounds[roundName]) {
-                    const dateMatch = roundName.match(/(\d{2}\/\d{2}\/\d{4})/);
-                    const roundDate = dateMatch ? parse(dateMatch[1], 'dd/MM/yyyy', new Date()) : item.createdAt;
-                    if (isWithinInterval(roundDate, { start, end })) {
-                        rounds[roundName] = { date: roundDate, items: [], id: item.id, isFinished: !!item.isFinished, totalCost: 0, totalSale: 0 };
-                    }
-                }
-            }
-        });
-
-
         return Object.entries(rounds).sort(([, valA], [, valB]) => {
             if(valA.id === 'default-round') return 1;
             if(valB.id === 'default-round') return -1;
@@ -394,6 +386,31 @@ export default function SpsMeatStockPage() {
 
     }, [stockItems, stockLogs, searchQuery, displayMonth]);
     
+    const aggregatedStock = useMemo(() => {
+        const summary: Record<string, { name: string, stock: number, totalKg: number, packageSize: number }> = {};
+        
+        stockItems.forEach(item => {
+            if(item.packageSize === 0) return; // Skip slaughter round placeholders
+
+            if (summary[item.sku]) {
+                summary[item.sku].stock += item.currentStock;
+                summary[item.sku].totalKg += item.currentStock * item.packageSize;
+            } else {
+                summary[item.sku] = {
+                    name: item.name,
+                    stock: item.currentStock,
+                    totalKg: item.currentStock * item.packageSize,
+                    packageSize: item.packageSize
+                };
+            }
+        });
+
+        return Object.entries(summary).map(([sku, data]) => ({
+            sku,
+            ...data
+        })).sort((a,b) => a.sku.localeCompare(b.sku));
+    }, [stockItems]);
+
     const handleSetRoundFinished = async (roundId: string, isFinished: boolean) => {
         await updateSpsMeatStockItem(roundId, { isFinished });
     };
@@ -485,6 +502,34 @@ export default function SpsMeatStockPage() {
                         </CardContent>
                     </Card>
                 </div>
+                 <Card>
+                    <CardHeader>
+                        <CardTitle>ລວມສິນຄ້າທັງໝົດ</CardTitle>
+                        <CardDescription>ລວມຍອດສິນຄ້າຄົງເຫຼືອທັງໝົດໂດຍບໍ່ແຍກຮອບຂ້າ</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>SKU</TableHead>
+                                    <TableHead>ຊື່ສິນຄ້າ</TableHead>
+                                    <TableHead className="text-right">ຄົງເຫຼືອ (ຖົງ)</TableHead>
+                                    <TableHead className="text-right">ລວມ (kg)</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {aggregatedStock.map(item => (
+                                    <TableRow key={item.sku} className={item.stock === 0 ? 'bg-red-50' : ''}>
+                                        <TableCell className="font-mono">{item.sku}</TableCell>
+                                        <TableCell className="font-medium">{item.name}</TableCell>
+                                        <TableCell className="text-right font-bold">{item.stock}</TableCell>
+                                        <TableCell className="text-right font-bold text-blue-600">{item.totalKg.toFixed(2)}</TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
                 <Card>
                     <CardHeader>
                         <div className="flex justify-between items-center">
@@ -543,7 +588,7 @@ export default function SpsMeatStockPage() {
                                                     const totalUnits = item.currentStock * item.packageSize;
                                                     const totalCostValue = item.costPrice * totalUnits;
                                                     return (
-                                                        <TableRow key={item.id} className={item.currentStock === 0 ? 'bg-red-100' : ''}>
+                                                        <TableRow key={item.id} className={item.currentStock === 0 ? 'bg-red-50' : ''}>
                                                             <TableCell className="font-mono">{item.sku}</TableCell>
                                                             <TableCell className="font-medium hover:underline">
                                                                 <Link href={`/meat-business/sps-meat/stock/${item.id}`}>{item.name}</Link>
@@ -591,3 +636,4 @@ export default function SpsMeatStockPage() {
         </div>
     );
 }
+

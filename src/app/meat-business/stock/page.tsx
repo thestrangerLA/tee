@@ -11,7 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Package, Trash2, PlusCircle, DollarSign, ArrowDown, ArrowUp, Printer, Search, ChevronDown, Calendar as CalendarIcon } from "lucide-react";
+import { ArrowLeft, Package, Trash2, PlusCircle, DollarSign, ArrowDown, ArrowUp, Printer, Search, ChevronDown, Calendar as CalendarIcon, CheckCheck } from "lucide-react";
 import Link from 'next/link';
 import {
   Table,
@@ -41,6 +41,17 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuPortal,
+  DropdownMenuSubContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Checkbox } from "@/components/ui/checkbox";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -49,9 +60,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import type { MeatStockItem, MeatStockLog } from '@/lib/types';
-import { listenToMeatStockItems, addMeatStockItem, deleteMeatStockItem, updateStockQuantity, listenToAllMeatStockLogs, addMultipleMeatStockItems } from '@/services/meatStockService';
+import { listenToMeatStockItems, addMeatStockItem, deleteMeatStockItem, updateStockQuantity, listenToAllMeatStockLogs, addMultipleMeatStockItems, updateMeatStockItem } from '@/services/meatStockService';
 import { useClientRouter } from '@/hooks/useClientRouter';
-import { format } from 'date-fns';
+import { format, isWithinInterval, startOfMonth, endOfMonth, getYear, setMonth, getMonth, parse } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
 
 
@@ -60,7 +71,7 @@ const formatCurrency = (value: number) => {
 };
 
 
-const AddItemDialog = ({ onAddItem, slaughterRoundDetail }: { onAddItem: (item: Omit<MeatStockItem, 'id'|'createdAt'>, detail?: string) => Promise<string>, slaughterRoundDetail?: string }) => {
+const AddItemDialog = ({ onAddItem, slaughterRoundDetail }: { onAddItem: (item: Omit<MeatStockItem, 'id'|'createdAt'|'isFinished'>, detail?: string) => Promise<string>, slaughterRoundDetail?: string }) => {
     const { toast } = useToast();
     const router = useClientRouter();
     const [open, setOpen] = useState(false);
@@ -143,7 +154,7 @@ const AddItemDialog = ({ onAddItem, slaughterRoundDetail }: { onAddItem: (item: 
 }
 
 
-const AddSlaughterRoundDialog = ({ onAddMultipleItems }: { onAddMultipleItems: (items: Omit<MeatStockItem, 'id'|'createdAt'>[], date: Date) => Promise<void> }) => {
+const AddSlaughterRoundDialog = ({ onAddMultipleItems }: { onAddMultipleItems: (items: Omit<MeatStockItem, 'id'|'createdAt'|'isFinished'>[], date: Date) => Promise<void> }) => {
     const { toast } = useToast();
     const [open, setOpen] = useState(false);
     const [roundDate, setRoundDate] = useState<Date | undefined>(new Date());
@@ -155,13 +166,14 @@ const AddSlaughterRoundDialog = ({ onAddMultipleItems }: { onAddMultipleItems: (
         }
 
         try {
-            const dummyItem: Omit<MeatStockItem, 'id'|'createdAt'> = {
+            const dummyItem: Omit<MeatStockItem, 'id'|'createdAt'|'isFinished'> = {
                 sku: `ROUND-${format(roundDate, 'yyyyMMdd')}`,
                 name: `ຮອບຂ້າ ${format(roundDate, 'dd/MM/yyyy')}`,
                 packageSize: 0,
                 costPrice: 0,
                 sellingPrice: 0,
                 currentStock: 0,
+                isFinished: false,
             }
             await addMeatStockItem(dummyItem, `ຮອບຂ້າທີ່ ${format(roundDate, 'dd/MM/yyyy')}`);
 
@@ -197,7 +209,15 @@ const AddSlaughterRoundDialog = ({ onAddMultipleItems }: { onAddMultipleItems: (
                             </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0">
-                            <Calendar mode="single" selected={roundDate} onSelect={setRoundDate} initialFocus />
+                            <Calendar
+                                mode="single"
+                                selected={roundDate}
+                                onSelect={setRoundDate}
+                                initialFocus
+                                fromYear={2023}
+                                toYear={2026}
+                                captionLayout="dropdown-nav"
+                             />
                         </PopoverContent>
                     </Popover>
                 </div>
@@ -280,6 +300,7 @@ export default function MeatStockPage() {
     const [stockItems, setStockItems] = useState<MeatStockItem[]>([]);
     const [stockLogs, setStockLogs] = useState<MeatStockLog[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
+    const [displayMonth, setDisplayMonth] = useState<Date>(new Date());
     
     useEffect(() => {
         const unsubscribeItems = listenToMeatStockItems(setStockItems);
@@ -299,11 +320,13 @@ export default function MeatStockPage() {
     }, [stockItems]);
 
     const slaughterRounds = useMemo(() => {
-        const rounds: Record<string, { date: Date, items: MeatStockItem[] }> = {};
+        const rounds: Record<string, { date: Date, items: MeatStockItem[], id: string, isFinished: boolean, totalCost: number, totalSale: number }> = {};
+        const start = startOfMonth(displayMonth);
+        const end = endOfMonth(displayMonth);
         
         const itemLogMap: Record<string, string> = {};
         stockLogs.filter(log => log.type === 'stock-in' && log.detail.startsWith('ຮອບຂ້າທີ່')).forEach(log => {
-            if (!itemLogMap[log.itemId]) { // Only map the first (creation) log
+            if (!itemLogMap[log.itemId]) {
                 itemLogMap[log.itemId] = log.detail;
             }
         });
@@ -312,43 +335,127 @@ export default function MeatStockPage() {
             item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             item.sku.toLowerCase().includes(searchQuery.toLowerCase())
         );
+        
+        filteredItems.forEach(item => {
+            if (item.name.startsWith('ຮອບຂ້າ') && item.packageSize === 0) {
+                const roundName = item.name.replace('ຮອບຂ້າ ', 'ຮອບຂ້າທີ່ ');
+                const dateMatch = roundName.match(/(\d{2}\/\d{2}\/\d{4})/);
+                const roundDate = dateMatch ? parse(dateMatch[1], 'dd/MM/yyyy', new Date()) : item.createdAt;
+
+                if (isWithinInterval(roundDate, { start, end }) && !rounds[roundName]) {
+                    rounds[roundName] = { date: roundDate, items: [], id: item.id, isFinished: !!item.isFinished, totalCost: 0, totalSale: 0 };
+                }
+            }
+        });
 
         filteredItems.forEach(item => {
-            if (item.name.startsWith('ຮອບຂ້າ') && item.currentStock === 0 && item.packageSize === 0) {
-                const roundName = item.name.replace('ຮອບຂ້າ ', 'ຮອບຂ້າທີ່ ');
-                if (!rounds[roundName]) {
-                    rounds[roundName] = { date: item.createdAt, items: [] };
-                }
+            if (item.name.startsWith('ຮອບຂ້າ') && item.packageSize === 0) {
                 return;
             }
 
             const detail = itemLogMap[item.id];
-            if (detail) {
-                if (!rounds[detail]) {
-                    rounds[detail] = { date: item.createdAt, items: [] };
-                }
+            
+            if (detail && rounds[detail]) {
                 rounds[detail].items.push(item);
-            } else {
-                 if (!rounds['ຮອບຂ້າທີ່ 1 05/10/25']) {
-                    rounds['ຮອບຂ້າທີ່ 1 05/10/25'] = { date: new Date(0), items: [] };
+                rounds[detail].totalCost += item.currentStock * item.packageSize * item.costPrice;
+                rounds[detail].totalSale += item.currentStock * item.packageSize * item.sellingPrice;
+            } 
+            else if (isWithinInterval(item.createdAt, { start, end })) {
+                const defaultRoundName = 'Uncategorized';
+                if (!rounds[defaultRoundName]) {
+                    rounds[defaultRoundName] = { 
+                        date: new Date(), 
+                        items: [],
+                        id: 'default-round',
+                        isFinished: false,
+                        totalCost: 0,
+                        totalSale: 0
+                    };
                 }
-                rounds['ຮອບຂ້າທີ່ 1 05/10/25'].items.push(item);
+                rounds[defaultRoundName].items.push(item);
+                rounds[defaultRoundName].totalCost += item.currentStock * item.packageSize * item.costPrice;
+                rounds[defaultRoundName].totalSale += item.currentStock * item.packageSize * item.sellingPrice;
             }
         });
 
-        stockLogs.forEach(log => {
-             if (log.detail.startsWith('ຮອບຂ້າທີ່') && !rounds[log.detail]) {
-                rounds[log.detail] = { date: log.createdAt, items: [] };
-            }
-        });
-
-        return Object.entries(rounds).sort(([keyA, valA], [keyB, valB]) => {
-            if (keyA === 'ຮອບຂ້າທີ່ 1 05/10/25') return 1;
-            if (keyB === 'ຮອບຂ້າທີ່ 1 05/10/25') return -1;
+        return Object.entries(rounds).sort(([, valA], [, valB]) => {
+            if(valA.id === 'default-round') return 1;
+            if(valB.id === 'default-round') return -1;
             return valB.date.getTime() - valA.date.getTime();
         });
 
-    }, [stockItems, stockLogs, searchQuery]);
+    }, [stockItems, stockLogs, searchQuery, displayMonth]);
+
+    const aggregatedStock = useMemo(() => {
+        const summary: Record<string, { name: string, stock: number, totalKg: number, packageSize: number }> = {};
+        
+        stockItems.forEach(item => {
+            if(item.packageSize === 0) return; // Skip slaughter round placeholders
+
+            if (summary[item.sku]) {
+                summary[item.sku].stock += item.currentStock;
+                summary[item.sku].totalKg += item.currentStock * item.packageSize;
+            } else {
+                summary[item.sku] = {
+                    name: item.name,
+                    stock: item.currentStock,
+                    totalKg: item.currentStock * item.packageSize,
+                    packageSize: item.packageSize
+                };
+            }
+        });
+
+        return Object.entries(summary).map(([sku, data]) => ({
+            sku,
+            ...data
+        })).sort((a,b) => a.sku.localeCompare(b.sku));
+    }, [stockItems]);
+    
+    const handleSetRoundFinished = async (roundId: string, isFinished: boolean) => {
+        await updateMeatStockItem(roundId, { isFinished });
+    };
+
+    const MonthYearSelector = () => {
+        const years = Array.from({ length: 5 }, (_, i) => getYear(new Date()) - 2 + i);
+        years.push(2025, 2026);
+        const uniqueYears = [...new Set(years)].sort();
+        const months = Array.from({ length: 12 }, (_, i) => setMonth(new Date(), i));
+
+        return (
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="flex items-center gap-2">
+                        {format(displayMonth, "LLLL yyyy")}
+                        <ChevronDown className="h-4 w-4" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    {uniqueYears.map(year => (
+                         <DropdownMenuSub key={year}>
+                            <DropdownMenuSubTrigger>
+                                <span>{year + 543}</span>
+                            </DropdownMenuSubTrigger>
+                            <DropdownMenuPortal>
+                                <DropdownMenuSubContent>
+                                    {months.map(month => (
+                                        <DropdownMenuItem 
+                                            key={getMonth(month)} 
+                                            onClick={() => {
+                                                const newDate = new Date(year, getMonth(month), 1);
+                                                setDisplayMonth(newDate);
+                                            }}
+                                        >
+                                            {format(month, "LLLL")}
+                                        </DropdownMenuItem>
+                                    ))}
+                                </DropdownMenuSubContent>
+                             </DropdownMenuPortal>
+                        </DropdownMenuSub>
+                    ))}
+                </DropdownMenuContent>
+            </DropdownMenu>
+        );
+    };
 
     return (
         <div className="flex min-h-screen w-full flex-col bg-muted/40 print:bg-white">
@@ -364,7 +471,12 @@ export default function MeatStockPage() {
                     <h1 className="text-xl font-bold tracking-tight">ຈັດການສະຕັອກ (ທຸລະກິດຊີ້ນ)</h1>
                 </div>
                  <div className="ml-auto flex items-center gap-2">
+                    <MonthYearSelector />
                     <AddSlaughterRoundDialog onAddMultipleItems={addMultipleMeatStockItems} />
+                    <Button onClick={() => window.print()} variant="outline" size="sm">
+                        <Printer className="mr-2 h-4 w-4" />
+                        ພິມ
+                    </Button>
                 </div>
             </header>
             <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
@@ -392,9 +504,37 @@ export default function MeatStockPage() {
                 </div>
                 <Card>
                     <CardHeader>
+                        <CardTitle>ລວມສິນຄ້າທັງໝົດ</CardTitle>
+                        <CardDescription>ລວມຍອດສິນຄ້າຄົງເຫຼືອທັງໝົດໂດຍບໍ່ແຍກຮອບຂ້າ</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>SKU</TableHead>
+                                    <TableHead>ຊື່ສິນຄ້າ</TableHead>
+                                    <TableHead className="text-right">ຄົງເຫຼືອ (ຖົງ)</TableHead>
+                                    <TableHead className="text-right">ລວມ (kg)</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {aggregatedStock.map(item => (
+                                    <TableRow key={item.sku} className={item.stock === 0 ? 'bg-red-50' : ''}>
+                                        <TableCell className="font-mono">{item.sku}</TableCell>
+                                        <TableCell className="font-medium">{item.name}</TableCell>
+                                        <TableCell className="text-right font-bold">{item.stock}</TableCell>
+                                        <TableCell className="text-right font-bold text-blue-600">{item.totalKg.toFixed(2)}</TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader>
                         <div className="flex justify-between items-center">
                             <div>
-                                <CardTitle>ລາຍການສິນຄ້າໃນຄັງ</CardTitle>
+                                <CardTitle>ລາຍການສິນຄ້າໃນຄັງ ({slaughterRounds.length} ຮອບຂ້າ)</CardTitle>
                                 <CardDescription>ກຸ່ມສິນຄ້າຕາມຮອບຂ້າ. ກົດເພື່ອເປີດ-ປິດລາຍການ.</CardDescription>
                             </div>
                              <div className="relative">
@@ -414,10 +554,18 @@ export default function MeatStockPage() {
                         <Accordion type="single" collapsible className="w-full" defaultValue={slaughterRounds[0]?.[0]}>
                             {slaughterRounds.map(([detail, round]) => (
                                 <AccordionItem value={detail} key={detail}>
-                                    <AccordionTrigger className="text-lg font-semibold bg-muted/50 px-4 rounded-md hover:no-underline">
+                                    <AccordionTrigger className={`text-lg font-semibold px-4 rounded-md hover:no-underline ${round.isFinished ? 'bg-green-100' : 'bg-muted/50'}`}>
                                         <div className="flex justify-between items-center w-full">
                                             <span>{detail}</span>
-                                            <div onClick={(e) => e.stopPropagation()}>
+                                            <div className="flex items-center gap-4" onClick={(e) => e.stopPropagation()}>
+                                                <div className="text-sm font-normal text-muted-foreground space-x-4 hidden md:block">
+                                                    <span>ມູນຄ່າສະຕັອກ: <span className="font-semibold text-primary">{formatCurrency(round.totalCost)}</span></span>
+                                                    <span>ມູນຄ່າຂາຍ: <span className="font-semibold text-green-600">{formatCurrency(round.totalSale)}</span></span>
+                                                </div>
+                                                <div className="flex items-center space-x-2">
+                                                    <Checkbox id={`finish-${round.id}`} checked={round.isFinished} onCheckedChange={(checked) => handleSetRoundFinished(round.id, !!checked)} />
+                                                    <Label htmlFor={`finish-${round.id}`}>ສຳເລັດ</Label>
+                                                </div>
                                                 <AddItemDialog onAddItem={addMeatStockItem} slaughterRoundDetail={detail} />
                                             </div>
                                         </div>
@@ -440,7 +588,7 @@ export default function MeatStockPage() {
                                                     const totalUnits = item.currentStock * item.packageSize;
                                                     const totalCostValue = item.costPrice * totalUnits;
                                                     return (
-                                                        <TableRow key={item.id}>
+                                                        <TableRow key={item.id} className={item.currentStock === 0 ? 'bg-red-50' : ''}>
                                                             <TableCell className="font-mono">{item.sku}</TableCell>
                                                             <TableCell className="font-medium hover:underline">
                                                                 <Link href={`/meat-business/stock/${item.id}`}>{item.name}</Link>
@@ -480,7 +628,7 @@ export default function MeatStockPage() {
                             ))}
                         </Accordion>
                         ) : (
-                             <div className="text-center h-24 content-center">ບໍ່ມີຂໍ້ມູນສິນຄ້າ</div>
+                             <div className="text-center h-24 content-center">ບໍ່ມີຂໍ້ມູນສິນຄ້າໃນເດືອນນີ້</div>
                         )}
                     </CardContent>
                 </Card>
@@ -488,3 +636,4 @@ export default function MeatStockPage() {
         </div>
     );
 }
+
