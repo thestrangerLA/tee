@@ -31,7 +31,8 @@ export default function TourProgramsPage() {
         return () => unsubscribe();
     }, []);
 
-    const handleDelete = async (id: string) => {
+    const handleDelete = async (e: React.MouseEvent, id: string) => {
+        e.stopPropagation(); // Prevent row click event
         if (window.confirm("Are you sure you want to delete this tour program and all its data?")) {
             try {
                 await deleteTourProgram(id);
@@ -106,7 +107,7 @@ export default function TourProgramsPage() {
                                                     <DropdownMenuContent align="end">
                                                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                                         <DropdownMenuItem onSelect={(e) => { e.stopPropagation(); navigateToDetail(program.id); }}>Edit</DropdownMenuItem>
-                                                        <DropdownMenuItem onSelect={(e) => { e.stopPropagation(); handleDelete(program.id); }} className="text-red-500">Delete</DropdownMenuItem>
+                                                        <DropdownMenuItem onSelect={(e) => handleDelete(e, program.id)} className="text-red-500">Delete</DropdownMenuItem>
                                                     </DropdownMenuContent>
                                                 </DropdownMenu>
                                             </TableCell>

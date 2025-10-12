@@ -115,6 +115,11 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
     const router = useRouter();
     const params = useParams();
     const calculationId = params.id as string;
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
     
     const [tourInfo, setTourInfo] = useState<TourInfo>(initialCalculation?.tourInfo || {
         mouContact: '', groupCode: '', destinationCountry: '', program: '',
@@ -135,11 +140,11 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        if (!calculationId || calculationId === 'default') {
+        if (!isClient || !calculationId || calculationId === 'default') {
             if (initialCalculation) {
                 setLoading(false);
             } else {
-                setLoading(true); // Should be handled by parent page
+                // Should be handled by parent page or loading state
             }
             return;
         };
@@ -172,7 +177,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
         });
 
         return () => unsubscribe();
-    }, [calculationId, initialCalculation]);
+    }, [calculationId, initialCalculation, isClient]);
     
     
     const handleDataChange = useCallback(async () => {
@@ -400,7 +405,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
         );
     };
 
-    if (loading) {
+    if (loading || !isClient) {
         return (
             <div className="flex flex-col items-center justify-center h-screen">
                 <p className="text-2xl font-semibold mb-4">Loading...</p>
