@@ -1,6 +1,6 @@
 
 import type { Metadata } from 'next';
-import { getFirestore, collection, getDocs, doc, getDoc } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, doc, getDoc, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { SavedCalculation } from './client-page';
 import TourCalculatorClientPage from './client-page';
@@ -15,30 +15,40 @@ async function getTourCostCalculation(id: string): Promise<SavedCalculation | nu
 
     if (docSnap.exists()) {
         const data = docSnap.data();
-        // Convert Timestamps to serializable format (ISO string)
+        
         const tourInfo = data.tourInfo || {};
-        if (tourInfo.startDate) tourInfo.startDate = tourInfo.startDate.toDate().toISOString();
-        if (tourInfo.endDate) tourInfo.endDate = tourInfo.endDate.toDate().toISOString();
+        if (tourInfo.startDate && tourInfo.startDate instanceof Timestamp) {
+            tourInfo.startDate = tourInfo.startDate.toDate().toISOString();
+        }
+        if (tourInfo.endDate && tourInfo.endDate instanceof Timestamp) {
+            tourInfo.endDate = tourInfo.endDate.toDate().toISOString();
+        }
 
         const allCosts = data.allCosts || {};
         const processDateFields = (items: any[]) => {
           return items?.map(item => {
-            if (item.checkInDate) item.checkInDate = item.checkInDate.toDate().toISOString();
-            if (item.departureDate) item.departureDate = item.departureDate.toDate().toISOString();
-            return item;
+            const newItem = { ...item };
+            if (newItem.checkInDate && newItem.checkInDate instanceof Timestamp) {
+                newItem.checkInDate = newItem.checkInDate.toDate().toISOString();
+            }
+            if (newItem.departureDate && newItem.departureDate instanceof Timestamp) {
+                newItem.departureDate = newItem.departureDate.toDate().toISOString();
+            }
+            return newItem;
           }) || [];
         }
         allCosts.accommodations = processDateFields(allCosts.accommodations);
         allCosts.flights = processDateFields(allCosts.flights);
         allCosts.trainTickets = processDateFields(allCosts.trainTickets);
 
+        const savedAt = data.savedAt;
         return {
             id: docSnap.id,
             tourInfo,
             allCosts,
             exchangeRates: data.exchangeRates,
             profitPercentage: data.profitPercentage,
-            savedAt: data.savedAt?.toDate().toISOString(),
+            savedAt: savedAt instanceof Timestamp ? savedAt.toDate().toISOString() : savedAt,
         } as SavedCalculation;
     } else {
         return null;
