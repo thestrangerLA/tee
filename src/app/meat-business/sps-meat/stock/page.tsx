@@ -300,7 +300,8 @@ export default function SpsMeatStockPage() {
     const [stockLogs, setStockLogs] = useState<MeatStockLog[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [displayMonth, setDisplayMonth] = useState<Date>(new Date());
-    
+    const [selectedSkusForPrint, setSelectedSkusForPrint] = useState<Record<string, boolean>>({});
+
     useEffect(() => {
         const unsubscribeItems = listenToSpsMeatStockItems(setStockItems);
         const unsubscribeLogs = listenToAllSpsMeatStockLogs(setStockLogs);
@@ -389,7 +390,7 @@ export default function SpsMeatStockPage() {
     const aggregatedStock = useMemo(() => {
         const summary: Record<string, { name: string, stock: number, totalKg: number, packageSize: number }> = {};
         
-        stockItems.forEach(item => {
+        stockItems.filter(item => !item.isFinished).forEach(item => {
             if(item.packageSize === 0) return; // Skip slaughter round placeholders
 
             if (summary[item.sku]) {
@@ -413,6 +414,24 @@ export default function SpsMeatStockPage() {
 
     const handleSetRoundFinished = async (roundId: string, isFinished: boolean) => {
         await updateSpsMeatStockItem(roundId, { isFinished });
+    };
+
+    const handleSetItemFinished = async (itemId: string, isFinished: boolean) => {
+        await updateSpsMeatStockItem(itemId, { isFinished });
+    };
+
+    const handleSelectSkuForPrint = (sku: string, isSelected: boolean) => {
+        setSelectedSkusForPrint(prev => ({ ...prev, [sku]: isSelected }));
+    };
+
+    const handleSelectAllForPrint = (isSelected: boolean) => {
+        const newSelection: Record<string, boolean> = {};
+        if (isSelected) {
+            aggregatedStock.forEach(item => {
+                newSelection[item.sku] = true;
+            });
+        }
+        setSelectedSkusForPrint(newSelection);
     };
 
     const MonthYearSelector = () => {
@@ -457,6 +476,10 @@ export default function SpsMeatStockPage() {
         );
     };
 
+     const isAllSelectedForPrint = useMemo(() => {
+        return aggregatedStock.length > 0 && aggregatedStock.every(item => selectedSkusForPrint[item.sku]);
+    }, [aggregatedStock, selectedSkusForPrint]);
+
     return (
         <div className="flex min-h-screen w-full flex-col bg-muted/40 print:bg-white">
             <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 print:hidden">
@@ -479,8 +502,8 @@ export default function SpsMeatStockPage() {
                     </Button>
                 </div>
             </header>
-            <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-                 <div className="grid gap-4 md:grid-cols-2">
+            <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 print:p-0">
+                 <div className="grid gap-4 md:grid-cols-2 print:hidden">
                      <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">ມູນຄ່າສະຕັອກທັງໝົດ</CardTitle>
@@ -502,7 +525,7 @@ export default function SpsMeatStockPage() {
                         </CardContent>
                     </Card>
                 </div>
-                 <Card>
+                 <Card id="aggregated-stock-card" className="print-only:block">
                     <CardHeader>
                         <CardTitle>ລວມສິນຄ້າທັງໝົດ</CardTitle>
                         <CardDescription>ລວມຍອດສິນຄ້າຄົງເຫຼືອທັງໝົດໂດຍບໍ່ແຍກຮອບຂ້າ</CardDescription>
@@ -511,6 +534,12 @@ export default function SpsMeatStockPage() {
                         <Table>
                             <TableHeader>
                                 <TableRow>
+                                    <TableHead className="w-12 print:hidden">
+                                         <Checkbox 
+                                            checked={isAllSelectedForPrint}
+                                            onCheckedChange={(checked) => handleSelectAllForPrint(!!checked)}
+                                        />
+                                    </TableHead>
                                     <TableHead>SKU</TableHead>
                                     <TableHead>ຊື່ສິນຄ້າ</TableHead>
                                     <TableHead className="text-right">ຄົງເຫຼືອ (ຖົງ)</TableHead>
@@ -519,7 +548,13 @@ export default function SpsMeatStockPage() {
                             </TableHeader>
                             <TableBody>
                                 {aggregatedStock.map(item => (
-                                    <TableRow key={item.sku} className={item.stock === 0 ? 'bg-red-50' : ''}>
+                                    <TableRow key={item.sku} data-print-selected={selectedSkusForPrint[item.sku] || false} className="print:hidden data-[print-selected=true]:print:table-row">
+                                        <TableCell className="print:hidden">
+                                            <Checkbox 
+                                                checked={selectedSkusForPrint[item.sku] || false}
+                                                onCheckedChange={(checked) => handleSelectSkuForPrint(item.sku, !!checked)}
+                                            />
+                                        </TableCell>
                                         <TableCell className="font-mono">{item.sku}</TableCell>
                                         <TableCell className="font-medium">{item.name}</TableCell>
                                         <TableCell className="text-right font-bold">{item.stock}</TableCell>
@@ -530,7 +565,7 @@ export default function SpsMeatStockPage() {
                         </Table>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="print:hidden">
                     <CardHeader>
                         <div className="flex justify-between items-center">
                             <div>
@@ -563,8 +598,8 @@ export default function SpsMeatStockPage() {
                                                     <span>ມູນຄ່າຂາຍ: <span className="font-semibold text-green-600">{formatCurrency(round.totalSale)}</span></span>
                                                 </div>
                                                 <div className="flex items-center space-x-2">
-                                                    <Checkbox id={`finish-${round.id}`} checked={round.isFinished} onCheckedChange={(checked) => handleSetRoundFinished(round.id, !!checked)} />
-                                                    <Label htmlFor={`finish-${round.id}`}>ສຳເລັດ</Label>
+                                                    <Checkbox id={`finish-round-${round.id}`} checked={round.isFinished} onCheckedChange={(checked) => handleSetRoundFinished(round.id, !!checked)} />
+                                                    <Label htmlFor={`finish-round-${round.id}`}>ສຳເລັດຮອບ</Label>
                                                 </div>
                                                 <AddItemDialog onAddItem={addSpsMeatStockItem} slaughterRoundDetail={detail} />
                                             </div>
@@ -580,7 +615,7 @@ export default function SpsMeatStockPage() {
                                                     <TableHead className="text-right">ຄົງເຫຼືອ (ຖົງ)</TableHead>
                                                     <TableHead className="text-right">ລວມ (kg)</TableHead>
                                                     <TableHead className="text-right">ມູນຄ່າລວມ</TableHead>
-                                                    <TableHead className="text-center">ຈັດການ</TableHead>
+                                                    <TableHead className="text-center w-[250px]">ຈັດການ</TableHead>
                                                 </TableRow>
                                             </TableHeader>
                                             <TableBody>
@@ -597,7 +632,11 @@ export default function SpsMeatStockPage() {
                                                             <TableCell className="text-right font-bold">{item.currentStock}</TableCell>
                                                             <TableCell className="text-right font-bold text-blue-600">{totalUnits.toFixed(2)}</TableCell>
                                                             <TableCell className="text-right">{formatCurrency(totalCostValue)}</TableCell>
-                                                            <TableCell className="text-center space-x-2">
+                                                            <TableCell className="text-center space-x-1">
+                                                                <div className="flex items-center justify-center gap-1">
+                                                                    <Checkbox id={`finish-item-${item.id}`} checked={!!item.isFinished} onCheckedChange={(checked) => handleSetItemFinished(item.id, !!checked)} />
+                                                                    <Label htmlFor={`finish-item-${item.id}`} className="text-xs">ສຳເລັດ</Label>
+                                                                </div>
                                                                 <StockAdjustmentDialog item={item} onAdjust={updateSpsStockQuantity} type="stock-in" />
                                                                 <StockAdjustmentDialog item={item} onAdjust={updateSpsStockQuantity} type="sale" />
                                                                 <AlertDialog>
@@ -637,3 +676,6 @@ export default function SpsMeatStockPage() {
     );
 }
 
+
+
+    
