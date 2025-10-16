@@ -95,8 +95,14 @@ const toDate = (date: DateValue): Date | undefined => {
   if (date instanceof Timestamp) {
       return date.toDate();
   }
-  const parsedDate = new Date(date);
-  return isNaN(parsedDate.getTime()) ? undefined : parsedDate;
+  if (typeof date === 'string' || typeof date === 'number') {
+    const parsedDate = new Date(date);
+    return isNaN(parsedDate.getTime()) ? undefined : parsedDate;
+  }
+  if (date instanceof Date) {
+      return date;
+  }
+  return undefined;
 };
 
 
@@ -239,7 +245,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
 
     // Generic CRUD operations
     const addItem = <T extends keyof TourCosts>(category: T, newItem: any) => {
-        const currentItems = allCosts[category] as any[];
+        const currentItems = allCosts[category] as any[] || [];
         updateCosts(category, [...currentItems, newItem]);
     };
 
@@ -250,7 +256,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
     };
     
     const deleteItem = <T extends keyof TourCosts>(category: T, itemId: string) => {
-        const updatedItems = allCosts[category].filter((item: any) => item.id !== itemId);
+        const updatedItems = (allCosts[category] || []).filter((item: any) => item.id !== itemId);
         updateCosts(category, updatedItems as TourCosts[T]);
          toast({
             title: "ລຶບລາຍການສຳເລັດ",
