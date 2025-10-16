@@ -40,14 +40,16 @@ async function getTourCostCalculation(id: string): Promise<SavedCalculation | nu
         allCosts.accommodations = processDateFields(allCosts.accommodations);
         allCosts.flights = processDateFields(allCosts.flights);
         allCosts.trainTickets = processDateFields(allCosts.trainTickets);
+        allCosts.overseasPackages = allCosts.overseasPackages || [];
 
+        const savedAt = data.savedAt;
         return {
             id: docSnap.id,
             tourInfo,
             allCosts,
             exchangeRates: data.exchangeRates,
             profitPercentage: data.profitPercentage,
-            savedAt: data.savedAt?.toDate().toISOString(),
+            savedAt: savedAt instanceof Timestamp ? savedAt.toDate().toISOString() : savedAt,
         } as SavedCalculation;
     } else {
         return null;
