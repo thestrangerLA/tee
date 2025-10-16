@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { ArrowLeft, Save, Trash2, MapPin, Calendar as CalendarIcon, BedDouble, Truck, Plane, TrainFront, PlusCircle, Camera, UtensilsCrossed, Users, FileText, Clock, Eye, EyeOff, Printer } from "lucide-react";
+import { ArrowLeft, Save, Trash2, MapPin, Calendar as CalendarIcon, BedDouble, Truck, Plane, TrainFront, PlusCircle, Camera, UtensilsCrossed, Users, FileText, Clock, Eye, EyeOff, Printer, Earth } from "lucide-react";
 import { format } from 'date-fns';
 import { th } from 'date-fns/locale';
 import { TotalCostCard } from '@/components/tour/TotalCostCard';
@@ -47,6 +47,7 @@ type EntranceFee = { id: string; locationName: string; pax: number; numLocations
 type MealCost = { id: string; name: string; pax: number; breakfast: number; lunch: number; dinner: number; pricePerMeal: number; currency: Currency; };
 type GuideFee = { id: string; guideName: string; numGuides: number; numDays: number; pricePerDay: number; currency: Currency; };
 type DocumentFee = { id: string; documentName: string; pax: number; price: number; currency: Currency; };
+type OverseasPackage = { id: string; name: string; priceUSD: number; priceTHB: number; priceCNY: number; };
 
 interface TourInfo {
     mouContact: string;
@@ -70,6 +71,7 @@ interface TourCosts {
     meals: MealCost[];
     guides: GuideFee[];
     documents: DocumentFee[];
+    overseasPackages: OverseasPackage[];
 }
 
 export interface SavedCalculation {
@@ -90,6 +92,9 @@ const initialRates: ExchangeRates = {
 
 const toDate = (date: DateValue): Date | undefined => {
   if (!date) return undefined;
+  if (date instanceof Timestamp) {
+      return date.toDate();
+  }
   const parsedDate = new Date(date);
   return isNaN(parsedDate.getTime()) ? undefined : parsedDate;
 };
@@ -128,7 +133,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
 
     const [allCosts, setAllCosts] = useState<TourCosts>(initialCalculation?.allCosts || {
         accommodations: [], trips: [], flights: [], trainTickets: [],
-        entranceFees: [], meals: [], guides: [], documents: []
+        entranceFees: [], meals: [], guides: [], documents: [], overseasPackages: []
     });
 
     const [exchangeRates, setExchangeRates] = useState<ExchangeRates>(initialCalculation?.exchangeRates || initialRates);
@@ -141,11 +146,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
 
     useEffect(() => {
         if (!isClient || !calculationId || calculationId === 'default') {
-            if (initialCalculation) {
-                setLoading(false);
-            } else {
-                // Should be handled by parent page or loading state
-            }
+            setLoading(false);
             return;
         };
 
@@ -161,7 +162,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                 });
                 setAllCosts(data.allCosts || {
                     accommodations: [], trips: [], flights: [], trainTickets: [],
-                    entranceFees: [], meals: [], guides: [], documents: []
+                    entranceFees: [], meals: [], guides: [], documents: [], overseasPackages: []
                 });
                 if (data.exchangeRates) setExchangeRates(data.exchangeRates);
                 if (data.profitPercentage !== undefined) setProfitPercentage(data.profitPercentage);
@@ -177,7 +178,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
         });
 
         return () => unsubscribe();
-    }, [calculationId, initialCalculation, isClient]);
+    }, [calculationId, isClient]);
     
     
     const handleDataChange = useCallback(async () => {
@@ -296,7 +297,8 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
     const addMealCost = () => addItem('meals', { id: uuidv4(), name: '', pax: 1, breakfast: 0, lunch: 0, dinner: 0, pricePerMeal: 0, currency: 'LAK' });
     const addGuideFee = () => addItem('guides', { id: uuidv4(), guideName: '', numGuides: 1, numDays: 1, pricePerDay: 0, currency: 'LAK' });
     const addDocumentFee = () => addItem('documents', { id: uuidv4(), documentName: '', pax: 1, price: 0, currency: 'LAK' });
-    
+    const addOverseasPackage = () => addItem('overseasPackages', { id: uuidv4(), name: '', priceUSD: 0, priceTHB: 0, priceCNY: 0 });
+
     // --- Total Calculation Memos ---
     const accommodationTotals = useMemo(() => {
         const totals: Record<Currency, number> = { USD: 0, THB: 0, LAK: 0, CNY: 0 };
@@ -363,6 +365,16 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
         });
         return totals;
     }, [allCosts.documents]);
+
+    const overseasPackageTotals = useMemo(() => {
+        const totals: Record<Currency, number> = { USD: 0, THB: 0, LAK: 0, CNY: 0 };
+        allCosts.overseasPackages?.forEach(pkg => {
+            totals.USD += pkg.priceUSD || 0;
+            totals.THB += pkg.priceTHB || 0;
+            totals.CNY += pkg.priceCNY || 0;
+        });
+        return totals;
+    }, [allCosts.overseasPackages]);
     
     const totalsByCategory = {
         'ຄ່າທີ່ພັກ': accommodationTotals,
@@ -372,7 +384,8 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
         'ຄ່າເຂົ້າຊົມສະຖານທີ່': entranceFeeTotals,
         'ຄ່າອາຫານ': mealTotals,
         'ຄ່າໄກ້': guideTotals,
-        'ຄ່າເອກະສານ': documentTotals
+        'ຄ່າເອກະສານ': documentTotals,
+        'ຄ່າເພັກເກດຕ່າງປະເທດ': overseasPackageTotals,
     };
 
     const grandTotals = useMemo(() => {
@@ -565,7 +578,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                 <CardDescription>ເພີ່ມ ແລະ ຈັດການຄ່າໃຊ້ຈ່າຍຕ່າງໆ</CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <Accordion type="multiple" className="w-full flex flex-col gap-4" defaultValue={['ຄ່າທີ່ພັກ', 'ຄ່າຂົນສົ່ງ', 'ຄ່າປີ້ຍົນ', 'ຄ່າປີ້ລົດໄຟ', 'ຄ່າເຂົ້າຊົມສະຖານທີ່', 'ຄ່າອາຫານ', 'ຄ່າໄກ້', 'ຄ່າເອກະສານ'].map(t => t.toLowerCase().replace(/\s/g, '-'))}>
+                                <Accordion type="multiple" className="w-full flex flex-col gap-4" defaultValue={['ຄ່າທີ່ພັກ', 'ຄ່າຂົນສົ່ງ', 'ຄ່າປີ້ຍົນ', 'ຄ່າປີ້ລົດໄຟ', 'ຄ່າເຂົ້າຊົມສະຖານທີ່', 'ຄ່າອາຫານ', 'ຄ່າໄກ້', 'ຄ່າເອກະສານ', 'ຄ່າເພັກເກດຕ່າງປະເທດ'].map(t => t.toLowerCase().replace(/\s/g, '-'))}>
                                     {/* Accommodation */}
                                     <CostCategoryContent 
                                         title="ຄ່າທີ່ພັກ" 
@@ -1095,6 +1108,54 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
                                                 </Card>
                                             ))}
                                             <Button onClick={addDocumentFee}><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າເອກະສານ</Button>
+                                        </div>
+                                    </CostCategoryContent>
+
+                                    {/* Overseas Package */}
+                                    <CostCategoryContent 
+                                        title="ຄ່າເພັກເກດຕ່າງປະເທດ" 
+                                        icon={<Earth className="h-5 w-5" />}
+                                        summary={<CategorySummary totals={overseasPackageTotals} />}
+                                    >
+                                        <div className="space-y-4 pt-2">
+                                            {allCosts.overseasPackages?.map((pkg, index) => (
+                                                <Card key={pkg.id} className="bg-muted/30">
+                                                    <CardHeader className="flex-row items-center justify-between p-3 bg-muted/50">
+                                                        <CardTitle className="text-base">Package #{index + 1}</CardTitle>
+                                                        <div>
+                                                            <Button variant="ghost" size="icon" onClick={() => toggleItemVisibility(pkg.id)}>
+                                                                {itemVisibility[pkg.id] === false ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
+                                                            </Button>
+                                                            <Button variant="ghost" size="icon" onClick={() => deleteItem('overseasPackages', pkg.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button>
+                                                        </div>
+                                                    </CardHeader>
+                                                    {(itemVisibility[pkg.id] !== false) && (
+                                                    <CardContent className="p-4 space-y-4">
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                            <div className="space-y-2 col-span-2">
+                                                                <Label>ຊື່ ຫຼື ລາຍລະອຽດແພັກເກດ</Label>
+                                                                <Input value={pkg.name} onChange={e => updateItem('overseasPackages', pkg.id, 'name', e.target.value)} placeholder="ເຊັ່ນ ຄ່າແພັກເກດທົວຈີນ" />
+                                                            </div>
+                                                        </div>
+                                                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                                            <div className="space-y-2">
+                                                                <Label>ລາຄາ (USD)</Label>
+                                                                <Input type="number" min="0" value={pkg.priceUSD} onChange={e => updateItem('overseasPackages', pkg.id, 'priceUSD', parseFloat(e.target.value) || 0)} />
+                                                            </div>
+                                                            <div className="space-y-2">
+                                                                <Label>ລາຄາ (THB)</Label>
+                                                                <Input type="number" min="0" value={pkg.priceTHB} onChange={e => updateItem('overseasPackages', pkg.id, 'priceTHB', parseFloat(e.target.value) || 0)} />
+                                                            </div>
+                                                            <div className="space-y-2">
+                                                                <Label>ລາຄາ (CNY)</Label>
+                                                                <Input type="number" min="0" value={pkg.priceCNY} onChange={e => updateItem('overseasPackages', pkg.id, 'priceCNY', parseFloat(e.target.value) || 0)} />
+                                                            </div>
+                                                        </div>
+                                                    </CardContent>
+                                                    )}
+                                                </Card>
+                                            ))}
+                                            <Button onClick={addOverseasPackage}><PlusCircle className="mr-2 h-4 w-4" />ເພີ່ມຄ່າແພັກເກດ</Button>
                                         </div>
                                     </CostCategoryContent>
                                 </Accordion>

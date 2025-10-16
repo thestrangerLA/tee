@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calculator, BedDouble, Truck, Plane, TrainFront, Camera, UtensilsCrossed, Users, FileText } from 'lucide-react';
+import { Calculator, BedDouble, Truck, Plane, TrainFront, Camera, UtensilsCrossed, Users, FileText, Earth } from 'lucide-react';
 
 type Currency = 'USD' | 'THB' | 'LAK' | 'CNY';
 
@@ -36,6 +36,7 @@ const categoryIcons: { [key: string]: React.ReactNode } = {
     'ຄ່າອາຫານ': <UtensilsCrossed className="h-6 w-6 text-yellow-500" />,
     'ຄ່າໄກ້': <Users className="h-6 w-6 text-indigo-500" />,
     'ຄ່າເອກະສານ': <FileText className="h-6 w-6 text-pink-500" />,
+    'ຄ່າເພັກເກດຕ່າງປະເທດ': <Earth className="h-6 w-6 text-teal-500" />,
 };
 
 

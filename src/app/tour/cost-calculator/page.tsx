@@ -30,7 +30,9 @@ export interface SavedCalculation {
         numPeople?: number;
         travelerInfo?: string;
     };
-    allCosts?: any;
+    allCosts?: {
+        overseasPackages?: any[]; // Ensure this property exists
+    };
 }
 
 
@@ -67,7 +69,8 @@ export default function TourCostCalculatorListPage() {
       if (date instanceof Timestamp) {
         return date.toDate();
       }
-      return date as Date;
+      const parsedDate = new Date(date);
+      return isNaN(parsedDate.getTime()) ? undefined : parsedDate;
     };
 
     useEffect(() => {
@@ -155,6 +158,7 @@ export default function TourCostCalculatorListPage() {
                 meals: [],
                 guides: [],
                 documents: [],
+                overseasPackages: [],
             },
         };
         const calculationsColRef = collection(firestore, 'tourCalculations');
