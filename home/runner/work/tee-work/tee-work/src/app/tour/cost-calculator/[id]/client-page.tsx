@@ -92,6 +92,9 @@ const initialRates: ExchangeRates = {
 
 const toDate = (date: DateValue): Date | undefined => {
   if (!date) return undefined;
+  if (date instanceof Timestamp) {
+      return date.toDate();
+  }
   const parsedDate = new Date(date);
   return isNaN(parsedDate.getTime()) ? undefined : parsedDate;
 };
@@ -143,11 +146,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
 
     useEffect(() => {
         if (!isClient || !calculationId || calculationId === 'default') {
-            if (initialCalculation) {
-                setLoading(false);
-            } else {
-                // Should be handled by parent page or loading state
-            }
+            setLoading(false);
             return;
         };
 
@@ -179,7 +178,7 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
         });
 
         return () => unsubscribe();
-    }, [calculationId, initialCalculation, isClient]);
+    }, [calculationId, isClient]);
     
     
     const handleDataChange = useCallback(async () => {
