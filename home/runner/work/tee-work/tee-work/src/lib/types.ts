@@ -18,6 +18,10 @@ export interface Transaction {
     amount: number;
     description: string;
     businessType?: 'agriculture' | 'tour' | 'documents' | 'meat-business';
+    kip?: number;
+    baht?: number;
+    usd?: number;
+    cny?: number;
 }
 
 export interface AccountSummary {
@@ -147,4 +151,9 @@ export interface TourAccountSummary {
     transfer: CurrencyValues;
 }
 
-export interface DocumentAccountSummary extends TourAccountSummary {}
+export interface DocumentAccountSummary {
+    id: string;
+    capital: CurrencyValues;
+    cash: CurrencyValues;
+    transfer: CurrencyValues;
+}
