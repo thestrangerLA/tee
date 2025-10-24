@@ -149,6 +149,16 @@ export interface ApplianceStockItem {
   createdAt: Date;
 }
 
+export interface Sale {
+    id: string;
+    items: { id: string; name: string; quantity: number; price: number; total: number; }[];
+    subtotal: number;
+    totalCost?: number;
+    totalProfit?: number;
+    date: Date;
+    createdAt: Date;
+}
+
 export interface ApplianceStockLog {
   id: string;
   itemId: string;

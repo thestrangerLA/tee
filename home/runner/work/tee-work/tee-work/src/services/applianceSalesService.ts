@@ -1,6 +1,7 @@
 
 import { db } from '@/lib/firebase';
-import { collection, addDoc, Timestamp, writeBatch, doc, getDoc, runTransaction, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, Timestamp, writeBatch, doc, getDoc, runTransaction, serverTimestamp, query, where, orderBy, onSnapshot, endAt, startAt } from 'firebase/firestore';
+import type { Sale } from '@/lib/types';
 
 const salesCollectionRef = collection(db, 'applianceSales');
 
@@ -11,7 +12,7 @@ export const saveApplianceSale = async (invoiceData: any): Promise<string> => {
     // 1. Set the sale document
     transaction.set(saleDocRef, {
       ...invoiceData,
-      createdAt: Timestamp.now()
+      createdAt: serverTimestamp()
     });
 
     // 2. Iterate through items to update stock and create logs
@@ -62,4 +63,37 @@ export const getApplianceSale = async (saleId: string) => {
         };
     }
     return null;
+};
+
+export const listenToApplianceSalesByDate = (date: Date, callback: (sales: Sale[]) => void) => {
+    const startDate = new Date(date);
+    startDate.setHours(0, 0, 0, 0);
+    const endDate = new Date(date);
+    endDate.setHours(23, 59, 59, 999);
+
+    const q = query(
+        salesCollectionRef,
+        where("date", ">=", Timestamp.fromDate(startDate)),
+        where("date", "<=", Timestamp.fromDate(endDate)),
+        orderBy("date", "desc")
+    );
+
+    return onSnapshot(q, (querySnapshot) => {
+        const salesData: Sale[] = [];
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            salesData.push({
+                id: doc.id,
+                ...data,
+                date: (data.date as Timestamp).toDate(),
+                createdAt: (data.createdAt as Timestamp).toDate(),
+            } as Sale);
+        });
+        callback(salesData);
+    });
+};
+
+export const deleteApplianceSale = async (saleId: string) => {
+    const saleDocRef = doc(db, 'applianceSales', saleId);
+    await deleteDoc(saleDocRef);
 };
