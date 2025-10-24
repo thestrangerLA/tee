@@ -37,15 +37,15 @@ export default function AppliancesPage() {
               </CardContent>
             </Card>
           </Link>
-          <Link href="#">
-            <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full text-muted-foreground">
+          <Link href="/appliances/stock">
+            <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-2xl font-bold font-headline">ຈັດການສະຕັອກ</CardTitle>
-                <Package className="h-8 w-8 text-muted" />
+                <Package className="h-8 w-8 text-primary" />
               </CardHeader>
               <CardContent>
-                <p>
-                  ຈັດການສະຕັອກສິນຄ້າ (ຈະມາໃນໄວໆນີ້)
+                <p className="text-muted-foreground">
+                  ຈັດການສະຕັອກສິນຄ້າ ແລະ ຕິດຕາມລະດັບສະຕັອກ
                 </p>
               </CardContent>
             </Card>
