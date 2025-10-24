@@ -1,5 +1,6 @@
 
 
+
 export type StockItem = {
   id: string;
   name: string;
@@ -177,4 +178,18 @@ export interface DocumentAccountSummary {
     capital: CurrencyValues;
     cash: CurrencyValues;
     transfer: CurrencyValues;
+}
+
+export interface ApplianceCustomer {
+    id: string;
+    name: string;
+    address: string;
+    phone: string;
+}
+
+export interface Customer {
+  id: string;
+  name: string;
+  address: string;
+  phone: string;
 }
