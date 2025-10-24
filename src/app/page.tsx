@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Leaf, FerrisWheel, Briefcase, FileText, Drumstick } from "lucide-react"
+import { Leaf, FerrisWheel, Briefcase, FileText, Drumstick, ShoppingCart } from "lucide-react"
 import Link from 'next/link'
 import { listenToAccountSummary } from '@/services/accountancyService';
 import { listenToTourAccountSummary } from '@/services/tourAccountancyService';
@@ -91,7 +91,7 @@ export default function Home() {
         </div>
       </header>
       <main className="flex flex-1 flex-col items-center justify-center gap-8 p-4">
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 w-full max-w-7xl">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 w-full max-w-screen-2xl">
             <BusinessCard title="ທຸລະກິດທ່ອງທ່ຽວ" href="/tour" icon={<FerrisWheel className="h-8 w-8 text-primary" />}>
                  {loading ? <Skeleton className="h-24 w-full" /> : tourSummary ? (
                     <div className="space-y-1 text-sm">
@@ -132,6 +132,10 @@ export default function Home() {
                        <p>CNY: <span className="font-mono font-semibold">{formatCurrency(docTotals.cny)}</span></p>
                     </div>
                 ) : <p className="text-muted-foreground">ບໍ່ມີຂໍ້ມູນ</p>}
+            </BusinessCard>
+
+            <BusinessCard title="ທຸລະກິດ ເຄື່ອງໃຊ້" href="/appliances" icon={<ShoppingCart className="h-8 w-8 text-primary" />}>
+                <p className="text-muted-foreground">ຈັດການຂໍ້ມູນທຸລະກິດເຄື່ອງໃຊ້ທົ່ວໄປ</p>
             </BusinessCard>
         </div>
       </main>
