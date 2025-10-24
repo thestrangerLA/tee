@@ -17,11 +17,12 @@ export interface Transaction {
     date: Date; // Stored as Timestamp in Firestore, converted to Date on client
     amount: number;
     description: string;
-    businessType?: 'agriculture' | 'tour' | 'documents' | 'meat-business';
+    businessType?: 'agriculture' | 'tour' | 'documents' | 'meat-business' | 'appliances';
     kip?: number;
     baht?: number;
     usd?: number;
     cny?: number;
+    saleId?: string;
 }
 
 export interface AccountSummary {
@@ -136,6 +137,27 @@ export interface MeatStockLog {
   createdAt: Date;
 }
 
+export interface ApplianceStockItem {
+  id: string;
+  sku: string;
+  name: string;
+  category: string;
+  costPrice: number;
+  sellingPrice: number;
+  currentStock: number;
+  createdAt: Date;
+}
+
+export interface ApplianceStockLog {
+  id: string;
+  itemId: string;
+  change: number;
+  newStock: number;
+  type: 'stock-in' | 'sale';
+  detail: string;
+  createdAt: Date;
+}
+
 
 export type CurrencyValues = {
     kip: number;
@@ -156,4 +178,18 @@ export interface DocumentAccountSummary {
     capital: CurrencyValues;
     cash: CurrencyValues;
     transfer: CurrencyValues;
+}
+
+export interface ApplianceCustomer {
+    id: string;
+    name: string;
+    address: string;
+    phone: string;
+}
+
+export interface Customer {
+  id: string;
+  name: string;
+  address: string;
+  phone: string;
 }

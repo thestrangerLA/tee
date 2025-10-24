@@ -31,7 +31,7 @@ export default function ApplianceInvoicePage() {
     try {
       if (invoiceData.type === 'income') {
         // Record the sale with profit details
-        await saveApplianceSale({
+        const saleId = await saveApplianceSale({
             ...invoiceData,
             totalCost: invoiceData.totalCost,
             totalProfit: invoiceData.totalProfit,
@@ -41,8 +41,9 @@ export default function ApplianceInvoicePage() {
         await addApplianceTransaction({
           date: invoiceData.date,
           type: 'income',
-          description: `Sale - Invoice`,
+          description: `Sale - Invoice #${saleId.substring(0, 5)}`,
           amount: invoiceData.subtotal,
+          saleId: saleId,
         });
 
         toast({
