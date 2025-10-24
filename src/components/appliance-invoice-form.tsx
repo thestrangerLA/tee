@@ -87,6 +87,7 @@ export const ApplianceInvoiceForm = forwardRef<ApplianceInvoiceFormHandle, Appli
                 })),
                 subtotal: subtotal,
                 date: new Date(invoiceDate),
+                type: 'income',
             };
             onSave(invoiceData);
         } else {
@@ -114,6 +115,7 @@ export const ApplianceInvoiceForm = forwardRef<ApplianceInvoiceFormHandle, Appli
           </Tabs>
         </CardHeader>
         <CardContent className="space-y-6">
+          <Tabs value={transactionType} onValueChange={(value) => setTransactionType(value as 'income' | 'expense')}>
             <TabsContent value="income" className="mt-0">
                 <div className="space-y-6">
                     <div className="grid md:grid-cols-3 gap-6">
@@ -203,6 +205,7 @@ export const ApplianceInvoiceForm = forwardRef<ApplianceInvoiceFormHandle, Appli
                     </div>
                  </div>
             </TabsContent>
+          </Tabs>
           
           <div className="flex justify-end gap-2">
              <Button onClick={() => window.print()} variant="outline"><Printer className="mr-2 h-4 w-4"/>ພິມ</Button>
