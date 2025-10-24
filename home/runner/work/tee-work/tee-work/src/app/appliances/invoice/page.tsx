@@ -44,6 +44,7 @@ export default function ApplianceInvoicePage() {
           description: `Sale - Invoice #${saleId.substring(0, 5)}`,
           amount: invoiceData.subtotal,
           saleId: saleId,
+          profit: invoiceData.totalProfit,
         });
 
         toast({

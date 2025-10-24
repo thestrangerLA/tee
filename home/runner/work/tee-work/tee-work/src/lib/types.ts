@@ -23,6 +23,7 @@ export interface Transaction {
     usd?: number;
     cny?: number;
     saleId?: string;
+    profit?: number;
 }
 
 export interface AccountSummary {

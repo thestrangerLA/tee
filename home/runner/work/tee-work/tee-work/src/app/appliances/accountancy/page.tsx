@@ -433,6 +433,7 @@ export default function ApplianceAccountancyPage() {
                                                 <TableRow>
                                                     <TableHead>ຄຳອະທິບາຍ</TableHead>
                                                     <TableHead className="text-right">ຈຳນວນເງິນ (KIP)</TableHead>
+                                                    <TableHead className="text-right">ກຳໄລ (KIP)</TableHead>
                                                     <TableHead className="text-center w-[120px]">ການດຳເນີນການ</TableHead>
                                                 </TableRow>
                                             </TableHeader>
@@ -441,6 +442,9 @@ export default function ApplianceAccountancyPage() {
                                                     <TableRow key={tx.id} className={tx.type === 'income' ? 'bg-green-50/50' : 'bg-red-50/50'}>
                                                         <TableCell className="font-medium">{tx.description}</TableCell>
                                                         <TableCell className={`text-right font-semibold ${tx.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>{formatCurrency(tx.amount || 0)}</TableCell>
+                                                        <TableCell className="text-right font-semibold text-blue-600">
+                                                            {tx.profit !== undefined ? formatCurrency(tx.profit) : '-'}
+                                                        </TableCell>
                                                         <TableCell className="text-center">
                                                             {tx.saleId && (
                                                                 <Button variant="ghost" size="icon" onClick={() => setViewingSaleId(tx.saleId!)}>
@@ -493,6 +497,10 @@ export default function ApplianceAccountancyPage() {
                             <div className="grid gap-2">
                                 <Label htmlFor="edit-amount">ຈຳນວນເງິນ (KIP)</Label>
                                 <Input id="edit-amount" type="number" value={editingTransaction.amount || ''} onChange={(e) => setEditingTransaction(p => p ? { ...p, amount: Number(e.target.value) } : null)} />
+                            </div>
+                             <div className="grid gap-2">
+                                <Label htmlFor="edit-profit">ກຳໄລ (KIP)</Label>
+                                <Input id="edit-profit" type="number" value={editingTransaction.profit || ''} onChange={(e) => setEditingTransaction(p => p ? { ...p, profit: Number(e.target.value) } : null)} />
                             </div>
                         </div>
                         <DialogFooter>
