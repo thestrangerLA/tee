@@ -4,18 +4,17 @@
 import { useState, useEffect, useRef } from 'react';
 import { listenToApplianceStockItems } from '@/services/applianceStockService';
 import { saveApplianceSale } from '@/services/applianceSalesService';
-import { saveApplianceDebtor } from '@/services/applianceDebtorService';
 import { listenToApplianceCustomers } from '@/services/applianceCustomerService';
 import type { ApplianceStockItem, ApplianceCustomer } from '@/lib/types';
 import { ApplianceInvoiceForm, type ApplianceInvoiceFormHandle } from '@/components/appliance-invoice-form';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { ArrowLeft, FileText } from 'lucide-react';
+import { addApplianceTransaction } from '@/services/applianceAccountancyService';
 
 export default function ApplianceInvoicePage() {
   const [stockItems, setStockItems] = useState<ApplianceStockItem[]>([]);
   const [customers, setCustomers] = useState<ApplianceCustomer[]>([]);
-  const [paymentStatus, setPaymentStatus] = useState<'paid' | 'unpaid'>('paid');
   const invoiceFormRef = useRef<ApplianceInvoiceFormHandle>(null);
 
   useEffect(() => {
@@ -28,18 +27,22 @@ export default function ApplianceInvoicePage() {
   }, []);
 
   const handleSaveInvoice = async (invoiceData: any) => {
-    let result;
-    if (invoiceData.status === 'unpaid') {
-      result = await saveApplianceDebtor(invoiceData);
-    } else {
-      result = await saveApplianceSale(invoiceData);
-    }
+    try {
+      // Record the sale
+      await saveApplianceSale(invoiceData);
 
-    if (result.success) {
-      alert(result.message);
+      // Record the income transaction in accountancy
+      await addApplianceTransaction({
+        date: invoiceData.date,
+        type: 'income',
+        description: `ລາຍຮັບຈາກການຂາຍ #${invoiceData.invoiceNumber || ''}`,
+        amount: invoiceData.subtotal,
+      });
+
+      alert('ບັນທຶກລາຍຮັບ ແລະ ອັບເດດສະຕັອກສຳເລັດ!');
       invoiceFormRef.current?.resetForm();
-    } else {
-      alert(`Failed to save invoice: ${result.message}`);
+    } catch (error: any) {
+       alert(`Failed to save invoice: ${error.message}`);
     }
   };
 
@@ -57,8 +60,8 @@ export default function ApplianceInvoicePage() {
             <FileText className="h-6 w-6 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">ອອກໃບເກັບເງິນ (ເຄື່ອງໃຊ້)</h1>
-            <p className="text-sm text-muted-foreground">ສ້າງ ແລະ ພິມໃບເກັບເງິນສຳລັບລູກຄ້າ</p>
+            <h1 className="text-2xl font-bold tracking-tight">ລາຍຮັບ</h1>
+            <p className="text-sm text-muted-foreground">ບັນທຶກລາຍຮັບຈາກການຂາຍເຄື່ອງໃຊ້</p>
           </div>
         </div>
       </header>
@@ -68,8 +71,6 @@ export default function ApplianceInvoicePage() {
             allItems={stockItems} 
             customers={customers}
             onSave={handleSaveInvoice}
-            paymentStatus={paymentStatus}
-            onPaymentStatusChange={setPaymentStatus}
         />
       </main>
     </div>

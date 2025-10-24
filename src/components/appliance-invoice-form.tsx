@@ -8,7 +8,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
 import { Trash2, PlusCircle, Printer } from 'lucide-react';
 import type { ApplianceStockItem, ApplianceCustomer } from '@/lib/types';
@@ -22,8 +21,6 @@ interface ApplianceInvoiceFormProps {
     allItems: ApplianceStockItem[];
     customers: ApplianceCustomer[];
     onSave: (invoiceData: any) => void;
-    paymentStatus: 'paid' | 'unpaid';
-    onPaymentStatusChange: (status: 'paid' | 'unpaid') => void;
 }
 
 export interface ApplianceInvoiceFormHandle {
@@ -33,19 +30,14 @@ export interface ApplianceInvoiceFormHandle {
 const formatCurrency = (value: number) => new Intl.NumberFormat('lo-LA').format(value);
 
 export const ApplianceInvoiceForm = forwardRef<ApplianceInvoiceFormHandle, ApplianceInvoiceFormProps>(
-  ({ allItems, customers, onSave, paymentStatus, onPaymentStatusChange }, ref) => {
+  ({ allItems, onSave }, ref) => {
     
-    const initialCustomerState = { name: '', address: '', phone: '' };
-    const [customer, setCustomer] = useState<Partial<ApplianceCustomer>>(initialCustomerState);
     const [invoiceItems, setInvoiceItems] = useState<InvoiceItem[]>([]);
-    const [invoiceNumber, setInvoiceNumber] = useState('');
     const [invoiceDate, setInvoiceDate] = useState(format(new Date(), 'yyyy-MM-dd'));
 
     useImperativeHandle(ref, () => ({
       resetForm() {
-        setCustomer(initialCustomerState);
         setInvoiceItems([]);
-        setInvoiceNumber('');
         setInvoiceDate(format(new Date(), 'yyyy-MM-dd'));
       }
     }));
@@ -78,14 +70,8 @@ export const ApplianceInvoiceForm = forwardRef<ApplianceInvoiceFormHandle, Appli
       setInvoiceItems(invoiceItems.filter((_, i) => i !== index));
     };
 
-    const handleCustomerSelect = (customerId: string) => {
-        const selectedCustomer = customers.find(c => c.id === customerId);
-        setCustomer(selectedCustomer || initialCustomerState);
-    };
-    
     const handleSave = () => {
         const invoiceData = {
-            customer: customer,
             items: invoiceItems.map(item => ({
                 id: item.id,
                 name: item.name,
@@ -94,9 +80,8 @@ export const ApplianceInvoiceForm = forwardRef<ApplianceInvoiceFormHandle, Appli
                 total: item.sellingPrice * item.quantity,
             })),
             subtotal: subtotal,
-            invoiceNumber: invoiceNumber,
             date: new Date(invoiceDate),
-            status: paymentStatus
+            status: 'paid' // Default to 'paid' since the UI is removed
         };
         onSave(invoiceData);
     };
@@ -104,60 +89,15 @@ export const ApplianceInvoiceForm = forwardRef<ApplianceInvoiceFormHandle, Appli
     return (
       <Card className="w-full max-w-4xl mx-auto shadow-lg">
         <CardHeader>
-          <CardTitle>ຂໍ້ມູນໃບເກັບເງິນ</CardTitle>
+          <CardTitle>ບັນທຶກລາຍຮັບ</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <h3 className="font-semibold">ຂໍ້ມູນລູກຄ້າ</h3>
-              <Select onValueChange={handleCustomerSelect}>
-                <SelectTrigger>
-                  <SelectValue placeholder="ເລືອກລູກຄ້າທີ່ມີຢູ່ແລ້ວ" />
-                </SelectTrigger>
-                <SelectContent>
-                  {customers.map(c => (
-                    <SelectItem key={c.id} value={c.id}>{c.name} - {c.phone}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <div className="grid gap-2">
-                <Label htmlFor="customer-name">ຊື່ລູກຄ້າ</Label>
-                <Input id="customer-name" value={customer.name} onChange={e => setCustomer({...customer, name: e.target.value})} />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="customer-address">ທີ່ຢູ່</Label>
-                <Textarea id="customer-address" value={customer.address} onChange={e => setCustomer({...customer, address: e.target.value})} />
-              </div>
-               <div className="grid gap-2">
-                <Label htmlFor="customer-phone">ເບີໂທ</Label>
-                <Input id="customer-phone" value={customer.phone} onChange={e => setCustomer({...customer, phone: e.target.value})} />
-              </div>
-            </div>
-            <div className="space-y-4">
-              <h3 className="font-semibold">ລາຍລະອຽດໃບເກັບເງິນ</h3>
-              <div className="grid gap-2">
-                <Label htmlFor="invoice-number">ເລກທີ່ໃບເກັບເງິນ</Label>
-                <Input id="invoice-number" value={invoiceNumber} onChange={e => setInvoiceNumber(e.target.value)} />
-              </div>
-              <div className="grid gap-2">
+           <div className="grid md:grid-cols-3 gap-6">
+             <div className="grid gap-2">
                 <Label htmlFor="invoice-date">ວັນທີ</Label>
                 <Input id="invoice-date" type="date" value={invoiceDate} onChange={e => setInvoiceDate(e.target.value)} />
               </div>
-              <div className="grid gap-2">
-                 <Label>ສະຖານະການຊຳລະເງິນ</Label>
-                 <RadioGroup value={paymentStatus} onValueChange={(val: 'paid' | 'unpaid') => onPaymentStatusChange(val)} className="flex gap-4">
-                    <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="paid" id="paid" />
-                        <Label htmlFor="paid">ຊຳລະແລ້ວ</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="unpaid" id="unpaid" />
-                        <Label htmlFor="unpaid">ຕິດໜີ້</Label>
-                    </div>
-                </RadioGroup>
-              </div>
-            </div>
-          </div>
+           </div>
           
           <div>
             <h3 className="font-semibold mb-4">ລາຍການສິນຄ້າ</h3>
@@ -220,7 +160,7 @@ export const ApplianceInvoiceForm = forwardRef<ApplianceInvoiceFormHandle, Appli
           
           <div className="flex justify-end gap-2">
              <Button onClick={() => window.print()} variant="outline"><Printer className="mr-2 h-4 w-4"/>ພິມ</Button>
-             <Button onClick={handleSave}>ບັນທຶກໃບເກັບເງິນ</Button>
+             <Button onClick={handleSave}>ບັນທຶກ</Button>
           </div>
         </CardContent>
       </Card>
