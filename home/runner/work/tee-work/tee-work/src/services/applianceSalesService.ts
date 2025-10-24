@@ -1,6 +1,6 @@
 
 import { db } from '@/lib/firebase';
-import { collection, addDoc, Timestamp, writeBatch, doc, getDoc, runTransaction, serverTimestamp, query, where, orderBy, onSnapshot, endAt, startAt } from 'firebase/firestore';
+import { collection, addDoc, Timestamp, writeBatch, doc, getDoc, runTransaction, serverTimestamp, query, where, orderBy, onSnapshot, endAt, startAt, deleteDoc } from 'firebase/firestore';
 import type { Sale } from '@/lib/types';
 
 const salesCollectionRef = collection(db, 'applianceSales');
@@ -95,5 +95,6 @@ export const listenToApplianceSalesByDate = (date: Date, callback: (sales: Sale[
 
 export const deleteApplianceSale = async (saleId: string) => {
     const saleDocRef = doc(db, 'applianceSales', saleId);
+    // Note: This does not currently revert stock changes. A more complex transaction would be needed.
     await deleteDoc(saleDocRef);
 };
