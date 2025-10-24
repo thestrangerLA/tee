@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { saveApplianceSale } from '@/services/applianceSalesService';
-import type { ApplianceStockItem, ApplianceCustomer } from '@/lib/types';
+import type { ApplianceStockItem } from '@/lib/types';
 import { ApplianceInvoiceForm, type ApplianceInvoiceFormHandle } from '@/components/appliance-invoice-form';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -11,6 +11,7 @@ import { ArrowLeft, FileText } from 'lucide-react';
 import { listenToApplianceStockItems } from '@/services/applianceStockService';
 import { useToast } from '@/hooks/use-toast';
 import { useClientRouter } from '@/hooks/useClientRouter';
+import { addApplianceTransaction } from '@/services/applianceAccountancyService';
 
 
 export default function ApplianceInvoicePage() {
@@ -28,20 +29,41 @@ export default function ApplianceInvoicePage() {
 
   const handleSaveInvoice = async (invoiceData: any) => {
     try {
-      // Record the sale
-      await saveApplianceSale(invoiceData);
+      if (invoiceData.type === 'income') {
+        // Record the sale
+        await saveApplianceSale(invoiceData);
 
-      toast({
-          title: "ບັນທຶກສຳເລັດ",
-          description: "ບັນທຶກລາຍການຂາຍ ແລະ ອັບເດດສະຕັອກສຳເລັດແລ້ວ.",
-      });
+        // Also add to general transactions
+        await addApplianceTransaction({
+          date: invoiceData.date,
+          type: 'income',
+          description: `Sale - Invoice`,
+          amount: invoiceData.subtotal,
+        });
+
+        toast({
+            title: "ບັນທຶກສຳເລັດ",
+            description: "ບັນທຶກລາຍການຂາຍ ແລະ ອັບເດດສະຕັອກສຳເລັດແລ້ວ.",
+        });
+
+      } else { // Expense
+         await addApplianceTransaction({
+          date: invoiceData.date,
+          type: 'expense',
+          description: invoiceData.description,
+          amount: invoiceData.subtotal,
+        });
+         toast({
+            title: "ບັນທຶກລາຍຈ່າຍສຳເລັດ",
+        });
+      }
+      
       invoiceFormRef.current?.resetForm();
-      router.push('/appliances/reports/sales');
 
     } catch (error: any) {
        toast({
           title: "ເກີດຂໍ້ຜິດພາດ",
-          description: `ບໍ່ສາມາດບັນທຶກໃບເກັບເງິນໄດ້: ${error.message}`,
+          description: `ບໍ່ສາມາດບັນທຶກໄດ້: ${error.message}`,
           variant: "destructive"
        });
     }
@@ -61,8 +83,8 @@ export default function ApplianceInvoicePage() {
             <FileText className="h-6 w-6 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">ລາຍຮັບ</h1>
-            <p className="text-sm text-muted-foreground">ບັນທຶກລາຍຮັບຈາກການຂາຍເຄື່ອງໃຊ້</p>
+            <h1 className="text-2xl font-bold tracking-tight">ບັນທຶກ ລາຍຮັບ-ລາຍຈ່າຍ</h1>
+            <p className="text-sm text-muted-foreground">ບັນທຶກລາຍຮັບຈາກການຂາຍ ແລະ ລາຍຈ່າຍທົ່ວໄປ</p>
           </div>
         </div>
       </header>
