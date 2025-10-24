@@ -5,12 +5,12 @@ import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, History, ChevronRight, DollarSign, Calendar, CalendarDays } from "lucide-react";
+import { ArrowLeft, BookOpen, ChevronRight, DollarSign, Calendar, CalendarDays } from "lucide-react";
 import { collection, onSnapshot, query, orderBy, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { format, isSameDay, isSameMonth, isSameYear, startOfDay, endOfDay, startOfMonth, endOfMonth, startOfYear, endOfYear, getYear, getMonth, setMonth } from 'date-fns';
+import { format, isSameDay, isSameMonth, isSameYear, getYear, getMonth, setMonth } from 'date-fns';
 import { lo } from 'date-fns/locale';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuPortal, DropdownMenuSubContent } from "@/components/ui/dropdown-menu"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuPortal, DropdownMenuSubContent } from "@/components/ui/dropdown-menu";
 import type { Sale } from '@/lib/types';
 
 
@@ -31,7 +31,7 @@ const SummaryCard = ({ title, value, icon }: { title: string, value: string, ico
     </Card>
 );
 
-export default function ApplianceSalesPage() {
+export default function ApplianceGeneralLedgerPage() {
     const [sales, setSales] = useState<Sale[]>([]);
     const [filter, setFilter] = useState<{ year: number | null, month: number | null }>({ year: new Date().getFullYear(), month: new Date().getMonth() });
 
@@ -117,7 +117,7 @@ export default function ApplianceSalesPage() {
                 </Button>
                 <div className="flex items-center gap-2">
                     <div className="p-2 bg-primary/10 rounded-full">
-                        <History className="h-5 w-5 text-primary" />
+                        <BookOpen className="h-5 w-5 text-primary" />
                     </div>
                     <div>
                         <h1 className="text-xl font-bold tracking-tight">ປະຫວັດການຂາຍທັງໝົດ</h1>
@@ -188,3 +188,4 @@ export default function ApplianceSalesPage() {
         </div>
     );
 }
+
