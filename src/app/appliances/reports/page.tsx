@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, FilePieChart, BookOpen, ChevronRight } from "lucide-react";
+import { ArrowLeft, FilePieChart, BookOpen, ChevronRight, FileText } from "lucide-react";
 
 
 export default function ApplianceReportsPage() {
@@ -40,6 +40,22 @@ export default function ApplianceReportsPage() {
                                         <div>
                                             <CardTitle className="text-lg">ປະຫວັດຮັບ-ຈ່າຍທົ່ວໄປ</CardTitle>
                                             <CardDescription>ເບິ່ງລາຍການທຸລະກຳທັງໝົດ</CardDescription>
+                                        </div>
+                                    </div>
+                                     <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                                </CardHeader>
+                            </Card>
+                        </Link>
+                         <Link href="/appliances/reports/sales">
+                            <Card className="hover:bg-muted/50 cursor-pointer transition-colors">
+                                <CardHeader className="flex flex-row items-center justify-between">
+                                    <div className='flex items-center gap-4'>
+                                         <div className="bg-green-100 p-3 rounded-full">
+                                          <FileText className="h-6 w-6 text-green-600" />
+                                        </div>
+                                        <div>
+                                            <CardTitle className="text-lg">ລາຍງານການຂາຍ</CardTitle>
+                                            <CardDescription>ເບິ່ງປະຫວັດການຂາຍ ແລະ ໃບເກັບເງິນທັງໝົດ</CardDescription>
                                         </div>
                                     </div>
                                      <ChevronRight className="h-5 w-5 text-muted-foreground" />

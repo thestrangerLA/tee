@@ -2,27 +2,27 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { listenToApplianceStockItems } from '@/services/applianceStockService';
 import { saveApplianceSale } from '@/services/applianceSalesService';
-import { listenToApplianceCustomers } from '@/services/applianceCustomerService';
 import type { ApplianceStockItem, ApplianceCustomer } from '@/lib/types';
 import { ApplianceInvoiceForm, type ApplianceInvoiceFormHandle } from '@/components/appliance-invoice-form';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { ArrowLeft, FileText } from 'lucide-react';
-import { addApplianceTransaction } from '@/services/applianceAccountancyService';
+import { listenToApplianceStockItems } from '@/services/applianceStockService';
+import { useToast } from '@/hooks/use-toast';
+import { useClientRouter } from '@/hooks/useClientRouter';
+
 
 export default function ApplianceInvoicePage() {
   const [stockItems, setStockItems] = useState<ApplianceStockItem[]>([]);
-  const [customers, setCustomers] = useState<ApplianceCustomer[]>([]);
   const invoiceFormRef = useRef<ApplianceInvoiceFormHandle>(null);
+  const { toast } = useToast();
+  const router = useClientRouter();
 
   useEffect(() => {
     const unsubscribeStock = listenToApplianceStockItems(setStockItems);
-    const unsubscribeCustomers = listenToApplianceCustomers(setCustomers);
     return () => {
       unsubscribeStock();
-      unsubscribeCustomers();
     };
   }, []);
 
@@ -31,18 +31,19 @@ export default function ApplianceInvoicePage() {
       // Record the sale
       await saveApplianceSale(invoiceData);
 
-      // Record the income transaction in accountancy
-      await addApplianceTransaction({
-        date: invoiceData.date,
-        type: 'income',
-        description: `ລາຍຮັບຈາກການຂາຍ #${invoiceData.invoiceNumber || ''}`,
-        amount: invoiceData.subtotal,
+      toast({
+          title: "ບັນທຶກສຳເລັດ",
+          description: "ບັນທຶກລາຍການຂາຍ ແລະ ອັບເດດສະຕັອກສຳເລັດແລ້ວ.",
       });
-
-      alert('ບັນທຶກລາຍຮັບ ແລະ ອັບເດດສະຕັອກສຳເລັດ!');
       invoiceFormRef.current?.resetForm();
+      router.push('/appliances/reports/sales');
+
     } catch (error: any) {
-       alert(`Failed to save invoice: ${error.message}`);
+       toast({
+          title: "ເກີດຂໍ້ຜິດພາດ",
+          description: `ບໍ່ສາມາດບັນທຶກໃບເກັບເງິນໄດ້: ${error.message}`,
+          variant: "destructive"
+       });
     }
   };
 
@@ -69,7 +70,6 @@ export default function ApplianceInvoicePage() {
         <ApplianceInvoiceForm 
             ref={invoiceFormRef} 
             allItems={stockItems} 
-            customers={customers}
             onSave={handleSaveInvoice}
         />
       </main>
