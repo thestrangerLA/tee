@@ -50,28 +50,28 @@ export default function AppliancesPage() {
               </CardContent>
             </Card>
           </Link>
-           <Link href="#">
-            <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full text-muted-foreground">
+           <Link href="/appliances/accountancy">
+            <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-2xl font-bold font-headline">ຈັດການບັນຊີ</CardTitle>
-                <Landmark className="h-8 w-8 text-muted" />
+                <Landmark className="h-8 w-8 text-primary" />
               </CardHeader>
               <CardContent>
-                <p>
-                  ຕິດຕາມລາຍຮັບ-ລາຍຈ່າຍ (ຈະມາໃນໄວໆນີ້)
+                <p className="text-muted-foreground">
+                  ຕິດຕາມລາຍຮັບ-ລາຍຈ່າຍ, ຈັດການທຸລະກຳ ແລະເບິ່ງສະຫຼຸບການເງິນ
                 </p>
               </CardContent>
             </Card>
           </Link>
-           <Link href="#">
-            <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full text-muted-foreground">
+           <Link href="/appliances/reports">
+            <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-2xl font-bold font-headline">ສະຫຼຸບຍອດ</CardTitle>
-                <FilePieChart className="h-8 w-8 text-muted" />
+                <FilePieChart className="h-8 w-8 text-primary" />
               </CardHeader>
               <CardContent>
-                <p>
-                  ເບິ່ງສະຫຼຸບຜົນປະກອບການ (ຈະມາໃນໄວໆນີ້)
+                <p className="text-muted-foreground">
+                  ເບິ່ງສະຫຼຸບຜົນປະກອບການ ແລະ ປະຫວັດຮັບ-ຈ່າຍທົ່ວໄປ
                 </p>
               </CardContent>
             </Card>
