@@ -10,6 +10,7 @@ import { ArrowLeft, FileText, Printer, MoreHorizontal } from "lucide-react";
 import { collection, onSnapshot, query, orderBy, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { format } from 'date-fns';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('lo-LA', { minimumFractionDigits: 0 }).format(value);
@@ -65,40 +66,49 @@ export default function ApplianceSalesPage() {
                         <CardDescription>ລາຍການໃບເກັບເງິນທີ່ໄດ້ບັນທຶກໄວ້</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>ວັນທີ</TableHead>
-                                    <TableHead>ລາຍການ</TableHead>
-                                    <TableHead className="text-right">ຍອດລວມ</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {sales.length > 0 ? (
-                                    sales.map(sale => (
-                                        <TableRow key={sale.id}>
-                                            <TableCell className="font-medium">{format(sale.date, 'dd/MM/yyyy')}</TableCell>
-                                            <TableCell>
-                                                <ul className="list-disc list-inside">
-                                                    {sale.items.map(item => (
-                                                        <li key={item.id} className="text-sm">
-                                                            {item.name} (x{item.quantity})
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            </TableCell>
-                                            <TableCell className="text-right font-mono">{formatCurrency(sale.subtotal)} KIP</TableCell>
-                                        </TableRow>
-                                    ))
-                                ) : (
-                                    <TableRow>
-                                        <TableCell colSpan={3} className="h-24 text-center">
-                                            ບໍ່ມີຂໍ້ມູນການຂາຍ
-                                        </TableCell>
-                                    </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
+                        {sales.length > 0 ? (
+                            <Accordion type="single" collapsible className="w-full">
+                                {sales.map((sale) => (
+                                    <AccordionItem value={sale.id} key={sale.id}>
+                                        <AccordionTrigger>
+                                            <div className="flex justify-between w-full pr-4">
+                                                <div className="font-semibold">{`ໃບບິນ ວັນທີ ${format(sale.date, 'dd/MM/yyyy')}`}</div>
+                                                <div className="text-right font-mono">{formatCurrency(sale.subtotal)} KIP</div>
+                                            </div>
+                                        </AccordionTrigger>
+                                        <AccordionContent className="p-2">
+                                            <div className="border rounded-lg p-4">
+                                                <h4 className="font-semibold mb-2">ລາຍລະອຽດໃບບິນ</h4>
+                                                <Table>
+                                                    <TableHeader>
+                                                        <TableRow>
+                                                            <TableHead>ລາຍການ</TableHead>
+                                                            <TableHead className="text-center">ຈຳນວນ</TableHead>
+                                                            <TableHead className="text-right">ລາຄາຕໍ່ໜ່ວຍ</TableHead>
+                                                            <TableHead className="text-right">ລາຄາລວມ</TableHead>
+                                                        </TableRow>
+                                                    </TableHeader>
+                                                    <TableBody>
+                                                        {sale.items.map(item => (
+                                                            <TableRow key={item.id}>
+                                                                <TableCell>{item.name}</TableCell>
+                                                                <TableCell className="text-center">{item.quantity}</TableCell>
+                                                                <TableCell className="text-right font-mono">{formatCurrency(item.price)}</TableCell>
+                                                                <TableCell className="text-right font-mono">{formatCurrency(item.total)}</TableCell>
+                                                            </TableRow>
+                                                        ))}
+                                                    </TableBody>
+                                                </Table>
+                                            </div>
+                                        </AccordionContent>
+                                    </AccordionItem>
+                                ))}
+                            </Accordion>
+                        ) : (
+                            <div className="text-center text-muted-foreground py-16">
+                                ບໍ່ມີຂໍ້ມູນການຂາຍ
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
             </main>
