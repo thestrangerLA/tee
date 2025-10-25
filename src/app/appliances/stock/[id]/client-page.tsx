@@ -121,10 +121,6 @@ export default function ApplianceStockClientPage({ initialItem }: { initialItem:
                             <Label>ຊື່ສິນຄ້າ</Label>
                             <Input value={editData.name || ''} onChange={(e) => setEditData({...editData, name: e.target.value})} disabled={!isEditing} />
                         </div>
-                         <div className="grid gap-2">
-                            <Label>ໝວດໝູ່</Label>
-                            <Input value={editData.category || ''} onChange={(e) => setEditData({...editData, category: e.target.value})} disabled={!isEditing} />
-                        </div>
                         <div className="grid gap-2">
                             <Label>ຕົ້ນทุน (KIP)</Label>
                             <Input type="number" value={editData.costPrice || ''} onChange={(e) => setEditData({...editData, costPrice: parseFloat(e.target.value) || 0})} disabled={!isEditing} />

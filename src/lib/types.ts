@@ -1,6 +1,4 @@
 
-
-
 export type StockItem = {
   id: string;
   name: string;
@@ -23,6 +21,8 @@ export interface Transaction {
     baht?: number;
     usd?: number;
     cny?: number;
+    saleId?: string;
+    profit?: number;
 }
 
 export interface AccountSummary {
@@ -141,11 +141,20 @@ export interface ApplianceStockItem {
   id: string;
   sku: string;
   name: string;
-  category: string;
   costPrice: number;
   sellingPrice: number;
   currentStock: number;
   createdAt: Date;
+}
+
+export interface Sale {
+    id: string;
+    items: { id: string; name: string; quantity: number; price: number; total: number; }[];
+    subtotal: number;
+    totalCost?: number;
+    totalProfit?: number;
+    date: Date;
+    createdAt: Date;
 }
 
 export interface ApplianceStockLog {

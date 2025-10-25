@@ -63,14 +63,13 @@ const AddItemDialog = ({ onAddItem }: { onAddItem: (item: Omit<ApplianceStockIte
         const newItem: Omit<ApplianceStockItem, 'id'|'createdAt'> = {
             sku: formData.get('sku') as string,
             name: formData.get('name') as string,
-            category: formData.get('category') as string,
             costPrice: parseFloat(formData.get('costPrice') as string) || 0,
             sellingPrice: parseFloat(formData.get('sellingPrice') as string) || 0,
             currentStock: parseFloat(formData.get('currentStock') as string) || 0,
         };
 
-        if (!newItem.sku || !newItem.name || !newItem.category) {
-             toast({ title: "Error", description: "ກະລຸນາປ້ອນ SKU, ຊື່ ແລະ ໝວດໝູ່.", variant: "destructive" });
+        if (!newItem.sku || !newItem.name) {
+             toast({ title: "Error", description: "ກະລຸນາປ້ອນ SKU และ ຊື່.", variant: "destructive" });
              return;
         }
 
@@ -106,10 +105,6 @@ const AddItemDialog = ({ onAddItem }: { onAddItem: (item: Omit<ApplianceStockIte
                          <div className="grid gap-2">
                             <Label htmlFor="name">ຊື່ເຄື່ອງໃຊ້</Label>
                             <Input id="name" name="name" required />
-                        </div>
-                         <div className="grid gap-2">
-                            <Label htmlFor="category">ໝວດໝູ່</Label>
-                            <Input id="category" name="category" placeholder="ເຊັ່ນ: ຕູ້ເຢັນ, ພັດລົມ" required />
                         </div>
                          <div className="grid gap-2">
                             <Label htmlFor="costPrice">ຕົ້ນทุน (KIP)</Label>
@@ -212,8 +207,7 @@ export default function ApplianceStockPage() {
     const filteredStockItems = useMemo(() => {
         return stockItems.filter(item =>
             item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            item.sku.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            item.category.toLowerCase().includes(searchQuery.toLowerCase())
+            item.sku.toLowerCase().includes(searchQuery.toLowerCase())
         );
     }, [stockItems, searchQuery]);
 
@@ -280,7 +274,6 @@ export default function ApplianceStockPage() {
                                 <TableRow>
                                     <TableHead>SKU</TableHead>
                                     <TableHead>ຊື່ສິນຄ້າ</TableHead>
-                                    <TableHead>ໝວດໝູ່</TableHead>
                                     <TableHead className="text-right">ຕົ້ນทุน</TableHead>
                                     <TableHead className="text-right">ລາຄາຂາຍ</TableHead>
                                     <TableHead className="text-right">ຄົງເຫຼືອ</TableHead>
@@ -294,7 +287,6 @@ export default function ApplianceStockPage() {
                                         <TableCell className="font-medium hover:underline">
                                             <Link href={`/appliances/stock/${item.id}`}>{item.name}</Link>
                                         </TableCell>
-                                        <TableCell>{item.category}</TableCell>
                                         <TableCell className="text-right">{formatCurrency(item.costPrice)}</TableCell>
                                         <TableCell className="text-right">{formatCurrency(item.sellingPrice)}</TableCell>
                                         <TableCell className="text-right font-bold">{item.currentStock}</TableCell>
@@ -318,7 +310,7 @@ export default function ApplianceStockPage() {
                                     </TableRow>
                                 )) : (
                                     <TableRow>
-                                        <TableCell colSpan={7} className="text-center h-24">ບໍ່ມີສິນຄ້າ</TableCell>
+                                        <TableCell colSpan={6} className="text-center h-24">ບໍ່ມີສິນຄ້າ</TableCell>
                                     </TableRow>
                                 )}
                             </TableBody>
