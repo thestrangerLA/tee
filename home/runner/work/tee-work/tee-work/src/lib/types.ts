@@ -1,5 +1,6 @@
 
 
+
 export type StockItem = {
   id: string;
   name: string;
@@ -142,7 +143,6 @@ export interface ApplianceStockItem {
   id: string;
   sku: string;
   name: string;
-  category: string;
   costPrice: number;
   sellingPrice: number;
   currentStock: number;
