@@ -604,11 +604,10 @@ export default function MeatStockPage() {
                                                             <TableCell className="text-right">{formatCurrency(totalCostValue)}</TableCell>
                                                             <TableCell className="text-center space-x-1">
                                                                 <div className="flex items-center justify-center gap-1">
-                                                                    <Checkbox id={`finish-item-${item.id}`} checked={item.isFinished} onCheckedChange={(checked) => handleSetItemFinished(item.id, !!checked)} />
+                                                                    <Checkbox id={`finish-item-${item.id}`} checked={!!item.isFinished} onCheckedChange={(checked) => handleSetItemFinished(item.id, !!checked)} />
                                                                     <Label htmlFor={`finish-item-${item.id}`} className="text-xs">ສຳເລັດ</Label>
                                                                 </div>
                                                                 <StockAdjustmentDialog item={item} onAdjust={updateStockQuantity} type="stock-in" />
-                                                                <StockAdjustmentDialog item={item} onAdjust={updateStockQuantity} type="sale" />
                                                                 <AlertDialog>
                                                                     <AlertDialogTrigger asChild><Button variant="ghost" size="icon"><Trash2 className="h-4 w-4 text-red-500" /></Button></AlertDialogTrigger>
                                                                     <AlertDialogContent>
@@ -646,6 +645,9 @@ export default function MeatStockPage() {
     );
 }
 
+
+
+    
 
 
     

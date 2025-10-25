@@ -69,7 +69,7 @@ const AddItemDialog = ({ onAddItem }: { onAddItem: (item: Omit<ApplianceStockIte
         };
 
         if (!newItem.sku || !newItem.name) {
-             toast({ title: "Error", description: "ກະລຸນາປ້ອນ SKU และ ຊື່.", variant: "destructive" });
+             toast({ title: "Error", description: "ກະລຸນາປ້ອນ SKU ແລະ ຊື່.", variant: "destructive" });
              return;
         }
 
@@ -292,7 +292,6 @@ export default function ApplianceStockPage() {
                                         <TableCell className="text-right font-bold">{item.currentStock}</TableCell>
                                         <TableCell className="text-center space-x-1">
                                             <StockAdjustmentDialog item={item} onAdjust={updateApplianceStockQuantity} type="stock-in" />
-                                            <StockAdjustmentDialog item={item} onAdjust={updateApplianceStockQuantity} type="sale" />
                                             <AlertDialog>
                                                 <AlertDialogTrigger asChild><Button variant="ghost" size="icon"><Trash2 className="h-4 w-4 text-red-500" /></Button></AlertDialogTrigger>
                                                 <AlertDialogContent>
@@ -321,3 +320,5 @@ export default function ApplianceStockPage() {
         </div>
     );
 }
+
+    
