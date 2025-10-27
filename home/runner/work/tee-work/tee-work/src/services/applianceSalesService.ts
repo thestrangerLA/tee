@@ -1,6 +1,6 @@
 
 import { db } from '@/lib/firebase';
-import { collection, addDoc, Timestamp, writeBatch, doc, getDoc, runTransaction, serverTimestamp, query, where, orderBy, onSnapshot, endAt, startAt, deleteDoc, increment } from 'firebase/firestore';
+import { collection, addDoc, Timestamp, writeBatch, doc, getDoc, runTransaction, serverTimestamp, query, where, orderBy, onSnapshot, endAt, startAt, deleteDoc, increment, getDocs } from 'firebase/firestore';
 import type { Sale } from '@/lib/types';
 
 const salesCollectionRef = collection(db, 'applianceSales');
@@ -72,6 +72,16 @@ export const getApplianceSale = async (saleId: string): Promise<Sale | null> => 
         } as Sale;
     }
     return null;
+};
+
+export const getAllApplianceSaleIds = async (): Promise<{ id: string }[]> => {
+    const q = query(salesCollectionRef);
+    const querySnapshot = await getDocs(q);
+    const ids = querySnapshot.docs.map(doc => ({ id: doc.id }));
+    if (ids.length === 0) {
+        return [{ id: 'default' }];
+    }
+    return ids;
 };
 
 export const listenToApplianceSalesByDate = (date: Date, callback: (sales: Sale[]) => void) => {

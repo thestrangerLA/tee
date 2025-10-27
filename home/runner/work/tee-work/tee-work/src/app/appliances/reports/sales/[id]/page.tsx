@@ -1,5 +1,5 @@
 
-import { getApplianceSale } from '@/services/applianceSalesService';
+import { getApplianceSale, getAllApplianceSaleIds } from '@/services/applianceSalesService';
 import type { Metadata } from 'next';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
@@ -8,8 +8,18 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { format } from 'date-fns';
 
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 export const dynamicParams = true;
+
+export async function generateStaticParams() {
+  try {
+    const ids = await getAllApplianceSaleIds();
+    return ids;
+  } catch (error) {
+    console.error("Error fetching static params for appliance sales:", error);
+    return [{ id: 'default' }];
+  }
+}
 
 const formatCurrency = (value: number) => {
     if (isNaN(value)) return '0';
@@ -24,6 +34,15 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
 
 
 export default async function SaleDetailPage({ params }: { params: { id: string } }) {
+  if (params.id === 'default') {
+    return (
+        <div className="flex justify-center items-center h-screen">
+            <h1>Loading sale data...</h1>
+            <p>This is a placeholder for static builds.</p>
+        </div>
+    );
+  }
+
   const sale = await getApplianceSale(params.id);
 
   if (!sale) {
