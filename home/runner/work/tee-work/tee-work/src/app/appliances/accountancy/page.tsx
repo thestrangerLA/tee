@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Landmark, Wallet, PlusCircle, Calendar as CalendarIcon, ChevronDown, ChevronUp, MoreHorizontal, Pencil, Trash2, Briefcase, Combine, ArrowUpCircle, ArrowDownCircle, Scale, FileText, Banknote, Minus, Equal, Coins, MinusCircle, Eye } from "lucide-react"
+import { ArrowLeft, Landmark, Wallet, PlusCircle, Calendar as CalendarIcon, ChevronDown, ChevronUp, MoreHorizontal, Pencil, Trash2, Briefcase, Combine, ArrowUpCircle, ArrowDownCircle, Scale, FileText, Banknote, Minus, Equal, Coins, MinusCircle } from "lucide-react"
 import Link from 'next/link'
 import { useToast } from "@/hooks/use-toast"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
@@ -15,14 +15,12 @@ import { Calendar } from "@/components/ui/calendar"
 import { Textarea } from "@/components/ui/textarea"
 import { format, isSameDay, startOfMonth, endOfMonth, isWithinInterval, startOfDay, eachDayOfInterval, getYear, setMonth, getMonth } from "date-fns"
 
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuPortal, DropdownMenuSubContent } from "@/components/ui/dropdown-menu"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { listenToApplianceAccountSummary, updateApplianceAccountSummary, listenToApplianceTransactions, addApplianceTransaction, updateApplianceTransaction, deleteApplianceTransaction } from '@/services/applianceAccountancyService';
-import { getApplianceSale } from '@/services/applianceSalesService';
 import type { AccountSummary, Transaction, CashCalculatorState } from '@/lib/types';
-import { Skeleton } from '@/components/ui/skeleton';
 import { listenToApplianceCashCalculatorState, updateApplianceCashCalculatorState } from '@/services/applianceCashCalculatorService';
 
 const formatCurrency = (value: number) => {
@@ -43,76 +41,6 @@ const SummaryCard = ({ title, value, icon, onClick, className }: { title: string
         </CardContent>
     </Card>
 );
-
-const SaleInvoiceDialogContent = ({ saleId }: { saleId: string }) => {
-    const [sale, setSale] = useState<any>(null);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        const fetchSale = async () => {
-            setLoading(true);
-            const saleData = await getApplianceSale(saleId);
-            setSale(saleData);
-            setLoading(false);
-        };
-        fetchSale();
-    }, [saleId]);
-
-    if (loading) {
-        return (
-            <div className="space-y-4">
-                <Skeleton className="h-8 w-1/2" />
-                <Skeleton className="h-24 w-full" />
-                <Skeleton className="h-10 w-1/3 ml-auto" />
-            </div>
-        );
-    }
-    if (!sale) return <p>ບໍ່ພົບຂໍ້ມູນໃບບິນ.</p>;
-
-    return (
-        <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                    <p><strong>ວັນທີ:</strong> {format(sale.date, 'dd/MM/yyyy')}</p>
-                </div>
-            </div>
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>ລາຍການ</TableHead>
-                        <TableHead className="text-center">ຈຳນວນ</TableHead>
-                        <TableHead className="text-right">ລາຄາຕໍ່ໜ່ວຍ</TableHead>
-                        <TableHead className="text-right">ລາຄາລວມ</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {sale.items.map((item: any) => (
-                        <TableRow key={item.id}>
-                            <TableCell>{item.name}</TableCell>
-                            <TableCell className="text-center">{item.quantity}</TableCell>
-                            <TableCell className="text-right">{formatCurrency(item.price)}</TableCell>
-                            <TableCell className="text-right">{formatCurrency(item.total)}</TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-                <TableFooter>
-                     <TableRow>
-                        <TableCell colSpan={3} className="text-right font-semibold">ຕົ້ນທຶນລວມ:</TableCell>
-                        <TableCell className="text-right font-mono text-red-600">{formatCurrency(sale.totalCost || 0)}</TableCell>
-                    </TableRow>
-                    <TableRow>
-                        <TableCell colSpan={3} className="text-right font-semibold">ຍອດຂາຍລວມ:</TableCell>
-                        <TableCell className="text-right font-mono">{formatCurrency(sale.subtotal)}</TableCell>
-                    </TableRow>
-                    <TableRow className="bg-green-50">
-                        <TableCell colSpan={3} className="text-right font-bold text-green-700">ກຳໄລລວມ:</TableCell>
-                        <TableCell className="text-right font-bold font-mono text-green-700">{formatCurrency(sale.totalProfit || 0)}</TableCell>
-                    </TableRow>
-                </TableFooter>
-            </Table>
-        </div>
-    );
-};
 
 const CashCalculatorCard = ({ onTotalChange }: { onTotalChange: (total: number) => void }) => {
     const denominations = [100000, 50000, 20000, 10000, 5000, 2000, 1000];
@@ -218,7 +146,6 @@ export default function ApplianceAccountancyPage() {
     const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
     const [isFormVisible, setFormVisible] = useState(true);
     const [historyDisplayMonth, setHistoryDisplayMonth] = useState<Date>(new Date());
-    const [viewingSaleId, setViewingSaleId] = useState<string | null>(null);
 
 
     const [editingField, setEditingField] = useState<'capital' | 'cash' | 'transfer' | 'workingCapital' | null>(null);
@@ -539,8 +466,7 @@ export default function ApplianceAccountancyPage() {
                                                 <TableRow>
                                                     <TableHead>ຄຳອະທິບາຍ</TableHead>
                                                     <TableHead className="text-right">ຈຳນວນເງິນ (KIP)</TableHead>
-                                                    <TableHead className="text-right">ກຳໄລ (KIP)</TableHead>
-                                                    <TableHead className="text-center w-[120px]">ການດຳເນີນການ</TableHead>
+                                                    <TableHead><span className="sr-only">Actions</span></TableHead>
                                                 </TableRow>
                                             </TableHeader>
                                             <TableBody>
@@ -548,15 +474,7 @@ export default function ApplianceAccountancyPage() {
                                                     <TableRow key={tx.id} className={tx.type === 'income' ? 'bg-green-50/50' : 'bg-red-50/50'}>
                                                         <TableCell className="font-medium">{tx.description}</TableCell>
                                                         <TableCell className={`text-right font-semibold ${tx.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>{formatCurrency(tx.amount || 0)}</TableCell>
-                                                        <TableCell className="text-right font-semibold text-blue-600">
-                                                            {tx.profit !== undefined ? formatCurrency(tx.profit) : '-'}
-                                                        </TableCell>
-                                                        <TableCell className="text-center">
-                                                            {tx.saleId && (
-                                                                <Button variant="ghost" size="icon" onClick={() => setViewingSaleId(tx.saleId!)}>
-                                                                    <Eye className="h-4 w-4 text-blue-500" />
-                                                                </Button>
-                                                            )}
+                                                        <TableCell className="text-right">
                                                             <DropdownMenu>
                                                                 <DropdownMenuTrigger asChild><Button variant="ghost" className="h-8 w-8 p-0"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
                                                                 <DropdownMenuContent align="end">
@@ -604,10 +522,6 @@ export default function ApplianceAccountancyPage() {
                                 <Label htmlFor="edit-amount">ຈຳນວນເງິນ (KIP)</Label>
                                 <Input id="edit-amount" type="number" value={editingTransaction.amount || ''} onChange={(e) => setEditingTransaction(p => p ? { ...p, amount: Number(e.target.value) } : null)} />
                             </div>
-                             <div className="grid gap-2">
-                                <Label htmlFor="edit-profit">ກຳໄລ (KIP)</Label>
-                                <Input id="edit-profit" type="number" value={editingTransaction.profit || ''} onChange={(e) => setEditingTransaction(p => p ? { ...p, profit: Number(e.target.value) } : null)} />
-                            </div>
                         </div>
                         <DialogFooter>
                             <Button variant="outline" onClick={() => setEditingTransaction(null)}>ຍົກເລີກ</Button>
@@ -634,21 +548,6 @@ export default function ApplianceAccountancyPage() {
                     </DialogContent>
                 </Dialog>
             )}
-
-             <Dialog open={!!viewingSaleId} onOpenChange={(isOpen) => !isOpen && setViewingSaleId(null)}>
-                <DialogContent className="sm:max-w-2xl">
-                    <DialogHeader>
-                        <DialogTitle>ລາຍລະອຽດໃບບິນ</DialogTitle>
-                        <DialogDescription>
-                            ລາຍລະອຽດຂອງໃບບິນເລກທີ່ {viewingSaleId?.substring(0,5)}...
-                        </DialogDescription>
-                    </DialogHeader>
-                    {viewingSaleId && <SaleInvoiceDialogContent saleId={viewingSaleId} />}
-                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setViewingSaleId(null)}>ປິດ</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
         </div>
     );
 }
