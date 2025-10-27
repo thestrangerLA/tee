@@ -69,7 +69,7 @@ const AddItemDialog = ({ onAddItem }: { onAddItem: (item: Omit<ApplianceStockIte
         };
 
         if (!newItem.sku || !newItem.name) {
-             toast({ title: "Error", description: "ກະລຸນາປ້ອນ SKU และ ຊື່.", variant: "destructive" });
+             toast({ title: "Error", description: "ກະລຸນາປ້ອນ SKU ແລະ ຊື່.", variant: "destructive" });
              return;
         }
 
