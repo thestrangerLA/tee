@@ -30,21 +30,28 @@ export default function ApplianceInvoicePage() {
   const handleSaveInvoice = async (invoiceData: any) => {
     try {
       if (invoiceData.type === 'income') {
-        // Record the sale
-        await saveApplianceSale(invoiceData);
+        // Record the sale with profit details
+        const saleId = await saveApplianceSale({
+            ...invoiceData,
+            totalCost: invoiceData.totalCost,
+            totalProfit: invoiceData.totalProfit,
+        });
 
         // Also add to general transactions
         await addApplianceTransaction({
           date: invoiceData.date,
           type: 'income',
-          description: `Sale - Invoice`,
+          description: `Sale - Invoice #${saleId.substring(0, 5)}`,
           amount: invoiceData.subtotal,
+          saleId: saleId,
+          profit: invoiceData.totalProfit,
         });
 
         toast({
             title: "ບັນທຶກສຳເລັດ",
             description: "ບັນທຶກລາຍການຂາຍ ແລະ ອັບເດດສະຕັອກສຳເລັດແລ້ວ.",
         });
+        invoiceFormRef.current?.resetForm();
 
       } else { // Expense
          await addApplianceTransaction({
@@ -56,10 +63,9 @@ export default function ApplianceInvoicePage() {
          toast({
             title: "ບັນທຶກລາຍຈ່າຍສຳເລັດ",
         });
+        invoiceFormRef.current?.resetForm();
       }
       
-      invoiceFormRef.current?.resetForm();
-
     } catch (error: any) {
        toast({
           title: "ເກີດຂໍ້ຜິດພາດ",

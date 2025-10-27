@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Trash2, PlusCircle, Printer, Check, ChevronsUpDown } from 'lucide-react';
 import type { ApplianceStockItem } from '@/lib/types';
 import { format } from 'date-fns';
@@ -142,6 +141,8 @@ export const ApplianceInvoiceForm = forwardRef<ApplianceInvoiceFormHandle, Appli
                     total: item.sellingPrice * item.quantity,
                 })),
                 subtotal: subtotal,
+                totalCost: totalCost,
+                totalProfit: totalProfit,
                 date: new Date(invoiceDate),
                 type: 'income',
             };
@@ -163,7 +164,7 @@ export const ApplianceInvoiceForm = forwardRef<ApplianceInvoiceFormHandle, Appli
       <Card className="w-full max-w-6xl mx-auto shadow-lg">
         <CardHeader>
           <CardTitle>ບັນທຶກ</CardTitle>
-           <Tabs value={transactionType} onValueChange={(value) => setTransactionType(value as 'income' | 'expense')} className="w-[400px]">
+          <Tabs value={transactionType} onValueChange={(value) => setTransactionType(value as 'income' | 'expense')} className="w-[400px]">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="income">ລາຍຮັບ</TabsTrigger>
               <TabsTrigger value="expense">ລາຍຈ່າຍ</TabsTrigger>
@@ -171,80 +172,80 @@ export const ApplianceInvoiceForm = forwardRef<ApplianceInvoiceFormHandle, Appli
           </Tabs>
         </CardHeader>
         <CardContent className="space-y-6">
-          <Tabs value={transactionType}>
-            <TabsContent value="income" className="mt-0">
-                <div className="space-y-6">
-                    <div className="grid md:grid-cols-3 gap-6">
-                        <div className="grid gap-2">
-                            <Label htmlFor="invoice-date">ວັນທີ</Label>
-                            <Input id="invoice-date" type="date" value={invoiceDate} onChange={e => setInvoiceDate(e.target.value)} />
-                        </div>
+          <Tabs value={transactionType} >
+            <TabsContent value="income" className="mt-0 space-y-6">
+                <div className="grid md:grid-cols-3 gap-6">
+                    <div className="grid gap-2">
+                        <Label htmlFor="invoice-date">ວັນທີ</Label>
+                        <Input id="invoice-date" type="date" value={invoiceDate} onChange={e => setInvoiceDate(e.target.value)} />
                     </div>
-                    
-                    <div>
-                        <h3 className="font-semibold mb-4">ລາຍການສິນຄ້າ</h3>
-                        <Table>
-                        <TableHeader>
-                            <TableRow>
-                            <TableHead className="w-[30%]">ສິນຄ້າ</TableHead>
-                            <TableHead>ຈຳນວນ</TableHead>
-                            <TableHead>ລາຄາຕົ້ນທຶນ</TableHead>
-                            <TableHead>ລາຄາຕໍ່ໜ່ວຍ</TableHead>
-                            <TableHead>ລາຄາລວມ</TableHead>
-                            <TableHead>ກຳໄລ</TableHead>
-                            <TableHead></TableHead>
+                </div>
+                
+                <div>
+                    <h3 className="font-semibold mb-4">ລາຍການສິນຄ້າ</h3>
+                    <Table>
+                    <TableHeader>
+                        <TableRow>
+                        <TableHead className="w-[30%]">ສິນຄ້າ</TableHead>
+                        <TableHead>ຈຳນວນ</TableHead>
+                        <TableHead>ລາຄາຕົ້ນທຶນ</TableHead>
+                        <TableHead>ລາຄາຕໍ່ໜ່ວຍ</TableHead>
+                        <TableHead>ລາຄາລວມ</TableHead>
+                        <TableHead>ກຳໄລ</TableHead>
+                        <TableHead></TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {invoiceItems.map((item, index) => {
+                          const total = item.sellingPrice * item.quantity;
+                          const profit = total - (item.costPrice * item.quantity);
+                          return (
+                            <TableRow key={index}>
+                                <TableCell>
+                                    <SearchableSelect 
+                                      items={allItems}
+                                      value={item.id}
+                                      onValueChange={(value) => handleItemChange(index, 'id', value)}
+                                    />
+                                </TableCell>
+                                <TableCell>
+                                <Input type="number" value={item.quantity} onChange={e => handleItemChange(index, 'quantity', parseInt(e.target.value) || 1)} />
+                                </TableCell>
+                                <TableCell>{formatCurrency(item.costPrice)}</TableCell>
+                                <TableCell>
+                                  <Input type="number" value={item.sellingPrice} onChange={e => handleItemChange(index, 'sellingPrice', parseFloat(e.target.value) || 0)} />
+                                </TableCell>
+                                <TableCell>{formatCurrency(total)}</TableCell>
+                                <TableCell>{formatCurrency(profit)}</TableCell>
+                                <TableCell>
+                                <Button variant="ghost" size="icon" onClick={() => handleRemoveItem(index)}>
+                                    <Trash2 className="h-4 w-4 text-red-500" />
+                                </Button>
+                                </TableCell>
                             </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {invoiceItems.map((item, index) => {
-                              const total = item.sellingPrice * item.quantity;
-                              const profit = total - (item.costPrice * item.quantity);
-                              return (
-                                <TableRow key={index}>
-                                    <TableCell>
-                                        <SearchableSelect 
-                                          items={allItems}
-                                          value={item.id}
-                                          onValueChange={(value) => handleItemChange(index, 'id', value)}
-                                        />
-                                    </TableCell>
-                                    <TableCell>
-                                    <Input type="number" value={item.quantity} onChange={e => handleItemChange(index, 'quantity', parseInt(e.target.value) || 1)} />
-                                    </TableCell>
-                                    <TableCell>{formatCurrency(item.costPrice)}</TableCell>
-                                    <TableCell>{formatCurrency(item.sellingPrice)}</TableCell>
-                                    <TableCell>{formatCurrency(total)}</TableCell>
-                                    <TableCell>{formatCurrency(profit)}</TableCell>
-                                    <TableCell>
-                                    <Button variant="ghost" size="icon" onClick={() => handleRemoveItem(index)}>
-                                        <Trash2 className="h-4 w-4 text-red-500" />
-                                    </Button>
-                                    </TableCell>
-                                </TableRow>
-                              )
-                            })}
-                        </TableBody>
-                        </Table>
-                        <Button variant="outline" className="mt-4" onClick={handleAddItem}>
-                        <PlusCircle className="mr-2 h-4 w-4" /> ເພີ່ມລາຍການ
-                        </Button>
-                    </div>
+                          )
+                        })}
+                    </TableBody>
+                    </Table>
+                    <Button variant="outline" className="mt-4" onClick={handleAddItem}>
+                    <PlusCircle className="mr-2 h-4 w-4" /> ເພີ່ມລາຍການ
+                    </Button>
+                </div>
 
-                    <div className="flex justify-end">
-                        <div className="w-full max-w-sm space-y-2">
-                        <div className="flex justify-between">
-                            <span>ຕົ້ນທຶນລວມ:</span>
-                            <span className="font-mono">{formatCurrency(totalCost)} KIP</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span>ລາຄາລວມຍ່ອຍ:</span>
-                            <span className="font-mono">{formatCurrency(subtotal)} KIP</span>
-                        </div>
-                        <div className="flex justify-between font-bold text-lg border-t pt-2 text-green-600">
-                            <span>ກຳໄລລວມ:</span>
-                            <span className="font-mono">{formatCurrency(totalProfit)} KIP</span>
-                        </div>
-                        </div>
+                <div className="flex justify-end">
+                    <div className="w-full max-w-sm space-y-2">
+                    <div className="flex justify-between">
+                        <span>ຕົ້ນທຶນລວມ:</span>
+                        <span className="font-mono">{formatCurrency(totalCost)} KIP</span>
+                    </div>
+                    <div className="flex justify-between">
+                        <span>ລາຄາລວມຍ່ອຍ:</span>
+                        <span className="font-mono">{formatCurrency(subtotal)} KIP</span>
+                    </div>
+                    <div className="flex justify-between font-bold text-lg border-t pt-2 text-green-600">
+                        <span>ກຳໄລລວມ:</span>
+                        <span className="font-mono">{formatCurrency(totalProfit)} KIP</span>
+                    </div>
                     </div>
                 </div>
             </TabsContent>
