@@ -212,7 +212,9 @@ export const ApplianceInvoiceForm = forwardRef<ApplianceInvoiceFormHandle, Appli
                                 <Input type="number" value={item.quantity} onChange={e => handleItemChange(index, 'quantity', parseInt(e.target.value) || 1)} />
                                 </TableCell>
                                 <TableCell>{formatCurrency(item.costPrice)}</TableCell>
-                                <TableCell>{formatCurrency(item.sellingPrice)}</TableCell>
+                                <TableCell>
+                                  <Input type="number" value={item.sellingPrice} onChange={e => handleItemChange(index, 'sellingPrice', parseFloat(e.target.value) || 0)} />
+                                </TableCell>
                                 <TableCell>{formatCurrency(total)}</TableCell>
                                 <TableCell>{formatCurrency(profit)}</TableCell>
                                 <TableCell>
