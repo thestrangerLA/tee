@@ -288,9 +288,7 @@ export default function ApplianceStockPage() {
                                 {filteredStockItems.length > 0 ? filteredStockItems.map(item => (
                                     <TableRow key={item.id} className={item.currentStock === 0 ? 'bg-red-50/50' : ''}>
                                         <TableCell className="font-mono">{item.sku}</TableCell>
-                                        <TableCell className="font-medium hover:underline">
-                                            <Link href={`/appliances/stock/${item.id}`}>{item.name}</Link>
-                                        </TableCell>
+                                        <TableCell className="font-medium">{item.name}</TableCell>
                                         <TableCell className="text-right p-1">
                                             <Input
                                                 type="number"
