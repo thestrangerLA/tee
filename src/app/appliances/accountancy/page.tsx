@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import { useState, useMemo, useEffect } from 'react';
@@ -198,6 +199,15 @@ export default function ApplianceAccountancyPage() {
         return { broughtForward, income, expense, netProfit, endingBalance };
     }, [transactions, historyDisplayMonth]);
 
+    const remainingMoney = useMemo(() => {
+        if (!summary) return 0;
+        return (summary.capital || 0) + performanceData.endingBalance;
+    }, [summary, performanceData.endingBalance]);
+
+    const differenceAmount = useMemo(() => {
+        return totalBalance - remainingMoney;
+    }, [totalBalance, remainingMoney]);
+
      const dailySummaries = useMemo(() => {
         const start = startOfMonth(historyDisplayMonth);
         const end = endOfMonth(historyDisplayMonth);
@@ -366,11 +376,12 @@ export default function ApplianceAccountancyPage() {
                 <h1 className="text-xl font-bold tracking-tight">ຈັດການບັນຊີ (ທຸລະກິດເຄື່ອງໃຊ້)</h1>
             </header>
             <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
                      <SummaryCard title="ເງິນທຶນ" value={formatCurrency(summary.capital || 0)} icon={<Briefcase className="h-5 w-5 text-primary" />} onClick={() => openEditDialog('capital')} />
                      <SummaryCard title="ເງິນສົດ" value={formatCurrency(summary.cash || 0)} icon={<Wallet className="h-5 w-5 text-primary" />} onClick={() => openEditDialog('cash')} />
                      <SummaryCard title="ເງິນໂອນ" value={formatCurrency(summary.transfer || 0)} icon={<Landmark className="h-5 w-5 text-primary" />} onClick={() => openEditDialog('transfer')} />
                      <SummaryCard title="ລວມເງິນຄົງເຫຼືອ" value={formatCurrency(totalBalance)} icon={<Combine className="h-5 w-5 text-green-600" />} />
+                     <SummaryCard title="ສ່ວນຕ່າງ" value={formatCurrency(differenceAmount)} icon={<MinusCircle className="h-5 w-5 text-indigo-500" />} />
                 </div>
                  <Card>
                     <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
@@ -380,12 +391,13 @@ export default function ApplianceAccountancyPage() {
                         </div>
                         <MonthYearSelector />
                     </CardHeader>
-                    <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                    <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
                         <SummaryCard title="ຍອດຍົກມາ" value={formatCurrency(performanceData.broughtForward)} icon={<FileText className="h-5 w-5 text-primary" />} />
                         <SummaryCard title="ລາຍຮັບ (ເດືອນ)" value={formatCurrency(performanceData.income)} icon={<ArrowUpCircle className="h-5 w-5 text-green-500" />} />
                         <SummaryCard title="ລາຍຈ່າຍ (ເດືອນ)" value={formatCurrency(performanceData.expense)} icon={<ArrowDownCircle className="h-5 w-5 text-red-500" />} />
                         <SummaryCard title="ກຳໄລ/ຂາດທຶນ (ເດືອນ)" value={formatCurrency(performanceData.netProfit)} icon={<Scale className="h-5 w-5 text-blue-500" />} />
                         <SummaryCard title="ຍອດທ້າຍເດືອນ" value={formatCurrency(performanceData.endingBalance)} icon={<Banknote className="h-5 w-5 text-indigo-500" />} />
+                        <SummaryCard title="ເງິນຍັງເຫຼືອ" value={formatCurrency(remainingMoney)} icon={<Coins className="h-5 w-5 text-yellow-600" />} />
                     </CardContent>
                 </Card>
 
@@ -551,3 +563,4 @@ export default function ApplianceAccountancyPage() {
         </div>
     );
 }
+
