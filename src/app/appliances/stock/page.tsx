@@ -69,7 +69,7 @@ const AddItemDialog = ({ onAddItem }: { onAddItem: (item: Omit<ApplianceStockIte
         };
 
         if (!newItem.sku || !newItem.name) {
-             toast({ title: "Error", description: "ກະລຸນາປ້ອນ SKU และ ຊື່.", variant: "destructive" });
+             toast({ title: "Error", description: "ກະລຸນາປ້ອນ SKU ແລະ ຊື່.", variant: "destructive" });
              return;
         }
 
@@ -203,6 +203,10 @@ export default function ApplianceStockPage() {
             unsubscribeItems();
         }
     }, []);
+
+    const handleFieldChange = (id: string, field: keyof ApplianceStockItem, value: string | number) => {
+        updateApplianceStockItem(id, { [field]: value });
+    };
     
     const filteredStockItems = useMemo(() => {
         return stockItems.filter(item =>
@@ -282,14 +286,45 @@ export default function ApplianceStockPage() {
                             </TableHeader>
                             <TableBody>
                                 {filteredStockItems.length > 0 ? filteredStockItems.map(item => (
-                                    <TableRow key={item.id} className={item.currentStock === 0 ? 'bg-red-50' : ''}>
-                                        <TableCell className="font-mono">{item.sku}</TableCell>
-                                        <TableCell className="font-medium hover:underline">
-                                            <Link href={`/appliances/stock/${item.id}`}>{item.name}</Link>
+                                    <TableRow key={item.id} className={item.currentStock === 0 ? 'bg-red-50/50' : ''}>
+                                        <TableCell className="font-mono p-1">
+                                            <Input
+                                                defaultValue={item.sku}
+                                                onBlur={(e) => handleFieldChange(item.id, 'sku', e.target.value)}
+                                                className="h-8 w-20"
+                                            />
                                         </TableCell>
-                                        <TableCell className="text-right">{formatCurrency(item.costPrice)}</TableCell>
-                                        <TableCell className="text-right">{formatCurrency(item.sellingPrice)}</TableCell>
-                                        <TableCell className="text-right font-bold">{item.currentStock}</TableCell>
+                                        <TableCell className="font-medium p-1">
+                                             <Input
+                                                defaultValue={item.name}
+                                                onBlur={(e) => handleFieldChange(item.id, 'name', e.target.value)}
+                                                className="h-8"
+                                            />
+                                        </TableCell>
+                                        <TableCell className="text-right p-1">
+                                            <Input
+                                                type="number"
+                                                defaultValue={item.costPrice}
+                                                onBlur={(e) => handleFieldChange(item.id, 'costPrice', parseFloat(e.target.value) || 0)}
+                                                className="h-8 w-28 text-right"
+                                            />
+                                        </TableCell>
+                                        <TableCell className="text-right p-1">
+                                            <Input
+                                                type="number"
+                                                defaultValue={item.sellingPrice}
+                                                onBlur={(e) => handleFieldChange(item.id, 'sellingPrice', parseFloat(e.target.value) || 0)}
+                                                className="h-8 w-28 text-right"
+                                            />
+                                        </TableCell>
+                                        <TableCell className="text-right p-1">
+                                             <Input
+                                                type="number"
+                                                defaultValue={item.currentStock}
+                                                onBlur={(e) => handleFieldChange(item.id, 'currentStock', parseInt(e.target.value, 10) || 0)}
+                                                className="h-8 w-20 text-right font-bold"
+                                            />
+                                        </TableCell>
                                         <TableCell className="text-center space-x-1">
                                             <StockAdjustmentDialog item={item} onAdjust={updateApplianceStockQuantity} type="stock-in" />
                                             <StockAdjustmentDialog item={item} onAdjust={updateApplianceStockQuantity} type="sale" />
@@ -321,3 +356,5 @@ export default function ApplianceStockPage() {
         </div>
     );
 }
+
+    
