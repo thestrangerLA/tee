@@ -5,27 +5,22 @@ import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, History, ChevronRight, DollarSign, Calendar, CalendarDays } from "lucide-react";
+import { ArrowLeft, History, ChevronRight, DollarSign, Calendar, CalendarDays, Trash2 } from "lucide-react";
 import { collection, onSnapshot, query, orderBy, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { format, isSameDay, isSameMonth, isSameYear, startOfDay, endOfDay, startOfMonth, endOfMonth, startOfYear, endOfYear, getYear, getMonth, setMonth } from 'date-fns';
+import { format, isSameDay, isSameMonth, isSameYear, getYear, getMonth, setMonth } from 'date-fns';
 import { lo } from 'date-fns/locale';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuPortal, DropdownMenuSubContent } from "@/components/ui/dropdown-menu"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { deleteApplianceSale } from '@/services/applianceSalesService';
+import { useToast } from '@/hooks/use-toast';
+import type { Sale } from '@/lib/types';
+
 
 const formatCurrency = (value: number) => {
     if (isNaN(value)) return '0';
     return new Intl.NumberFormat('lo-LA', { minimumFractionDigits: 0 }).format(value);
 };
-
-interface Sale {
-    id: string;
-    items: { id: string; name: string; quantity: number; price: number; total: number; }[];
-    subtotal: number;
-    totalCost?: number;
-    totalProfit?: number;
-    date: Date;
-    createdAt: Date;
-}
 
 const SummaryCard = ({ title, value, icon }: { title: string, value: string, icon: React.ReactNode }) => (
     <Card>
@@ -41,7 +36,8 @@ const SummaryCard = ({ title, value, icon }: { title: string, value: string, ico
 
 export default function ApplianceSalesPage() {
     const [sales, setSales] = useState<Sale[]>([]);
-    const [filter, setFilter] = useState<{ year: number | null, month: number | null }>({ year: null, month: null });
+    const [filter, setFilter] = useState<{ year: number | null, month: number | null }>({ year: new Date().getFullYear(), month: new Date().getMonth() });
+    const { toast } = useToast();
 
     useEffect(() => {
         const q = query(collection(db, 'applianceSales'), orderBy('createdAt', 'desc'));
@@ -98,6 +94,10 @@ export default function ApplianceSalesPage() {
     const filteredTotalSales = useMemo(() => {
         return filteredSales.reduce((sum, s) => sum + (s.subtotal || 0), 0);
     }, [filteredSales]);
+    
+     const filteredTotalProfit = useMemo(() => {
+        return filteredSales.reduce((sum, s) => sum + (s.totalProfit || 0), 0);
+    }, [filteredSales]);
 
     const availableYears = useMemo(() => {
         const years = new Set(sales.map(s => getYear(s.date)));
@@ -108,6 +108,16 @@ export default function ApplianceSalesPage() {
         value: i,
         label: format(setMonth(new Date(), i), 'LLLL', { locale: lo }),
     }));
+    
+    const handleDeleteSale = async (e: React.MouseEvent, saleId: string) => {
+        e.stopPropagation();
+        try {
+            await deleteApplianceSale(saleId);
+            toast({ title: 'ລຶບການຂາຍສຳເລັດ', description: 'ສະຕັອກສິນຄ້າໄດ້ຖືກອັບເດດຄືນແລ້ວ' });
+        } catch (error: any) {
+            toast({ title: 'ເກີດຂໍ້ຜິດພາດ', description: error.message, variant: 'destructive' });
+        }
+    };
 
 
     return (
@@ -140,7 +150,7 @@ export default function ApplianceSalesPage() {
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                             <div>
                                 <CardTitle>ປະຫວັດການຂາຍ</CardTitle>
-                                <CardDescription>ຍອດຂາຍລວມທີ່ກັ່ນຕອງ: LAK {formatCurrency(filteredTotalSales)}</CardDescription>
+                                <CardDescription>ຍອດຂາຍລວມ: LAK {formatCurrency(filteredTotalSales)} | ກຳໄລລວມ: LAK {formatCurrency(filteredTotalProfit)}</CardDescription>
                             </div>
                             <div className="flex items-center gap-2 mt-2 sm:mt-0">
                                 <DropdownMenu>
@@ -179,13 +189,32 @@ export default function ApplianceSalesPage() {
                                     </CardHeader>
                                     <CardContent className="p-0">
                                         {group.sales.map(sale => (
-                                            <div key={sale.id} className="flex items-center justify-between p-3 border-b last:border-b-0 hover:bg-muted/30 cursor-pointer">
-                                                <div className="flex flex-col">
-                                                    <span className="text-sm">ຍອດຂາຍ: <span className="font-mono">{formatCurrency(sale.subtotal)} LAK</span></span>
-                                                    <span className="text-sm text-green-600">ກຳໄລ: <span className="font-mono">{formatCurrency(sale.totalProfit || 0)} LAK</span></span>
+                                            <Link key={sale.id} href={`/appliances/reports/sales/${sale.id}`} passHref>
+                                                <div className="flex items-center justify-between p-3 border-b last:border-b-0 hover:bg-muted/30 cursor-pointer">
+                                                    <div className="flex flex-col">
+                                                        <span className="text-sm">ຍອດຂາຍ: <span className="font-mono">{formatCurrency(sale.subtotal)} LAK</span></span>
+                                                        <span className="text-sm text-green-600">ກຳໄລ: <span className="font-mono">{formatCurrency(sale.totalProfit || 0)} LAK</span></span>
+                                                    </div>
+                                                    <div className='flex items-center gap-2'>
+                                                        <AlertDialog>
+                                                            <AlertDialogTrigger asChild>
+                                                                <Button variant="ghost" size="icon" onClick={(e) => e.stopPropagation()}><Trash2 className="h-4 w-4 text-red-500" /></Button>
+                                                            </AlertDialogTrigger>
+                                                            <AlertDialogContent>
+                                                                <AlertDialogHeader>
+                                                                    <AlertDialogTitle>ທ່ານແນ່ໃຈບໍ່?</AlertDialogTitle>
+                                                                    <AlertDialogDescription>ການກະທຳນີ້ຈະລຶບການຂາຍ ແລະ ສົ່ງສິນຄ້າຄືນສູ່ສະຕັອກ. ບໍ່ສາມາດຍົກເລີກໄດ້.</AlertDialogDescription>
+                                                                </AlertDialogHeader>
+                                                                <AlertDialogFooter>
+                                                                    <AlertDialogCancel onClick={(e) => e.stopPropagation()}>ຍົກເລີກ</AlertDialogCancel>
+                                                                    <AlertDialogAction onClick={(e) => handleDeleteSale(e, sale.id)}>ລຶບ</AlertDialogAction>
+                                                                </AlertDialogFooter>
+                                                            </AlertDialogContent>
+                                                        </AlertDialog>
+                                                        <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                                                    </div>
                                                 </div>
-                                                <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                                            </div>
+                                            </Link>
                                         ))}
                                     </CardContent>
                                 </Card>
@@ -202,3 +231,4 @@ export default function ApplianceSalesPage() {
     );
 }
 
+    
