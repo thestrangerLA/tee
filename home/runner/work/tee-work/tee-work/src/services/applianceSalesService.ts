@@ -9,13 +9,10 @@ export const saveApplianceSale = async (invoiceData: any): Promise<string> => {
   const saleDocRef = doc(salesCollectionRef);
   
   await runTransaction(db, async (transaction) => {
-    // 1. Set the sale document
-    transaction.set(saleDocRef, {
-      ...invoiceData,
-      createdAt: serverTimestamp()
-    });
+    const stockUpdates: { ref: any, newStock: number }[] = [];
+    const stockLogs: any[] = [];
 
-    // 2. Iterate through items to update stock and create logs
+    // 1. READ all necessary stock documents first
     for (const item of invoiceData.items) {
       const itemDocRef = doc(db, 'applianceStockItems', item.id);
       const itemDoc = await transaction.get(itemDocRef);
@@ -30,13 +27,9 @@ export const saveApplianceSale = async (invoiceData: any): Promise<string> => {
       }
 
       const newStock = currentStock - item.quantity;
+      stockUpdates.push({ ref: itemDocRef, newStock: newStock });
       
-      // Update stock
-      transaction.update(itemDocRef, { currentStock: newStock });
-      
-      // Create log
-      const logDocRef = doc(collection(db, 'applianceStockLogs'));
-      transaction.set(logDocRef, {
+      stockLogs.push({
         itemId: item.id,
         change: -item.quantity,
         newStock: newStock,
@@ -45,6 +38,24 @@ export const saveApplianceSale = async (invoiceData: any): Promise<string> => {
         createdAt: serverTimestamp(),
       });
     }
+
+    // 2. Now perform all WRITE operations
+    // Set the sale document
+    transaction.set(saleDocRef, {
+      ...invoiceData,
+      createdAt: serverTimestamp()
+    });
+
+    // Update stock for all items
+    stockUpdates.forEach(update => {
+      transaction.update(update.ref, { currentStock: update.newStock });
+    });
+
+    // Create logs for all items
+    stockLogs.forEach(logData => {
+      const logDocRef = doc(collection(db, 'applianceStockLogs'));
+      transaction.set(logDocRef, logData);
+    });
   });
 
   return saleDocRef.id;
