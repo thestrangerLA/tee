@@ -7,30 +7,86 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Trash2, ArrowLeft, Truck, PlusCircle, Calendar as CalendarIcon, ChevronDown } from 'lucide-react';
+import { Trash2, ArrowLeft, Truck, PlusCircle, Calendar as CalendarIcon, ChevronDown, Check, ChevronsUpDown } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import Link from 'next/link';
 import { listenToTransportEntries, addTransportEntry, updateTransportEntry, deleteTransportEntry } from '@/services/transportService';
-import type { TransportEntry } from '@/lib/types';
+import type { TransportEntry, StockItem } from '@/lib/types';
+import { listenToAutoPartsStockItems } from '@/services/autoPartsStockService';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format, startOfDay, isWithinInterval, startOfMonth, endOfMonth, getMonth, setMonth, getYear, isSameDay } from 'date-fns';
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuPortal, DropdownMenuSubTrigger, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import { cn } from '@/lib/utils';
 
 
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('lo-LA', { minimumFractionDigits: 0 }).format(value);
 }
 
-const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddRow }: { 
+const SearchableSelect = ({ items, value, onValueChange }: { items: StockItem[], value: string, onValueChange: (value: string) => void }) => {
+    const [open, setOpen] = useState(false);
+
+    return (
+        <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+                <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={open}
+                    className="w-full justify-between h-8"
+                >
+                    <span className="truncate">
+                        {value
+                            ? items.find((item) => item.name === value)?.name ?? value
+                            : "ເລືອກສິນຄ້າ..."}
+                    </span>
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[300px] p-0">
+                <Command>
+                    <CommandInput placeholder="ຄົ້ນຫາສິນຄ້າ..." />
+                    <CommandEmpty>ບໍ່ພົບສິນຄ້າ.</CommandEmpty>
+                    <CommandGroup>
+                        {items.map((item) => (
+                            <CommandItem
+                                key={item.id}
+                                value={item.name}
+                                onSelect={(currentValue) => {
+                                    const selectedItem = items.find(i => i.name.toLowerCase() === currentValue.toLowerCase());
+                                    onValueChange(selectedItem ? selectedItem.name : "");
+                                    setOpen(false);
+                                }}
+                            >
+                                <Check
+                                    className={cn(
+                                        "mr-2 h-4 w-4",
+                                        value === item.name ? "opacity-100" : "opacity-0"
+                                    )}
+                                />
+                                {item.name}
+                            </CommandItem>
+                        ))}
+                    </CommandGroup>
+                </Command>
+            </PopoverContent>
+        </Popover>
+    );
+};
+
+
+const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddRow, stockItems }: { 
     type: 'ANS' | 'HAL' | 'MX',
     title: string, 
     entries: TransportEntry[],
     onRowChange: (id: string, field: keyof TransportEntry, value: any) => void,
     onRowDelete: (id: string) => void,
-    onAddRow: (type: 'ANS' | 'HAL' | 'MX') => void
+    onAddRow: (type: 'ANS' | 'HAL' | 'MX') => void,
+    stockItems: StockItem[]
 }) => {
     
     const totalAmount = useMemo(() => entries.reduce((sum, entry) => sum + (entry.amount || 0), 0), [entries]);
@@ -39,7 +95,7 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
     const unfinishedEntriesCount = useMemo(() => entries.filter(e => !e.finished).length, [entries]);
 
     const dailySummaries = useMemo(() => {
-        const groupedByDay: Record<string, { date: Date, profit: number, entries: TransportEntry[], orderCount: number, unfinishedCount: number, remainingAmount: number }> = {};
+        const groupedByDay: Record<string, { date: Date; profit: number, entries: TransportEntry[], orderCount: number, unfinishedCount: number, remainingAmount: number }> = {};
 
         entries.forEach(entry => {
             const dayKey = format(entry.date, 'yyyy-MM-dd');
@@ -124,7 +180,11 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
                                                     return (
                                                     <TableRow key={row.id}>
                                                         <TableCell className="p-2">
-                                                            <Input value={row.detail || ''} onChange={(e) => onRowChange(row.id, 'detail', e.target.value)} placeholder="ລາຍລະອຽດ" className="h-8" />
+                                                            <SearchableSelect
+                                                                items={stockItems}
+                                                                value={row.detail || ''}
+                                                                onValueChange={(value) => onRowChange(row.id, 'detail', value)}
+                                                            />
                                                         </TableCell>
                                                         <TableCell className="p-2">
                                                             <Input type="number" value={row.cost || ''} onChange={(e) => onRowChange(row.id, 'cost', parseFloat(e.target.value) || 0)} placeholder="ຕົ້ນທຶນ" className="h-8 text-right" />
@@ -152,7 +212,7 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
                             ))}
                          </Accordion>
                     ) : (
-                         <div className="text-center text-muted-foreground py-4">ບໍ່ມີລາຍການໃນເດືອນທີ່ເລືอก</div>
+                         <div className="text-center text-muted-foreground py-4">ບໍ່ມີລາຍການໃນເດືອນທີ່ເລືອກ</div>
                     )}
                 </div>
             </CardContent>
@@ -165,10 +225,15 @@ export default function TransportPage() {
     const { toast } = useToast();
     const [allEntries, setAllEntries] = useState<TransportEntry[]>([]);
     const [displayMonth, setDisplayMonth] = useState<Date>(new Date());
+    const [stockItems, setStockItems] = useState<StockItem[]>([]);
     
     useEffect(() => {
         const unsubscribe = listenToTransportEntries(setAllEntries);
-        return () => unsubscribe();
+        const unsubscribeStock = listenToAutoPartsStockItems(setStockItems);
+        return () => {
+            unsubscribe();
+            unsubscribeStock();
+        }
     }, []);
 
     const filteredEntries = useMemo(() => {
@@ -264,7 +329,7 @@ export default function TransportPage() {
         <div className="flex min-h-screen w-full flex-col bg-muted/40">
             <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
                 <Button variant="outline" size="icon" className="h-8 w-8" asChild>
-                    <Link href="/agriculture">
+                    <Link href="/autoparts">
                         <ArrowLeft className="h-4 w-4" />
                         <span className="sr-only">ກັບໄປໜ້າຫຼັກ</span>
                     </Link>
@@ -290,6 +355,7 @@ export default function TransportPage() {
                                     onAddRow={handleAddTransportRow}
                                     onRowChange={handleTransportRowChange}
                                     onRowDelete={handleTransportRowDelete}
+                                    stockItems={stockItems}
                                 />
                             </AccordionContent>
                         </AccordionItem>
@@ -303,6 +369,7 @@ export default function TransportPage() {
                                     onAddRow={handleAddTransportRow}
                                     onRowChange={handleTransportRowChange}
                                     onRowDelete={handleTransportRowDelete}
+                                    stockItems={stockItems}
                                 />
                             </AccordionContent>
                         </AccordionItem>
@@ -316,6 +383,7 @@ export default function TransportPage() {
                                     onAddRow={handleAddTransportRow}
                                     onRowChange={handleTransportRowChange}
                                     onRowDelete={handleTransportRowDelete}
+                                    stockItems={stockItems}
                                 />
                             </AccordionContent>
                         </AccordionItem>
@@ -324,7 +392,7 @@ export default function TransportPage() {
                 <div className="md:col-span-1 mt-4 md:mt-0 flex flex-col gap-4">
                      <Card>
                         <CardHeader>
-                            <CardTitle>ສະຫຼຸບຍອດລວມ (ເດືອນທີ່ເລືอก)</CardTitle>
+                            <CardTitle>ສະຫຼຸບຍອດລວມ (ເດືອນທີ່ເລືອກ)</CardTitle>
                         </CardHeader>
                         <CardContent className="flex flex-col gap-4">
                              <div className="flex justify-between items-center p-4 bg-muted rounded-md">
