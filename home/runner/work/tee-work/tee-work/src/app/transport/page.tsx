@@ -212,7 +212,7 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
                             ))}
                          </Accordion>
                     ) : (
-                         <div className="text-center text-muted-foreground py-4">ບໍ່ມີລາຍການໃນເດືອນທີ່ເລືอก</div>
+                         <div className="text-center text-muted-foreground py-4">ບໍ່ມີລາຍການໃນເດືອນທີ່ເລືອກ</div>
                     )}
                 </div>
             </CardContent>
@@ -329,7 +329,7 @@ export default function TransportPage() {
         <div className="flex min-h-screen w-full flex-col bg-muted/40">
             <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
                 <Button variant="outline" size="icon" className="h-8 w-8" asChild>
-                    <Link href="/agriculture">
+                    <Link href="/autoparts">
                         <ArrowLeft className="h-4 w-4" />
                         <span className="sr-only">ກັບໄປໜ້າຫຼັກ</span>
                     </Link>
