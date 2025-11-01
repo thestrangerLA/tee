@@ -484,7 +484,15 @@ export default function ApplianceAccountancyPage() {
                                             <TableBody>
                                                 {summary.transactions.map(tx => (
                                                     <TableRow key={tx.id} className={tx.type === 'income' ? 'bg-green-50/50' : 'bg-red-50/50'}>
-                                                        <TableCell className="font-medium">{tx.description}</TableCell>
+                                                        <TableCell className="font-medium">
+                                                            {tx.saleId ? (
+                                                                <Link href={`/appliances/reports/sales/${tx.saleId}`} className="hover:underline text-blue-600">
+                                                                    {tx.description}
+                                                                </Link>
+                                                            ) : (
+                                                                tx.description
+                                                            )}
+                                                        </TableCell>
                                                         <TableCell className={`text-right font-semibold ${tx.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>{formatCurrency(tx.amount || 0)}</TableCell>
                                                         <TableCell className="text-right">
                                                             <DropdownMenu>
