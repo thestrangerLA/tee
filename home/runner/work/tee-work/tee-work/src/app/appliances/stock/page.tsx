@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Package, Trash2, PlusCircle, DollarSign, ArrowDown, ArrowUp, Printer, Search } from "lucide-react";
+import { ArrowLeft, Package, Trash2, PlusCircle, DollarSign, Printer, Search } from "lucide-react";
 import Link from 'next/link';
 import {
   Table,
@@ -44,9 +44,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import type { ApplianceStockItem } from '@/lib/types';
-import { listenToApplianceStockItems, addApplianceStockItem, deleteApplianceStockItem, updateApplianceStockQuantity, updateApplianceStockItem } from '@/services/applianceStockService';
-import { useClientRouter } from '@/hooks/useClientRouter';
-
+import { listenToApplianceStockItems, addApplianceStockItem, deleteApplianceStockItem, updateApplianceStockItem } from '@/services/applianceStockService';
 
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('lo-LA', { minimumFractionDigits: 0 }).format(value);
