@@ -7,7 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { DollarSign, Package, Tags, Wrench } from "lucide-react"
+import { DollarSign, Package, Wrench } from "lucide-react"
 import type { StockItem } from "@/lib/types"
 import { StatCard } from "@/components/stat-card"
 import { StockTable } from "@/components/stock-table"
@@ -42,24 +42,11 @@ export default function AutoPartsStockPage() {
     return acc + item.currentStock * item.costPrice;
   }, 0);
 
-  const totalValueBaht = stockItems.reduce((acc, item) => {
-    return acc + item.currentStock * item.costPriceBaht;
-  }, 0);
-
   const categories = [...new Set(stockItems.map(item => item.category))];
 
   const filteredStockItems = stockItems.filter(item =>
     item.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
-  const valuePerCategory = stockItems.reduce((acc, item) => {
-    const value = item.currentStock * item.costPrice;
-    if (!acc[item.category]) {
-      acc[item.category] = 0;
-    }
-    acc[item.category] += value;
-    return acc;
-  }, {} as Record<string, number>);
 
   const formatCurrency = (value: number, currency: 'Kip' | 'Baht') => {
     const currencySymbol = currency === 'Kip' ? ' ກີບ' : ' ບາດ';
@@ -88,42 +75,13 @@ export default function AutoPartsStockPage() {
                 icon={<DollarSign className="h-4 w-4 text-muted-foreground" />}
                 description="ມູນຄ່າໂດຍປະມານຂອງສິນຄ້າທັງໝົດໃນສະກຸນເງິນກີບ"
             />
-            <StatCard
-                title="ມູນຄ່າສະຕັອກທັງໝົດ (ບາດ)"
-                value={formatCurrency(totalValueBaht, 'Baht')}
-                icon={<DollarSign className="h-4 w-4 text-muted-foreground" />}
-                description="ມູນຄ່າໂດຍປະມານຂອງສິນຄ້າທັງໝົດໃນສະກຸນເງິນບາດ"
-            />
              <StatCard 
                 title="ສິນຄ້າທັງໝົດ"
                 value={stockItems.length.toString()}
                 icon={<Package className="h-4 w-4 text-muted-foreground" />}
                 description="ຈຳນວນລາຍການສິນຄ້າໃນສະຕັອກ"
             />
-             <StatCard 
-                title="ໝວດໝູ່ທັງໝົດ"
-                value={categories.length.toString()}
-                icon={<Tags className="h-4 w-4 text-muted-foreground" />}
-                description="ຈຳນວນໝວດໝູ່ສິນຄ້າທັງໝົດ"
-            />
         </div>
-        <Card>
-            <CardHeader>
-                <CardTitle>ມູນຄ່າຕາມໝວດໝູ່ (ກີບ)</CardTitle>
-                <CardDescription>ມູນຄ່າລວມຂອງສິນຄ້າໃນແຕ່ລະໝວດໝູ່</CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                {Object.entries(valuePerCategory).sort(([a], [b]) => a.localeCompare(b)).map(([category, value]) => (
-                    <StatCard
-                        key={category}
-                        title={category}
-                        value={formatCurrency(value, 'Kip')}
-                        icon={<Tags className="h-4 w-4 text-muted-foreground" />}
-                        description={`ມູນຄ່າລວມໃນໝວດໝູ່ ${category}`}
-                    />
-                ))}
-            </CardContent>
-        </Card>
         <div className="grid grid-cols-1">
             <StockTable 
               data={filteredStockItems} 
