@@ -360,7 +360,7 @@ export default function ApplianceAccountancyPage() {
         switch(editingField) {
             case 'capital': return 'ແກ້ໄຂເງິນທຶນ';
             case 'cash': return 'ແກ້ໄຂເງິນສົດ';
-            case 'transfer': return 'ແກ້ໄຂເງິນໂอน';
+            case 'transfer': return 'ແກ້ໄຂເງິນໂອນ';
             case 'workingCapital': return 'ແກ້ໄຂເງິນໝູນວຽນ';
             default: return 'ແກ້ໄຂ';
         }
@@ -486,7 +486,7 @@ export default function ApplianceAccountancyPage() {
                                                     <TableRow key={tx.id} className={tx.type === 'income' ? 'bg-green-50/50' : 'bg-red-50/50'}>
                                                         <TableCell className="font-medium">
                                                             {tx.saleId ? (
-                                                                <Link href={`/appliances/reports/sales/${tx.saleId}`} className="hover:underline text-blue-600">
+                                                                <Link href={`/appliances/reports/sales/`} className="hover:underline text-blue-600">
                                                                     {tx.description}
                                                                 </Link>
                                                             ) : (
@@ -571,4 +571,5 @@ export default function ApplianceAccountancyPage() {
         </div>
     );
 }
+
 
