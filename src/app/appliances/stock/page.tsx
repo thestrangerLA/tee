@@ -281,7 +281,7 @@ export default function ApplianceStockPage() {
                                     <TableHead className="text-right">ຕົ້ນทุน</TableHead>
                                     <TableHead className="text-right">ລາຄາຂາຍ</TableHead>
                                     <TableHead className="text-right">ຄົງເຫຼືອ</TableHead>
-                                    <TableHead className="text-center w-[250px]">ຈັດການ</TableHead>
+                                    <TableHead className="text-center w-[150px]">ຈັດການ</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -327,7 +327,6 @@ export default function ApplianceStockPage() {
                                         </TableCell>
                                         <TableCell className="text-center space-x-1">
                                             <StockAdjustmentDialog item={item} onAdjust={updateApplianceStockQuantity} type="stock-in" />
-                                            <StockAdjustmentDialog item={item} onAdjust={updateApplianceStockQuantity} type="sale" />
                                             <AlertDialog>
                                                 <AlertDialogTrigger asChild><Button variant="ghost" size="icon"><Trash2 className="h-4 w-4 text-red-500" /></Button></AlertDialogTrigger>
                                                 <AlertDialogContent>
@@ -356,5 +355,3 @@ export default function ApplianceStockPage() {
         </div>
     );
 }
-
-    
