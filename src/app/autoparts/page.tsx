@@ -2,7 +2,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, Landmark, Package, FilePieChart, Wrench } from "lucide-react"
+import { ArrowLeft, Landmark, Package, FilePieChart, Wrench, Truck } from "lucide-react"
 import Link from 'next/link'
 import { Button } from "@/components/ui/button"
 
@@ -46,6 +46,19 @@ export default function AutoPartsPage() {
               <CardContent>
                 <p className="text-muted-foreground">
                   ຕິດຕາມລາຍຮັບ-ລາຍຈ່າຍ, ຈັດການທຸລະກຳ ແລະເບິ່ງສະຫຼຸບການເງິນ
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+          <Link href="/transport">
+            <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-2xl font-bold font-headline">ບັນຊີຂົນສົ່ງ</CardTitle>
+                <Truck className="h-8 w-8 text-primary" />
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  ບັນທຶກ ແລະ ຕິດຕາມຄ່າໃຊ້ຈ່າຍໃນການຂົນສົ່ງສິນຄ້າ
                 </p>
               </CardContent>
             </Card>
