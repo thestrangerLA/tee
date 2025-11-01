@@ -359,7 +359,7 @@ export default function AutoPartsAccountancyPage() {
         switch(editingField) {
             case 'capital': return 'ແກ້ໄຂເງິນທຶນ';
             case 'cash': return 'ແກ້ໄຂເງິນສົດ';
-            case 'transfer': return 'ແກ້ໄຂເງິນໂอน';
+            case 'transfer': return 'ແກ້ໄຂເງິນໂອນ';
             case 'workingCapital': return 'ແກ້ໄຂເງິນໝູນວຽນ';
             default: return 'ແກ້ໄຂ';
         }
@@ -563,4 +563,5 @@ export default function AutoPartsAccountancyPage() {
     );
 }
 
+    
     
