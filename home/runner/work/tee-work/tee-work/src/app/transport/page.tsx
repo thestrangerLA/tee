@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import { useState, useMemo, useEffect } from 'react';
@@ -27,7 +28,7 @@ const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('lo-LA', { minimumFractionDigits: 0 }).format(value);
 }
 
-const SearchableSelect = ({ items, value, onValueChange }: { items: StockItem[], value: string, onValueChange: (value: string) => void }) => {
+const SearchableSelect = ({ items, value, onValueChange }: { items: StockItem[], value: string, onValueChange: (selectedItem: StockItem | null) => void }) => {
     const [open, setOpen] = useState(false);
 
     return (
@@ -58,7 +59,7 @@ const SearchableSelect = ({ items, value, onValueChange }: { items: StockItem[],
                                 value={item.name}
                                 onSelect={(currentValue) => {
                                     const selectedItem = items.find(i => i.name.toLowerCase() === currentValue.toLowerCase());
-                                    onValueChange(selectedItem ? selectedItem.name : "");
+                                    onValueChange(selectedItem || null);
                                     setOpen(false);
                                 }}
                             >
@@ -83,7 +84,7 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
     type: 'ANS' | 'HAL' | 'MX',
     title: string, 
     entries: TransportEntry[],
-    onRowChange: (id: string, field: keyof TransportEntry, value: any) => void,
+    onRowChange: (id: string, field: keyof TransportEntry, value: any, updatedFields?: Partial<TransportEntry>) => void,
     onRowDelete: (id: string) => void,
     onAddRow: (type: 'ANS' | 'HAL' | 'MX') => void,
     stockItems: StockItem[]
@@ -110,7 +111,8 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
                 };
             }
             groupedByDay[dayKey].entries.push(entry);
-            groupedByDay[dayKey].profit += (entry.amount || 0) - (entry.cost || 0);
+            const totalCost = (entry.cost || 0) * (entry.quantity || 1);
+            groupedByDay[dayKey].profit += (entry.amount || 0) - totalCost;
             groupedByDay[dayKey].orderCount += 1;
             if (!entry.finished) {
                 groupedByDay[dayKey].unfinishedCount += 1;
@@ -120,6 +122,14 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
 
         return Object.values(groupedByDay).sort((a, b) => b.date.getTime() - a.date.getTime());
     }, [entries]);
+
+     const handleDetailChange = (rowId: string, selectedItem: StockItem | null) => {
+        if (selectedItem) {
+            onRowChange(rowId, 'detail', selectedItem.name, { cost: selectedItem.costPrice });
+        } else {
+            onRowChange(rowId, 'detail', '');
+        }
+    };
 
 
     return (
@@ -166,8 +176,9 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
                                         <Table>
                                             <TableHeader>
                                                 <TableRow>
-                                                    <TableHead className="w-[40%]">ລາຍລະອຽດ</TableHead>
-                                                    <TableHead className="w-[150px] text-right">ຕົ້ນທຶນ</TableHead>
+                                                    <TableHead className="w-[35%]">ລາຍລະອຽດ</TableHead>
+                                                    <TableHead className="w-[100px] text-right">ຕົ້ນທຶນ</TableHead>
+                                                    <TableHead className="w-[80px] text-right">ຈຳນວນ</TableHead>
                                                     <TableHead className="w-[150px] text-right">ຈຳນວນເງິນ</TableHead>
                                                     <TableHead className="w-[120px] text-right">ກຳໄລ</TableHead>
                                                     <TableHead className="w-[80px] text-center">ສຳເລັດ</TableHead>
@@ -176,18 +187,22 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
                                             </TableHeader>
                                             <TableBody>
                                                 {summary.entries.map((row) => {
-                                                    const profit = (row.amount || 0) - (row.cost || 0);
+                                                    const totalCost = (row.cost || 0) * (row.quantity || 1);
+                                                    const profit = (row.amount || 0) - totalCost;
                                                     return (
                                                     <TableRow key={row.id}>
                                                         <TableCell className="p-2">
                                                             <SearchableSelect
                                                                 items={stockItems}
                                                                 value={row.detail || ''}
-                                                                onValueChange={(value) => onRowChange(row.id, 'detail', value)}
+                                                                onValueChange={(selected) => handleDetailChange(row.id, selected)}
                                                             />
                                                         </TableCell>
                                                         <TableCell className="p-2">
                                                             <Input type="number" value={row.cost || ''} onChange={(e) => onRowChange(row.id, 'cost', parseFloat(e.target.value) || 0)} placeholder="ຕົ້ນທຶນ" className="h-8 text-right" />
+                                                        </TableCell>
+                                                        <TableCell className="p-2">
+                                                            <Input type="number" value={row.quantity || ''} onChange={(e) => onRowChange(row.id, 'quantity', parseInt(e.target.value, 10) || 1)} placeholder="ຈຳນວນ" className="h-8 text-right" />
                                                         </TableCell>
                                                         <TableCell className="p-2">
                                                             <Input type="number" value={row.amount || ''} onChange={(e) => onRowChange(row.id, 'amount', parseFloat(e.target.value) || 0)} placeholder="ຈຳນວນເງິນ" className="h-8 text-right" />
@@ -249,7 +264,7 @@ export default function TransportPage() {
 
 
     const transportTotalAmount = useMemo(() => filteredEntries.reduce((total, row) => total + (row.amount || 0), 0), [filteredEntries]);
-    const transportTotalCost = useMemo(() => filteredEntries.reduce((total, row) => total + (row.cost || 0), 0), [filteredEntries]);
+    const transportTotalCost = useMemo(() => filteredEntries.reduce((total, row) => total + ((row.cost || 0) * (row.quantity || 1)), 0), [filteredEntries]);
     const transportProfit = useMemo(() => transportTotalAmount - transportTotalCost, [transportTotalAmount, transportTotalCost]);
     const transportRemaining = useMemo(() => filteredEntries.filter(e => !e.finished).reduce((total, row) => total + (row.amount || 0), 0), [filteredEntries]);
 
@@ -263,10 +278,10 @@ export default function TransportPage() {
         }
     };
 
-    const handleTransportRowChange = async (id: string, field: keyof TransportEntry, value: any) => {
+    const handleTransportRowChange = async (id: string, field: keyof TransportEntry, value: any, updatedFields?: Partial<TransportEntry>) => {
         try {
-            await updateTransportEntry(id, { [field]: value });
-            // No toast needed for real-time updates to avoid being noisy
+            const updates = updatedFields ? { ...updatedFields, [field]: value } : { [field]: value };
+            await updateTransportEntry(id, updates);
         } catch (error) {
             console.error("Error updating row: ", error);
             toast({ title: "ເກີດຂໍ້ຜິດພາດ", description: "ບໍ່ສາມາດອັບເດດຂໍ້ມູນໄດ້", variant: "destructive" });
