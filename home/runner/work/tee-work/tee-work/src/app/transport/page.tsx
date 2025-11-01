@@ -84,7 +84,7 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
     type: 'ANS' | 'HAL' | 'MX',
     title: string, 
     entries: TransportEntry[],
-    onRowChange: (id: string, field: keyof TransportEntry, value: any, updatedFields?: Partial<TransportEntry>) => void,
+    onRowChange: (id: string, updatedFields: Partial<TransportEntry>) => void,
     onRowDelete: (id: string) => void,
     onAddRow: (type: 'ANS' | 'HAL' | 'MX') => void,
     stockItems: StockItem[]
@@ -125,9 +125,9 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
 
      const handleDetailChange = (rowId: string, selectedItem: StockItem | null) => {
         if (selectedItem) {
-            onRowChange(rowId, 'detail', selectedItem.name, { cost: selectedItem.costPrice });
+            onRowChange(rowId, { detail: selectedItem.name, cost: selectedItem.costPrice });
         } else {
-            onRowChange(rowId, 'detail', '');
+            onRowChange(rowId, { detail: '' });
         }
     };
 
@@ -199,19 +199,19 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
                                                             />
                                                         </TableCell>
                                                         <TableCell className="p-2">
-                                                            <Input type="number" value={row.cost || ''} onChange={(e) => onRowChange(row.id, 'cost', parseFloat(e.target.value) || 0)} placeholder="ຕົ້ນທຶນ" className="h-8 text-right" />
+                                                            <Input type="number" value={row.cost || ''} onChange={(e) => onRowChange(row.id, { cost: parseFloat(e.target.value) || 0 })} placeholder="ຕົ້ນທຶນ" className="h-8 text-right" />
                                                         </TableCell>
                                                         <TableCell className="p-2">
-                                                            <Input type="number" value={row.quantity || ''} onChange={(e) => onRowChange(row.id, 'quantity', parseInt(e.target.value, 10) || 1)} placeholder="ຈຳນວນ" className="h-8 text-right" />
+                                                            <Input type="number" value={row.quantity || ''} onChange={(e) => onRowChange(row.id, { quantity: parseInt(e.target.value, 10) || 1 })} placeholder="ຈຳນວນ" className="h-8 text-right" />
                                                         </TableCell>
                                                         <TableCell className="p-2">
-                                                            <Input type="number" value={row.amount || ''} onChange={(e) => onRowChange(row.id, 'amount', parseFloat(e.target.value) || 0)} placeholder="ຈຳນວນເງິນ" className="h-8 text-right" />
+                                                            <Input type="number" value={row.amount || ''} onChange={(e) => onRowChange(row.id, { amount: parseFloat(e.target.value) || 0 })} placeholder="ຈຳນວນເງິນ" className="h-8 text-right" />
                                                         </TableCell>
                                                         <TableCell className={`p-2 text-right font-medium ${profit >= 0 ? '' : 'text-red-600'}`}>
                                                             {formatCurrency(profit)}
                                                         </TableCell>
                                                         <TableCell className="text-center p-2">
-                                                            <Checkbox checked={row.finished} onCheckedChange={(checked) => onRowChange(row.id, 'finished', checked)} />
+                                                            <Checkbox checked={row.finished} onCheckedChange={(checked) => onRowChange(row.id, { finished: !!checked })} />
                                                         </TableCell>
                                                         <TableCell className="text-center p-2">
                                                             <Button variant="ghost" size="icon" onClick={() => onRowDelete(row.id)}>
@@ -278,10 +278,9 @@ export default function TransportPage() {
         }
     };
 
-    const handleTransportRowChange = async (id: string, field: keyof TransportEntry, value: any, updatedFields?: Partial<TransportEntry>) => {
+    const handleTransportRowChange = async (id: string, updatedFields: Partial<TransportEntry>) => {
         try {
-            const updates = updatedFields ? { ...updatedFields, [field]: value } : { [field]: value };
-            await updateTransportEntry(id, updates);
+            await updateTransportEntry(id, updatedFields);
         } catch (error) {
             console.error("Error updating row: ", error);
             toast({ title: "ເກີດຂໍ້ຜິດພາດ", description: "ບໍ່ສາມາດອັບເດດຂໍ້ມູນໄດ້", variant: "destructive" });
