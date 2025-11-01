@@ -38,6 +38,7 @@ function formatCurrency(amount: number, currency: 'Kip' | 'Baht') {
 }
 
 const categoryColors: Record<string, string> = {
+    'auto-parts': 'bg-sky-100',
     'ຝຸ່ນ': 'bg-green-100',
     'ແນວພັນ': 'bg-yellow-100',
     'ຢາພືດ': 'bg-red-100',
@@ -90,7 +91,7 @@ export function StockTable({ data, categories, onAddItem, onUpdateItem, onDelete
                 <div>
                     <CardTitle>ສິນຄ້າໃນຄັງ</CardTitle>
                     <CardDescription>
-                    ຈັດການສິນຄ້າ ແລະ ເບິ່ງລະດັບສະຕັອກຂອງທ່ານ
+                    ຈັດການສິນຄ້າ และ ເບິ່ງລະດັບສະຕັອກຂອງທ່ານ
                     </CardDescription>
                 </div>
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full md:w-auto">
