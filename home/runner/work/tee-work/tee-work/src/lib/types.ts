@@ -46,19 +46,6 @@ export interface TransportEntry {
     createdAt: Date; 
 }
 
-export interface CodEntry {
-    id: string;
-    company: 'ANS' | 'HAL' | 'MX';
-    type: 'pending' | 'collected' | 'returned';
-    date: Date;
-    customerName: string;
-    description: string;
-    amount: number;
-    isPaidToOffice: boolean;
-    createdAt: Date;
-}
-
-
 export interface CashCalculatorState {
     id: string;
     counts: Record<string, number>;
