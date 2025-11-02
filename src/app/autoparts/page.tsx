@@ -2,7 +2,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, Landmark, Package, FilePieChart, Wrench, Truck } from "lucide-react"
+import { ArrowLeft, Landmark, Package, FilePieChart, Wrench, Truck, HandCoins } from "lucide-react"
 import Link from 'next/link'
 import { Button } from "@/components/ui/button"
 
@@ -23,7 +23,7 @@ export default function AutoPartsPage() {
         </div>
       </header>
       <main className="flex flex-1 flex-col items-center justify-center gap-8 p-4">
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2 w-full max-w-4xl">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 w-full max-w-6xl">
           <Link href="/autoparts/stock">
             <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -46,6 +46,19 @@ export default function AutoPartsPage() {
               <CardContent>
                 <p className="text-muted-foreground">
                   ຕິດຕາມລາຍຮັບ-ລາຍຈ່າຍ, ຈັດການທຸລະກຳ ແລະເບິ່ງສະຫຼຸບການເງິນ
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+           <Link href="/autoparts/cod">
+            <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-2xl font-bold font-headline">ລະບົບ COD</CardTitle>
+                <HandCoins className="h-8 w-8 text-primary" />
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  ຈັດການ ແລະ ຕິດຕາມລາຍການເກັບເງິນປາຍທາງ (COD)
                 </p>
               </CardContent>
             </Card>

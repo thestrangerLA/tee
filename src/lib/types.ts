@@ -40,9 +40,22 @@ export interface TransportEntry {
     detail: string;
     cost: number;
     amount: number;
+    quantity: number;
     finished: boolean;
     createdAt: Date; 
 }
+
+export interface CodEntry {
+    id: string;
+    type: 'pending' | 'collected' | 'returned';
+    date: Date;
+    customerName: string;
+    description: string;
+    amount: number;
+    isPaidToOffice: boolean;
+    createdAt: Date;
+}
+
 
 export interface CashCalculatorState {
     id: string;
