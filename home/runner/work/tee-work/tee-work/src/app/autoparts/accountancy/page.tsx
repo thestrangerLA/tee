@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Landmark, Wallet, PlusCircle, Calendar as CalendarIcon, ChevronDown, ChevronUp, MoreHorizontal, Pencil, Trash2, Briefcase, Combine, ArrowUpCircle, ArrowDownCircle, Scale, FileText, Banknote, Minus, Equal, Coins, MinusCircle } from "lucide-react"
+import { ArrowLeft, Landmark, Wallet, PlusCircle, Calendar as CalendarIcon, ChevronDown, ChevronUp, MoreHorizontal, Pencil, Trash2, Briefcase, Combine, ArrowUpCircle, ArrowDownCircle, Scale, FileText, Banknote, Minus, Equal, Coins, MinusCircle, Truck } from "lucide-react"
 import Link from 'next/link'
 import { useToast } from "@/hooks/use-toast"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
@@ -20,8 +20,9 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { listenToAutoPartsAccountSummary, updateAutoPartsAccountSummary, listenToAutoPartsTransactions, addAutoPartsTransaction, updateAutoPartsTransaction, deleteAutoPartsTransaction } from '@/services/autoPartsAccountancyService';
-import type { AccountSummary, Transaction, CashCalculatorState } from '@/lib/types';
+import type { AccountSummary, Transaction, CashCalculatorState, TransportEntry } from '@/lib/types';
 import { listenToAutoPartsCashCalculatorState, updateAutoPartsCashCalculatorState } from '@/services/autoPartsCashCalculatorService';
+import { listenToAutoPartsTransportEntries } from '@/services/autoPartsTransportService';
 
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('lo-LA', { minimumFractionDigits: 0 }).format(value);
@@ -142,6 +143,7 @@ export default function AutoPartsAccountancyPage() {
     const [summary, setSummary] = useState<AccountSummary | null>(null);
     const [date, setDate] = useState<Date | undefined>(new Date());
     const [transactions, setTransactions] = useState<Transaction[]>([]);
+    const [transportEntries, setTransportEntries] = useState<TransportEntry[]>([]);
     const [newTransaction, setNewTransaction] = useState<Partial<Transaction>>({ type: 'expense', description: '', amount: 0 });
     const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
     const [isFormVisible, setFormVisible] = useState(true);
@@ -154,9 +156,11 @@ export default function AutoPartsAccountancyPage() {
     useEffect(() => {
         const unsubscribeSummary = listenToAutoPartsAccountSummary(setSummary);
         const unsubscribeTransactions = listenToAutoPartsTransactions(setTransactions);
+        const unsubscribeTransport = listenToAutoPartsTransportEntries(setTransportEntries);
         return () => {
             unsubscribeSummary();
             unsubscribeTransactions();
+            unsubscribeTransport();
         };
     }, []);
 
@@ -170,6 +174,14 @@ export default function AutoPartsAccountancyPage() {
         if (!summary) return 0;
         return (summary.cash || 0) + (summary.transfer || 0);
     }, [summary]);
+    
+    const transportRemaining = useMemo(() => {
+        return transportEntries.filter(e => !e.finished).reduce((total, row) => total + (row.amount || 0), 0);
+    }, [transportEntries]);
+
+    const grandTotalMoney = useMemo(() => {
+        return totalBalance + transportRemaining;
+    }, [totalBalance, transportRemaining]);
 
     const performanceData = useMemo(() => {
         const startOfSelectedMonth = startOfMonth(historyDisplayMonth);
@@ -375,12 +387,13 @@ export default function AutoPartsAccountancyPage() {
                 <h1 className="text-xl font-bold tracking-tight">ຈັດການບັນຊີ (ທຸລະກິດອາໄຫຼລົດ)</h1>
             </header>
             <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
                      <SummaryCard title="ເງິນທຶນ" value={formatCurrency(summary.capital || 0)} icon={<Briefcase className="h-5 w-5 text-primary" />} onClick={() => openEditDialog('capital')} />
                      <SummaryCard title="ເງິນສົດ" value={formatCurrency(summary.cash || 0)} icon={<Wallet className="h-5 w-5 text-primary" />} onClick={() => openEditDialog('cash')} />
                      <SummaryCard title="ເງິນໂອນ" value={formatCurrency(summary.transfer || 0)} icon={<Landmark className="h-5 w-5 text-primary" />} onClick={() => openEditDialog('transfer')} />
                      <SummaryCard title="ລວມເງິນຄົງເຫຼືອ" value={formatCurrency(totalBalance)} icon={<Combine className="h-5 w-5 text-green-600" />} />
-                     <SummaryCard title="ສ່ວນຕ່າງ" value={formatCurrency(differenceAmount)} icon={<MinusCircle className="h-5 w-5 text-indigo-500" />} />
+                     <SummaryCard title="ຄົງເຫຼືອຈາກຂົນສົ່ງ" value={formatCurrency(transportRemaining)} icon={<Truck className="h-5 w-5 text-orange-500" />} />
+                     <SummaryCard title="ລວມທັງໝົດ" value={formatCurrency(grandTotalMoney)} icon={<Coins className="h-5 w-5 text-blue-600" />} />
                 </div>
                  <Card>
                     <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
@@ -562,6 +575,3 @@ export default function AutoPartsAccountancyPage() {
         </div>
     );
 }
-
-    
-    

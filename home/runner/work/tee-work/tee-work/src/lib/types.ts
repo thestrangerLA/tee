@@ -17,7 +17,7 @@ export interface Transaction {
     date: Date; // Stored as Timestamp in Firestore, converted to Date on client
     amount: number;
     description: string;
-    businessType?: 'agriculture' | 'tour' | 'documents' | 'meat-business' | 'appliances';
+    businessType?: 'agriculture' | 'tour' | 'documents' | 'meat-business' | 'appliances' | 'autoparts';
     kip?: number;
     baht?: number;
     usd?: number;
@@ -45,6 +45,19 @@ export interface TransportEntry {
     finished: boolean;
     createdAt: Date; 
 }
+
+export interface CodEntry {
+    id: string;
+    company: 'ANS' | 'HAL' | 'MX';
+    type: 'pending' | 'collected' | 'returned';
+    date: Date;
+    customerName: string;
+    description: string;
+    amount: number;
+    isPaidToOffice: boolean;
+    createdAt: Date;
+}
+
 
 export interface CashCalculatorState {
     id: string;
