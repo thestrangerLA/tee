@@ -303,5 +303,4 @@ export default function TourCostCalculatorListPage() {
             </main>
         </div>
     );
-
-  
+}
