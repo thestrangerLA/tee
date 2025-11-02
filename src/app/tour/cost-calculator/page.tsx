@@ -10,10 +10,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PlusCircle, Calendar as CalendarIcon, Calculator, Pencil, Trash2, ArrowLeft, MoreHorizontal, Search } from 'lucide-react';
+import { PlusCircle, Calculator, MoreHorizontal, Search, ArrowLeft } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { getFirestore, collection, query, orderBy, onSnapshot, addDoc, deleteDoc, doc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 // Define the shape of a calculation document from Firestore
 export interface SavedCalculation {
@@ -35,7 +36,6 @@ export interface SavedCalculation {
         overseasPackages?: any[]; // Ensure this property exists
     };
 }
-
 
 export default function TourCostCalculatorListPage() {
     const router = useRouter();
@@ -67,8 +67,11 @@ export default function TourCostCalculatorListPage() {
       if (date instanceof Timestamp) {
         return date.toDate();
       }
-      const parsedDate = new Date(date);
-      return isNaN(parsedDate.getTime()) ? undefined : parsedDate;
+      if (typeof date === 'string' || typeof date === 'number') {
+        const parsedDate = new Date(date);
+        return isNaN(parsedDate.getTime()) ? undefined : parsedDate;
+      }
+      return undefined;
     };
     
     const filteredCalculations = useMemo(() => {
