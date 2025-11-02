@@ -47,7 +47,7 @@ const CodCompanyTable = ({ company, title, entries, onUpdateEntry, onDeleteEntry
     return (
         <Card>
             <CardHeader>
-                <CardTitle>{title}</CardTitle>
+                <CardTitle className="sr-only">{title}</CardTitle>
                  <CardDescription className="flex flex-wrap items-center gap-x-4 text-xs">
                     <span>ລວມ: {formatCurrency(summary.totalAmount)}</span>
                     <span className="text-green-600">ເກັບເງິນສຳເລັດ: {formatCurrency(summary.collected)}</span>
@@ -254,22 +254,22 @@ export default function AutoPartsCodPage() {
                 </div>
                 <div className="md:col-span-2 mt-4 md:mt-0">
                     <Accordion type="single" collapsible defaultValue="item-ans" className="w-full space-y-4">
-                        <AccordionItem value="item-ans">
-                            <AccordionTrigger className="text-lg font-bold bg-blue-50 hover:bg-blue-100 px-4 rounded-md">ANS</AccordionTrigger>
+                        <AccordionItem value="item-ans" className="border-none">
+                            <AccordionTrigger className="text-lg font-bold bg-blue-50 hover:bg-blue-100 px-4 rounded-md hover:no-underline">ANS</AccordionTrigger>
                             <AccordionContent className="p-1">
-                                <CodCompanyTable company="ANS" title="" entries={ansEntries} onUpdateEntry={handleUpdateEntry} onDeleteEntry={handleDeleteEntry} />
+                                <CodCompanyTable company="ANS" title="ANS" entries={ansEntries} onUpdateEntry={handleUpdateEntry} onDeleteEntry={handleDeleteEntry} />
                             </AccordionContent>
                         </AccordionItem>
-                        <AccordionItem value="item-hal">
-                            <AccordionTrigger className="text-lg font-bold bg-green-50 hover:bg-green-100 px-4 rounded-md">HAL</AccordionTrigger>
+                        <AccordionItem value="item-hal" className="border-none">
+                            <AccordionTrigger className="text-lg font-bold bg-green-50 hover:bg-green-100 px-4 rounded-md hover:no-underline">HAL</AccordionTrigger>
                             <AccordionContent className="p-1">
-                                 <CodCompanyTable company="HAL" title="" entries={halEntries} onUpdateEntry={handleUpdateEntry} onDeleteEntry={handleDeleteEntry} />
+                                 <CodCompanyTable company="HAL" title="HAL" entries={halEntries} onUpdateEntry={handleUpdateEntry} onDeleteEntry={handleDeleteEntry} />
                             </AccordionContent>
                         </AccordionItem>
-                        <AccordionItem value="item-mx">
-                            <AccordionTrigger className="text-lg font-bold bg-orange-50 hover:bg-orange-100 px-4 rounded-md">MX</AccordionTrigger>
+                        <AccordionItem value="item-mx" className="border-none">
+                            <AccordionTrigger className="text-lg font-bold bg-orange-50 hover:bg-orange-100 px-4 rounded-md hover:no-underline">MX</AccordionTrigger>
                             <AccordionContent className="p-1">
-                                 <CodCompanyTable company="MX" title="" entries={mxEntries} onUpdateEntry={handleUpdateEntry} onDeleteEntry={handleDeleteEntry} />
+                                 <CodCompanyTable company="MX" title="MX" entries={mxEntries} onUpdateEntry={handleUpdateEntry} onDeleteEntry={handleDeleteEntry} />
                             </AccordionContent>
                         </AccordionItem>
                     </Accordion>
@@ -278,3 +278,5 @@ export default function AutoPartsCodPage() {
         </div>
     );
 }
+
+    
