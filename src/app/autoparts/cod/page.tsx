@@ -19,10 +19,86 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSub, D
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 
 
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('lo-LA', { minimumFractionDigits: 0 }).format(value);
+}
+
+const CodCompanyTable = ({ company, title, entries, onUpdateEntry, onDeleteEntry }: {
+    company: 'ANS' | 'HAL' | 'MX',
+    title: string,
+    entries: CodEntry[],
+    onUpdateEntry: (id: string, field: keyof CodEntry, value: any) => void,
+    onDeleteEntry: (id: string) => void
+}) => {
+     const summary = useMemo(() => {
+        const totalAmount = entries.reduce((sum, e) => sum + e.amount, 0);
+        const collected = entries.filter(e => e.type === 'collected').reduce((sum, e) => sum + e.amount, 0);
+        const pending = entries.filter(e => e.type === 'pending').reduce((sum, e) => sum + e.amount, 0);
+        const returned = entries.filter(e => e.type === 'returned').reduce((sum, e) => sum + e.amount, 0);
+        const paidToOffice = entries.filter(e => e.isPaidToOffice).reduce((sum, e) => sum + e.amount, 0);
+        const dueToOffice = collected - paidToOffice;
+
+        return { totalAmount, collected, pending, returned, paidToOffice, dueToOffice };
+    }, [entries]);
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle className="sr-only">{title}</CardTitle>
+                 <CardDescription className="flex flex-wrap items-center gap-x-4 text-xs">
+                    <span>ລວມ: {formatCurrency(summary.totalAmount)}</span>
+                    <span className="text-green-600">ເກັບເງິນສຳເລັດ: {formatCurrency(summary.collected)}</span>
+                    <span className="text-yellow-600">ຄ້າງ: {formatCurrency(summary.pending)}</span>
+                    <span className="text-orange-600">ຕີຄືນ: {formatCurrency(summary.returned)}</span>
+                    <span className="font-bold">ມອບແລ້ວ: {formatCurrency(summary.paidToOffice)}</span>
+                    <span className="font-bold text-red-600">ຄ້າງມອບ: {formatCurrency(summary.dueToOffice)}</span>
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                 <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>ວັນທີ</TableHead>
+                            <TableHead>ລູກຄ້າ</TableHead>
+                            <TableHead className="text-right">ຈຳນວນເງິນ</TableHead>
+                            <TableHead className="text-center">ສະຖານະ</TableHead>
+                            <TableHead className="text-center">ມອບເງິນ Office</TableHead>
+                            <TableHead className="w-12"></TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {entries.map(entry => (
+                            <TableRow key={entry.id} className={entry.isPaidToOffice ? 'bg-green-50/50' : ''}>
+                                <TableCell>{format(entry.date, 'dd/MM/yy')}</TableCell>
+                                <TableCell>{entry.customerName}</TableCell>
+                                <TableCell className="text-right">{formatCurrency(entry.amount)}</TableCell>
+                                <TableCell className="text-center">
+                                    <Select value={entry.type} onValueChange={(v) => onUpdateEntry(entry.id, 'type', v)}>
+                                        <SelectTrigger className="h-8 text-xs">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="pending"><Badge variant="secondary">ຄ້າງ</Badge></SelectItem>
+                                            <SelectItem value="collected"><Badge className="bg-green-500">ສຳເລັດ</Badge></SelectItem>
+                                            <SelectItem value="returned"><Badge variant="destructive">ຄືນ</Badge></SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </TableCell>
+                                <TableCell className="text-center">
+                                    <Checkbox checked={entry.isPaidToOffice} onCheckedChange={c => onUpdateEntry(entry.id, 'isPaidToOffice', c)} />
+                                </TableCell>
+                                <TableCell><Button variant="ghost" size="icon" onClick={() => onDeleteEntry(entry.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button></TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+                {entries.length === 0 && <div className="text-center p-8 text-muted-foreground">ບໍ່ມີລາຍການ</div>}
+            </CardContent>
+        </Card>
+    );
 }
 
 export default function AutoPartsCodPage() {
@@ -31,6 +107,7 @@ export default function AutoPartsCodPage() {
     const [displayMonth, setDisplayMonth] = useState<Date>(new Date());
     const [newEntry, setNewEntry] = useState<Partial<Omit<CodEntry, 'id' | 'createdAt'>>>({
         date: new Date(),
+        company: 'ANS',
         type: 'pending',
         customerName: '',
         description: '',
@@ -48,32 +125,26 @@ export default function AutoPartsCodPage() {
         return allEntries.filter(entry => isWithinInterval(entry.date, { start, end }));
     }, [allEntries, displayMonth]);
     
-    const summary = useMemo(() => {
-        const totalAmount = filteredEntries.reduce((sum, e) => sum + e.amount, 0);
-        const collected = filteredEntries.filter(e => e.type === 'collected').reduce((sum, e) => sum + e.amount, 0);
-        const pending = filteredEntries.filter(e => e.type === 'pending').reduce((sum, e) => sum + e.amount, 0);
-        const returned = filteredEntries.filter(e => e.type === 'returned').reduce((sum, e) => sum + e.amount, 0);
-        const paidToOffice = filteredEntries.filter(e => e.isPaidToOffice).reduce((sum, e) => sum + e.amount, 0);
-        const dueToOffice = collected - paidToOffice;
-
-        return { totalAmount, collected, pending, returned, paidToOffice, dueToOffice };
-    }, [filteredEntries]);
+    const ansEntries = useMemo(() => filteredEntries.filter(e => e.company === 'ANS'), [filteredEntries]);
+    const halEntries = useMemo(() => filteredEntries.filter(e => e.company === 'HAL'), [filteredEntries]);
+    const mxEntries = useMemo(() => filteredEntries.filter(e => e.company === 'MX'), [filteredEntries]);
     
     const handleAddEntry = async () => {
-        if (!newEntry.date || !newEntry.customerName || !newEntry.amount) {
+        if (!newEntry.date || !newEntry.customerName || !newEntry.amount || !newEntry.company) {
             toast({title: 'ຂໍ້ມູນບໍ່ຄົບ', description: 'ກະລຸນາປ້ອນຂໍ້ມູນໃຫ້ຄົບ', variant: 'destructive'});
             return;
         }
         try {
             await addAutoPartsCodEntry({
                 date: startOfDay(newEntry.date),
+                company: newEntry.company,
                 type: 'pending',
                 customerName: newEntry.customerName,
                 description: newEntry.description || '',
                 amount: newEntry.amount,
             });
             toast({title: 'ເພີ່ມລາຍການ COD ສຳເລັດ'});
-            setNewEntry({ date: new Date(), type: 'pending', customerName: '', description: '', amount: 0 });
+            setNewEntry({ date: new Date(), company: 'ANS', type: 'pending', customerName: '', description: '', amount: 0 });
         } catch (e) {
             toast({title: 'ເກີດຂໍ້ຜິດພາດ', variant: 'destructive'});
         }
@@ -88,7 +159,6 @@ export default function AutoPartsCodPage() {
             deleteAutoPartsCodEntry(id).then(() => toast({title: 'ລຶບລາຍການສຳເລັດ'}));
         }
     };
-
 
     const MonthYearSelector = () => {
         const years = Array.from({ length: 3 }, (_, i) => getYear(new Date()) - 1 + i);
@@ -164,70 +234,48 @@ export default function AutoPartsCodPage() {
                                     <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={newEntry.date} onSelect={(d) => setNewEntry(p => ({...p, date: d}))} initialFocus/></PopoverContent>
                                 </Popover>
                             </div>
+                             <div className="grid gap-2">
+                                <Label>ບໍລິສັດຂົນສົ່ງ</Label>
+                                <Select value={newEntry.company} onValueChange={v => setNewEntry(p => ({...p, company: v as 'ANS' | 'HAL' | 'MX'}))}>
+                                    <SelectTrigger><SelectValue /></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="ANS">ANS</SelectItem>
+                                        <SelectItem value="HAL">HAL</SelectItem>
+                                        <SelectItem value="MX">MX</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
                             <div className="grid gap-2"><Label>ຊື່ລູກຄ້າ</Label><Input value={newEntry.customerName} onChange={e => setNewEntry(p => ({...p, customerName: e.target.value}))} /></div>
                             <div className="grid gap-2"><Label>ລາຍລະອຽດ</Label><Input value={newEntry.description} onChange={e => setNewEntry(p => ({...p, description: e.target.value}))} /></div>
                             <div className="grid gap-2"><Label>ຈຳນວນເງິນ</Label><Input type="number" value={newEntry.amount || ''} onChange={e => setNewEntry(p => ({...p, amount: Number(e.target.value)}))} /></div>
                             <Button onClick={handleAddEntry}><PlusCircle className="mr-2 h-4 w-4"/>ເພີ່ມລາຍການ</Button>
                         </CardContent>
                     </Card>
-                     <Card>
-                        <CardHeader><CardTitle>ສະຫຼຸບຍອດ COD (ເດືອນທີ່ເລືອກ)</CardTitle></CardHeader>
-                        <CardContent className="space-y-2">
-                            <div className="flex justify-between"><span>ຍອດລວມທັງໝົດ:</span><span className="font-bold">{formatCurrency(summary.totalAmount)}</span></div>
-                            <div className="flex justify-between"><span>ເກັບເງິນສຳເລັດ:</span><span className="font-bold text-green-600">{formatCurrency(summary.collected)}</span></div>
-                            <div className="flex justify-between"><span>ກຳລັງດຳເນີນການ:</span><span className="font-bold text-yellow-600">{formatCurrency(summary.pending)}</span></div>
-                            <div className="flex justify-between"><span>ສົ່ງຄືນ:</span><span className="font-bold text-orange-600">{formatCurrency(summary.returned)}</span></div>
-                            <div className="flex justify-between border-t pt-2 mt-2"><span>ມອບເງິນໃຫ້ Office ແລ້ວ:</span><span className="font-bold">{formatCurrency(summary.paidToOffice)}</span></div>
-                            <div className="flex justify-between font-bold text-red-600"><span>ຍອດຄ້າງທີ່ຕ້ອງມອບ:</span><span >{formatCurrency(summary.dueToOffice)}</span></div>
-                        </CardContent>
-                    </Card>
                 </div>
                 <div className="md:col-span-2 mt-4 md:mt-0">
-                    <Card>
-                        <CardHeader><CardTitle>ລາຍການ COD</CardTitle></CardHeader>
-                        <CardContent>
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>ວັນທີ</TableHead>
-                                        <TableHead>ລູກຄ້າ</TableHead>
-                                        <TableHead className="text-right">ຈຳນວນເງິນ</TableHead>
-                                        <TableHead className="text-center">ສະຖານະ</TableHead>
-                                        <TableHead className="text-center">ມອບເງິນ Office</TableHead>
-                                        <TableHead className="w-12"></TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {filteredEntries.map(entry => (
-                                        <TableRow key={entry.id} className={entry.isPaidToOffice ? 'bg-green-50/50' : ''}>
-                                            <TableCell>{format(entry.date, 'dd/MM/yy')}</TableCell>
-                                            <TableCell>{entry.customerName}</TableCell>
-                                            <TableCell className="text-right">{formatCurrency(entry.amount)}</TableCell>
-                                            <TableCell className="text-center">
-                                                <Select value={entry.type} onValueChange={(v) => handleUpdateEntry(entry.id, 'type', v)}>
-                                                    <SelectTrigger className="h-8 text-xs">
-                                                        <SelectValue />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem value="pending"><Badge variant="secondary">ຄ້າງ</Badge></SelectItem>
-                                                        <SelectItem value="collected"><Badge className="bg-green-500">ສຳເລັດ</Badge></SelectItem>
-                                                        <SelectItem value="returned"><Badge variant="destructive">ຄືນ</Badge></SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                            </TableCell>
-                                            <TableCell className="text-center">
-                                                <Checkbox checked={entry.isPaidToOffice} onCheckedChange={c => handleUpdateEntry(entry.id, 'isPaidToOffice', c)} />
-                                            </TableCell>
-                                            <TableCell><Button variant="ghost" size="icon" onClick={() => handleDeleteEntry(entry.id)}><Trash2 className="h-4 w-4 text-red-500"/></Button></TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                            {filteredEntries.length === 0 && <div className="text-center p-8 text-muted-foreground">ບໍ່ມີລາຍການ</div>}
-                        </CardContent>
-                    </Card>
+                    <Accordion type="single" collapsible defaultValue="item-ans" className="w-full space-y-4">
+                        <AccordionItem value="item-ans" className="border-none">
+                            <AccordionTrigger className="text-lg font-bold bg-blue-50 hover:bg-blue-100 px-4 rounded-md hover:no-underline">ANS</AccordionTrigger>
+                            <AccordionContent className="p-1">
+                                <CodCompanyTable company="ANS" title="" entries={ansEntries} onUpdateEntry={handleUpdateEntry} onDeleteEntry={handleDeleteEntry} />
+                            </AccordionContent>
+                        </AccordionItem>
+                        <AccordionItem value="item-hal" className="border-none">
+                            <AccordionTrigger className="text-lg font-bold bg-green-50 hover:bg-green-100 px-4 rounded-md hover:no-underline">HAL</AccordionTrigger>
+                            <AccordionContent className="p-1">
+                                 <CodCompanyTable company="HAL" title="" entries={halEntries} onUpdateEntry={handleUpdateEntry} onDeleteEntry={handleDeleteEntry} />
+                            </AccordionContent>
+                        </AccordionItem>
+                        <AccordionItem value="item-mx" className="border-none">
+                            <AccordionTrigger className="text-lg font-bold bg-orange-50 hover:bg-orange-100 px-4 rounded-md hover:no-underline">MX</AccordionTrigger>
+                            <AccordionContent className="p-1">
+                                 <CodCompanyTable company="MX" title="" entries={mxEntries} onUpdateEntry={handleUpdateEntry} onDeleteEntry={handleDeleteEntry} />
+                            </AccordionContent>
+                        </AccordionItem>
+                    </Accordion>
                 </div>
             </main>
         </div>
     );
-}
+
+    
