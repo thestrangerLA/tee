@@ -4,18 +4,17 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { format } from 'date-fns';
+import { format, isSameMonth, isSameYear } from 'date-fns';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PlusCircle, Calendar as CalendarIcon, Calculator, Pencil, Trash2, ArrowLeft, MoreHorizontal, Search } from 'lucide-react';
+import { PlusCircle, Calculator, MoreHorizontal, Search, ArrowLeft } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { getFirestore, collection, query, orderBy, onSnapshot, addDoc, deleteDoc, doc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-
 
 // Define the shape of a calculation document from Firestore
 export interface SavedCalculation {
@@ -38,7 +37,6 @@ export interface SavedCalculation {
     };
 }
 
-
 export default function TourCostCalculatorListPage() {
     const router = useRouter();
     const { toast } = useToast();
@@ -47,6 +45,7 @@ export default function TourCostCalculatorListPage() {
     const [savedCalculations, setSavedCalculations] = useState<SavedCalculation[]>([]);
     const [calculationsLoading, setCalculationsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
+    const [selectedMonth, setSelectedMonth] = useState<string>(format(new Date(), 'yyyy-MM'));
 
     useEffect(() => {
         if (!firestore) return;
@@ -69,12 +68,33 @@ export default function TourCostCalculatorListPage() {
       if (date instanceof Timestamp) {
         return date.toDate();
       }
-      const parsedDate = new Date(date);
-      return isNaN(parsedDate.getTime()) ? undefined : parsedDate;
+      if (typeof date === 'string' || typeof date === 'number') {
+        const parsedDate = new Date(date);
+        return isNaN(parsedDate.getTime()) ? undefined : parsedDate;
+      }
+      return undefined;
     };
-    
+
+    const availableMonths = useMemo(() => {
+        const monthSet = new Set<string>();
+        savedCalculations.forEach(calc => {
+            const date = toDate(calc.savedAt);
+            if (date) {
+                monthSet.add(format(date, 'yyyy-MM'));
+            }
+        });
+        return Array.from(monthSet);
+    }, [savedCalculations]);
+
     const filteredCalculations = useMemo(() => {
+        const [year, month] = selectedMonth.split('-').map(Number);
+        const selectedDate = new Date(year, month - 1);
+        
         return savedCalculations.filter(calc => {
+            const savedAtDate = toDate(calc.savedAt);
+            const matchesMonth = savedAtDate && isSameMonth(savedAtDate, selectedDate) && isSameYear(savedAtDate, selectedDate);
+            if (!matchesMonth) return false;
+
             const groupCode = calc.tourInfo?.groupCode?.toLowerCase() || '';
             const program = calc.tourInfo?.program?.toLowerCase() || '';
             const destination = calc.tourInfo?.destinationCountry?.toLowerCase() || '';
@@ -82,8 +102,7 @@ export default function TourCostCalculatorListPage() {
                    program.includes(searchQuery.toLowerCase()) ||
                    destination.includes(searchQuery.toLowerCase());
         })
-    }, [savedCalculations, searchQuery]);
-
+    }, [savedCalculations, searchQuery, selectedMonth]);
 
     const handleAddNewCalculation = async () => {
         if (!firestore) {
@@ -175,6 +194,18 @@ export default function TourCostCalculatorListPage() {
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
                     </div>
+                    <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                        <SelectTrigger className="w-[180px] text-black">
+                            <SelectValue placeholder="ເລືອກເດືອນ" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {availableMonths.map(month => (
+                                <SelectItem key={month} value={month}>
+                                    {format(new Date(month + '-02'), 'LLLL yyyy')}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                     <Button onClick={handleAddNewCalculation}>
                         <PlusCircle className="mr-2 h-4 w-4" />
                         ເພີ່ມການຄຳນວນໃໝ່
