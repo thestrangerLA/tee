@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import { useState, useEffect, useMemo } from 'react';
@@ -10,32 +11,15 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PlusCircle, Calculator, MoreHorizontal, Search, ArrowLeft } from 'lucide-react';
+import { PlusCircle, Calculator, MoreHorizontal, Search, ArrowLeft, ChevronDown } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { getFirestore, collection, query, orderBy, onSnapshot, addDoc, deleteDoc, doc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import TourCalculatorClientPage from './[id]/client-page';
+import type { SavedCalculation } from './[id]/client-page';
 
-// Define the shape of a calculation document from Firestore
-export interface SavedCalculation {
-    id: string;
-    savedAt: any; // Firestore Timestamp
-    tourInfo: {
-        mouContact?: string;
-        groupCode?: string;
-        destinationCountry?: string;
-        program?: string;
-        startDate?: any;
-        endDate?: any;
-        numDays?: number;
-        numNights?: number;
-        numPeople?: number;
-        travelerInfo?: string;
-    };
-    allCosts?: {
-        overseasPackages?: any[]; // Ensure this property exists
-    };
-}
 
 export default function TourCostCalculatorListPage() {
     const router = useRouter();
@@ -46,6 +30,7 @@ export default function TourCostCalculatorListPage() {
     const [calculationsLoading, setCalculationsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedMonth, setSelectedMonth] = useState<string>(format(new Date(), 'yyyy-MM'));
+    const [expandedRow, setExpandedRow] = useState<string | null>(null);
 
     useEffect(() => {
         if (!firestore) return;
@@ -83,7 +68,7 @@ export default function TourCostCalculatorListPage() {
                 monthSet.add(format(date, 'yyyy-MM'));
             }
         });
-        return Array.from(monthSet);
+        return Array.from(monthSet).sort((a,b) => b.localeCompare(a));
     }, [savedCalculations]);
 
     const filteredCalculations = useMemo(() => {
@@ -147,10 +132,6 @@ export default function TourCostCalculatorListPage() {
         }
     };
     
-    const navigateToCalculation = (id: string) => {
-        router.push(`/tour/cost-calculator/${id}`);
-    }
-    
     const handleDeleteCalculation = async (e: React.MouseEvent, id: string) => {
         e.stopPropagation(); // Prevent row click event
         if (!firestore) {
@@ -166,6 +147,10 @@ export default function TourCostCalculatorListPage() {
             });
         }
     };
+
+    const handleRowClick = (id: string) => {
+        setExpandedRow(currentId => currentId === id ? null : id);
+    }
 
 
     return (
@@ -213,7 +198,7 @@ export default function TourCostCalculatorListPage() {
                 </div>
             </header>
             <main className="flex w-full flex-1 flex-col gap-8 p-4 sm:px-6 sm:py-4">
-                <div className="w-full max-w-screen-xl mx-auto flex flex-col gap-4">
+                <div className="w-full max-w-screen-2xl mx-auto flex flex-col gap-4">
                      {calculationsLoading ? (
                         <Card>
                             <CardContent className="p-10 text-center text-muted-foreground">
@@ -227,6 +212,7 @@ export default function TourCostCalculatorListPage() {
                                     <Table>
                                         <TableHeader className="bg-muted/50">
                                             <TableRow>
+                                                <TableHead className="w-12"></TableHead>
                                                 <TableHead>ວັນທີບັນທຶກ</TableHead>
                                                 <TableHead>Group Code</TableHead>
                                                 <TableHead>ໂປຣແກຣມ</TableHead>
@@ -236,35 +222,50 @@ export default function TourCostCalculatorListPage() {
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
-                                            {filteredCalculations.length > 0 ? filteredCalculations.map(calc => {
-                                                const savedAtDate = toDate(calc.savedAt);
-                                                return (
-                                                <TableRow key={calc.id} className="cursor-pointer hover:bg-muted/30" onClick={() => navigateToCalculation(calc.id)}>
-                                                    <TableCell>{savedAtDate ? format(savedAtDate, 'dd/MM/yyyy') : '...'}</TableCell>
-                                                    <TableCell>{calc.tourInfo?.groupCode}</TableCell>
-                                                    <TableCell>{calc.tourInfo?.program}</TableCell>
-                                                    <TableCell>{calc.tourInfo?.destinationCountry}</TableCell>
-                                                    <TableCell>{calc.tourInfo?.numPeople}</TableCell>
-                                                    <TableCell className="text-right">
-                                                         <DropdownMenu>
-                                                            <DropdownMenuTrigger asChild>
-                                                                <Button aria-haspopup="true" size="icon" variant="ghost" onClick={(e) => e.stopPropagation()}>
-                                                                    <MoreHorizontal className="h-4 w-4" />
-                                                                    <span className="sr-only">Toggle menu</span>
-                                                                </Button>
-                                                            </DropdownMenuTrigger>
-                                                            <DropdownMenuContent align="end">
-                                                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                                <DropdownMenuItem onSelect={() => navigateToCalculation(calc.id)}>Edit</DropdownMenuItem>
-                                                                <DropdownMenuItem onSelect={(e) => handleDeleteCalculation(e, calc.id)} className="text-red-500">Delete</DropdownMenuItem>
-                                                            </DropdownMenuContent>
-                                                        </DropdownMenu>
-                                                    </TableCell>
-                                                </TableRow>
-                                                );
-                                            }) : (
+                                            {filteredCalculations.length > 0 ? filteredCalculations.map(calc => (
+                                                <Collapsible asChild key={calc.id} open={expandedRow === calc.id} onOpenChange={() => handleRowClick(calc.id)}>
+                                                  <>
+                                                    <CollapsibleTrigger asChild>
+                                                        <TableRow className="cursor-pointer hover:bg-muted/30">
+                                                            <TableCell>
+                                                                <ChevronDown className={`h-4 w-4 transition-transform ${expandedRow === calc.id ? 'rotate-180' : ''}`} />
+                                                            </TableCell>
+                                                            <TableCell>{toDate(calc.savedAt) ? format(toDate(calc.savedAt)!, 'dd/MM/yyyy') : '...'}</TableCell>
+                                                            <TableCell>{calc.tourInfo?.groupCode}</TableCell>
+                                                            <TableCell>{calc.tourInfo?.program}</TableCell>
+                                                            <TableCell>{calc.tourInfo?.destinationCountry}</TableCell>
+                                                            <TableCell>{calc.tourInfo?.numPeople}</TableCell>
+                                                            <TableCell className="text-right">
+                                                                <DropdownMenu>
+                                                                    <DropdownMenuTrigger asChild>
+                                                                        <Button aria-haspopup="true" size="icon" variant="ghost" onClick={(e) => e.stopPropagation()}>
+                                                                            <MoreHorizontal className="h-4 w-4" />
+                                                                            <span className="sr-only">Toggle menu</span>
+                                                                        </Button>
+                                                                    </DropdownMenuTrigger>
+                                                                    <DropdownMenuContent align="end">
+                                                                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                                        <DropdownMenuItem onSelect={(e) => { e.stopPropagation(); router.push(`/tour/cost-calculator/${calc.id}`)}}>Edit in Full Page</DropdownMenuItem>
+                                                                        <DropdownMenuItem onSelect={(e) => handleDeleteCalculation(e, calc.id)} className="text-red-500">Delete</DropdownMenuItem>
+                                                                    </DropdownMenuContent>
+                                                                </DropdownMenu>
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    </CollapsibleTrigger>
+                                                    <CollapsibleContent asChild>
+                                                      <TableRow>
+                                                        <TableCell colSpan={7}>
+                                                            <div className="p-4 bg-muted/20">
+                                                                <TourCalculatorClientPage initialCalculation={calc} />
+                                                            </div>
+                                                        </TableCell>
+                                                      </TableRow>
+                                                    </CollapsibleContent>
+                                                  </>
+                                                </Collapsible>
+                                            )) : (
                                                 <TableRow>
-                                                    <TableCell colSpan={6} className="h-24 text-center">
+                                                    <TableCell colSpan={7} className="h-24 text-center">
                                                         ບໍ່ພົບຂໍ້ມູນ.
                                                     </TableCell>
                                                 </TableRow>
@@ -280,3 +281,4 @@ export default function TourCostCalculatorListPage() {
         </div>
     );
 }
+
