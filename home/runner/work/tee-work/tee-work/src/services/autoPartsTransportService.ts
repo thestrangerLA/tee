@@ -11,9 +11,7 @@ import {
     deleteDoc, 
     orderBy,
     serverTimestamp,
-    Timestamp,
-    where,
-    getDocs
+    Timestamp
 } from 'firebase/firestore';
 import { startOfDay } from 'date-fns';
 
