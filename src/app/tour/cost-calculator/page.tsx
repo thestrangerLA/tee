@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { format } from 'date-fns';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PlusCircle, Calendar as CalendarIcon, Calculator, Pencil, Trash2, ArrowLeft } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
@@ -46,7 +47,6 @@ export default function TourCostCalculatorListPage() {
     const [groupedCalculations, setGroupedCalculations] = useState<Record<string, SavedCalculation[]>>({});
     const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
     const [availableYears, setAvailableYears] = useState<string[]>([]);
-    const [selectedMonth, setSelectedMonth] = useState<string>('');
 
     useEffect(() => {
         if (!firestore) return;
@@ -105,19 +105,14 @@ export default function TourCostCalculatorListPage() {
                     acc[month] = [];
                 }
                 acc[month].push(calc);
+                // Calculations are already sorted by Firestore query
                 return acc;
             }, {} as Record<string, SavedCalculation[]>);
 
-            const sortedGroupKeys = Object.keys(grouped).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
-            
-            if (sortedGroupKeys.length > 0 && !selectedMonth) {
-                setSelectedMonth(sortedGroupKeys[0]);
-            } else if (sortedGroupKeys.length > 0 && !sortedGroupKeys.includes(selectedMonth)) {
-                setSelectedMonth(sortedGroupKeys[0]);
-            } else if (sortedGroupKeys.length === 0) {
-                setSelectedMonth('');
-            }
-
+            const sortedGroupKeys = Object.keys(grouped).sort((a, b) => {
+                // Sort by date object to handle month and year sorting correctly
+                return new Date(b).getTime() - new Date(a).getTime();
+            });
 
             const sortedGroupedCalculations: Record<string, SavedCalculation[]> = {};
             for(const key of sortedGroupKeys) {
@@ -128,7 +123,7 @@ export default function TourCostCalculatorListPage() {
         } else {
             setGroupedCalculations({});
         }
-    }, [savedCalculations, selectedYear, selectedMonth]);
+    }, [savedCalculations, selectedYear]);
 
     const handleAddNewCalculation = async () => {
         if (!firestore) {
@@ -209,26 +204,16 @@ export default function TourCostCalculatorListPage() {
                         ລາຍການຄຳນວນຕົ້ນທຶນທັງໝົດ
                     </h1>
                 </div>
-                 <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2 text-primary-foreground">
+                 <div className="flex items-center gap-2">
+                     <div className="flex items-center gap-2">
                         <CalendarIcon className="h-5 w-5"/>
                         <Select value={selectedYear} onValueChange={setSelectedYear}>
-                            <SelectTrigger className="w-[120px] bg-primary border-primary-foreground">
+                            <SelectTrigger className="w-[120px] bg-primary text-primary-foreground border-primary-foreground">
                                 <SelectValue placeholder="ເລືອກປີ" />
                             </SelectTrigger>
                             <SelectContent>
                                 {availableYears.map(year => (
                                     <SelectItem key={year} value={year}>ປີ {parseInt(year) + 543}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                             <SelectTrigger className="w-[180px] bg-primary border-primary-foreground">
-                                <SelectValue placeholder="ເລືອກເດືອນ" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {Object.keys(groupedCalculations).map(month => (
-                                    <SelectItem key={month} value={month}>{month}</SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
@@ -247,50 +232,56 @@ export default function TourCostCalculatorListPage() {
                                 <p>Loading calculations...</p>
                             </CardContent>
                         </Card>
-                     ) : selectedMonth && groupedCalculations[selectedMonth] ? (
-                         <Card className="overflow-hidden">
-                            <CardHeader>
-                                <CardTitle>{selectedMonth}</CardTitle>
-                            </CardHeader>
-                            <CardContent className="p-0">
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-sm">
-                                        <thead className="bg-muted/50">
-                                            <tr className="text-left">
-                                                <th className="p-3 font-medium">ວັນທີບັນທຶກ</th>
-                                                <th className="p-3 font-medium">Group Code</th>
-                                                <th className="p-3 font-medium">ໂປຣແກຣມ</th>
-                                                <th className="p-3 font-medium">ຈຸດໝາຍ</th>
-                                                <th className="p-3 font-medium">ຈຳນວນຄົນ</th>
-                                                <th className="p-3 font-medium text-right">ການກະທຳ</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {groupedCalculations[selectedMonth].map(calc => {
-                                                const savedAtDate = toDate(calc.savedAt);
-                                                return (
-                                                <tr key={calc.id} className="border-b border-muted/50 last:border-b-0 cursor-pointer hover:bg-muted/30" onClick={() => navigateToCalculation(calc.id)}>
-                                                    <td className="p-3">{savedAtDate ? format(savedAtDate, 'dd/MM/yyyy') : '...'}</td>
-                                                    <td className="p-3">{calc.tourInfo?.groupCode}</td>
-                                                    <td className="p-3">{calc.tourInfo?.program}</td>
-                                                    <td className="p-3">{calc.tourInfo?.destinationCountry}</td>
-                                                    <td className="p-3">{calc.tourInfo?.numPeople}</td>
-                                                    <td className="p-3 text-right">
-                                                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); navigateToCalculation(calc.id); }}>
-                                                            <Pencil className="h-4 w-4 text-blue-500" />
-                                                        </Button>
-                                                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => handleDeleteCalculation(e, calc.id)}>
-                                                            <Trash2 className="h-4 w-4 text-red-500" />
-                                                        </Button>
-                                                    </td>
-                                                </tr>
-                                                );
-                                            })}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </CardContent>
-                        </Card>
+                     ) : Object.keys(groupedCalculations).length > 0 ? (
+                        <Accordion type="multiple" defaultValue={Object.keys(groupedCalculations)} className="w-full space-y-4">
+                            {Object.entries(groupedCalculations).map(([month, calcs]) => (
+                                <AccordionItem value={month} key={month} className="border-none">
+                                     <Card className="overflow-hidden">
+                                        <AccordionTrigger className="px-6 py-4 bg-card hover:no-underline">
+                                            <h2 className="text-lg font-semibold">{month}</h2>
+                                        </AccordionTrigger>
+                                        <AccordionContent className="p-0">
+                                            <div className="overflow-x-auto">
+                                                <table className="w-full text-sm">
+                                                    <thead className="bg-muted/50">
+                                                        <tr className="text-left">
+                                                            <th className="p-3 font-medium">ວັນທີບັນທຶກ</th>
+                                                            <th className="p-3 font-medium">Group Code</th>
+                                                            <th className="p-3 font-medium">ໂປຣແກຣມ</th>
+                                                            <th className="p-3 font-medium">ຈຸດໝາຍ</th>
+                                                            <th className="p-3 font-medium">ຈຳນວນຄົນ</th>
+                                                            <th className="p-3 font-medium text-right">ການກະທຳ</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {calcs.map(calc => {
+                                                            const savedAtDate = toDate(calc.savedAt);
+                                                            return (
+                                                            <tr key={calc.id} className="border-b border-muted/50 last:border-b-0 cursor-pointer hover:bg-muted/30" onClick={() => navigateToCalculation(calc.id)}>
+                                                                <td className="p-3">{savedAtDate ? format(savedAtDate, 'dd/MM/yyyy') : '...'}</td>
+                                                                <td className="p-3">{calc.tourInfo?.groupCode}</td>
+                                                                <td className="p-3">{calc.tourInfo?.program}</td>
+                                                                <td className="p-3">{calc.tourInfo?.destinationCountry}</td>
+                                                                <td className="p-3">{calc.tourInfo?.numPeople}</td>
+                                                                <td className="p-3 text-right">
+                                                                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); navigateToCalculation(calc.id); }}>
+                                                                        <Pencil className="h-4 w-4 text-blue-500" />
+                                                                    </Button>
+                                                                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => handleDeleteCalculation(e, calc.id)}>
+                                                                        <Trash2 className="h-4 w-4 text-red-500" />
+                                                                    </Button>
+                                                                </td>
+                                                            </tr>
+                                                            );
+                                                        })}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </AccordionContent>
+                                    </Card>
+                                </AccordionItem>
+                            ))}
+                        </Accordion>
                     ) : (
                          <Card>
                             <CardContent className="p-10 text-center text-muted-foreground">
