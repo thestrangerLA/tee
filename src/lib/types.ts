@@ -1,4 +1,5 @@
 
+
 export type StockItem = {
   id: string;
   name: string;
@@ -47,6 +48,7 @@ export interface TransportEntry {
 
 export interface CodEntry {
     id: string;
+    company: 'ANS' | 'HAL' | 'MX';
     type: 'pending' | 'collected' | 'returned';
     date: Date;
     customerName: string;
