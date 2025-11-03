@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import { useState, useEffect, useMemo } from 'react';
@@ -61,7 +62,7 @@ import { useToast } from "@/hooks/use-toast";
 import type { MeatStockItem, MeatStockLog } from '@/lib/types';
 import { listenToMeatStockItems, addMeatStockItem, deleteMeatStockItem, updateStockQuantity, listenToAllMeatStockLogs, addMultipleMeatStockItems, updateMeatStockItem } from '@/services/meatStockService';
 import { useClientRouter } from '@/hooks/useClientRouter';
-import { format, isWithinInterval, startOfMonth, endOfMonth, getYear, setMonth, getMonth, parse } from 'date-fns';
+import { format, isWithinInterval, startOfMonth, endOfMonth, getYear, setMonth, getMonth, parse, subMonths } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
 
 
@@ -299,7 +300,7 @@ export default function MeatStockPage() {
     const [stockItems, setStockItems] = useState<MeatStockItem[]>([]);
     const [stockLogs, setStockLogs] = useState<MeatStockLog[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
-    const [displayMonth, setDisplayMonth] = useState<Date>(new Date());
+    const [displayMonth, setDisplayMonth] = useState<Date>(subMonths(new Date(), 1));
     const [selectedSkusForPrint, setSelectedSkusForPrint] = useState<Record<string, boolean>>({});
     
     useEffect(() => {
@@ -675,7 +676,5 @@ export default function MeatStockPage() {
         </div>
     );
 }
-
-    
 
     
