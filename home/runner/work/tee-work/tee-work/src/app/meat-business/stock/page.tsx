@@ -300,6 +300,7 @@ export default function MeatStockPage() {
     const [stockItems, setStockItems] = useState<MeatStockItem[]>([]);
     const [stockLogs, setStockLogs] = useState<MeatStockLog[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
+    const [selectedSkusForPrint, setSelectedSkusForPrint] = useState<Record<string, boolean>>({});
     
     useEffect(() => {
         const unsubscribeItems = listenToMeatStockItems(setStockItems);
@@ -333,7 +334,6 @@ export default function MeatStockPage() {
             item.sku.toLowerCase().includes(searchQuery.toLowerCase())
         );
         
-        // Ensure all rounds for the month are created first, even if empty
         filteredItems.forEach(item => {
             if (item.name.startsWith('ຮອບຂ້າ') && item.packageSize === 0) {
                 const roundName = item.name.replace('ຮອບຂ້າ ', 'ຮອບຂ້າທີ່ ');
@@ -358,7 +358,7 @@ export default function MeatStockPage() {
                 rounds[detail].totalCost += item.currentStock * item.packageSize * item.costPrice;
                 rounds[detail].totalSale += item.currentStock * item.packageSize * item.sellingPrice;
             } 
-            else { // Fallback for items created in the month without a round
+            else { 
                 const defaultRoundName = 'Uncategorized';
                 if (!rounds[defaultRoundName]) {
                     rounds[defaultRoundName] = { 
@@ -636,3 +636,4 @@ export default function MeatStockPage() {
 
 
     
+
