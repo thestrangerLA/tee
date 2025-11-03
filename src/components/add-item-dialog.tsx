@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import type { StockItem } from "@/lib/types"
 import { useState } from "react"
@@ -26,33 +25,22 @@ type AddItemDialogProps = {
 
 export function AddItemDialog({ open, onOpenChange, onAddItem, categories }: AddItemDialogProps) {
     const { toast } = useToast()
-    const [selectedCategory, setSelectedCategory] = useState<string>("");
-
+    
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
         const currentStock = parseInt(formData.get('currentStock') as string, 10) || 0;
         const newItem: Omit<StockItem, 'id'> = {
             name: formData.get('name') as string,
-            category: selectedCategory,
+            category: 'auto-parts', // Auto-assign category
             currentStock: currentStock,
             costPrice: parseFloat(formData.get('costPrice') as string) || 0,
-            costPriceBaht: parseFloat(formData.get('costPriceBaht') as string) || 0,
             wholesalePrice: parseFloat(formData.get('wholesalePrice') as string) || 0,
             sellingPrice: parseFloat(formData.get('sellingPrice') as string) || 0,
         };
 
-        if (!newItem.category) {
-            toast({
-                title: "ຂໍ້ຜິດພາດ",
-                description: "ກະລຸນາເລືອກໝວດໝູ່",
-                variant: "destructive",
-            });
-            return;
-        }
-
         try {
-            await onAddItem(newItem);
+            await onAddItem(newItem as Omit<StockItem, 'id'>);
             toast({
                 title: "ສຳເລັດ!",
                 description: "ເພີ່ມລາຍການໃໝ່ໃນສະຕັອກສຳເລັດແລ້ວ",
@@ -60,7 +48,6 @@ export function AddItemDialog({ open, onOpenChange, onAddItem, categories }: Add
             });
             onOpenChange(false);
             (event.currentTarget as HTMLFormElement).reset();
-            setSelectedCategory("");
         } catch (error) {
             toast({
                 title: "ເກີດຂໍ້ຜິດພາດ",
@@ -84,20 +71,7 @@ export function AddItemDialog({ open, onOpenChange, onAddItem, categories }: Add
             <div className="grid gap-4 py-4">
                 <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="name" className="text-right">ຊື່</Label>
-                    <Input id="name" name="name" placeholder="ເຊັ່ນ: ຝຸ່ນຍີ່ຫໍ້ A" className="col-span-3" required />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="category" className="text-right">ໝວດໝູ່</Label>
-                    <Select onValueChange={setSelectedCategory} value={selectedCategory}>
-                        <SelectTrigger className="col-span-3">
-                            <SelectValue placeholder="ເລືອກໝວດໝູ່" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {[...categories, "ຝຸ່ນ", "ແນວພັນ", "ຢາພືດ", "ຢາສັດ", "ອຸປະກອນ", "ເຂົ້າ", "ຫົວອາຫານ", "ວິຕາມິນ"].filter((v, i, a) => a.indexOf(v) === i).sort().map((category) => (
-                                <SelectItem key={category} value={category}>{category}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                    <Input id="name" name="name" placeholder="ເຊັ່ນ: ຢາງລົດ" className="col-span-3" required />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="currentStock" className="text-right">ສະຕັອກປັດຈຸບັນ</Label>
@@ -106,10 +80,6 @@ export function AddItemDialog({ open, onOpenChange, onAddItem, categories }: Add
                 <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="costPrice" className="text-right">ລາຄາຕົ້ນທຶນ (ກີບ)</Label>
                     <Input id="costPrice" name="costPrice" type="number" placeholder="0.00" step="0.01" className="col-span-3" required />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="costPriceBaht" className="text-right">ລາຄາຕົ້ນທຶນ (ບາດ)</Label>
-                    <Input id="costPriceBaht" name="costPriceBaht" type="number" placeholder="0.00" step="0.01" className="col-span-3" required />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="wholesalePrice" className="text-right">ລາຄາຂາຍສົ່ງ</Label>

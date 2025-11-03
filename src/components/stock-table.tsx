@@ -38,6 +38,7 @@ function formatCurrency(amount: number, currency: 'Kip' | 'Baht') {
 }
 
 const categoryColors: Record<string, string> = {
+    'auto-parts': 'bg-sky-100',
     'ຝຸ່ນ': 'bg-green-100',
     'ແນວພັນ': 'bg-yellow-100',
     'ຢາພືດ': 'bg-red-100',
@@ -73,7 +74,7 @@ export function StockTable({ data, categories, onAddItem, onUpdateItem, onDelete
     };
 
     const groupedData = data.reduce((acc, item) => {
-        const category = item.category;
+        const category = item.category || 'Uncategorized';
         if (!acc[category]) {
             acc[category] = [];
         }
@@ -128,7 +129,6 @@ export function StockTable({ data, categories, onAddItem, onUpdateItem, onDelete
                 <TableRow>
                 <TableHead className="w-[250px] text-blue-600">ຊື່ສິນຄ້າ</TableHead>
                 <TableHead className="text-right text-red-600">ລາຄາຕົ້ນທຶນ (ກີບ)</TableHead>
-                <TableHead className="text-right text-red-600">ລາຄາຕົ້ນທຶນ (ບາດ)</TableHead>
                 <TableHead className="text-right text-green-600">ລາຄາຂາຍສົ່ງ</TableHead>
                 <TableHead className="text-right text-purple-600">ລາຄາຂາຍຍ່ອຍ</TableHead>
                 <TableHead className="text-right w-[120px] text-cyan-600">ສະຕັອກປັດຈຸບັນ</TableHead>
@@ -144,7 +144,7 @@ export function StockTable({ data, categories, onAddItem, onUpdateItem, onDelete
                     return (
                     <React.Fragment key={category}>
                         <TableRow className={cn("cursor-pointer", getCategoryColor(category))} onClick={() => toggleCategory(category)}>
-                            <TableCell colSpan={8} className="p-2">
+                            <TableCell colSpan={7} className="p-2">
                                 <div className="flex items-center gap-2">
                                     {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                                     <span className="font-semibold">{category}</span>
@@ -168,15 +168,6 @@ export function StockTable({ data, categories, onAddItem, onUpdateItem, onDelete
                                         step="0.01"
                                         defaultValue={item.costPrice}
                                         onBlur={(e) => handleFieldChange(item.id, 'costPrice', parseFloat(e.target.value) || 0)}
-                                        className="h-8 w-24 text-right"
-                                    />
-                                </TableCell>
-                                <TableCell className="text-right p-2">
-                                    <Input
-                                        type="number"
-                                        step="0.01"
-                                        defaultValue={item.costPriceBaht}
-                                        onBlur={(e) => handleFieldChange(item.id, 'costPriceBaht', parseFloat(e.target.value) || 0)}
                                         className="h-8 w-24 text-right"
                                     />
                                 </TableCell>
