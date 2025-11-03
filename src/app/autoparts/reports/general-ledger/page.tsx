@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, BookOpen, Calendar as CalendarIcon, Printer, ChevronRight } from "lucide-react";
-import { listenToApplianceTransactions } from '@/services/applianceAccountancyService';
+import { listenToAllAutoPartsTransactions } from '@/services/autoPartsReportService';
 import type { Transaction } from '@/lib/types';
 import { getMonth, format, setMonth, isWithinInterval, startOfYear, endOfYear, getYear } from 'date-fns';
 
@@ -23,13 +23,13 @@ const formatCurrency = (value: number) => {
 };
 
 
-export default function ApplianceGeneralLedgerPage() {
+export default function AutoPartsGeneralLedgerPage() {
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [startDate, setStartDate] = useState<Date | undefined>(startOfYear(new Date()));
     const [endDate, setEndDate] = useState<Date | undefined>(endOfYear(new Date()));
 
     useEffect(() => {
-        const unsubscribeTransactions = listenToApplianceTransactions(setTransactions);
+        const unsubscribeTransactions = listenToAllAutoPartsTransactions(setTransactions);
         return () => {
             unsubscribeTransactions();
         };
@@ -89,14 +89,14 @@ export default function ApplianceGeneralLedgerPage() {
         <div className="flex min-h-screen w-full flex-col bg-muted/40">
             <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 print:hidden">
                 <Button variant="outline" size="icon" className="h-8 w-8" asChild>
-                    <Link href="/appliances/reports">
+                    <Link href="/autoparts/reports">
                         <ArrowLeft className="h-4 w-4" />
                         <span className="sr-only">ກັບໄປໜ້າລາຍງານ</span>
                     </Link>
                 </Button>
                 <div className="flex items-center gap-2">
                     <BookOpen className="h-6 w-6 text-primary"/>
-                    <h1 className="text-xl font-bold tracking-tight">ປະຫວັດຮັບ-ຈ່າຍທົ່ວໄປ (ເຄື່ອງໃຊ້)</h1>
+                    <h1 className="text-xl font-bold tracking-tight">ປະຫວັດຮັບ-ຈ່າຍທົ່ວໄປ (ອາໄຫຼລົດ)</h1>
                 </div>
             </header>
             <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
@@ -182,7 +182,7 @@ export default function ApplianceGeneralLedgerPage() {
                            <div className="space-y-2">
                             {reportData.monthlyReports.map(({ year, month, net }) => (
                                 <Link 
-                                    href={`/appliances/reports/general-ledger-month?year=${year}&month=${month}`} 
+                                    href={`/autoparts/reports/general-ledger-month?year=${year}&month=${month}`} 
                                     key={`${year}-${month}`}
                                     passHref
                                 >
@@ -216,3 +216,5 @@ export default function ApplianceGeneralLedgerPage() {
         </div>
     );
 }
+
+    
