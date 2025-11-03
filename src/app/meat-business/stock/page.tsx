@@ -1,5 +1,4 @@
 
-
 "use client"
 
 import { useState, useEffect, useMemo } from 'react';
@@ -302,7 +301,7 @@ export default function MeatStockPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [displayMonth, setDisplayMonth] = useState<Date>(new Date());
     const [selectedSkusForPrint, setSelectedSkusForPrint] = useState<Record<string, boolean>>({});
-
+    
     useEffect(() => {
         const unsubscribeItems = listenToMeatStockItems(setStockItems);
         const unsubscribeLogs = listenToAllMeatStockLogs(setStockLogs);
@@ -434,7 +433,7 @@ export default function MeatStockPage() {
         }
         setSelectedSkusForPrint(newSelection);
     };
-
+    
     const MonthYearSelector = () => {
         const years = Array.from({ length: 5 }, (_, i) => getYear(new Date()) - 2 + i);
         years.push(2025, 2026);
@@ -503,7 +502,7 @@ export default function MeatStockPage() {
                     </Button>
                 </div>
             </header>
-            <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 print:p-0">
+            <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
                  <div className="grid gap-4 md:grid-cols-2 print:hidden">
                      <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -677,7 +676,6 @@ export default function MeatStockPage() {
     );
 }
 
-
-
     
 
+    
