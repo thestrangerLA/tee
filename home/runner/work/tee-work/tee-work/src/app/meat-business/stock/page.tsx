@@ -300,7 +300,6 @@ export default function MeatStockPage() {
     const [stockItems, setStockItems] = useState<MeatStockItem[]>([]);
     const [stockLogs, setStockLogs] = useState<MeatStockLog[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
-    const [displayMonth, setDisplayMonth] = useState<Date>(new Date());
     
     useEffect(() => {
         const unsubscribeItems = listenToMeatStockItems(setStockItems);
@@ -321,8 +320,6 @@ export default function MeatStockPage() {
 
     const slaughterRounds = useMemo(() => {
         const rounds: Record<string, { date: Date, items: MeatStockItem[], id: string, isFinished: boolean, totalCost: number, totalSale: number }> = {};
-        const start = startOfMonth(displayMonth);
-        const end = endOfMonth(displayMonth);
         
         const itemLogMap: Record<string, string> = {};
         stockLogs.filter(log => log.type === 'stock-in' && log.detail.startsWith('ຮອບຂ້າທີ່')).forEach(log => {
@@ -343,7 +340,7 @@ export default function MeatStockPage() {
                 const dateMatch = roundName.match(/(\d{2}\/\d{2}\/\d{4})/);
                 const roundDate = dateMatch ? parse(dateMatch[1], 'dd/MM/yyyy', new Date()) : item.createdAt;
 
-                if (isWithinInterval(roundDate, { start, end }) && !rounds[roundName]) {
+                if (!rounds[roundName]) {
                     rounds[roundName] = { date: roundDate, items: [], id: item.id, isFinished: !!item.isFinished, totalCost: 0, totalSale: 0 };
                 }
             }
@@ -361,7 +358,7 @@ export default function MeatStockPage() {
                 rounds[detail].totalCost += item.currentStock * item.packageSize * item.costPrice;
                 rounds[detail].totalSale += item.currentStock * item.packageSize * item.sellingPrice;
             } 
-            else if (isWithinInterval(item.createdAt, { start, end })) { // Fallback for items created in the month without a round
+            else { // Fallback for items created in the month without a round
                 const defaultRoundName = 'Uncategorized';
                 if (!rounds[defaultRoundName]) {
                     rounds[defaultRoundName] = { 
@@ -385,7 +382,7 @@ export default function MeatStockPage() {
             return valB.date.getTime() - valA.date.getTime();
         });
 
-    }, [stockItems, stockLogs, searchQuery, displayMonth]);
+    }, [stockItems, stockLogs, searchQuery]);
 
     const aggregatedStock = useMemo(() => {
         const summary: Record<string, { name: string, stock: number, totalKg: number, packageSize: number }> = {};
@@ -420,47 +417,23 @@ export default function MeatStockPage() {
         await updateMeatStockItem(itemId, { isFinished });
     };
 
-    const MonthYearSelector = () => {
-        const years = Array.from({ length: 5 }, (_, i) => getYear(new Date()) - 2 + i);
-        years.push(2025, 2026);
-        const uniqueYears = [...new Set(years)].sort();
-        const months = Array.from({ length: 12 }, (_, i) => setMonth(new Date(), i));
-
-        return (
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="flex items-center gap-2">
-                        {format(displayMonth, "LLLL yyyy")}
-                        <ChevronDown className="h-4 w-4" />
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                    {uniqueYears.map(year => (
-                         <DropdownMenuSub key={year}>
-                            <DropdownMenuSubTrigger>
-                                <span>{year + 543}</span>
-                            </DropdownMenuSubTrigger>
-                            <DropdownMenuPortal>
-                                <DropdownMenuSubContent>
-                                    {months.map(month => (
-                                        <DropdownMenuItem 
-                                            key={getMonth(month)} 
-                                            onClick={() => {
-                                                const newDate = new Date(year, getMonth(month), 1);
-                                                setDisplayMonth(newDate);
-                                            }}
-                                        >
-                                            {format(month, "LLLL")}
-                                        </DropdownMenuItem>
-                                    ))}
-                                </DropdownMenuSubContent>
-                             </DropdownMenuPortal>
-                        </DropdownMenuSub>
-                    ))}
-                </DropdownMenuContent>
-            </DropdownMenu>
-        );
+    const handleSelectSkuForPrint = (sku: string, isSelected: boolean) => {
+        setSelectedSkusForPrint(prev => ({ ...prev, [sku]: isSelected }));
     };
+
+    const handleSelectAllForPrint = (isSelected: boolean) => {
+        const newSelection: Record<string, boolean> = {};
+        if (isSelected) {
+            aggregatedStock.forEach(item => {
+                newSelection[item.sku] = true;
+            });
+        }
+        setSelectedSkusForPrint(newSelection);
+    };
+
+    const isAllSelectedForPrint = useMemo(() => {
+        return aggregatedStock.length > 0 && aggregatedStock.every(item => selectedSkusForPrint[item.sku]);
+    }, [aggregatedStock, selectedSkusForPrint]);
 
     return (
         <div className="flex min-h-screen w-full flex-col bg-muted/40 print:bg-white">
@@ -476,7 +449,6 @@ export default function MeatStockPage() {
                     <h1 className="text-xl font-bold tracking-tight">ຈັດການສະຕັອກ (ທຸລະກິດຊີ້ນ)</h1>
                 </div>
                  <div className="ml-auto flex items-center gap-2">
-                    <MonthYearSelector />
                     <AddSlaughterRoundDialog onAddMultipleItems={addMultipleMeatStockItems} />
                     <Button onClick={() => window.print()} variant="outline" size="sm">
                         <Printer className="mr-2 h-4 w-4" />
@@ -485,7 +457,7 @@ export default function MeatStockPage() {
                 </div>
             </header>
             <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-                 <div className="grid gap-4 md:grid-cols-2">
+                 <div className="grid gap-4 md:grid-cols-2 print:hidden">
                      <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">ມູນຄ່າສະຕັອກທັງໝົດ</CardTitle>
@@ -507,7 +479,7 @@ export default function MeatStockPage() {
                         </CardContent>
                     </Card>
                 </div>
-                <Card>
+                <Card id="aggregated-stock-card" className="print-only:block">
                     <CardHeader>
                         <CardTitle>ລວມສິນຄ້າທັງໝົດ</CardTitle>
                         <CardDescription>ລວມຍອດສິນຄ້າຄົງເຫຼືອທັງໝົດໂດຍບໍ່ແຍກຮອບຂ້າ</CardDescription>
@@ -516,6 +488,12 @@ export default function MeatStockPage() {
                         <Table>
                             <TableHeader>
                                 <TableRow>
+                                    <TableHead className="w-12 print:hidden">
+                                        <Checkbox 
+                                            checked={isAllSelectedForPrint}
+                                            onCheckedChange={(checked) => handleSelectAllForPrint(!!checked)}
+                                        />
+                                    </TableHead>
                                     <TableHead>SKU</TableHead>
                                     <TableHead>ຊື່ສິນຄ້າ</TableHead>
                                     <TableHead className="text-right">ຄົງເຫຼືອ (ຖົງ)</TableHead>
@@ -524,7 +502,13 @@ export default function MeatStockPage() {
                             </TableHeader>
                             <TableBody>
                                 {aggregatedStock.map(item => (
-                                    <TableRow key={item.sku} className={item.stock === 0 ? 'bg-red-50' : ''}>
+                                    <TableRow key={item.sku} data-print-selected={selectedSkusForPrint[item.sku] || false} className="print:hidden data-[print-selected=true]:print:table-row">
+                                        <TableCell className="print:hidden">
+                                            <Checkbox 
+                                                checked={selectedSkusForPrint[item.sku] || false}
+                                                onCheckedChange={(checked) => handleSelectSkuForPrint(item.sku, !!checked)}
+                                            />
+                                        </TableCell>
                                         <TableCell className="font-mono">{item.sku}</TableCell>
                                         <TableCell className="font-medium">{item.name}</TableCell>
                                         <TableCell className="text-right font-bold">{item.stock}</TableCell>
@@ -535,7 +519,7 @@ export default function MeatStockPage() {
                         </Table>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="print:hidden">
                     <CardHeader>
                         <div className="flex justify-between items-center">
                             <div>
@@ -608,6 +592,7 @@ export default function MeatStockPage() {
                                                                     <Label htmlFor={`finish-item-${item.id}`} className="text-xs">ສຳເລັດ</Label>
                                                                 </div>
                                                                 <StockAdjustmentDialog item={item} onAdjust={updateStockQuantity} type="stock-in" />
+                                                                <StockAdjustmentDialog item={item} onAdjust={updateStockQuantity} type="sale" />
                                                                 <AlertDialog>
                                                                     <AlertDialogTrigger asChild><Button variant="ghost" size="icon"><Trash2 className="h-4 w-4 text-red-500" /></Button></AlertDialogTrigger>
                                                                     <AlertDialogContent>
@@ -636,7 +621,7 @@ export default function MeatStockPage() {
                             ))}
                         </Accordion>
                         ) : (
-                             <div className="text-center h-24 content-center">ບໍ່ມີຂໍ້ມູນສິນຄ້າໃນເດືອນນີ້</div>
+                             <div className="text-center h-24 content-center">ບໍ່ມີຂໍ້ມູນສິນຄ້າ</div>
                         )}
                     </CardContent>
                 </Card>
