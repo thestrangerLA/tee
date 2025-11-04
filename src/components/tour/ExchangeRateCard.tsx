@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import { useState, useMemo, useEffect } from 'react';
@@ -94,60 +95,60 @@ export function ExchangeRateCard({ grandTotals, rates, onRatesChange, profitPerc
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-2 p-2 border rounded-md">
                                     <Label className="md:col-span-3 font-semibold">1 USD =</Label>
                                     <div className="flex items-center gap-1">
-                                        <Input type="number" value={rates.USD?.THB?.toFixed(4) || ''} onChange={e => handleRateChange('USD', 'THB', e.target.value)} className="h-8"/>
+                                        <Input type="number" value={rates.USD?.THB || ''} onChange={e => handleRateChange('USD', 'THB', e.target.value)} className="h-8"/>
                                         <Label className="text-xs">THB</Label>
                                     </div>
                                     <div className="flex items-center gap-1">
-                                        <Input type="number" value={rates.USD?.LAK?.toFixed(0) || ''} onChange={e => handleRateChange('USD', 'LAK', e.target.value)} className="h-8"/>
+                                        <Input type="number" value={rates.USD?.LAK || ''} onChange={e => handleRateChange('USD', 'LAK', e.target.value)} className="h-8"/>
                                         <Label className="text-xs">LAK</Label>
                                     </div>
                                     <div className="flex items-center gap-1">
-                                        <Input type="number" value={rates.USD?.CNY?.toFixed(4) || ''} onChange={e => handleRateChange('USD', 'CNY', e.target.value)} className="h-8"/>
+                                        <Input type="number" value={rates.USD?.CNY || ''} onChange={e => handleRateChange('USD', 'CNY', e.target.value)} className="h-8"/>
                                         <Label className="text-xs">CNY</Label>
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-2 p-2 border rounded-md">
                                     <Label className="md:col-span-3 font-semibold">1 THB =</Label>
                                     <div className="flex items-center gap-1">
-                                        <Input type="number" value={rates.THB?.USD?.toFixed(4) || ''} onChange={e => handleRateChange('THB', 'USD', e.target.value)} className="h-8"/>
+                                        <Input type="number" value={rates.THB?.USD || ''} onChange={e => handleRateChange('THB', 'USD', e.target.value)} className="h-8"/>
                                         <Label className="text-xs">USD</Label>
                                     </div>
                                     <div className="flex items-center gap-1">
-                                        <Input type="number" value={rates.THB?.LAK?.toFixed(0) || ''} onChange={e => handleRateChange('THB', 'LAK', e.target.value)} className="h-8"/>
+                                        <Input type="number" value={rates.THB?.LAK || ''} onChange={e => handleRateChange('THB', 'LAK', e.target.value)} className="h-8"/>
                                         <Label className="text-xs">LAK</Label>
                                     </div>
                                     <div className="flex items-center gap-1">
-                                        <Input type="number" value={rates.THB?.CNY?.toFixed(4) || ''} onChange={e => handleRateChange('THB', 'CNY', e.target.value)} className="h-8"/>
+                                        <Input type="number" value={rates.THB?.CNY || ''} onChange={e => handleRateChange('THB', 'CNY', e.target.value)} className="h-8"/>
                                         <Label className="text-xs">CNY</Label>
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-2 p-2 border rounded-md">
                                     <Label className="md:col-span-3 font-semibold">1 CNY =</Label>
                                     <div className="flex items-center gap-1">
-                                        <Input type="number" value={rates.CNY?.USD?.toFixed(4) || ''} onChange={e => handleRateChange('CNY', 'USD', e.target.value)} className="h-8"/>
+                                        <Input type="number" value={rates.CNY?.USD || ''} onChange={e => handleRateChange('CNY', 'USD', e.target.value)} className="h-8"/>
                                         <Label className="text-xs">USD</Label>
                                     </div>
                                     <div className="flex items-center gap-1">
-                                        <Input type="number" value={rates.CNY?.THB?.toFixed(4) || ''} onChange={e => handleRateChange('CNY', 'THB', e.target.value)} className="h-8"/>
+                                        <Input type="number" value={rates.CNY?.THB || ''} onChange={e => handleRateChange('CNY', 'THB', e.target.value)} className="h-8"/>
                                         <Label className="text-xs">THB</Label>
                                     </div>
                                     <div className="flex items-center gap-1">
-                                        <Input type="number" value={rates.CNY?.LAK?.toFixed(0) || ''} onChange={e => handleRateChange('CNY', 'LAK', e.target.value)} className="h-8"/>
+                                        <Input type="number" value={rates.CNY?.LAK || ''} onChange={e => handleRateChange('CNY', 'LAK', e.target.value)} className="h-8"/>
                                         <Label className="text-xs">LAK</Label>
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-2 p-2 border rounded-md">
                                     <Label className="md:col-span-3 font-semibold">1 LAK =</Label>
                                     <div className="flex items-center gap-1">
-                                        <Input type="number" value={rates.LAK?.USD?.toFixed(6) || ''} onChange={e => handleRateChange('LAK', 'USD', e.target.value)} className="h-8"/>
+                                        <Input type="number" value={rates.LAK?.USD || ''} onChange={e => handleRateChange('LAK', 'USD', e.target.value)} className="h-8"/>
                                         <Label className="text-xs">USD</Label>
                                     </div>
                                     <div className="flex items-center gap-1">
-                                        <Input type="number" value={rates.LAK?.THB?.toFixed(6) || ''} onChange={e => handleRateChange('LAK', 'THB', e.target.value)} className="h-8"/>
+                                        <Input type="number" value={rates.LAK?.THB || ''} onChange={e => handleRateChange('LAK', 'THB', e.target.value)} className="h-8"/>
                                         <Label className="text-xs">THB</Label>
                                     </div>
                                     <div className="flex items-center gap-1">
-                                        <Input type="number" value={rates.LAK?.CNY?.toFixed(6) || ''} onChange={e => handleRateChange('LAK', 'CNY', e.target.value)} className="h-8"/>
+                                        <Input type="number" value={rates.LAK?.CNY || ''} onChange={e => handleRateChange('LAK', 'CNY', e.target.value)} className="h-8"/>
                                         <Label className="text-xs">CNY</Label>
                                     </div>
                                 </div>
