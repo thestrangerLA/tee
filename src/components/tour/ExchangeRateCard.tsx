@@ -15,7 +15,7 @@ export type ExchangeRates = {
 };
 
 const currencySymbols: Record<Currency, string> = {
-    USD: '$ (ດอลລár)',
+    USD: '$ (ດอลลár)',
     THB: '฿ (ບາດ)',
     LAK: '₭ (ກີບ)',
     CNY: '¥ (ຢວນ)',
@@ -233,3 +233,5 @@ export function ExchangeRateCard({ grandTotals, rates, onRatesChange, profitPerc
         </>
     );
 }
+
+    
