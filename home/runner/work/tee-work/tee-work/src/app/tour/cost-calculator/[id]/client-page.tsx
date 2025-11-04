@@ -28,7 +28,7 @@ import { db } from '@/lib/firebase';
 type Currency = 'USD' | 'THB' | 'LAK' | 'CNY';
 
 const currencySymbols: Record<Currency, string> = {
-    USD: '$ (ດอลລár)',
+    USD: '$ (ດอลลár)',
     THB: '฿ (ບາດ)',
     LAK: '₭ (ກີບ)',
     CNY: '¥ (ຢວນ)',
@@ -85,10 +85,10 @@ export interface SavedCalculation {
 }
 
 const initialRates: ExchangeRates = {
-    USD: { THB: 36.0, LAK: 22000, CNY: 7.4 },
-    THB: { USD: 0.0370, LAK: 690, CNY: 0.1900 },
-    CNY: { USD: 0.1379, THB: 5.1, LAK: 3000 },
-    LAK: { USD: 0.000055, THB: 0.0014, CNY: 0.000333 },
+    USD: { THB: 38, LAK: 25000, CNY: 8 },
+    THB: { USD: 0.038, LAK: 700, CNY: 0.25 },
+    CNY: { USD: 0.20, THB: 6, LAK: 3500 },
+    LAK: { USD: 0.00005, THB: 0.0015, CNY: 0.00035 },
 };
 
 const toDate = (date: DateValue): Date | undefined => {
@@ -1227,3 +1227,4 @@ export default function TourCalculatorClientPage({ initialCalculation }: { initi
     );
 }
 
+    
