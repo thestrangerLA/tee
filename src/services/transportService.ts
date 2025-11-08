@@ -26,6 +26,7 @@ const createInitialRowState = (type: 'ANS' | 'HAL' | 'MX', date: Date): Omit<Tra
     detail: '',
     cost: 0,
     amount: 0,
+    quantity: 1,
     finished: false,
 });
 
