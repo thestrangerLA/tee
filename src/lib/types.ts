@@ -1,4 +1,5 @@
 
+
 export type StockItem = {
   id: string;
   name: string;
@@ -40,7 +41,6 @@ export interface TransportEntry {
     detail: string;
     cost: number;
     amount: number;
-    quantity: number;
     finished: boolean;
     createdAt: Date; 
 }

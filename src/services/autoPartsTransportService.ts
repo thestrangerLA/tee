@@ -1,4 +1,5 @@
 
+
 import { db } from '@/lib/firebase';
 import type { TransportEntry } from '@/lib/types';
 import { 
@@ -22,7 +23,6 @@ const createInitialRowState = (type: 'ANS' | 'HAL' | 'MX', date: Date): Omit<Tra
     date: startOfDay(date),
     detail: '',
     cost: 0,
-    quantity: 1,
     amount: 0,
     finished: false,
 });

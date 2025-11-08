@@ -12,7 +12,6 @@ import { useToast } from "@/hooks/use-toast";
 import Link from 'next/link';
 import { listenToTransportEntries, addTransportEntry, updateTransportEntry, deleteTransportEntry } from '@/services/transportService';
 import type { TransportEntry, StockItem } from '@/lib/types';
-import { listenToAutoPartsStockItems } from '@/services/autoPartsStockService';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -57,7 +56,7 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
                 };
             }
             groupedByDay[dayKey].entries.push(entry);
-            const totalCost = (entry.cost || 0) * (entry.quantity || 1);
+            const totalCost = entry.cost || 0;
             groupedByDay[dayKey].profit += (entry.amount || 0) - totalCost;
             groupedByDay[dayKey].orderCount += 1;
             if (!entry.finished) {
@@ -68,6 +67,11 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
 
         return Object.values(groupedByDay).sort((a, b) => b.date.getTime() - a.date.getTime());
     }, [entries]);
+
+     const handleDetailChange = (rowId: string, value: string) => {
+        onRowChange(rowId, { detail: value });
+    };
+
 
     return (
         <Card>
@@ -115,7 +119,6 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
                                                 <TableRow>
                                                     <TableHead className="w-[35%]">ລາຍລະອຽດ</TableHead>
                                                     <TableHead className="w-[100px] text-right">ຕົ້ນທຶນ</TableHead>
-                                                    <TableHead className="w-[80px] text-right">ຈຳນວນ</TableHead>
                                                     <TableHead className="w-[150px] text-right">ຈຳນວນເງິນ</TableHead>
                                                     <TableHead className="w-[120px] text-right">ກຳໄລ</TableHead>
                                                     <TableHead className="w-[80px] text-center">ສຳເລັດ</TableHead>
@@ -124,23 +127,20 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
                                             </TableHeader>
                                             <TableBody>
                                                 {summary.entries.map((row) => {
-                                                    const totalCost = (row.cost || 0) * (row.quantity || 1);
+                                                    const totalCost = row.cost || 0;
                                                     const profit = (row.amount || 0) - totalCost;
                                                     return (
                                                     <TableRow key={row.id}>
                                                         <TableCell className="p-2">
-                                                            <Input 
+                                                             <Input 
                                                                 value={row.detail || ''} 
-                                                                onChange={(e) => onRowChange(row.id, { detail: e.target.value })} 
+                                                                onChange={(e) => handleDetailChange(row.id, e.target.value)} 
                                                                 placeholder="ລາຍລະອຽດ" 
                                                                 className="h-8" 
                                                             />
                                                         </TableCell>
                                                         <TableCell className="p-2">
                                                             <Input type="number" value={row.cost || ''} onChange={(e) => onRowChange(row.id, { cost: parseFloat(e.target.value) || 0 })} placeholder="ຕົ້ນທຶນ" className="h-8 text-right" />
-                                                        </TableCell>
-                                                        <TableCell className="p-2">
-                                                            <Input type="number" value={row.quantity || ''} onChange={(e) => onRowChange(row.id, { quantity: parseInt(e.target.value, 10) || 1 })} placeholder="ຈຳນວນ" className="h-8 text-right" />
                                                         </TableCell>
                                                         <TableCell className="p-2">
                                                             <Input type="number" value={row.amount || ''} onChange={(e) => onRowChange(row.id, { amount: parseFloat(e.target.value) || 0 })} placeholder="ຈຳນວນເງິນ" className="h-8 text-right" />
@@ -199,7 +199,7 @@ export default function TransportPage() {
 
 
     const transportTotalAmount = useMemo(() => filteredEntries.reduce((total, row) => total + (row.amount || 0), 0), [filteredEntries]);
-    const transportTotalCost = useMemo(() => filteredEntries.reduce((total, row) => total + ((row.cost || 0) * (row.quantity || 1)), 0), [filteredEntries]);
+    const transportTotalCost = useMemo(() => filteredEntries.reduce((total, row) => total + (row.cost || 0), 0), [filteredEntries]);
     const transportProfit = useMemo(() => transportTotalAmount - transportTotalCost, [transportTotalAmount, transportTotalCost]);
     const transportRemaining = useMemo(() => filteredEntries.filter(e => !e.finished).reduce((total, row) => total + (row.amount || 0), 0), [filteredEntries]);
 
