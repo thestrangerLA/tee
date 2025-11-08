@@ -1,5 +1,4 @@
 
-
 "use client"
 
 import { useState, useMemo, useEffect } from 'react';
@@ -28,59 +27,7 @@ const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('lo-LA', { minimumFractionDigits: 0 }).format(value);
 }
 
-const SearchableSelect = ({ items, value, onValueChange }: { items: StockItem[], value: string, onValueChange: (selectedItem: StockItem | null) => void }) => {
-    const [open, setOpen] = useState(false);
-
-    return (
-        <Popover open={open} onOpenChange={setOpen}>
-            <PopoverTrigger asChild>
-                <Button
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={open}
-                    className="w-full justify-between h-8"
-                >
-                    <span className="truncate">
-                        {value
-                            ? items.find((item) => item.name === value)?.name ?? value
-                            : "ເລືອກສິນຄ້າ..."}
-                    </span>
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-[300px] p-0">
-                <Command>
-                    <CommandInput placeholder="ຄົ້ນຫາສິນຄ້າ..." />
-                    <CommandEmpty>ບໍ່ພົບສິນຄ້າ.</CommandEmpty>
-                    <CommandGroup>
-                        {items.map((item) => (
-                            <CommandItem
-                                key={item.id}
-                                value={item.name}
-                                onSelect={(currentValue) => {
-                                    const selectedItem = items.find(i => i.name.toLowerCase() === currentValue.toLowerCase());
-                                    onValueChange(selectedItem || null);
-                                    setOpen(false);
-                                }}
-                            >
-                                <Check
-                                    className={cn(
-                                        "mr-2 h-4 w-4",
-                                        value === item.name ? "opacity-100" : "opacity-0"
-                                    )}
-                                />
-                                {item.name}
-                            </CommandItem>
-                        ))}
-                    </CommandGroup>
-                </Command>
-            </PopoverContent>
-        </Popover>
-    );
-};
-
-
-const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddRow, stockItems }: { 
+const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddRow }: { 
     type: 'ANS' | 'HAL' | 'MX',
     title: string, 
     entries: TransportEntry[],
@@ -123,12 +70,8 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
         return Object.values(groupedByDay).sort((a, b) => b.date.getTime() - a.date.getTime());
     }, [entries]);
 
-     const handleDetailChange = (rowId: string, selectedItem: StockItem | null) => {
-        if (selectedItem) {
-            onRowChange(rowId, { detail: selectedItem.name, cost: selectedItem.costPrice });
-        } else {
-            onRowChange(rowId, { detail: '' });
-        }
+     const handleDetailChange = (rowId: string, value: string) => {
+        onRowChange(rowId, { detail: value });
     };
 
 
@@ -192,10 +135,11 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
                                                     return (
                                                     <TableRow key={row.id}>
                                                         <TableCell className="p-2">
-                                                            <SearchableSelect
-                                                                items={stockItems}
-                                                                value={row.detail || ''}
-                                                                onValueChange={(selected) => handleDetailChange(row.id, selected)}
+                                                             <Input 
+                                                                value={row.detail || ''} 
+                                                                onChange={(e) => handleDetailChange(row.id, e.target.value)} 
+                                                                placeholder="ລາຍລະອຽດ" 
+                                                                className="h-8" 
                                                             />
                                                         </TableCell>
                                                         <TableCell className="p-2">
@@ -406,7 +350,7 @@ export default function TransportPage() {
                 <div className="md:col-span-1 mt-4 md:mt-0 flex flex-col gap-4">
                      <Card>
                         <CardHeader>
-                            <CardTitle>ສະຫຼຸບຍອດລວມ (ເດືອນທີ່ເລືอก)</CardTitle>
+                            <CardTitle>ສະຫຼຸບຍອດລວມ (ເດືອນທີ່ເລືອກ)</CardTitle>
                         </CardHeader>
                         <CardContent className="flex flex-col gap-4">
                              <div className="flex justify-between items-center p-4 bg-muted rounded-md">
@@ -432,3 +376,6 @@ export default function TransportPage() {
         </div>
     );
 }
+
+
+    
