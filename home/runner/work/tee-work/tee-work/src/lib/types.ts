@@ -41,7 +41,7 @@ export interface TransportEntry {
     detail: string;
     cost: number;
     amount: number;
-    quantity: number;
+    quantity?: number;
     finished: boolean;
     createdAt: Date; 
 }
@@ -217,3 +217,4 @@ export interface Customer {
   address: string;
   phone: string;
 }
+

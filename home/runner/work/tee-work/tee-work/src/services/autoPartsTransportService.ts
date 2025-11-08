@@ -1,4 +1,5 @@
 
+
 import { db } from '@/lib/firebase';
 import type { TransportEntry } from '@/lib/types';
 import { 
@@ -70,3 +71,4 @@ export const deleteAutoPartsTransportEntry = async (id: string) => {
     const transportDoc = doc(db, 'autoparts-transportEntries', id);
     await deleteDoc(transportDoc);
 };
+
