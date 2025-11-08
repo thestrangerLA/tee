@@ -27,66 +27,13 @@ const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('lo-LA', { minimumFractionDigits: 0 }).format(value);
 }
 
-const SearchableSelect = ({ items, value, onValueChange }: { items: StockItem[], value: string, onValueChange: (value: string) => void }) => {
-    const [open, setOpen] = useState(false);
-
-    return (
-        <Popover open={open} onOpenChange={setOpen}>
-            <PopoverTrigger asChild>
-                <Button
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={open}
-                    className="w-full justify-between h-8"
-                >
-                    <span className="truncate">
-                        {value
-                            ? items.find((item) => item.name === value)?.name ?? value
-                            : "ເລືອກສິນຄ້າ..."}
-                    </span>
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-[300px] p-0">
-                <Command>
-                    <CommandInput placeholder="ຄົ້ນຫາສິນຄ້າ..." />
-                    <CommandEmpty>ບໍ່ພົບສິນຄ້າ.</CommandEmpty>
-                    <CommandGroup>
-                        {items.map((item) => (
-                            <CommandItem
-                                key={item.id}
-                                value={item.name}
-                                onSelect={(currentValue) => {
-                                    const selectedItem = items.find(i => i.name.toLowerCase() === currentValue.toLowerCase());
-                                    onValueChange(selectedItem ? selectedItem.name : "");
-                                    setOpen(false);
-                                }}
-                            >
-                                <Check
-                                    className={cn(
-                                        "mr-2 h-4 w-4",
-                                        value === item.name ? "opacity-100" : "opacity-0"
-                                    )}
-                                />
-                                {item.name}
-                            </CommandItem>
-                        ))}
-                    </CommandGroup>
-                </Command>
-            </PopoverContent>
-        </Popover>
-    );
-};
-
-
-const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddRow, stockItems }: { 
+const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddRow }: { 
     type: 'ANS' | 'HAL' | 'MX',
     title: string, 
     entries: TransportEntry[],
-    onRowChange: (id: string, field: keyof TransportEntry, value: any) => void,
+    onRowChange: (id: string, updatedFields: Partial<TransportEntry>) => void,
     onRowDelete: (id: string) => void,
     onAddRow: (type: 'ANS' | 'HAL' | 'MX') => void,
-    stockItems: StockItem[]
 }) => {
     
     const totalAmount = useMemo(() => entries.reduce((sum, entry) => sum + (entry.amount || 0), 0), [entries]);
@@ -110,7 +57,8 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
                 };
             }
             groupedByDay[dayKey].entries.push(entry);
-            groupedByDay[dayKey].profit += (entry.amount || 0) - (entry.cost || 0);
+            const totalCost = (entry.cost || 0) * (entry.quantity || 1);
+            groupedByDay[dayKey].profit += (entry.amount || 0) - totalCost;
             groupedByDay[dayKey].orderCount += 1;
             if (!entry.finished) {
                 groupedByDay[dayKey].unfinishedCount += 1;
@@ -120,7 +68,6 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
 
         return Object.values(groupedByDay).sort((a, b) => b.date.getTime() - a.date.getTime());
     }, [entries]);
-
 
     return (
         <Card>
@@ -166,8 +113,9 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
                                         <Table>
                                             <TableHeader>
                                                 <TableRow>
-                                                    <TableHead className="w-[40%]">ລາຍລະອຽດ</TableHead>
-                                                    <TableHead className="w-[150px] text-right">ຕົ້ນທຶນ</TableHead>
+                                                    <TableHead className="w-[35%]">ລາຍລະອຽດ</TableHead>
+                                                    <TableHead className="w-[100px] text-right">ຕົ້ນທຶນ</TableHead>
+                                                    <TableHead className="w-[80px] text-right">ຈຳນວນ</TableHead>
                                                     <TableHead className="w-[150px] text-right">ຈຳນວນເງິນ</TableHead>
                                                     <TableHead className="w-[120px] text-right">ກຳໄລ</TableHead>
                                                     <TableHead className="w-[80px] text-center">ສຳເລັດ</TableHead>
@@ -176,27 +124,32 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
                                             </TableHeader>
                                             <TableBody>
                                                 {summary.entries.map((row) => {
-                                                    const profit = (row.amount || 0) - (row.cost || 0);
+                                                    const totalCost = (row.cost || 0) * (row.quantity || 1);
+                                                    const profit = (row.amount || 0) - totalCost;
                                                     return (
                                                     <TableRow key={row.id}>
                                                         <TableCell className="p-2">
-                                                            <SearchableSelect
-                                                                items={stockItems}
-                                                                value={row.detail || ''}
-                                                                onValueChange={(value) => onRowChange(row.id, 'detail', value)}
+                                                            <Input 
+                                                                value={row.detail || ''} 
+                                                                onChange={(e) => onRowChange(row.id, { detail: e.target.value })} 
+                                                                placeholder="ລາຍລະອຽດ" 
+                                                                className="h-8" 
                                                             />
                                                         </TableCell>
                                                         <TableCell className="p-2">
-                                                            <Input type="number" value={row.cost || ''} onChange={(e) => onRowChange(row.id, 'cost', parseFloat(e.target.value) || 0)} placeholder="ຕົ້ນທຶນ" className="h-8 text-right" />
+                                                            <Input type="number" value={row.cost || ''} onChange={(e) => onRowChange(row.id, { cost: parseFloat(e.target.value) || 0 })} placeholder="ຕົ້ນທຶນ" className="h-8 text-right" />
                                                         </TableCell>
                                                         <TableCell className="p-2">
-                                                            <Input type="number" value={row.amount || ''} onChange={(e) => onRowChange(row.id, 'amount', parseFloat(e.target.value) || 0)} placeholder="ຈຳນວນເງິນ" className="h-8 text-right" />
+                                                            <Input type="number" value={row.quantity || ''} onChange={(e) => onRowChange(row.id, { quantity: parseInt(e.target.value, 10) || 1 })} placeholder="ຈຳນວນ" className="h-8 text-right" />
+                                                        </TableCell>
+                                                        <TableCell className="p-2">
+                                                            <Input type="number" value={row.amount || ''} onChange={(e) => onRowChange(row.id, { amount: parseFloat(e.target.value) || 0 })} placeholder="ຈຳນວນເງິນ" className="h-8 text-right" />
                                                         </TableCell>
                                                         <TableCell className={`p-2 text-right font-medium ${profit >= 0 ? '' : 'text-red-600'}`}>
                                                             {formatCurrency(profit)}
                                                         </TableCell>
                                                         <TableCell className="text-center p-2">
-                                                            <Checkbox checked={row.finished} onCheckedChange={(checked) => onRowChange(row.id, 'finished', checked)} />
+                                                            <Checkbox checked={row.finished} onCheckedChange={(checked) => onRowChange(row.id, { finished: !!checked })} />
                                                         </TableCell>
                                                         <TableCell className="text-center p-2">
                                                             <Button variant="ghost" size="icon" onClick={() => onRowDelete(row.id)}>
@@ -225,14 +178,11 @@ export default function TransportPage() {
     const { toast } = useToast();
     const [allEntries, setAllEntries] = useState<TransportEntry[]>([]);
     const [displayMonth, setDisplayMonth] = useState<Date>(new Date());
-    const [stockItems, setStockItems] = useState<StockItem[]>([]);
     
     useEffect(() => {
         const unsubscribe = listenToTransportEntries(setAllEntries);
-        const unsubscribeStock = listenToAutoPartsStockItems(setStockItems);
         return () => {
             unsubscribe();
-            unsubscribeStock();
         }
     }, []);
 
@@ -249,7 +199,7 @@ export default function TransportPage() {
 
 
     const transportTotalAmount = useMemo(() => filteredEntries.reduce((total, row) => total + (row.amount || 0), 0), [filteredEntries]);
-    const transportTotalCost = useMemo(() => filteredEntries.reduce((total, row) => total + (row.cost || 0), 0), [filteredEntries]);
+    const transportTotalCost = useMemo(() => filteredEntries.reduce((total, row) => total + ((row.cost || 0) * (row.quantity || 1)), 0), [filteredEntries]);
     const transportProfit = useMemo(() => transportTotalAmount - transportTotalCost, [transportTotalAmount, transportTotalCost]);
     const transportRemaining = useMemo(() => filteredEntries.filter(e => !e.finished).reduce((total, row) => total + (row.amount || 0), 0), [filteredEntries]);
 
@@ -263,10 +213,9 @@ export default function TransportPage() {
         }
     };
 
-    const handleTransportRowChange = async (id: string, field: keyof TransportEntry, value: any) => {
+    const handleTransportRowChange = async (id: string, updatedFields: Partial<TransportEntry>) => {
         try {
-            await updateTransportEntry(id, { [field]: value });
-            // No toast needed for real-time updates to avoid being noisy
+            await updateTransportEntry(id, updatedFields);
         } catch (error) {
             console.error("Error updating row: ", error);
             toast({ title: "ເກີດຂໍ້ຜິດພາດ", description: "ບໍ່ສາມາດອັບເດດຂໍ້ມູນໄດ້", variant: "destructive" });
@@ -329,7 +278,7 @@ export default function TransportPage() {
         <div className="flex min-h-screen w-full flex-col bg-muted/40">
             <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
                 <Button variant="outline" size="icon" className="h-8 w-8" asChild>
-                    <Link href="/autoparts">
+                    <Link href="/agriculture">
                         <ArrowLeft className="h-4 w-4" />
                         <span className="sr-only">ກັບໄປໜ້າຫຼັກ</span>
                     </Link>
@@ -355,7 +304,6 @@ export default function TransportPage() {
                                     onAddRow={handleAddTransportRow}
                                     onRowChange={handleTransportRowChange}
                                     onRowDelete={handleTransportRowDelete}
-                                    stockItems={stockItems}
                                 />
                             </AccordionContent>
                         </AccordionItem>
@@ -369,7 +317,6 @@ export default function TransportPage() {
                                     onAddRow={handleAddTransportRow}
                                     onRowChange={handleTransportRowChange}
                                     onRowDelete={handleTransportRowDelete}
-                                    stockItems={stockItems}
                                 />
                             </AccordionContent>
                         </AccordionItem>
@@ -383,7 +330,6 @@ export default function TransportPage() {
                                     onAddRow={handleAddTransportRow}
                                     onRowChange={handleTransportRowChange}
                                     onRowDelete={handleTransportRowDelete}
-                                    stockItems={stockItems}
                                 />
                             </AccordionContent>
                         </AccordionItem>
