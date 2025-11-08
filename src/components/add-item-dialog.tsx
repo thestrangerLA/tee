@@ -15,6 +15,13 @@ import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
 import type { StockItem } from "@/lib/types"
 import { useState } from "react"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 type AddItemDialogProps = {
   open: boolean;
@@ -32,15 +39,16 @@ export function AddItemDialog({ open, onOpenChange, onAddItem, categories }: Add
         const currentStock = parseInt(formData.get('currentStock') as string, 10) || 0;
         const newItem: Omit<StockItem, 'id'> = {
             name: formData.get('name') as string,
-            category: 'auto-parts', // Auto-assign category
+            category: formData.get('category') as string,
             currentStock: currentStock,
             costPrice: parseFloat(formData.get('costPrice') as string) || 0,
+            costPriceBaht: parseFloat(formData.get('costPriceBaht') as string) || 0,
             wholesalePrice: parseFloat(formData.get('wholesalePrice') as string) || 0,
             sellingPrice: parseFloat(formData.get('sellingPrice') as string) || 0,
         };
 
         try {
-            await onAddItem(newItem as Omit<StockItem, 'id'>);
+            await onAddItem(newItem);
             toast({
                 title: "ສຳເລັດ!",
                 description: "ເພີ່ມລາຍການໃໝ່ໃນສະຕັອກສຳເລັດແລ້ວ",
@@ -73,6 +81,18 @@ export function AddItemDialog({ open, onOpenChange, onAddItem, categories }: Add
                     <Label htmlFor="name" className="text-right">ຊື່</Label>
                     <Input id="name" name="name" placeholder="ເຊັ່ນ: ຢາງລົດ" className="col-span-3" required />
                 </div>
+                 <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="category" className="text-right">ໝວດໝູ່</Label>
+                    <Select name="category">
+                        <SelectTrigger className="col-span-3">
+                            <SelectValue placeholder="ເລືອກໝວດໝູ່" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {categories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
+                             <SelectItem value="auto-parts">auto-parts</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="currentStock" className="text-right">ສະຕັອກປັດຈຸບັນ</Label>
                     <Input id="currentStock" name="currentStock" type="number" placeholder="0" className="col-span-3" required />
@@ -80,6 +100,10 @@ export function AddItemDialog({ open, onOpenChange, onAddItem, categories }: Add
                 <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="costPrice" className="text-right">ລາຄາຕົ້ນທຶນ (ກີບ)</Label>
                     <Input id="costPrice" name="costPrice" type="number" placeholder="0.00" step="0.01" className="col-span-3" required />
+                </div>
+                 <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="costPriceBaht" className="text-right">ລາຄາຕົ້ນທຶນ (ບາດ)</Label>
+                    <Input id="costPriceBaht" name="costPriceBaht" type="number" placeholder="0.00" step="0.01" className="col-span-3" />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="wholesalePrice" className="text-right">ລາຄາຂາຍສົ່ງ</Label>
