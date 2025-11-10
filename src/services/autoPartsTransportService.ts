@@ -19,6 +19,16 @@ import { startOfDay } from 'date-fns';
 
 const transportCollectionRef = collection(db, 'autoparts-transportEntries');
 
+const createInitialRowState = (type: 'ANS' | 'HAL' | 'MX', date: Date): Omit<TransportEntry, 'id' | 'createdAt'> => ({
+    type: type,
+    date: startOfDay(date),
+    detail: '',
+    cost: 0,
+    quantity: 1,
+    amount: 0,
+    finished: false,
+});
+
 
 export const listenToAutoPartsTransportEntries = (callback: (items: TransportEntry[]) => void) => {
     const q = query(transportCollectionRef, orderBy('date', 'desc'), orderBy('order', 'asc'));
@@ -70,5 +80,3 @@ export const deleteAutoPartsTransportEntry = async (id: string) => {
     const transportDoc = doc(db, 'autoparts-transportEntries', id);
     await deleteDoc(transportDoc);
 };
-
-
