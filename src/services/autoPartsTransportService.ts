@@ -19,6 +19,7 @@ import { startOfDay } from 'date-fns';
 
 const transportCollectionRef = collection(db, 'autoparts-transportEntries');
 
+
 export const listenToAutoPartsTransportEntries = (callback: (items: TransportEntry[]) => void) => {
     const q = query(transportCollectionRef, orderBy('date', 'desc'), orderBy('order', 'asc'));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
@@ -37,7 +38,7 @@ export const listenToAutoPartsTransportEntries = (callback: (items: TransportEnt
     return unsubscribe;
 };
 
-export const addMultipleAutoPartsTransportEntries = async (entries: Omit<TransportEntry, 'id'|'createdAt'|'date'>[], entryDate: Date, company: 'ANS' | 'HAL' | 'MX', order: number) => {
+export const addMultipleAutoPartsTransportEntries = async (entries: Omit<TransportEntry, 'id'|'createdAt'|'date'|'type'>[], entryDate: Date, company: 'ANS' | 'HAL' | 'MX', order: number) => {
     const batch = writeBatch(db);
     const date = startOfDay(entryDate);
 
@@ -58,12 +59,11 @@ export const addMultipleAutoPartsTransportEntries = async (entries: Omit<Transpo
 export const updateAutoPartsTransportEntry = async (id: string, updatedFields: Partial<Omit<TransportEntry, 'id' | 'createdAt'>>) => {
     const transportDoc = doc(db, 'autoparts-transportEntries', id);
     
+    const dataToUpdate: any = { ...updatedFields };
     if (updatedFields.date && updatedFields.date instanceof Date) {
-        const { date, ...rest } = updatedFields;
-        await updateDoc(transportDoc, { ...rest, date: Timestamp.fromDate(date) });
-    } else {
-        await updateDoc(transportDoc, updatedFields);
+        dataToUpdate.date = Timestamp.fromDate(updatedFields.date);
     }
+    await updateDoc(transportDoc, dataToUpdate);
 };
 
 export const deleteAutoPartsTransportEntry = async (id: string) => {
