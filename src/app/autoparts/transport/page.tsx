@@ -1,5 +1,4 @@
 
-
 "use client"
 
 import { useState, useMemo, useEffect } from 'react';
@@ -239,13 +238,14 @@ export default function AutoPartsTransportPage() {
     const [displayMonth, setDisplayMonth] = useState<Date>(new Date());
     const [stockItems, setStockItems] = useState<StockItem[]>([]);
     
-    const [newEntryDate, setNewEntryDate] = useState<Date | undefined>(new Date());
+    const [newEntryDate, setNewEntryDate] = useState<Date | undefined>();
     const [newEntryCompany, setNewEntryCompany] = useState<'ANS' | 'HAL' | 'MX'>('ANS');
 
     
     useEffect(() => {
         const unsubscribe = listenToAutoPartsTransportEntries(setAllEntries);
         const unsubscribeStock = listenToAutoPartsStockItems(setStockItems);
+        setNewEntryDate(new Date());
         return () => {
             unsubscribe();
             unsubscribeStock();
@@ -468,4 +468,3 @@ export default function AutoPartsTransportPage() {
         </div>
     );
 }
-
