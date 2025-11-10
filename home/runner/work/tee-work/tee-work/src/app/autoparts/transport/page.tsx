@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Trash2, ArrowLeft, Truck, PlusCircle, Calendar as CalendarIcon, ChevronDown, Check, ChevronsUpDown } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import Link from 'next/link';
-import { listenToAutoPartsTransportEntries, addAutoPartsTransportEntry, updateAutoPartsTransportEntry, deleteAutoPartsTransportEntry } from '@/services/autoPartsTransportService';
+import { listenToAutoPartsTransportEntries, addMultipleAutoPartsTransportEntries, updateAutoPartsTransportEntry, deleteAutoPartsTransportEntry } from '@/services/autoPartsTransportService';
 import type { TransportEntry, StockItem } from '@/lib/types';
 import { listenToAutoPartsStockItems } from '@/services/autoPartsStockService';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
@@ -22,11 +22,134 @@ import { format, startOfDay, isWithinInterval, startOfMonth, endOfMonth, getMont
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuPortal, DropdownMenuSubTrigger, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { cn } from '@/lib/utils';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { v4 as uuidv4 } from 'uuid';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('lo-LA', { minimumFractionDigits: 0 }).format(value);
 }
+
+const AddEntriesDialog = ({ onAddMultipleEntries, stockItems }: { 
+    onAddMultipleEntries: (entries: Omit<TransportEntry, 'id'|'createdAt'|'date'>[], date: Date, company: 'ANS' | 'HAL' | 'MX') => Promise<void>;
+    stockItems: StockItem[];
+}) => {
+    const { toast } = useToast();
+    const [open, setOpen] = useState(false);
+    const [entryDate, setEntryDate] = useState<Date | undefined>(new Date());
+    const [company, setCompany] = useState<'ANS' | 'HAL' | 'MX'>('ANS');
+    const [entries, setEntries] = useState<Omit<TransportEntry, 'id'|'createdAt'|'date'|'type'>[]>([]);
+
+    const handleAddItem = () => {
+        setEntries(prev => [...prev, { detail: '', cost: 0, quantity: 1, amount: 0, finished: false }]);
+    };
+
+    const handleItemChange = (index: number, field: keyof Omit<TransportEntry, 'id'|'createdAt'|'date'|'type'>, value: any) => {
+        setEntries(prev => prev.map((item, i) => i === index ? { ...item, [field]: value } : item));
+    };
+
+    const handleItemSelect = (index: number, selectedItem: StockItem | null) => {
+        if(selectedItem) {
+            handleItemChange(index, 'detail', selectedItem.name);
+            handleItemChange(index, 'cost', selectedItem.costPrice);
+        }
+    }
+
+    const handleRemoveItem = (index: number) => {
+        setEntries(prev => prev.filter((_, i) => i !== index));
+    };
+
+    const handleSave = async () => {
+        if (!entryDate || entries.length === 0) {
+            toast({ title: "ຂໍ້ມູນບໍ່ຄົບຖ້ວນ", description: "ກະລຸນາເລືອກວັນທີ ແລະ ເພີ່ມລາຍການຢ່າງໜ້ອຍໜຶ່ງລາຍການ", variant: "destructive" });
+            return;
+        }
+
+        try {
+            await onAddMultipleEntries(entries, entryDate, company);
+            toast({ title: "ເພີ່ມລາຍການຂົນສົ່ງສຳເລັດ" });
+            setOpen(false);
+            setEntries([]);
+            setEntryDate(new Date());
+        } catch (error) {
+            console.error("Error adding multiple entries:", error);
+            toast({ title: "ເກີດຂໍ້ຜິດພາດ", variant: "destructive" });
+        }
+    };
+
+    return (
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+                <Button><PlusCircle className="mr-2 h-4 w-4" /> ເພີ່ມລາຍການຂົນສົ່ງ</Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl">
+                <DialogHeader>
+                    <DialogTitle>ເພີ່ມລາຍການຂົນສົ່ງໃໝ່</DialogTitle>
+                </DialogHeader>
+                <div className="grid grid-cols-2 gap-4 py-4">
+                     <div className="grid gap-2">
+                        <Label>ວັນທີ</Label>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button variant={"outline"} className="justify-start text-left font-normal">
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {entryDate ? format(entryDate, "PPP") : <span>ເລືອກວັນທີ</span>}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={entryDate} onSelect={setEntryDate} initialFocus/></PopoverContent>
+                        </Popover>
+                    </div>
+                    <div className="grid gap-2">
+                        <Label>ບໍລິສັດຂົນສົ່ງ</Label>
+                        <Select value={company} onValueChange={(v) => setCompany(v as 'ANS' | 'HAL' | 'MX')}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="ANS">ANS</SelectItem>
+                                <SelectItem value="HAL">HAL</SelectItem>
+                                <SelectItem value="MX">MX</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
+
+                <div className="max-h-[400px] overflow-y-auto">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="w-[35%]">ລາຍລະອຽດ</TableHead>
+                                <TableHead className="w-[100px] text-right">ຕົ້ນທຶນ</TableHead>
+                                <TableHead className="w-[80px] text-right">ຈຳນວນ</TableHead>
+                                <TableHead className="w-[150px] text-right">ຈຳນວນເງິນ</TableHead>
+                                <TableHead className="w-[50px]"></TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {entries.map((entry, index) => (
+                                <TableRow key={index}>
+                                    <TableCell className="p-1">
+                                        <SearchableSelect items={stockItems} value={entry.detail || ''} onValueChange={(item) => handleItemSelect(index, item)} />
+                                    </TableCell>
+                                    <TableCell className="p-1"><Input type="number" value={entry.cost || ''} onChange={(e) => handleItemChange(index, 'cost', Number(e.target.value))} className="h-8 text-right" /></TableCell>
+                                    <TableCell className="p-1"><Input type="number" value={entry.quantity || ''} onChange={(e) => handleItemChange(index, 'quantity', Number(e.target.value))} className="h-8 text-right" /></TableCell>
+                                    <TableCell className="p-1"><Input type="number" value={entry.amount || ''} onChange={(e) => handleItemChange(index, 'amount', Number(e.target.value))} className="h-8 text-right" /></TableCell>
+                                    <TableCell className="p-1"><Button variant="ghost" size="icon" onClick={() => handleRemoveItem(index)}><Trash2 className="h-4 w-4 text-red-500" /></Button></TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </div>
+                <Button variant="outline" onClick={handleAddItem} className="mt-2"><PlusCircle className="mr-2 h-4 w-4" /> ເພີ່ມອີກແຖວ</Button>
+
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => setOpen(false)}>ຍົກເລີກ</Button>
+                    <Button onClick={handleSave}>ບັນທຶກ</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+};
 
 const SearchableSelect = ({ items, value, onValueChange }: { items: StockItem[], value: string, onValueChange: (selectedItem: StockItem | null) => void }) => {
     const [open, setOpen] = useState(false);
@@ -80,13 +203,12 @@ const SearchableSelect = ({ items, value, onValueChange }: { items: StockItem[],
 };
 
 
-const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddRow, stockItems }: { 
+const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, stockItems }: { 
     type: 'ANS' | 'HAL' | 'MX',
     title: string, 
     entries: TransportEntry[],
     onRowChange: (id: string, updatedFields: Partial<TransportEntry>) => void,
     onRowDelete: (id: string) => void,
-    onAddRow: (type: 'ANS' | 'HAL' | 'MX') => void,
     stockItems: StockItem[]
 }) => {
     
@@ -145,10 +267,6 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
                         )}
                     </CardDescription>
                 </div>
-                <Button size="sm" onClick={() => onAddRow(type)}>
-                    <PlusCircle className="mr-2 h-4 w-4"/>
-                    ເພີ່ມແຖວ
-                </Button>
             </CardHeader>
             <CardContent>
                  <div className="overflow-x-auto">
@@ -268,16 +386,6 @@ export default function AutoPartsTransportPage() {
     const transportProfit = useMemo(() => transportTotalAmount - transportTotalCost, [transportTotalAmount, transportTotalCost]);
     const transportRemaining = useMemo(() => filteredEntries.filter(e => !e.finished).reduce((total, row) => total + (row.amount || 0), 0), [filteredEntries]);
 
-    const handleAddTransportRow = async (type: 'ANS' | 'HAL' | 'MX') => {
-        try {
-            await addAutoPartsTransportEntry(type, displayMonth);
-            toast({ title: "ເພີ່ມແຖວໃໝ່ສຳເລັດ" });
-        } catch (error) {
-            console.error("Error adding row: ", error);
-            toast({ title: "ເກີດຂໍ້ຜິດພາດ", description: "ບໍ່ສາມາດເພີ່ມແຖວໄດ້", variant: "destructive" });
-        }
-    };
-
     const handleTransportRowChange = async (id: string, updatedFields: Partial<TransportEntry>) => {
         try {
             await updateAutoPartsTransportEntry(id, updatedFields);
@@ -352,8 +460,9 @@ export default function AutoPartsTransportPage() {
                     <Truck className="h-6 w-6 text-primary" />
                     <h1 className="text-xl font-bold tracking-tight">ບັນຊີຂົນສົ່ງ (ອາໄຫຼລົດ)</h1>
                 </div>
-                 <div className="ml-auto">
+                 <div className="ml-auto flex items-center gap-2">
                     <MonthYearSelector />
+                    <AddEntriesDialog onAddMultipleEntries={addMultipleAutoPartsTransportEntries} stockItems={stockItems} />
                 </div>
             </header>
             <main className="flex-1 p-4 sm:px-6 sm:py-0 md:grid md:grid-cols-3 md:gap-8">
@@ -366,7 +475,6 @@ export default function AutoPartsTransportPage() {
                                     type="ANS"
                                     title="ລາຍການ ANS"
                                     entries={ansEntries}
-                                    onAddRow={handleAddTransportRow}
                                     onRowChange={handleTransportRowChange}
                                     onRowDelete={handleTransportRowDelete}
                                     stockItems={stockItems}
@@ -380,7 +488,6 @@ export default function AutoPartsTransportPage() {
                                     type="HAL"
                                     title="ລາຍການ HAL"
                                     entries={halEntries}
-                                    onAddRow={handleAddTransportRow}
                                     onRowChange={handleTransportRowChange}
                                     onRowDelete={handleTransportRowDelete}
                                     stockItems={stockItems}
@@ -394,7 +501,6 @@ export default function AutoPartsTransportPage() {
                                     type="MX"
                                     title="ລາຍການ MX"
                                     entries={mxEntries}
-                                    onAddRow={handleAddTransportRow}
                                     onRowChange={handleTransportRowChange}
                                     onRowDelete={handleTransportRowDelete}
                                     stockItems={stockItems}
@@ -432,3 +538,4 @@ export default function AutoPartsTransportPage() {
         </div>
     );
 }
+

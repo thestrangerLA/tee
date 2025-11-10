@@ -12,7 +12,8 @@ import {
     deleteDoc, 
     orderBy,
     serverTimestamp,
-    Timestamp
+    Timestamp,
+    writeBatch
 } from 'firebase/firestore';
 import { startOfDay } from 'date-fns';
 
@@ -47,14 +48,31 @@ export const listenToAutoPartsTransportEntries = (callback: (items: TransportEnt
     return unsubscribe;
 };
 
-export const addAutoPartsTransportEntry = async (type: 'ANS' | 'HAL' | 'MX', dateForMonth: Date) => {
-    const newEntry = createInitialRowState(type, dateForMonth);
+export const addAutoPartsTransportEntry = async (type: 'ANS' | 'HAL' | 'MX', entryDate: Date) => {
+    const newEntry = createInitialRowState(type, entryDate);
     await addDoc(transportCollectionRef, {
         ...newEntry,
         date: Timestamp.fromDate(newEntry.date),
         createdAt: serverTimestamp()
     });
 };
+
+export const addMultipleAutoPartsTransportEntries = async (entries: Omit<TransportEntry, 'id' | 'createdAt' | 'date'>[], entryDate: Date, company: 'ANS' | 'HAL' | 'MX') => {
+    const batch = writeBatch(db);
+    const date = startOfDay(entryDate);
+
+    entries.forEach(entry => {
+        const docRef = doc(transportCollectionRef);
+        batch.set(docRef, {
+            ...entry,
+            date: Timestamp.fromDate(date),
+            type: company,
+            createdAt: serverTimestamp(),
+        });
+    });
+
+    await batch.commit();
+}
 
 export const updateAutoPartsTransportEntry = async (id: string, updatedFields: Partial<Omit<TransportEntry, 'id' | 'createdAt'>>) => {
     const transportDoc = doc(db, 'autoparts-transportEntries', id);
