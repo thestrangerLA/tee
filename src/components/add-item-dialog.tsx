@@ -26,7 +26,7 @@ import {
 type AddItemDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAddItem: (item: Omit<StockItem, 'id'>) => Promise<void>;
+  onAddItem: (item: Omit<StockItem, 'id' | 'costPriceBaht'>) => Promise<void>;
   categories: string[];
 }
 
@@ -37,18 +37,17 @@ export function AddItemDialog({ open, onOpenChange, onAddItem, categories }: Add
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
         const currentStock = parseInt(formData.get('currentStock') as string, 10) || 0;
-        const newItem: Omit<StockItem, 'id'> = {
+        const newItem: Omit<StockItem, 'id' | 'costPriceBaht'> = {
             name: formData.get('name') as string,
             category: formData.get('category') as string,
             currentStock: currentStock,
             costPrice: parseFloat(formData.get('costPrice') as string) || 0,
-            costPriceBaht: parseFloat(formData.get('costPriceBaht') as string) || 0,
             wholesalePrice: parseFloat(formData.get('wholesalePrice') as string) || 0,
             sellingPrice: parseFloat(formData.get('sellingPrice') as string) || 0,
         };
 
         try {
-            await onAddItem(newItem);
+            await onAddItem(newItem as Omit<StockItem, 'id'>);
             toast({
                 title: "ສຳເລັດ!",
                 description: "ເພີ່ມລາຍການໃໝ່ໃນສະຕັອກສຳເລັດແລ້ວ",
@@ -65,6 +64,9 @@ export function AddItemDialog({ open, onOpenChange, onAddItem, categories }: Add
             console.error("Error adding item: ", error);
         }
     };
+
+    const validCategories = categories.filter(cat => cat && cat.trim() !== '');
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -88,7 +90,7 @@ export function AddItemDialog({ open, onOpenChange, onAddItem, categories }: Add
                             <SelectValue placeholder="ເລືອກໝວດໝູ່" />
                         </SelectTrigger>
                         <SelectContent>
-                            {categories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
+                            {validCategories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
                              <SelectItem value="auto-parts">auto-parts</SelectItem>
                         </SelectContent>
                     </Select>
