@@ -10,7 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Trash2, ArrowLeft, Truck, PlusCircle, Calendar as CalendarIcon, ChevronDown, Check, ChevronsUpDown } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import Link from 'next/link';
-import { listenToAutoPartsTransportEntries, addAutoPartsTransportEntry, updateAutoPartsTransportEntry, deleteAutoPartsTransportEntry } from '@/services/autoPartsTransportService';
+import { addMultipleAutoPartsTransportEntries, listenToAutoPartsTransportEntries, updateAutoPartsTransportEntry, deleteAutoPartsTransportEntry } from '@/services/autoPartsTransportService';
 import type { TransportEntry, StockItem } from '@/lib/types';
 import { listenToAutoPartsStockItems } from '@/services/autoPartsStockService';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
@@ -23,11 +23,138 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "
 import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { v4 as uuidv4 } from 'uuid';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('lo-LA', { minimumFractionDigits: 0 }).format(value);
 }
+
+const AddEntriesDialog = ({ onAddMultipleEntries, stockItems }: { 
+    onAddMultipleEntries: (entries: Omit<TransportEntry, 'id'|'createdAt'|'date'|'type'>[], date: Date, company: 'ANS' | 'HAL' | 'MX', order: number) => Promise<void>;
+    stockItems: StockItem[];
+}) => {
+    const { toast } = useToast();
+    const [open, setOpen] = useState(false);
+    const [entryDate, setEntryDate] = useState<Date | undefined>(new Date());
+    const [company, setCompany] = useState<'ANS' | 'HAL' | 'MX'>('ANS');
+    const [order, setOrder] = useState<number>(1);
+    const [entries, setEntries] = useState<Omit<TransportEntry, 'id'|'createdAt'|'date'|'type'|'order'>[]>([]);
+
+    const handleAddItem = () => {
+        setEntries(prev => [...prev, { detail: '', cost: 0, quantity: 1, amount: 0, finished: false }]);
+    };
+
+    const handleItemChange = (index: number, field: keyof Omit<TransportEntry, 'id'|'createdAt'|'date'|'type'>, value: any) => {
+        setEntries(prev => prev.map((item, i) => i === index ? { ...item, [field]: value } : item));
+    };
+
+    const handleItemSelect = (index: number, selectedItem: StockItem | null) => {
+        if(selectedItem) {
+            handleItemChange(index, 'detail', selectedItem.name);
+            handleItemChange(index, 'cost', selectedItem.costPrice);
+        }
+    }
+
+    const handleRemoveItem = (index: number) => {
+        setEntries(prev => prev.filter((_, i) => i !== index));
+    };
+
+    const handleSave = async () => {
+        if (!entryDate || entries.length === 0 || !order) {
+            toast({ title: "ຂໍ້ມູນບໍ່ຄົບຖ້ວນ", description: "ກະລຸນາເລືອກວັນທີ, ໃສ່ລຳດັບ ແລະ ເພີ່ມລາຍການຢ່າງໜ້ອຍໜຶ່ງລາຍການ", variant: "destructive" });
+            return;
+        }
+
+        try {
+            await onAddMultipleEntries(entries, entryDate, company, order);
+            toast({ title: "ເພີ່ມລາຍການຂົນສົ່ງສຳເລັດ" });
+            setOpen(false);
+            setEntries([]);
+            setEntryDate(new Date());
+            setOrder(prev => prev + 1); // Auto-increment for next time
+        } catch (error) {
+            console.error("Error adding multiple entries:", error);
+            toast({ title: "ເກີດຂໍ້ຜິດພາດ", variant: "destructive" });
+        }
+    };
+
+    return (
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+                <Button><PlusCircle className="mr-2 h-4 w-4" /> ເພີ່ມລາຍການຂົນສົ່ງ</Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl">
+                <DialogHeader>
+                    <DialogTitle>ເພີ່ມລາຍການຂົນສົ່ງໃໝ່</DialogTitle>
+                </DialogHeader>
+                <div className="grid grid-cols-3 gap-4 py-4">
+                     <div className="grid gap-2">
+                        <Label>ວັນທີ</Label>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button variant={"outline"} className="justify-start text-left font-normal">
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {entryDate ? format(entryDate, "PPP") : <span>ເລືອກວັນທີ</span>}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={entryDate} onSelect={setEntryDate} initialFocus/></PopoverContent>
+                        </Popover>
+                    </div>
+                    <div className="grid gap-2">
+                        <Label>ບໍລິສັດຂົນສົ່ງ</Label>
+                        <Select value={company} onValueChange={(v) => setCompany(v as 'ANS' | 'HAL' | 'MX')}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="ANS">ANS</SelectItem>
+                                <SelectItem value="HAL">HAL</SelectItem>
+                                <SelectItem value="MX">MX</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                     <div className="grid gap-2">
+                        <Label>ລຳດັບ</Label>
+                        <Input type="number" value={order} onChange={e => setOrder(Number(e.target.value))} />
+                    </div>
+                </div>
+
+                <div className="max-h-[400px] overflow-y-auto">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="w-[35%]">ລາຍລະອຽດ</TableHead>
+                                <TableHead className="w-[100px] text-right">ຕົ້ນທຶນ</TableHead>
+                                <TableHead className="w-[80px] text-right">ຈຳນວນ</TableHead>
+                                <TableHead className="w-[150px] text-right">ຈຳນວນເງິນ</TableHead>
+                                <TableHead className="w-[50px]"></TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {entries.map((entry, index) => (
+                                <TableRow key={index}>
+                                    <TableCell className="p-1">
+                                        <SearchableSelect items={stockItems} value={entry.detail || ''} onValueChange={(item) => handleItemSelect(index, item)} />
+                                    </TableCell>
+                                    <TableCell className="p-1"><Input type="number" value={entry.cost || ''} onChange={(e) => handleItemChange(index, 'cost', Number(e.target.value))} className="h-8 text-right" /></TableCell>
+                                    <TableCell className="p-1"><Input type="number" value={entry.quantity || ''} onChange={(e) => handleItemChange(index, 'quantity', Number(e.target.value))} className="h-8 text-right" /></TableCell>
+                                    <TableCell className="p-1"><Input type="number" value={entry.amount || ''} onChange={(e) => handleItemChange(index, 'amount', Number(e.target.value))} className="h-8 text-right" /></TableCell>
+                                    <TableCell className="p-1"><Button variant="ghost" size="icon" onClick={() => handleRemoveItem(index)}><Trash2 className="h-4 w-4 text-red-500" /></Button></TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </div>
+                <Button variant="outline" onClick={handleAddItem} className="mt-2"><PlusCircle className="mr-2 h-4 w-4" /> ເພີ່ມອີກແຖວ</Button>
+
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => setOpen(false)}>ຍົກເລີກ</Button>
+                    <Button onClick={handleSave}>ບັນທຶກ</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+};
 
 const SearchableSelect = ({ items, value, onValueChange }: { items: StockItem[], value: string, onValueChange: (selectedItem: StockItem | null) => void }) => {
     const [open, setOpen] = useState(false);
@@ -96,28 +223,14 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, stockI
     const unfinishedEntriesCount = useMemo(() => entries.filter(e => !e.finished).length, [entries]);
 
     const dailySummaries = useMemo(() => {
-        const groupedByDay: Record<string, { date: Date; profit: number, entries: TransportEntry[], orderCount: number, unfinishedCount: number, remainingAmount: number }> = {};
+        const groupedByDay: Record<string, { date: Date; entries: TransportEntry[] }> = {};
 
         entries.forEach(entry => {
             const dayKey = format(entry.date, 'yyyy-MM-dd');
             if (!groupedByDay[dayKey]) {
-                groupedByDay[dayKey] = {
-                    date: entry.date,
-                    profit: 0,
-                    entries: [],
-                    orderCount: 0,
-                    unfinishedCount: 0,
-                    remainingAmount: 0
-                };
+                groupedByDay[dayKey] = { date: entry.date, entries: [] };
             }
             groupedByDay[dayKey].entries.push(entry);
-            const totalCost = (entry.cost || 0) * (entry.quantity || 1);
-            groupedByDay[dayKey].profit += (entry.amount || 0) - totalCost;
-            groupedByDay[dayKey].orderCount += 1;
-            if (!entry.finished) {
-                groupedByDay[dayKey].unfinishedCount += 1;
-                groupedByDay[dayKey].remainingAmount += (entry.amount || 0);
-            }
         });
 
         return Object.values(groupedByDay).sort((a, b) => b.date.getTime() - a.date.getTime());
@@ -150,77 +263,108 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, stockI
                  <div className="overflow-x-auto">
                     {dailySummaries.length > 0 ? (
                          <Accordion type="single" collapsible className="w-full">
-                            {dailySummaries.map((summary, index) => (
-                                <AccordionItem value={`item-${index}`} key={index}>
+                            {dailySummaries.map((summary, index) => {
+                                 const ordersInDay = summary.entries.reduce((acc, entry) => {
+                                    const orderKey = String(entry.order || 'N/A');
+                                    if (!acc[orderKey]) acc[orderKey] = [];
+                                    acc[orderKey].push(entry);
+                                    return acc;
+                                }, {} as Record<string, TransportEntry[]>);
+
+                                return (
+                                <AccordionItem value={`day-${index}`} key={index}>
                                     <AccordionTrigger>
                                         <div className="flex justify-between w-full pr-4">
                                             <div className="font-semibold">{`ວັນທີ ${format(summary.date, "d")}`}</div>
-                                            <div className="flex gap-4 items-center text-sm">
-                                                 <span className={`font-medium ${summary.unfinishedCount > 0 ? 'text-red-500' : 'text-green-500'}`}>
-                                                    ຄ້າງ {summary.unfinishedCount}/{summary.orderCount}
-                                                 </span>
-                                                 {summary.unfinishedCount > 0 && (
-                                                    <span className="text-red-600">ເຫຼືອ: {formatCurrency(summary.remainingAmount)}</span>
-                                                 )}
-                                                <span className={summary.profit >= 0 ? 'text-green-600' : 'text-red-600'}>
-                                                    ກຳໄລ: {formatCurrency(summary.profit)}
-                                                </span>
-                                            </div>
                                         </div>
                                     </AccordionTrigger>
-                                    <AccordionContent>
-                                        <Table>
-                                            <TableHeader>
-                                                <TableRow>
-                                                    <TableHead className="w-[35%]">ລາຍລະອຽດ</TableHead>
-                                                    <TableHead className="w-[100px] text-right">ຕົ້ນທຶນ</TableHead>
-                                                    <TableHead className="w-[80px] text-right">ຈຳນວນ</TableHead>
-                                                    <TableHead className="w-[150px] text-right">ຈຳນວນເງິນ</TableHead>
-                                                    <TableHead className="w-[120px] text-right">ກຳໄລ</TableHead>
-                                                    <TableHead className="w-[80px] text-center">ສຳເລັດ</TableHead>
-                                                    <TableHead className="w-[50px] text-center">ລົບ</TableHead>
-                                                </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
-                                                {summary.entries.map((row) => {
-                                                    const totalCost = (row.cost || 0) * (row.quantity || 1);
-                                                    const profit = (row.amount || 0) - totalCost;
-                                                    return (
-                                                    <TableRow key={row.id}>
-                                                        <TableCell className="p-2">
-                                                            <SearchableSelect
-                                                                items={stockItems}
-                                                                value={row.detail || ''}
-                                                                onValueChange={(selected) => handleDetailChange(row.id, selected)}
-                                                            />
-                                                        </TableCell>
-                                                        <TableCell className="p-2">
-                                                            <Input type="number" value={row.cost || ''} onChange={(e) => onRowChange(row.id, { cost: parseFloat(e.target.value) || 0 })} placeholder="ຕົ້ນທຶນ" className="h-8 text-right" />
-                                                        </TableCell>
-                                                        <TableCell className="p-2">
-                                                            <Input type="number" value={row.quantity || ''} onChange={(e) => onRowChange(row.id, { quantity: parseInt(e.target.value, 10) || 1 })} placeholder="ຈຳນວນ" className="h-8 text-right" />
-                                                        </TableCell>
-                                                        <TableCell className="p-2">
-                                                            <Input type="number" value={row.amount || ''} onChange={(e) => onRowChange(row.id, { amount: parseFloat(e.target.value) || 0 })} placeholder="ຈຳນວນເງິນ" className="h-8 text-right" />
-                                                        </TableCell>
-                                                        <TableCell className={`p-2 text-right font-medium ${profit >= 0 ? '' : 'text-red-600'}`}>
-                                                            {formatCurrency(profit)}
-                                                        </TableCell>
-                                                        <TableCell className="text-center p-2">
-                                                            <Checkbox checked={row.finished} onCheckedChange={(checked) => onRowChange(row.id, { finished: !!checked })} />
-                                                        </TableCell>
-                                                        <TableCell className="text-center p-2">
-                                                            <Button variant="ghost" size="icon" onClick={() => onRowDelete(row.id)}>
-                                                                <Trash2 className="h-4 w-4 text-red-500" />
-                                                            </Button>
-                                                        </TableCell>
-                                                    </TableRow>
-                                                )})}
-                                            </TableBody>
-                                        </Table>
+                                    <AccordionContent className="pl-4 border-l-2">
+                                        <Accordion type="single" collapsible className="w-full">
+                                            {Object.entries(ordersInDay).map(([order, entries]) => {
+                                                const orderTotals = entries.reduce((acc, entry) => {
+                                                    const totalCost = (entry.cost || 0) * (entry.quantity || 1);
+                                                    acc.profit += (entry.amount || 0) - totalCost;
+                                                    if (!entry.finished) {
+                                                        acc.remainingAmount += (entry.amount || 0);
+                                                    }
+                                                    return acc;
+                                                }, { profit: 0, remainingAmount: 0 });
+                                                const unfinishedCount = entries.filter(e => !e.finished).length;
+
+                                                return (
+                                                    <AccordionItem value={`order-${order}`} key={order}>
+                                                        <AccordionTrigger className="py-2">
+                                                            <div className="flex justify-between w-full items-center pr-4">
+                                                                <div className="font-semibold">ລຳດັບ: {order}</div>
+                                                                <div className="flex gap-4 items-center text-sm">
+                                                                    <span className={`font-medium ${unfinishedCount > 0 ? 'text-red-500' : 'text-green-500'}`}>
+                                                                        ຄ້າງ {unfinishedCount}/{entries.length}
+                                                                    </span>
+                                                                    {unfinishedCount > 0 && <span className="text-red-600">ເຫຼືອ: {formatCurrency(orderTotals.remainingAmount)}</span>}
+                                                                    <span className={orderTotals.profit >= 0 ? 'text-green-600' : 'text-red-600'}>
+                                                                        ກຳໄລ: {formatCurrency(orderTotals.profit)}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </AccordionTrigger>
+                                                        <AccordionContent>
+                                                            <Table>
+                                                                <TableHeader>
+                                                                    <TableRow>
+                                                                        <TableHead className="w-[35%]">ລາຍລະອຽດ</TableHead>
+                                                                        <TableHead className="w-[100px] text-right">ຕົ້ນທຶນ</TableHead>
+                                                                        <TableHead className="w-[80px] text-right">ຈຳນວນ</TableHead>
+                                                                        <TableHead className="w-[150px] text-right">ຈຳນວນເງິນ</TableHead>
+                                                                        <TableHead className="w-[120px] text-right">ກຳໄລ</TableHead>
+                                                                        <TableHead className="w-[80px] text-center">ສຳເລັດ</TableHead>
+                                                                        <TableHead className="w-[50px] text-center">ລົບ</TableHead>
+                                                                    </TableRow>
+                                                                </TableHeader>
+                                                                <TableBody>
+                                                                    {entries.map((row) => {
+                                                                        const totalCost = (row.cost || 0) * (row.quantity || 1);
+                                                                        const profit = (row.amount || 0) - totalCost;
+                                                                        return (
+                                                                        <TableRow key={row.id}>
+                                                                            <TableCell className="p-2">
+                                                                                <SearchableSelect
+                                                                                    items={stockItems}
+                                                                                    value={row.detail || ''}
+                                                                                    onValueChange={(selected) => handleDetailChange(row.id, selected)}
+                                                                                />
+                                                                            </TableCell>
+                                                                            <TableCell className="p-2">
+                                                                                <Input type="number" value={row.cost || ''} onChange={(e) => onRowChange(row.id, { cost: parseFloat(e.target.value) || 0 })} placeholder="ຕົ້ນທຶນ" className="h-8 text-right" />
+                                                                            </TableCell>
+                                                                            <TableCell className="p-2">
+                                                                                <Input type="number" value={row.quantity || ''} onChange={(e) => onRowChange(row.id, { quantity: parseInt(e.target.value, 10) || 1 })} placeholder="ຈຳນວນ" className="h-8 text-right" />
+                                                                            </TableCell>
+                                                                            <TableCell className="p-2">
+                                                                                <Input type="number" value={row.amount || ''} onChange={(e) => onRowChange(row.id, { amount: parseFloat(e.target.value) || 0 })} placeholder="ຈຳນວນເງິນ" className="h-8 text-right" />
+                                                                            </TableCell>
+                                                                            <TableCell className={`p-2 text-right font-medium ${profit >= 0 ? '' : 'text-red-600'}`}>
+                                                                                {formatCurrency(profit)}
+                                                                            </TableCell>
+                                                                            <TableCell className="text-center p-2">
+                                                                                <Checkbox checked={row.finished} onCheckedChange={(checked) => onRowChange(row.id, { finished: !!checked })} />
+                                                                            </TableCell>
+                                                                            <TableCell className="text-center p-2">
+                                                                                <Button variant="ghost" size="icon" onClick={() => onRowDelete(row.id)}>
+                                                                                    <Trash2 className="h-4 w-4 text-red-500" />
+                                                                                </Button>
+                                                                            </TableCell>
+                                                                        </TableRow>
+                                                                    )})}
+                                                                </TableBody>
+                                                            </Table>
+                                                        </AccordionContent>
+                                                    </AccordionItem>
+                                                )
+                                            })}
+                                        </Accordion>
                                     </AccordionContent>
                                 </AccordionItem>
-                            ))}
+                            )})}
                          </Accordion>
                     ) : (
                          <div className="text-center text-muted-foreground py-4">ບໍ່ມີລາຍການໃນເດືອນທີ່ເລືອກ</div>
@@ -238,14 +382,9 @@ export default function AutoPartsTransportPage() {
     const [displayMonth, setDisplayMonth] = useState<Date>(new Date());
     const [stockItems, setStockItems] = useState<StockItem[]>([]);
     
-    const [newEntryDate, setNewEntryDate] = useState<Date | undefined>();
-    const [newEntryCompany, setNewEntryCompany] = useState<'ANS' | 'HAL' | 'MX'>('ANS');
-
-    
     useEffect(() => {
         const unsubscribe = listenToAutoPartsTransportEntries(setAllEntries);
         const unsubscribeStock = listenToAutoPartsStockItems(setStockItems);
-        setNewEntryDate(new Date());
         return () => {
             unsubscribe();
             unsubscribeStock();
@@ -268,20 +407,6 @@ export default function AutoPartsTransportPage() {
     const transportTotalCost = useMemo(() => filteredEntries.reduce((total, row) => total + ((row.cost || 0) * (row.quantity || 1)), 0), [filteredEntries]);
     const transportProfit = useMemo(() => transportTotalAmount - transportTotalCost, [transportTotalAmount, transportTotalCost]);
     const transportRemaining = useMemo(() => filteredEntries.filter(e => !e.finished).reduce((total, row) => total + (row.amount || 0), 0), [filteredEntries]);
-
-    const handleAddTransportRow = async () => {
-        if (!newEntryDate) {
-            toast({ title: "ກະລຸນາເລືອກວັນທີ", variant: "destructive" });
-            return;
-        }
-        try {
-            await addAutoPartsTransportEntry(newEntryCompany, newEntryDate);
-            toast({ title: "ເພີ່ມແຖວໃໝ່ສຳເລັດ" });
-        } catch (error) {
-            console.error("Error adding row: ", error);
-            toast({ title: "ເກີດຂໍ້ຜິດພາດ", description: "ບໍ່ສາມາດເພີ່ມແຖວໄດ້", variant: "destructive" });
-        }
-    };
 
     const handleTransportRowChange = async (id: string, updatedFields: Partial<TransportEntry>) => {
         try {
@@ -357,46 +482,13 @@ export default function AutoPartsTransportPage() {
                     <Truck className="h-6 w-6 text-primary" />
                     <h1 className="text-xl font-bold tracking-tight">ບັນຊີຂົນສົ່ງ (ອາໄຫຼລົດ)</h1>
                 </div>
-                 <div className="ml-auto">
+                 <div className="ml-auto flex items-center gap-2">
                     <MonthYearSelector />
+                    <AddEntriesDialog onAddMultipleEntries={addMultipleAutoPartsTransportEntries} stockItems={stockItems} />
                 </div>
             </header>
             <main className="flex-1 p-4 sm:px-6 sm:py-0 md:grid md:grid-cols-3 md:gap-8">
                 <div className="md:col-span-2 flex flex-col gap-4">
-                     <Card>
-                        <CardHeader><CardTitle>ເພີ່ມລາຍການຂົນສົ່ງໃໝ່</CardTitle></CardHeader>
-                        <CardContent className="flex flex-col sm:flex-row gap-4 items-end">
-                            <div className="grid gap-2">
-                                <Label>ວັນທີ</Label>
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                        <Button variant={"outline"} className="w-[200px] justify-start text-left font-normal">
-                                            <CalendarIcon className="mr-2 h-4 w-4" />
-                                            {newEntryDate ? format(newEntryDate, "PPP") : <span>ເລືອກວັນທີ</span>}
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={newEntryDate} onSelect={setNewEntryDate} initialFocus/></PopoverContent>
-                                </Popover>
-                            </div>
-                            <div className="grid gap-2">
-                                <Label>ບໍລິສັດຂົນສົ່ງ</Label>
-                                <Select value={newEntryCompany} onValueChange={(v) => setNewEntryCompany(v as 'ANS' | 'HAL' | 'MX')}>
-                                    <SelectTrigger className="w-[120px]">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="ANS">ANS</SelectItem>
-                                        <SelectItem value="HAL">HAL</SelectItem>
-                                        <SelectItem value="MX">MX</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <Button onClick={handleAddTransportRow} className="w-full sm:w-auto">
-                                <PlusCircle className="mr-2 h-4 w-4"/>
-                                ເພີ່ມແຖວ
-                            </Button>
-                        </CardContent>
-                    </Card>
                      <Accordion type="single" collapsible defaultValue="item-ans" className="w-full">
                         <AccordionItem value="item-ans">
                             <AccordionTrigger className="text-lg font-bold bg-blue-50 hover:bg-blue-100 px-4 rounded-md">ANS</AccordionTrigger>

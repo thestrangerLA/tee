@@ -38,6 +38,7 @@ export interface TransportEntry {
     id: string;
     type: 'ANS' | 'HAL' | 'MX';
     date: Date;
+    order?: number;
     detail: string;
     cost: number;
     amount: number;
@@ -217,3 +218,4 @@ export interface Customer {
   address: string;
   phone: string;
 }
+

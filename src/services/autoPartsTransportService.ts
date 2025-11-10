@@ -12,25 +12,15 @@ import {
     deleteDoc, 
     orderBy,
     serverTimestamp,
-    Timestamp
+    Timestamp,
+    writeBatch
 } from 'firebase/firestore';
 import { startOfDay } from 'date-fns';
 
 const transportCollectionRef = collection(db, 'autoparts-transportEntries');
 
-const createInitialRowState = (type: 'ANS' | 'HAL' | 'MX', date: Date): Omit<TransportEntry, 'id' | 'createdAt'> => ({
-    type: type,
-    date: startOfDay(date),
-    detail: '',
-    cost: 0,
-    quantity: 1,
-    amount: 0,
-    finished: false,
-});
-
-
 export const listenToAutoPartsTransportEntries = (callback: (items: TransportEntry[]) => void) => {
-    const q = query(transportCollectionRef, orderBy('date', 'desc'));
+    const q = query(transportCollectionRef, orderBy('date', 'desc'), orderBy('order', 'asc'));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
         const entries: TransportEntry[] = [];
         querySnapshot.forEach((doc) => {
@@ -47,14 +37,23 @@ export const listenToAutoPartsTransportEntries = (callback: (items: TransportEnt
     return unsubscribe;
 };
 
-export const addAutoPartsTransportEntry = async (type: 'ANS' | 'HAL' | 'MX', entryDate: Date) => {
-    const newEntry = createInitialRowState(type, entryDate);
-    await addDoc(transportCollectionRef, {
-        ...newEntry,
-        date: Timestamp.fromDate(newEntry.date),
-        createdAt: serverTimestamp()
+export const addMultipleAutoPartsTransportEntries = async (entries: Omit<TransportEntry, 'id'|'createdAt'|'date'>[], entryDate: Date, company: 'ANS' | 'HAL' | 'MX', order: number) => {
+    const batch = writeBatch(db);
+    const date = startOfDay(entryDate);
+
+    entries.forEach(entry => {
+        const docRef = doc(transportCollectionRef);
+        batch.set(docRef, {
+            ...entry,
+            date: Timestamp.fromDate(date),
+            type: company,
+            order: order,
+            createdAt: serverTimestamp(),
+        });
     });
-};
+
+    await batch.commit();
+}
 
 export const updateAutoPartsTransportEntry = async (id: string, updatedFields: Partial<Omit<TransportEntry, 'id' | 'createdAt'>>) => {
     const transportDoc = doc(db, 'autoparts-transportEntries', id);
