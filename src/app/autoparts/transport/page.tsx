@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import { useState, useMemo, useEffect } from 'react';
@@ -21,6 +22,8 @@ import { format, startOfDay, isWithinInterval, startOfMonth, endOfMonth, getMont
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuPortal, DropdownMenuSubTrigger, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { cn } from '@/lib/utils';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 
 const formatCurrency = (value: number) => {
@@ -79,13 +82,12 @@ const SearchableSelect = ({ items, value, onValueChange }: { items: StockItem[],
 };
 
 
-const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddRow, stockItems }: { 
+const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, stockItems }: { 
     type: 'ANS' | 'HAL' | 'MX',
     title: string, 
     entries: TransportEntry[],
     onRowChange: (id: string, updatedFields: Partial<TransportEntry>) => void,
     onRowDelete: (id: string) => void,
-    onAddRow: (type: 'ANS' | 'HAL' | 'MX') => void,
     stockItems: StockItem[]
 }) => {
     
@@ -144,10 +146,6 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, onAddR
                         )}
                     </CardDescription>
                 </div>
-                <Button size="sm" onClick={() => onAddRow(type)}>
-                    <PlusCircle className="mr-2 h-4 w-4"/>
-                    ເພີ່ມແຖວ
-                </Button>
             </CardHeader>
             <CardContent>
                  <div className="overflow-x-auto">
@@ -241,6 +239,10 @@ export default function AutoPartsTransportPage() {
     const [displayMonth, setDisplayMonth] = useState<Date>(new Date());
     const [stockItems, setStockItems] = useState<StockItem[]>([]);
     
+    const [newEntryDate, setNewEntryDate] = useState<Date | undefined>(new Date());
+    const [newEntryCompany, setNewEntryCompany] = useState<'ANS' | 'HAL' | 'MX'>('ANS');
+
+    
     useEffect(() => {
         const unsubscribe = listenToAutoPartsTransportEntries(setAllEntries);
         const unsubscribeStock = listenToAutoPartsStockItems(setStockItems);
@@ -267,9 +269,13 @@ export default function AutoPartsTransportPage() {
     const transportProfit = useMemo(() => transportTotalAmount - transportTotalCost, [transportTotalAmount, transportTotalCost]);
     const transportRemaining = useMemo(() => filteredEntries.filter(e => !e.finished).reduce((total, row) => total + (row.amount || 0), 0), [filteredEntries]);
 
-    const handleAddTransportRow = async (type: 'ANS' | 'HAL' | 'MX') => {
+    const handleAddTransportRow = async () => {
+        if (!newEntryDate) {
+            toast({ title: "ກະລຸນາເລືອກວັນທີ", variant: "destructive" });
+            return;
+        }
         try {
-            await addAutoPartsTransportEntry(type, displayMonth);
+            await addAutoPartsTransportEntry(newEntryCompany, newEntryDate);
             toast({ title: "ເພີ່ມແຖວໃໝ່ສຳເລັດ" });
         } catch (error) {
             console.error("Error adding row: ", error);
@@ -357,6 +363,40 @@ export default function AutoPartsTransportPage() {
             </header>
             <main className="flex-1 p-4 sm:px-6 sm:py-0 md:grid md:grid-cols-3 md:gap-8">
                 <div className="md:col-span-2 flex flex-col gap-4">
+                     <Card>
+                        <CardHeader><CardTitle>ເພີ່ມລາຍການຂົນສົ່ງໃໝ່</CardTitle></CardHeader>
+                        <CardContent className="flex flex-col sm:flex-row gap-4 items-end">
+                            <div className="grid gap-2">
+                                <Label>ວັນທີ</Label>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button variant={"outline"} className="w-[200px] justify-start text-left font-normal">
+                                            <CalendarIcon className="mr-2 h-4 w-4" />
+                                            {newEntryDate ? format(newEntryDate, "PPP") : <span>ເລືອກວັນທີ</span>}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={newEntryDate} onSelect={setNewEntryDate} initialFocus/></PopoverContent>
+                                </Popover>
+                            </div>
+                            <div className="grid gap-2">
+                                <Label>ບໍລິສັດຂົນສົ່ງ</Label>
+                                <Select value={newEntryCompany} onValueChange={(v) => setNewEntryCompany(v as 'ANS' | 'HAL' | 'MX')}>
+                                    <SelectTrigger className="w-[120px]">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="ANS">ANS</SelectItem>
+                                        <SelectItem value="HAL">HAL</SelectItem>
+                                        <SelectItem value="MX">MX</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <Button onClick={handleAddTransportRow} className="w-full sm:w-auto">
+                                <PlusCircle className="mr-2 h-4 w-4"/>
+                                ເພີ່ມແຖວ
+                            </Button>
+                        </CardContent>
+                    </Card>
                      <Accordion type="single" collapsible defaultValue="item-ans" className="w-full">
                         <AccordionItem value="item-ans">
                             <AccordionTrigger className="text-lg font-bold bg-blue-50 hover:bg-blue-100 px-4 rounded-md">ANS</AccordionTrigger>
@@ -365,7 +405,6 @@ export default function AutoPartsTransportPage() {
                                     type="ANS"
                                     title="ລາຍການ ANS"
                                     entries={ansEntries}
-                                    onAddRow={handleAddTransportRow}
                                     onRowChange={handleTransportRowChange}
                                     onRowDelete={handleTransportRowDelete}
                                     stockItems={stockItems}
@@ -379,7 +418,6 @@ export default function AutoPartsTransportPage() {
                                     type="HAL"
                                     title="ລາຍການ HAL"
                                     entries={halEntries}
-                                    onAddRow={handleAddTransportRow}
                                     onRowChange={handleTransportRowChange}
                                     onRowDelete={handleTransportRowDelete}
                                     stockItems={stockItems}
@@ -393,7 +431,6 @@ export default function AutoPartsTransportPage() {
                                     type="MX"
                                     title="ລາຍການ MX"
                                     entries={mxEntries}
-                                    onAddRow={handleAddTransportRow}
                                     onRowChange={handleTransportRowChange}
                                     onRowDelete={handleTransportRowDelete}
                                     stockItems={stockItems}
@@ -431,3 +468,4 @@ export default function AutoPartsTransportPage() {
         </div>
     );
 }
+

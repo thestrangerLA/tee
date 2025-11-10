@@ -1,4 +1,5 @@
 
+
 import { db } from '@/lib/firebase';
 import type { TransportEntry } from '@/lib/types';
 import { 
@@ -46,8 +47,8 @@ export const listenToAutoPartsTransportEntries = (callback: (items: TransportEnt
     return unsubscribe;
 };
 
-export const addAutoPartsTransportEntry = async (type: 'ANS' | 'HAL' | 'MX', dateForMonth: Date) => {
-    const newEntry = createInitialRowState(type, dateForMonth);
+export const addAutoPartsTransportEntry = async (type: 'ANS' | 'HAL' | 'MX', entryDate: Date) => {
+    const newEntry = createInitialRowState(type, entryDate);
     await addDoc(transportCollectionRef, {
         ...newEntry,
         date: Timestamp.fromDate(newEntry.date),
@@ -70,3 +71,4 @@ export const deleteAutoPartsTransportEntry = async (id: string) => {
     const transportDoc = doc(db, 'autoparts-transportEntries', id);
     await deleteDoc(transportDoc);
 };
+
