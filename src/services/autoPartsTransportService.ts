@@ -19,7 +19,7 @@ import { startOfDay } from 'date-fns';
 
 const transportCollectionRef = collection(db, 'autoparts-transportEntries');
 
-const createInitialRowState = (type: 'ANS' | 'HAL' | 'MX', date: Date): Omit<TransportEntry, 'id' | 'createdAt'> => ({
+const createInitialRowState = (type: 'ANS' | 'HAL' | 'MX', date: Date): Omit<TransportEntry, 'id' | 'createdAt' | 'order'> => ({
     type: type,
     date: startOfDay(date),
     detail: '',
