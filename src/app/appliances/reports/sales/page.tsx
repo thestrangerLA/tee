@@ -229,6 +229,7 @@ export default function ApplianceSalesPage() {
                                                                 <TableRow>
                                                                     <TableHead>ສິນຄ້າ</TableHead>
                                                                     <TableHead className="text-center">ຈຳນວນ</TableHead>
+                                                                    <TableHead className="text-right">ຕົ້ນທຶນ</TableHead>
                                                                     <TableHead className="text-right">ລາຄາຕໍ່ໜ່ວຍ</TableHead>
                                                                     <TableHead className="text-right">ລາຄາລວມ</TableHead>
                                                                 </TableRow>
@@ -238,6 +239,7 @@ export default function ApplianceSalesPage() {
                                                                     <TableRow key={index}>
                                                                         <TableCell className="font-medium">{item.name}</TableCell>
                                                                         <TableCell className="text-center">{item.quantity}</TableCell>
+                                                                        <TableCell className="text-right">{formatCurrency(item.costPrice || 0)}</TableCell>
                                                                         <TableCell className="text-right">{formatCurrency(item.price)}</TableCell>
                                                                         <TableCell className="text-right">{formatCurrency(item.total)}</TableCell>
                                                                     </TableRow>

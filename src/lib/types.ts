@@ -36,7 +36,7 @@ export interface AccountSummary {
 
 export interface TransportEntry {
     id: string;
-    type: 'ANS' | 'HAL' | 'MX';
+    type: 'ANS' | 'HAL' | 'MX' | 'NH';
     date: Date;
     order?: number;
     detail: string;
@@ -49,7 +49,7 @@ export interface TransportEntry {
 
 export interface CodEntry {
     id: string;
-    company: 'ANS' | 'HAL' | 'MX';
+    company: 'ANS' | 'HAL' | 'MX' | 'NH';
     type: 'pending' | 'collected' | 'returned';
     date: Date;
     customerName: string;
@@ -165,7 +165,7 @@ export interface ApplianceStockItem {
 
 export interface Sale {
     id: string;
-    items: { id: string; name: string; quantity: number; price: number; total: number; }[];
+    items: { id: string; name: string; quantity: number; price: number; total: number; costPrice: number; }[];
     subtotal: number;
     totalCost?: number;
     totalProfit?: number;
@@ -218,3 +218,4 @@ export interface Customer {
   address: string;
   phone: string;
 }
+

@@ -1,9 +1,10 @@
 
 import { db } from '@/lib/firebase';
-import { collection, addDoc, Timestamp, writeBatch, doc, getDoc, runTransaction, serverTimestamp, query, where, orderBy, onSnapshot, endAt, startAt, deleteDoc } from 'firebase/firestore';
+import { collection, addDoc, Timestamp, writeBatch, doc, getDoc, runTransaction, serverTimestamp, query, where, orderBy, onSnapshot, endAt, startAt, deleteDoc, increment, getDocs } from 'firebase/firestore';
 import type { Sale } from '@/lib/types';
 
 const salesCollectionRef = collection(db, 'applianceSales');
+const stockCollectionRef = collection(db, 'applianceStockItems');
 
 export const saveApplianceSale = async (invoiceData: any): Promise<string> => {
   const saleDocRef = doc(salesCollectionRef);
@@ -58,7 +59,7 @@ export const saveApplianceSale = async (invoiceData: any): Promise<string> => {
   return saleDocRef.id;
 };
 
-export const getApplianceSale = async (saleId: string) => {
+export const getApplianceSale = async (saleId: string): Promise<Sale | null> => {
     const saleDocRef = doc(db, 'applianceSales', saleId);
     const docSnap = await getDoc(saleDocRef);
     if (docSnap.exists()) {
@@ -68,9 +69,19 @@ export const getApplianceSale = async (saleId: string) => {
             ...data,
             date: (data.date as Timestamp).toDate(),
             createdAt: (data.createdAt as Timestamp).toDate(),
-        };
+        } as Sale;
     }
     return null;
+};
+
+export const getAllApplianceSaleIds = async (): Promise<{ id: string }[]> => {
+    const q = query(salesCollectionRef);
+    const querySnapshot = await getDocs(q);
+    const ids = querySnapshot.docs.map(doc => ({ id: doc.id }));
+    if (ids.length === 0) {
+        return [{ id: 'default' }];
+    }
+    return ids;
 };
 
 export const listenToApplianceSalesByDate = (date: Date, callback: (sales: Sale[]) => void) => {
@@ -102,7 +113,40 @@ export const listenToApplianceSalesByDate = (date: Date, callback: (sales: Sale[
 };
 
 export const deleteApplianceSale = async (saleId: string) => {
-    const saleDocRef = doc(db, 'applianceSales', saleId);
-    // Note: This does not currently revert stock changes. A more complex transaction would be needed.
-    await deleteDoc(saleDocRef);
+    const saleDocRef = doc(salesCollectionRef, saleId);
+
+    await runTransaction(db, async (transaction) => {
+        const saleDoc = await transaction.get(saleDocRef);
+        if (!saleDoc.exists()) {
+            throw new Error("Sale document not found.");
+        }
+        const saleData = saleDoc.data() as Sale;
+
+        // Revert stock for each item in the sale
+        for (const item of saleData.items) {
+            const stockItemRef = doc(stockCollectionRef, item.id);
+            transaction.update(stockItemRef, { currentStock: increment(item.quantity) });
+
+            const logRef = doc(collection(db, 'applianceStockLogs'));
+            transaction.set(logRef, {
+                itemId: item.id,
+                change: item.quantity,
+                newStock: -1, // Placeholder, will be recalculated by listeners if needed, or can be improved
+                type: 'stock-in',
+                detail: `Reversal for deleted sale #${saleId.substring(0, 5)}`,
+                createdAt: serverTimestamp(),
+            });
+        }
+        
+        // Also remove the associated transaction in the general ledger
+        const q = query(collection(db, 'appliances-transactions'), where("saleId", "==", saleId));
+        const transactionSnapshot = await getDocs(q);
+        transactionSnapshot.forEach((doc) => {
+             transaction.delete(doc.ref);
+        });
+
+
+        // Delete the sale document
+        transaction.delete(saleDocRef);
+    });
 };
