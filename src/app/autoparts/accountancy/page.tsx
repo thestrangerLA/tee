@@ -141,7 +141,7 @@ const CashCalculatorCard = ({ onTotalChange }: { onTotalChange: (total: number) 
 export default function AutoPartsAccountancyPage() {
     const { toast } = useToast();
     const [summary, setSummary] = useState<AccountSummary | null>(null);
-    const [date, setDate] = useState<Date | undefined>(new Date());
+    const [date, setDate] = useState<Date | undefined>();
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [transportEntries, setTransportEntries] = useState<TransportEntry[]>([]);
     const [newTransaction, setNewTransaction] = useState<Partial<Transaction>>({ type: 'expense', description: '', amount: 0 });
@@ -157,6 +157,7 @@ export default function AutoPartsAccountancyPage() {
         const unsubscribeSummary = listenToAutoPartsAccountSummary(setSummary);
         const unsubscribeTransactions = listenToAutoPartsTransactions(setTransactions);
         const unsubscribeTransport = listenToAutoPartsTransportEntries(setTransportEntries);
+        setDate(new Date());
         return () => {
             unsubscribeSummary();
             unsubscribeTransactions();
@@ -576,5 +577,3 @@ export default function AutoPartsAccountancyPage() {
         </div>
     );
 }
-
-    
