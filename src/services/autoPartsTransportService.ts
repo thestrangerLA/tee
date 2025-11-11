@@ -31,7 +31,7 @@ const createInitialRowState = (type: 'ANS' | 'HAL' | 'MX', date: Date): Omit<Tra
 
 
 export const listenToAutoPartsTransportEntries = (callback: (items: TransportEntry[]) => void) => {
-    const q = query(transportCollectionRef, orderBy('date', 'desc'), orderBy('order', 'asc'));
+    const q = query(transportCollectionRef, orderBy('createdAt', 'desc'));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
         const entries: TransportEntry[] = [];
         querySnapshot.forEach((doc) => {
@@ -42,6 +42,13 @@ export const listenToAutoPartsTransportEntries = (callback: (items: TransportEnt
                 date: (data.date as Timestamp).toDate(),
                 createdAt: (data.createdAt as Timestamp)?.toDate() 
             } as TransportEntry);
+        });
+        // Sort by date and then by order on the client side
+        entries.sort((a, b) => {
+            if (a.date.getTime() !== b.date.getTime()) {
+                return b.date.getTime() - a.date.getTime();
+            }
+            return (a.order || 0) - (b.order || 0);
         });
         callback(entries);
     });
