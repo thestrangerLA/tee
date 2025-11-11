@@ -9,7 +9,7 @@ import { ArrowLeft, History, ChevronRight, DollarSign, Calendar, CalendarDays, T
 import { collection, onSnapshot, query, orderBy, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { format, isSameDay, isSameMonth, isSameYear, getYear, getMonth, setMonth } from 'date-fns';
-import { lo } from 'date-fns/locale';
+import { th } from 'date-fns/locale';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuPortal, DropdownMenuSubContent } from "@/components/ui/dropdown-menu"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { deleteApplianceSale } from '@/services/applianceSalesService';
@@ -108,7 +108,7 @@ export default function ApplianceSalesPage() {
 
     const months = Array.from({ length: 12 }, (_, i) => ({
         value: i,
-        label: format(setMonth(new Date(), i), 'LLLL', { locale: lo }),
+        label: format(setMonth(new Date(), i), 'LLLL', { locale: th }),
     }));
     
     const handleDeleteSale = async (e: React.MouseEvent, saleId: string) => {
@@ -181,16 +181,19 @@ export default function ApplianceSalesPage() {
                             </div>
                         </div>
                     </CardHeader>
-                    <CardContent className="space-y-4">
+                    <CardContent className="space-y-2">
                         {sortedGroupedSales.length > 0 ? (
-                            sortedGroupedSales.map(group => (
-                                <Card key={group.date.toISOString()} className="overflow-hidden">
-                                    <CardHeader className="bg-muted/50 p-3">
-                                        <h3 className="font-semibold">{format(group.date, 'EEEE, d MMMM yyyy', { locale: lo })}</h3>
-                                        <p className="text-xs text-muted-foreground">{group.sales.length} ທຸລະກຳ</p>
-                                    </CardHeader>
-                                    <CardContent className="p-0">
-                                        <Accordion type="single" collapsible>
+                           <Accordion type="multiple" className="w-full space-y-2">
+                            {sortedGroupedSales.map(group => (
+                                <AccordionItem value={group.date.toISOString()} key={group.date.toISOString()} className="border-none">
+                                    <AccordionTrigger className="bg-muted/50 p-3 rounded-md hover:no-underline font-semibold text-base">
+                                        <div className="flex justify-between w-full pr-2">
+                                            <h3>{format(group.date, 'EEEE, d MMMM yyyy', { locale: th })}</h3>
+                                            <p className="text-sm text-muted-foreground">{group.sales.length} ທຸລະກຳ</p>
+                                        </div>
+                                    </AccordionTrigger>
+                                    <AccordionContent className="pt-2">
+                                         <Accordion type="single" collapsible>
                                             {group.sales.map(sale => (
                                                 <AccordionItem value={sale.id} key={sale.id} className="border-b last:border-b-0">
                                                     <AccordionTrigger className="p-3 hover:bg-muted/30 hover:no-underline">
@@ -232,27 +235,33 @@ export default function ApplianceSalesPage() {
                                                                     <TableHead className="text-right">ຕົ້ນທຶນ</TableHead>
                                                                     <TableHead className="text-right">ລາຄາຕໍ່ໜ່ວຍ</TableHead>
                                                                     <TableHead className="text-right">ລາຄາລວມ</TableHead>
+                                                                    <TableHead className="text-right">ກຳໄລ</TableHead>
                                                                 </TableRow>
                                                             </TableHeader>
                                                             <TableBody>
-                                                                {sale.items.map((item, index) => (
-                                                                    <TableRow key={index}>
-                                                                        <TableCell className="font-medium">{item.name}</TableCell>
-                                                                        <TableCell className="text-center">{item.quantity}</TableCell>
-                                                                        <TableCell className="text-right">{formatCurrency(item.costPrice || 0)}</TableCell>
-                                                                        <TableCell className="text-right">{formatCurrency(item.price)}</TableCell>
-                                                                        <TableCell className="text-right">{formatCurrency(item.total)}</TableCell>
-                                                                    </TableRow>
-                                                                ))}
+                                                                {sale.items.map((item, index) => {
+                                                                    const itemProfit = (item.price * item.quantity) - (item.costPrice * item.quantity);
+                                                                    return (
+                                                                        <TableRow key={index}>
+                                                                            <TableCell className="font-medium">{item.name}</TableCell>
+                                                                            <TableCell className="text-center">{item.quantity}</TableCell>
+                                                                            <TableCell className="text-right">{formatCurrency(item.costPrice || 0)}</TableCell>
+                                                                            <TableCell className="text-right">{formatCurrency(item.price)}</TableCell>
+                                                                            <TableCell className="text-right">{formatCurrency(item.total)}</TableCell>
+                                                                            <TableCell className="text-right font-medium text-green-600">{formatCurrency(itemProfit)}</TableCell>
+                                                                        </TableRow>
+                                                                    )
+                                                                })}
                                                             </TableBody>
                                                         </Table>
                                                     </AccordionContent>
                                                 </AccordionItem>
                                             ))}
                                         </Accordion>
-                                    </CardContent>
-                                </Card>
-                            ))
+                                    </AccordionContent>
+                                </AccordionItem>
+                            ))}
+                            </Accordion>
                         ) : (
                             <div className="text-center text-muted-foreground py-16">
                                 ບໍ່ມີຂໍ້ມູນການຂາຍໃນຊ່ວງເວລາທີ່ເລືອກ
@@ -265,3 +274,4 @@ export default function ApplianceSalesPage() {
     );
 }
 
+    

@@ -1,5 +1,4 @@
 
-
 "use client"
 
 import { useState, useEffect, useMemo } from 'react';
@@ -149,7 +148,7 @@ export default function TourCostCalculatorListPage() {
     };
 
     const handleRowClick = (id: string) => {
-        setExpandedRow(currentId => currentId === id ? null : id);
+        router.push(`/tour/cost-calculator/${id}`);
     }
 
 
@@ -212,7 +211,6 @@ export default function TourCostCalculatorListPage() {
                                     <Table>
                                         <TableHeader className="bg-muted/50">
                                             <TableRow>
-                                                <TableHead className="w-12"></TableHead>
                                                 <TableHead>ວັນທີບັນທຶກ</TableHead>
                                                 <TableHead>Group Code</TableHead>
                                                 <TableHead>ໂປຣແກຣມ</TableHead>
@@ -222,50 +220,36 @@ export default function TourCostCalculatorListPage() {
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
-                                            {filteredCalculations.length > 0 ? filteredCalculations.map(calc => (
-                                                <Collapsible asChild key={calc.id} open={expandedRow === calc.id} onOpenChange={() => handleRowClick(calc.id)}>
-                                                  <>
-                                                    <CollapsibleTrigger asChild>
-                                                        <TableRow className="cursor-pointer hover:bg-muted/30">
-                                                            <TableCell>
-                                                                <ChevronDown className={`h-4 w-4 transition-transform ${expandedRow === calc.id ? 'rotate-180' : ''}`} />
-                                                            </TableCell>
-                                                            <TableCell>{toDate(calc.savedAt) ? format(toDate(calc.savedAt)!, 'dd/MM/yyyy') : '...'}</TableCell>
-                                                            <TableCell>{calc.tourInfo?.groupCode}</TableCell>
-                                                            <TableCell>{calc.tourInfo?.program}</TableCell>
-                                                            <TableCell>{calc.tourInfo?.destinationCountry}</TableCell>
-                                                            <TableCell>{calc.tourInfo?.numPeople}</TableCell>
-                                                            <TableCell className="text-right">
-                                                                <DropdownMenu>
-                                                                    <DropdownMenuTrigger asChild>
-                                                                        <Button aria-haspopup="true" size="icon" variant="ghost" onClick={(e) => e.stopPropagation()}>
-                                                                            <MoreHorizontal className="h-4 w-4" />
-                                                                            <span className="sr-only">Toggle menu</span>
-                                                                        </Button>
-                                                                    </DropdownMenuTrigger>
-                                                                    <DropdownMenuContent align="end">
-                                                                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                                        <DropdownMenuItem onSelect={(e) => { e.stopPropagation(); router.push(`/tour/cost-calculator/${calc.id}`)}}>Edit in Full Page</DropdownMenuItem>
-                                                                        <DropdownMenuItem onSelect={(e) => handleDeleteCalculation(e, calc.id)} className="text-red-500">Delete</DropdownMenuItem>
-                                                                    </DropdownMenuContent>
-                                                                </DropdownMenu>
-                                                            </TableCell>
-                                                        </TableRow>
-                                                    </CollapsibleTrigger>
-                                                    <CollapsibleContent asChild>
-                                                      <TableRow>
-                                                        <TableCell colSpan={7}>
-                                                            <div className="p-4 bg-muted/20">
-                                                                <TourCalculatorClientPage initialCalculation={calc} />
-                                                            </div>
-                                                        </TableCell>
-                                                      </TableRow>
-                                                    </CollapsibleContent>
-                                                  </>
-                                                </Collapsible>
-                                            )) : (
+                                            {filteredCalculations.length > 0 ? filteredCalculations.map(calc => {
+                                                const savedAtDate = toDate(calc.savedAt);
+                                                return (
+                                                <TableRow key={calc.id} className="cursor-pointer hover:bg-muted/30" onClick={() => handleRowClick(calc.id)}>
+                                                    
+                                                    <TableCell>{savedAtDate ? format(savedAtDate, 'dd/MM/yyyy') : '...'}</TableCell>
+                                                    <TableCell>{calc.tourInfo?.groupCode}</TableCell>
+                                                    <TableCell>{calc.tourInfo?.program}</TableCell>
+                                                    <TableCell>{calc.tourInfo?.destinationCountry}</TableCell>
+                                                    <TableCell>{calc.tourInfo?.numPeople}</TableCell>
+                                                    <TableCell className="text-right">
+                                                        <DropdownMenu>
+                                                            <DropdownMenuTrigger asChild>
+                                                                <Button aria-haspopup="true" size="icon" variant="ghost" onClick={(e) => e.stopPropagation()}>
+                                                                    <MoreHorizontal className="h-4 w-4" />
+                                                                    <span className="sr-only">Toggle menu</span>
+                                                                </Button>
+                                                            </DropdownMenuTrigger>
+                                                            <DropdownMenuContent align="end">
+                                                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                                <DropdownMenuItem onSelect={(e) => { e.stopPropagation(); router.push(`/tour/cost-calculator/${calc.id}`)}}>Edit in Full Page</DropdownMenuItem>
+                                                                <DropdownMenuItem onSelect={(e) => handleDeleteCalculation(e, calc.id)} className="text-red-500">Delete</DropdownMenuItem>
+                                                            </DropdownMenuContent>
+                                                        </DropdownMenu>
+                                                    </TableCell>
+                                                </TableRow>
+                                                );
+                                            }) : (
                                                 <TableRow>
-                                                    <TableCell colSpan={7} className="h-24 text-center">
+                                                    <TableCell colSpan={6} className="h-24 text-center">
                                                         ບໍ່ພົບຂໍ້ມູນ.
                                                     </TableCell>
                                                 </TableRow>
@@ -282,3 +266,4 @@ export default function TourCostCalculatorListPage() {
     );
 }
 
+    

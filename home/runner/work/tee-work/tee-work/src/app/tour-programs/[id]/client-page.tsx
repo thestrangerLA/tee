@@ -26,7 +26,7 @@ import type { TourCostItem, TourIncomeItem, TourProgram, Currency } from '@/lib/
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from 'date-fns';
-import { lo } from 'date-fns/locale';
+import { th } from 'date-fns/locale';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Checkbox } from "@/components/ui/checkbox";
@@ -546,7 +546,7 @@ export default function TourProgramClientPage({ initialProgram }: { initialProgr
                 <div>
                     <CardTitle>ລາຍລະອຽດໂປຣແກຣມ ແລະ ຂໍ້ມູນກຸ່ມ</CardTitle>
                     <CardDescription>
-                        ວັນທີສ້າງ: {localProgram.createdAt ? format(localProgram.createdAt, "PPP", {locale: lo}) : '-'}
+                        ວັນທີສ້າງ: {localProgram.createdAt ? format(localProgram.createdAt, "PPP", {locale: th}) : '-'}
                         {isSaving && <span className="ml-4 text-blue-500 animate-pulse">ກຳລັງບັນທຶກ...</span>}
                     </CardDescription>
                 </div>
@@ -875,3 +875,5 @@ export default function TourProgramClientPage({ initialProgram }: { initialProgr
     </div>
   )
 }
+
+    

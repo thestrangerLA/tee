@@ -8,13 +8,15 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { format } from 'date-fns';
 
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
 export const dynamicParams = true;
 
 export async function generateStaticParams() {
   try {
     const ids = await getAllApplianceSaleIds();
-    return ids;
+    return ids.map((item) => ({
+      id: item.id,
+    }));
   } catch (error) {
     console.error("Error fetching static params for appliance sales:", error);
     return [{ id: 'default' }];
@@ -27,8 +29,12 @@ const formatCurrency = (value: number) => {
 };
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+  const sale = await getApplianceSale(params.id);
+  if (!sale) {
+    return { title: 'Invoice Not Found' };
+  }
   return {
-    title: `Invoice #${params.id.substring(0, 7)}`,
+    title: `Invoice #${sale.id.substring(0, 7)}`,
   };
 }
 
@@ -99,6 +105,10 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
                                 <TableCell colSpan={3} className="text-right">ຍອດລວມທັງໝົດ</TableCell>
                                 <TableCell className="text-right">{formatCurrency(sale.subtotal)}</TableCell>
                             </TableRow>
+                             <TableRow className="font-bold text-base text-blue-600">
+                                <TableCell colSpan={3} className="text-right">ຕົ້ນທຶນ</TableCell>
+                                <TableCell className="text-right">{formatCurrency(sale.totalCost || 0)}</TableCell>
+                            </TableRow>
                             <TableRow className="font-bold text-base text-green-600">
                                 <TableCell colSpan={3} className="text-right">ກຳໄລ</TableCell>
                                 <TableCell className="text-right">{formatCurrency(sale.totalProfit || 0)}</TableCell>
@@ -112,3 +122,4 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
   );
 }
 
+    

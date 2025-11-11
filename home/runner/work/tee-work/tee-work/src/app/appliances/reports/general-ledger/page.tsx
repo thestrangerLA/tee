@@ -9,7 +9,7 @@ import { ArrowLeft, BookOpen, ChevronRight, DollarSign, Calendar, CalendarDays }
 import { collection, onSnapshot, query, orderBy, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { format, isSameDay, isSameMonth, isSameYear, getYear, getMonth, setMonth } from 'date-fns';
-import { lo } from 'date-fns/locale';
+import { th } from 'date-fns/locale';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuPortal, DropdownMenuSubContent } from "@/components/ui/dropdown-menu";
 import type { Sale } from '@/lib/types';
 
@@ -102,7 +102,7 @@ export default function ApplianceGeneralLedgerPage() {
 
     const months = Array.from({ length: 12 }, (_, i) => ({
         value: i,
-        label: format(setMonth(new Date(), i), 'LLLL', { locale: lo }),
+        label: format(setMonth(new Date(), i), 'LLLL', { locale: th }),
     }));
 
 
@@ -171,7 +171,7 @@ export default function ApplianceGeneralLedgerPage() {
                                 <Link key={group.date.toISOString()} href={`/appliances/reports/sales/${format(group.date, 'yyyy-MM-dd')}`}>
                                     <Card className="overflow-hidden hover:bg-muted/50 cursor-pointer">
                                         <CardHeader className="bg-muted/50 p-3">
-                                            <h3 className="font-semibold">{format(group.date, 'EEEE, d MMMM yyyy', { locale: lo })}</h3>
+                                            <h3 className="font-semibold">{format(group.date, 'EEEE, d MMMM yyyy', { locale: th })}</h3>
                                             <p className="text-xs text-muted-foreground">{group.sales.length} ທຸລະກຳ</p>
                                         </CardHeader>
                                     </Card>
@@ -189,3 +189,4 @@ export default function ApplianceGeneralLedgerPage() {
     );
 }
 
+    
