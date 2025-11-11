@@ -27,7 +27,7 @@ const formatCurrency = (value: number) => {
 }
 
 const CodCompanyTable = ({ company, title, entries, onUpdateEntry, onDeleteEntry }: {
-    company: 'ANS' | 'HAL' | 'MX',
+    company: 'ANS' | 'HAL' | 'MX' | 'NH',
     title: string,
     entries: CodEntry[],
     onUpdateEntry: (id: string, field: keyof CodEntry, value: any) => void,
@@ -128,6 +128,7 @@ export default function AutoPartsCodPage() {
     const ansEntries = useMemo(() => filteredEntries.filter(e => e.company === 'ANS'), [filteredEntries]);
     const halEntries = useMemo(() => filteredEntries.filter(e => e.company === 'HAL'), [filteredEntries]);
     const mxEntries = useMemo(() => filteredEntries.filter(e => e.company === 'MX'), [filteredEntries]);
+    const nhEntries = useMemo(() => filteredEntries.filter(e => e.company === 'NH'), [filteredEntries]);
     
     const handleAddEntry = async () => {
         if (!newEntry.date || !newEntry.customerName || !newEntry.amount || !newEntry.company) {
@@ -236,12 +237,13 @@ export default function AutoPartsCodPage() {
                             </div>
                              <div className="grid gap-2">
                                 <Label>ບໍລິສັດຂົນສົ່ງ</Label>
-                                <Select value={newEntry.company} onValueChange={v => setNewEntry(p => ({...p, company: v as 'ANS' | 'HAL' | 'MX'}))}>
+                                <Select value={newEntry.company} onValueChange={v => setNewEntry(p => ({...p, company: v as 'ANS' | 'HAL' | 'MX' | 'NH'}))}>
                                     <SelectTrigger><SelectValue /></SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="ANS">ANS</SelectItem>
                                         <SelectItem value="HAL">HAL</SelectItem>
                                         <SelectItem value="MX">MX</SelectItem>
+                                        <SelectItem value="NH">NH</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -272,11 +274,15 @@ export default function AutoPartsCodPage() {
                                  <CodCompanyTable company="MX" title="MX" entries={mxEntries} onUpdateEntry={handleUpdateEntry} onDeleteEntry={handleDeleteEntry} />
                             </AccordionContent>
                         </AccordionItem>
+                        <AccordionItem value="item-nh" className="border-none">
+                            <AccordionTrigger className="text-lg font-bold bg-purple-50 hover:bg-purple-100 px-4 rounded-md hover:no-underline">NH</AccordionTrigger>
+                            <AccordionContent className="p-1">
+                                 <CodCompanyTable company="NH" title="NH" entries={nhEntries} onUpdateEntry={handleUpdateEntry} onDeleteEntry={handleDeleteEntry} />
+                            </AccordionContent>
+                        </AccordionItem>
                     </Accordion>
                 </div>
             </main>
         </div>
     );
 }
-
-    

@@ -1,5 +1,4 @@
 
-
 "use client"
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
@@ -33,14 +32,14 @@ const formatCurrency = (value: number) => {
 }
 
 const AddEntriesDialog = ({ onAddMultipleEntries, stockItems, lastOrderNumber }: { 
-    onAddMultipleEntries: (entries: Omit<TransportEntry, 'id'|'createdAt'|'date'|'type'|'order'>[], date: Date, company: 'ANS' | 'HAL' | 'MX', order: number) => Promise<void>;
+    onAddMultipleEntries: (entries: Omit<TransportEntry, 'id'|'createdAt'|'date'|'type'|'order'>[], date: Date, company: 'ANS' | 'HAL' | 'MX' | 'NH', order: number) => Promise<void>;
     stockItems: StockItem[];
     lastOrderNumber: number;
 }) => {
     const { toast } = useToast();
     const [open, setOpen] = useState(false);
     const [entryDate, setEntryDate] = useState<Date | undefined>(new Date());
-    const [company, setCompany] = useState<'ANS' | 'HAL' | 'MX'>('ANS');
+    const [company, setCompany] = useState<'ANS' | 'HAL' | 'MX' | 'NH'>('ANS');
     const [order, setOrder] = useState<number>(lastOrderNumber + 1);
     const [entries, setEntries] = useState<Omit<TransportEntry, 'id'|'createdAt'|'date'|'type'|'order'>[]>([]);
 
@@ -110,12 +109,13 @@ const AddEntriesDialog = ({ onAddMultipleEntries, stockItems, lastOrderNumber }:
                     </div>
                     <div className="grid gap-2">
                         <Label>ບໍລິສັດຂົນສົ່ງ</Label>
-                        <Select value={company} onValueChange={(v) => setCompany(v as 'ANS' | 'HAL' | 'MX')}>
+                        <Select value={company} onValueChange={(v) => setCompany(v as 'ANS' | 'HAL' | 'MX' | 'NH')}>
                             <SelectTrigger><SelectValue /></SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="ANS">ANS</SelectItem>
                                 <SelectItem value="HAL">HAL</SelectItem>
                                 <SelectItem value="MX">MX</SelectItem>
+                                <SelectItem value="NH">NH</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
@@ -215,7 +215,7 @@ const SearchableSelect = ({ items, value, onValueChange }: { items: StockItem[],
 
 
 const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, stockItems }: { 
-    type: 'ANS' | 'HAL' | 'MX',
+    type: 'ANS' | 'HAL' | 'MX' | 'NH',
     title: string, 
     entries: TransportEntry[],
     onRowChange: (id: string, updatedFields: Partial<TransportEntry>) => void,
@@ -407,6 +407,7 @@ export default function AutoPartsTransportPage() {
     const ansEntries = useMemo(() => filteredEntries.filter(e => e.type === 'ANS'), [filteredEntries]);
     const halEntries = useMemo(() => filteredEntries.filter(e => e.type === 'HAL'), [filteredEntries]);
     const mxEntries = useMemo(() => filteredEntries.filter(e => e.type === 'MX'), [filteredEntries]);
+    const nhEntries = useMemo(() => filteredEntries.filter(e => e.type === 'NH'), [filteredEntries]);
 
     const lastOrderNumber = useMemo(() => {
         const start = startOfMonth(displayMonth);
@@ -537,6 +538,19 @@ export default function AutoPartsTransportPage() {
                                     type="MX"
                                     title="ລາຍການ MX"
                                     entries={mxEntries}
+                                    onRowChange={handleTransportRowChange}
+                                    onRowDelete={handleTransportRowDelete}
+                                    stockItems={stockItems}
+                                />
+                            </AccordionContent>
+                        </AccordionItem>
+                        <AccordionItem value="item-nh">
+                             <AccordionTrigger className="text-lg font-bold bg-purple-50 hover:bg-purple-100 px-4 rounded-md">NH</AccordionTrigger>
+                            <AccordionContent className="p-1">
+                                <TransportTable 
+                                    type="NH"
+                                    title="ລາຍການ NH"
+                                    entries={nhEntries}
                                     onRowChange={handleTransportRowChange}
                                     onRowDelete={handleTransportRowDelete}
                                     stockItems={stockItems}
