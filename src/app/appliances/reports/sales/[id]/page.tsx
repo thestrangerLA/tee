@@ -8,7 +8,7 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { format } from 'date-fns';
 
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
 export const dynamicParams = true;
 
 export async function generateStaticParams() {
@@ -121,4 +121,3 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
     </div>
   );
 }
-

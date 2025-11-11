@@ -5,7 +5,7 @@ import { db } from '@/lib/firebase';
 import { SavedCalculation } from './client-page';
 import TourCalculatorClientPage from './client-page';
 
-export const dynamic = "force-static";
+export const dynamic = 'force-static';
 export const dynamicParams = true;
 
 async function getTourCostCalculation(id: string): Promise<SavedCalculation | null> {

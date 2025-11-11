@@ -9,7 +9,7 @@ import { ArrowLeft, History, ChevronRight, DollarSign, Calendar, CalendarDays, T
 import { collection, onSnapshot, query, orderBy, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { format, isSameDay, isSameMonth, isSameYear, getYear, getMonth, setMonth } from 'date-fns';
-import { lo } from 'date-fns/locale';
+import { th } from 'date-fns/locale';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuPortal, DropdownMenuSubContent } from "@/components/ui/dropdown-menu"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { deleteApplianceSale } from '@/services/applianceSalesService';
@@ -108,7 +108,7 @@ export default function ApplianceSalesPage() {
 
     const months = Array.from({ length: 12 }, (_, i) => ({
         value: i,
-        label: format(setMonth(new Date(), i), 'LLLL', { locale: lo }),
+        label: format(setMonth(new Date(), i), 'LLLL', { locale: th }),
     }));
     
     const handleDeleteSale = async (e: React.MouseEvent, saleId: string) => {
@@ -188,7 +188,7 @@ export default function ApplianceSalesPage() {
                                 <AccordionItem value={group.date.toISOString()} key={group.date.toISOString()} className="border-none">
                                     <AccordionTrigger className="bg-muted/50 p-3 rounded-md hover:no-underline font-semibold text-base">
                                         <div className="flex justify-between w-full pr-2">
-                                            <h3>{format(group.date, 'EEEE, d MMMM yyyy', { locale: lo })}</h3>
+                                            <h3>{format(group.date, 'EEEE, d MMMM yyyy', { locale: th })}</h3>
                                             <p className="text-sm text-muted-foreground">{group.sales.length} ທຸລະກຳ</p>
                                         </div>
                                     </AccordionTrigger>
@@ -273,4 +273,3 @@ export default function ApplianceSalesPage() {
         </div>
     );
 }
-
