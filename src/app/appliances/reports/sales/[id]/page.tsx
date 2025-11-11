@@ -14,7 +14,9 @@ export const dynamicParams = true;
 export async function generateStaticParams() {
   try {
     const ids = await getAllApplianceSaleIds();
-    return ids;
+    return ids.map((item) => ({
+      id: item.id,
+    }));
   } catch (error) {
     console.error("Error fetching static params for appliance sales:", error);
     return [{ id: 'default' }];
@@ -27,8 +29,12 @@ const formatCurrency = (value: number) => {
 };
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+  const sale = await getApplianceSale(params.id);
+  if (!sale) {
+    return { title: 'Invoice Not Found' };
+  }
   return {
-    title: `Invoice #${params.id.substring(0, 7)}`,
+    title: `Invoice #${sale.id.substring(0, 7)}`,
   };
 }
 
