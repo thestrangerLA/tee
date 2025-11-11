@@ -15,6 +15,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { deleteApplianceSale } from '@/services/applianceSalesService';
 import { useToast } from '@/hooks/use-toast';
 import type { Sale } from '@/lib/types';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 
 const formatCurrency = (value: number) => {
@@ -188,34 +190,64 @@ export default function ApplianceSalesPage() {
                                         <p className="text-xs text-muted-foreground">{group.sales.length} ທຸລະກຳ</p>
                                     </CardHeader>
                                     <CardContent className="p-0">
-                                        {group.sales.map(sale => (
-                                            <Link key={sale.id} href={`/appliances/reports/sales/${sale.id}`} passHref>
-                                                <div className="flex items-center justify-between p-3 border-b last:border-b-0 hover:bg-muted/30 cursor-pointer">
-                                                    <div className="flex flex-col">
-                                                        <span className="text-sm">ຍອດຂາຍ: <span className="font-mono">{formatCurrency(sale.subtotal)} LAK</span></span>
-                                                        <span className="text-sm text-green-600">ກຳໄລ: <span className="font-mono">{formatCurrency(sale.totalProfit || 0)} LAK</span></span>
-                                                    </div>
-                                                    <div className='flex items-center gap-2'>
-                                                        <AlertDialog>
-                                                            <AlertDialogTrigger asChild>
-                                                                <Button variant="ghost" size="icon" onClick={(e) => e.stopPropagation()}><Trash2 className="h-4 w-4 text-red-500" /></Button>
-                                                            </AlertDialogTrigger>
-                                                            <AlertDialogContent>
-                                                                <AlertDialogHeader>
-                                                                    <AlertDialogTitle>ທ່ານແນ່ໃຈບໍ່?</AlertDialogTitle>
-                                                                    <AlertDialogDescription>ການກະທຳນີ້ຈະລຶບການຂາຍ ແລະ ສົ່ງສິນຄ້າຄືນສູ່ສະຕັອກ. ບໍ່ສາມາດຍົກເລີກໄດ້.</AlertDialogDescription>
-                                                                </AlertDialogHeader>
-                                                                <AlertDialogFooter>
-                                                                    <AlertDialogCancel onClick={(e) => e.stopPropagation()}>ຍົກເລີກ</AlertDialogCancel>
-                                                                    <AlertDialogAction onClick={(e) => handleDeleteSale(e, sale.id)}>ລຶບ</AlertDialogAction>
-                                                                </AlertDialogFooter>
-                                                            </AlertDialogContent>
-                                                        </AlertDialog>
-                                                        <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                                                    </div>
-                                                </div>
-                                            </Link>
-                                        ))}
+                                        <Accordion type="single" collapsible>
+                                            {group.sales.map(sale => (
+                                                <AccordionItem value={sale.id} key={sale.id} className="border-b last:border-b-0">
+                                                    <AccordionTrigger className="p-3 hover:bg-muted/30 hover:no-underline">
+                                                        <div className="flex items-center justify-between w-full">
+                                                            <div className="flex flex-col text-left">
+                                                                <span className="text-sm">ຍອດຂາຍ: <span className="font-mono">{formatCurrency(sale.subtotal)} LAK</span></span>
+                                                                <span className="text-sm text-green-600">ກຳໄລ: <span className="font-mono">{formatCurrency(sale.totalProfit || 0)} LAK</span></span>
+                                                            </div>
+                                                            <div className='flex items-center gap-2'>
+                                                                <AlertDialog>
+                                                                    <AlertDialogTrigger asChild>
+                                                                        <Button variant="ghost" size="icon" onClick={(e) => e.stopPropagation()}><Trash2 className="h-4 w-4 text-red-500" /></Button>
+                                                                    </AlertDialogTrigger>
+                                                                    <AlertDialogContent>
+                                                                        <AlertDialogHeader>
+                                                                            <AlertDialogTitle>ທ່ານແນ່ໃຈບໍ່?</AlertDialogTitle>
+                                                                            <AlertDialogDescription>ການກະທຳນີ້ຈະລຶບການຂາຍ ແລະ ສົ່ງສິນຄ້າຄືນສູ່ສະຕັອກ. ບໍ່ສາມາດຍົກເລີກໄດ້.</AlertDialogDescription>
+                                                                        </AlertDialogHeader>
+                                                                        <AlertDialogFooter>
+                                                                            <AlertDialogCancel onClick={(e) => e.stopPropagation()}>ຍົກເລີກ</AlertDialogCancel>
+                                                                            <AlertDialogAction onClick={(e) => handleDeleteSale(e, sale.id)}>ລຶບ</AlertDialogAction>
+                                                                        </AlertDialogFooter>
+                                                                    </AlertDialogContent>
+                                                                </AlertDialog>
+                                                                <Button variant="ghost" size="icon" asChild>
+                                                                    <Link href={`/appliances/reports/sales/${sale.id}`} onClick={(e) => e.stopPropagation()}>
+                                                                        <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                                                                    </Link>
+                                                                </Button>
+                                                            </div>
+                                                        </div>
+                                                    </AccordionTrigger>
+                                                    <AccordionContent className="p-4 bg-white">
+                                                        <Table>
+                                                            <TableHeader>
+                                                                <TableRow>
+                                                                    <TableHead>ສິນຄ້າ</TableHead>
+                                                                    <TableHead className="text-center">ຈຳນວນ</TableHead>
+                                                                    <TableHead className="text-right">ລາຄາຕໍ່ໜ່ວຍ</TableHead>
+                                                                    <TableHead className="text-right">ລາຄາລວມ</TableHead>
+                                                                </TableRow>
+                                                            </TableHeader>
+                                                            <TableBody>
+                                                                {sale.items.map((item, index) => (
+                                                                    <TableRow key={index}>
+                                                                        <TableCell className="font-medium">{item.name}</TableCell>
+                                                                        <TableCell className="text-center">{item.quantity}</TableCell>
+                                                                        <TableCell className="text-right">{formatCurrency(item.price)}</TableCell>
+                                                                        <TableCell className="text-right">{formatCurrency(item.total)}</TableCell>
+                                                                    </TableRow>
+                                                                ))}
+                                                            </TableBody>
+                                                        </Table>
+                                                    </AccordionContent>
+                                                </AccordionItem>
+                                            ))}
+                                        </Accordion>
                                     </CardContent>
                                 </Card>
                             ))
@@ -231,4 +263,3 @@ export default function ApplianceSalesPage() {
     );
 }
 
-    
