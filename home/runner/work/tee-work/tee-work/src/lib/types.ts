@@ -165,7 +165,7 @@ export interface ApplianceStockItem {
 
 export interface Sale {
     id: string;
-    items: { id: string; name: string; quantity: number; price: number; total: number; }[];
+    items: { id: string; name: string; quantity: number; price: number; total: number; costPrice: number; }[];
     subtotal: number;
     totalCost?: number;
     totalProfit?: number;
@@ -218,3 +218,4 @@ export interface Customer {
   address: string;
   phone: string;
 }
+
