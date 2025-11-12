@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
@@ -266,7 +267,7 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, stockI
                 </div>
             </CardHeader>
             <CardContent>
-                 <div className="overflow-x-auto">
+                 <div className="overflow-x-auto print-all-content">
                     {dailySummaries.length > 0 ? (
                          <Accordion type="single" collapsible className="w-full">
                             {dailySummaries.map((summary, index) => {
@@ -485,8 +486,8 @@ export default function AutoPartsTransportPage() {
 
 
     return (
-        <div className="flex min-h-screen w-full flex-col bg-muted/40">
-            <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
+        <div className="flex min-h-screen w-full flex-col bg-muted/40 print:bg-white">
+            <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 print:hidden">
                 <Button variant="outline" size="icon" className="h-8 w-8" asChild>
                     <Link href="/autoparts">
                         <ArrowLeft className="h-4 w-4" />
@@ -588,3 +589,4 @@ export default function AutoPartsTransportPage() {
         </div>
     );
 }
+
