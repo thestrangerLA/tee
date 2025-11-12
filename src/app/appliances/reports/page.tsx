@@ -55,7 +55,7 @@ export default function ApplianceReportsPage() {
                                         </div>
                                         <div>
                                             <CardTitle className="text-lg">ລາຍງານການຂາຍ</CardTitle>
-                                            <CardDescription>ເບິ່ງປະຫວັດການຂາຍ ແລະ ໃບເກັບເງິນທັງໝົດ</CardDescription>
+                                            <CardDescription>ເບິ່ງປະຫວັດການຂາຍ และ ໃບເກັບເງິນທັງໝົດ</CardDescription>
                                         </div>
                                     </div>
                                      <ChevronRight className="h-5 w-5 text-muted-foreground" />
@@ -68,3 +68,5 @@ export default function ApplianceReportsPage() {
         </div>
     );
 }
+
+    

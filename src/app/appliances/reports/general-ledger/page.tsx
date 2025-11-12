@@ -5,14 +5,17 @@ import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, BookOpen, ChevronRight, DollarSign, Calendar, CalendarDays } from "lucide-react";
-import { collection, onSnapshot, query, orderBy, Timestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import { format, isSameDay, isSameMonth, isSameYear, getYear, getMonth, setMonth } from 'date-fns';
-import { th } from 'date-fns/locale';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuPortal, DropdownMenuSubContent } from "@/components/ui/dropdown-menu";
-import type { Sale } from '@/lib/types';
+import { ArrowLeft, BookOpen, ChevronRight, DollarSign, Calendar, CalendarDays, ArrowUpCircle, ArrowDownCircle, Scale } from "lucide-react";
+import { listenToApplianceTransactions } from '@/services/applianceAccountancyService';
+import type { Transaction } from '@/lib/types';
+import { getMonth, format, setMonth, isWithinInterval, startOfYear, endOfYear, getYear } from 'date-fns';
 
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { Label } from '@/components/ui/label';
 
 const formatCurrency = (value: number) => {
     if (isNaN(value)) return '0';
@@ -32,78 +35,63 @@ const SummaryCard = ({ title, value, icon }: { title: string, value: string, ico
 );
 
 export default function ApplianceGeneralLedgerPage() {
-    const [sales, setSales] = useState<Sale[]>([]);
-    const [filter, setFilter] = useState<{ year: number | null, month: number | null }>({ year: new Date().getFullYear(), month: new Date().getMonth() });
+    const [transactions, setTransactions] = useState<Transaction[]>([]);
+    const [startDate, setStartDate] = useState<Date | undefined>(startOfYear(new Date()));
+    const [endDate, setEndDate] = useState<Date | undefined>(endOfYear(new Date()));
 
     useEffect(() => {
-        const q = query(collection(db, 'applianceSales'), orderBy('createdAt', 'desc'));
-        const unsubscribe = onSnapshot(q, (querySnapshot) => {
-            const salesData: Sale[] = [];
-            querySnapshot.forEach((doc) => {
-                const data = doc.data();
-                salesData.push({
-                    id: doc.id,
-                    ...data,
-                    date: (data.date as Timestamp).toDate(),
-                    createdAt: (data.createdAt as Timestamp).toDate(),
-                } as Sale);
-            });
-            setSales(salesData);
-        });
-        return () => unsubscribe();
+        const unsubscribeTransactions = listenToApplianceTransactions(setTransactions);
+        return () => {
+            unsubscribeTransactions();
+        };
     }, []);
-
-    const summaryData = useMemo(() => {
-        const now = new Date();
-        const todayProfit = sales.filter(s => isSameDay(s.date, now)).reduce((sum, s) => sum + (s.totalProfit || 0), 0);
-        const thisMonthProfit = sales.filter(s => isSameMonth(s.date, now)).reduce((sum, s) => sum + (s.totalProfit || 0), 0);
-        const thisYearProfit = sales.filter(s => isSameYear(s.date, now)).reduce((sum, s) => sum + (s.totalProfit || 0), 0);
-        return { todayProfit, thisMonthProfit, thisYearProfit };
-    }, [sales]);
-
-    const filteredSales = useMemo(() => {
-        return sales.filter(sale => {
-            const saleYear = getYear(sale.date);
-            const saleMonth = getMonth(sale.date);
-            if (filter.year && saleYear !== filter.year) return false;
-            if (filter.month !== null && saleMonth !== filter.month) return false;
-            return true;
+    
+    const reportData = useMemo(() => {
+        const filteredTransactions = transactions.filter(tx => {
+            if (!startDate || !endDate) return true; // Show all if no date range
+            return isWithinInterval(tx.date, { start: startDate, end: endDate });
         });
-    }, [sales, filter]);
-
-    const groupedSales = useMemo(() => {
-        return filteredSales.reduce((acc, sale) => {
-            const dayKey = format(sale.date, 'yyyy-MM-dd');
-            if (!acc[dayKey]) {
-                acc[dayKey] = {
-                    date: sale.date,
-                    sales: []
+        
+        const groupedByMonth = filteredTransactions.reduce((acc, tx) => {
+            const month = getMonth(tx.date);
+            const year = getYear(tx.date);
+            const key = `${year}-${month}`;
+            if (!acc[key]) {
+                acc[key] = {
+                    year,
+                    month,
+                    transactions: [],
+                    income: 0,
+                    expense: 0,
+                    net: 0
                 };
             }
-            acc[dayKey].sales.push(sale);
+            acc[key].transactions.push(tx);
+            if (tx.type === 'income') {
+                acc[key].income += tx.amount || 0;
+            } else {
+                acc[key].expense += tx.amount || 0;
+            }
+            acc[key].net = acc[key].income - acc[key].expense;
             return acc;
-        }, {} as Record<string, { date: Date, sales: Sale[] }>);
-    }, [filteredSales]);
+        }, {} as Record<string, { year: number, month: number, transactions: Transaction[], income: number, expense: number, net: number }>);
+        
+        const monthlyReports = Object.values(groupedByMonth)
+            .sort((a, b) => (b.year - a.year) || (b.month - a.month));
+        
+        const grandTotals = filteredTransactions.reduce((acc, tx) => {
+            if (tx.type === 'income') {
+                acc.income += tx.amount || 0;
+            } else {
+                acc.expense += tx.amount || 0;
+            }
+            acc.net = acc.income - acc.expense;
+            return acc;
+        }, { income: 0, expense: 0, net: 0 });
 
-    const sortedGroupedSales = Object.values(groupedSales).sort((a, b) => b.date.getTime() - a.date.getTime());
-    
-    const filteredTotalSales = useMemo(() => {
-        return filteredSales.reduce((sum, s) => sum + (s.subtotal || 0), 0);
-    }, [filteredSales]);
-    
-    const filteredTotalProfit = useMemo(() => {
-        return filteredSales.reduce((sum, s) => sum + (s.totalProfit || 0), 0);
-    }, [filteredSales]);
+        return { monthlyReports, grandTotals };
 
-    const availableYears = useMemo(() => {
-        const years = new Set(sales.map(s => getYear(s.date)));
-        return Array.from(years).sort((a, b) => b - a);
-    }, [sales]);
-
-    const months = Array.from({ length: 12 }, (_, i) => ({
-        value: i,
-        label: format(setMonth(new Date(), i), 'LLLL', { locale: th }),
-    }));
+    }, [transactions, startDate, endDate]);
 
 
     return (
@@ -120,66 +108,89 @@ export default function ApplianceGeneralLedgerPage() {
                         <BookOpen className="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                        <h1 className="text-xl font-bold tracking-tight">ປະຫວັດການຂາຍທັງໝົດ</h1>
-                        <p className="text-xs text-muted-foreground">ລາຍການບິນທັງໝົດທີ່ໄດ້ຊຳລະເງິນແລ້ວ</p>
+                        <h1 className="text-xl font-bold tracking-tight">ປະຫວັດຮັບ-ຈ່າຍທົ່ວไป</h1>
+                        <p className="text-xs text-muted-foreground">ສະແດງລາຍການທຸລະກຳທັງໝົດຂອງທຸລະກິດເຄື່ອງໃຊ້</p>
                     </div>
                 </div>
             </header>
             <main className="flex-1 p-4 sm:px-6 sm:py-0 space-y-4">
                 <div className="grid gap-4 md:grid-cols-3">
-                    <SummaryCard title="ກຳໄລມື້ນີ້" value={`LAK ${formatCurrency(summaryData.todayProfit)}`} icon={<DollarSign className="h-4 w-4 text-muted-foreground" />} />
-                    <SummaryCard title="ກຳໄລເດືອນນີ້" value={`LAK ${formatCurrency(summaryData.thisMonthProfit)}`} icon={<Calendar className="h-4 w-4 text-muted-foreground" />} />
-                    <SummaryCard title="ກຳໄລປີນີ້" value={`LAK ${formatCurrency(summaryData.thisYearProfit)}`} icon={<CalendarDays className="h-4 w-4 text-muted-foreground" />} />
+                    <SummaryCard title="ລວມລາຍຮັບ" value={`LAK ${formatCurrency(reportData.grandTotals.income)}`} icon={<ArrowUpCircle className="h-4 w-4 text-muted-foreground text-green-500" />} />
+                    <SummaryCard title="ລວມລາຍຈ່າຍ" value={`LAK ${formatCurrency(reportData.grandTotals.expense)}`} icon={<ArrowDownCircle className="h-4 w-4 text-muted-foreground text-red-500" />} />
+                    <SummaryCard title="ກຳໄລ/ຂາດທຶນ" value={`LAK ${formatCurrency(reportData.grandTotals.net)}`} icon={<Scale className="h-4 w-4 text-muted-foreground text-blue-500" />} />
                 </div>
                  <Card>
                     <CardHeader>
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                             <div>
-                                <CardTitle>ປະຫວັດການຂາຍ</CardTitle>
-                                <CardDescription>ຍອດຂາຍລວມ: LAK {formatCurrency(filteredTotalSales)} | ກຳໄລລວມ: LAK {formatCurrency(filteredTotalProfit)}</CardDescription>
+                                <CardTitle>ລາຍງານລາຍເດືອນ</CardTitle>
+                                <CardDescription>ສະແດງສະຫຼຸບລາຍເດືອນຕາມຊ່ວງວັນທີທີ່ເລືອກ</CardDescription>
                             </div>
                             <div className="flex items-center gap-2 mt-2 sm:mt-0">
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button variant="outline">{filter.year ? `ປີ ${filter.year + 543}` : 'ທຸກໆປີ'}</Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent>
-                                        <DropdownMenuItem onClick={() => setFilter(f => ({ ...f, year: null }))}>ທຸກໆປີ</DropdownMenuItem>
-                                        {availableYears.map(year => (
-                                            <DropdownMenuItem key={year} onClick={() => setFilter(f => ({ ...f, year }))}>ປີ {year + 543}</DropdownMenuItem>
-                                        ))}
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button variant="outline">{filter.month !== null ? months[filter.month].label : 'ທຸກໆເດືອນ'}</Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent>
-                                        <DropdownMenuItem onClick={() => setFilter(f => ({ ...f, month: null }))}>ທຸກໆເດືອນ</DropdownMenuItem>
-                                        {months.map(month => (
-                                            <DropdownMenuItem key={month.value} onClick={() => setFilter(f => ({ ...f, month: month.value }))}>{month.label}</DropdownMenuItem>
-                                        ))}
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                                <Button variant="ghost" onClick={() => setFilter({ year: null, month: null })}>ລ້າງຕົວກອງ</Button>
+                               <div className="grid gap-2">
+                                    <Label htmlFor="start-date" className="sr-only">ວັນທີເລີ່ມຕົ້ນ</Label>
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                            <Button id="start-date" variant={"outline"} className="w-[200px] justify-start text-left font-normal">
+                                                <Calendar className="mr-2 h-4 w-4" />
+                                                {startDate ? format(startDate, "dd/MM/yy") : <span>ເລີ່ມ</span>}
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={startDate} onSelect={setStartDate} initialFocus  /></PopoverContent>
+                                    </Popover>
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="end-date" className="sr-only">ວັນທີສິ້ນສຸດ</Label>
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                            <Button id="end-date" variant={"outline"} className="w-[200px] justify-start text-left font-normal">
+                                                <Calendar className="mr-2 h-4 w-4" />
+                                                {endDate ? format(endDate, "dd/MM/yy") : <span>ສິ້ນສຸດ</span>}
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={endDate} onSelect={setEndDate} initialFocus  /></PopoverContent>
+                                    </Popover>
+                                </div>
                             </div>
                         </div>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                        {sortedGroupedSales.length > 0 ? (
-                            sortedGroupedSales.map(group => (
-                                <Link key={group.date.toISOString()} href={`/appliances/reports/sales/${format(group.date, 'yyyy-MM-dd')}`}>
-                                    <Card className="overflow-hidden hover:bg-muted/50 cursor-pointer">
-                                        <CardHeader className="bg-muted/50 p-3">
-                                            <h3 className="font-semibold">{format(group.date, 'EEEE, d MMMM yyyy', { locale: th })}</h3>
-                                            <p className="text-xs text-muted-foreground">{group.sales.length} ທຸລະກຳ</p>
-                                        </CardHeader>
+                    <CardContent className="space-y-2">
+                        {reportData.monthlyReports.length > 0 ? (
+                           reportData.monthlyReports.map(({ year, month, net, income, expense }) => (
+                                <Link 
+                                    href={`/appliances/reports/general-ledger-month?year=${year}&month=${month}`} 
+                                    key={`${year}-${month}`}
+                                    passHref
+                                >
+                                    <Card className="hover:bg-muted/50 cursor-pointer">
+                                        <CardContent className="p-4 flex items-center justify-between">
+                                            <div className="font-semibold text-base">
+                                                {format(setMonth(new Date(year, month), month), 'LLLL yyyy')}
+                                            </div>
+                                            <div className="flex items-center gap-4">
+                                                <div className="hidden sm:grid grid-cols-3 gap-x-4 text-xs">
+                                                     <div className="flex items-center justify-end gap-1 text-green-600">
+                                                        <span className="font-bold uppercase">ຮັບ:</span>
+                                                        <span className={`font-mono w-24 text-right`}>{formatCurrency(income)}</span>
+                                                    </div>
+                                                     <div className="flex items-center justify-end gap-1 text-red-600">
+                                                        <span className="font-bold uppercase">ຈ່າຍ:</span>
+                                                        <span className={`font-mono w-24 text-right`}>{formatCurrency(expense)}</span>
+                                                    </div>
+                                                    <div className="flex items-center justify-end gap-1">
+                                                        <span className="font-bold uppercase text-muted-foreground">Net:</span>
+                                                        <span className={`font-mono w-24 text-right ${net >= 0 ? 'text-blue-600' : 'text-red-600'}`}>{formatCurrency(net)}</span>
+                                                    </div>
+                                                </div>
+                                                <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                                            </div>
+                                        </CardContent>
                                     </Card>
                                 </Link>
                             ))
                         ) : (
                             <div className="text-center text-muted-foreground py-16">
-                                ບໍ່ມີຂໍ້ມູນການຂາຍໃນຊ່ວງເວລາທີ່ເລືອກ
+                                ບໍ່ມີຂໍ້ມູນໃນຊ່ວງເວລາທີ່ເລືອກ
                             </div>
                         )}
                     </CardContent>
@@ -188,3 +199,5 @@ export default function ApplianceGeneralLedgerPage() {
         </div>
     );
 }
+
+    
