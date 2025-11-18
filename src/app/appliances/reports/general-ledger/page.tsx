@@ -9,6 +9,7 @@ import { ArrowLeft, BookOpen, ChevronRight, DollarSign, Calendar, CalendarDays, 
 import { listenToApplianceTransactions } from '@/services/applianceAccountancyService';
 import type { Transaction } from '@/lib/types';
 import { getMonth, format, setMonth, isWithinInterval, startOfYear, endOfYear, getYear } from 'date-fns';
+import { lo } from 'date-fns/locale';
 
 import {
   Popover,
@@ -108,7 +109,7 @@ export default function ApplianceGeneralLedgerPage() {
                         <BookOpen className="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                        <h1 className="text-xl font-bold tracking-tight">ປະຫວັດຮັບ-ຈ່າຍທົ່ວไป</h1>
+                        <h1 className="text-xl font-bold tracking-tight">ປະຫວັດຮັບ-ຈ່າຍທົ່ວໄປ</h1>
                         <p className="text-xs text-muted-foreground">ສະແດງລາຍການທຸລະກຳທັງໝົດຂອງທຸລະກິດເຄື່ອງໃຊ້</p>
                     </div>
                 </div>
@@ -199,5 +200,6 @@ export default function ApplianceGeneralLedgerPage() {
         </div>
     );
 }
+
 
     
