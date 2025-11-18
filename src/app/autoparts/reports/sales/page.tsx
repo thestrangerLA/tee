@@ -6,17 +6,18 @@ import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, History, ChevronRight, DollarSign, Calendar, CalendarDays, Trash2 } from "lucide-react";
-import { collection, onSnapshot, query, orderBy, Timestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { listenToAutoPartsTransportEntries, deleteAutoPartsTransportEntry } from '@/services/autoPartsTransportService';
+
 import { format, isSameDay, isSameMonth, isSameYear, getYear, getMonth, setMonth } from 'date-fns';
 import { lo } from 'date-fns/locale';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuPortal, DropdownMenuSubContent } from "@/components/ui/dropdown-menu"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { deleteAutoPartsSale } from '@/services/autoPartsSalesService';
+
 import { useToast } from '@/hooks/use-toast';
-import type { Sale } from '@/lib/types';
+import type { TransportEntry } from '@/lib/types';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
 
 
 const formatCurrency = (value: number) => {
@@ -36,86 +37,70 @@ const SummaryCard = ({ title, value, icon }: { title: string, value: string, ico
     </Card>
 );
 
-export default function AutoPartsSalesPage() {
-    const [sales, setSales] = useState<Sale[]>([]);
+export default function AutoPartsSalesBasedOnTransportPage() {
+    const [transportEntries, setTransportEntries] = useState<TransportEntry[]>([]);
     const [filter, setFilter] = useState<{ year: number | null, month: number | null }>({ year: new Date().getFullYear(), month: new Date().getMonth() });
     const { toast } = useToast();
 
     useEffect(() => {
-        const q = query(collection(db, 'autoparts-sales'), orderBy('createdAt', 'desc'));
-        const unsubscribe = onSnapshot(q, (querySnapshot) => {
-            const salesData: Sale[] = [];
-            querySnapshot.forEach((doc) => {
-                const data = doc.data();
-                salesData.push({
-                    id: doc.id,
-                    ...data,
-                    date: (data.date as Timestamp).toDate(),
-                    createdAt: (data.createdAt as Timestamp).toDate(),
-                } as Sale);
-            });
-            setSales(salesData);
-        });
+        const unsubscribe = listenToAutoPartsTransportEntries(setTransportEntries);
         return () => unsubscribe();
     }, []);
 
     const summaryData = useMemo(() => {
         const now = new Date();
-        const todayProfit = sales.filter(s => isSameDay(s.date, now)).reduce((sum, s) => sum + (s.totalProfit || 0), 0);
-        const thisMonthProfit = sales.filter(s => isSameMonth(s.date, now)).reduce((sum, s) => sum + (s.totalProfit || 0), 0);
-        const thisYearProfit = sales.filter(s => isSameYear(s.date, now)).reduce((sum, s) => sum + (s.totalProfit || 0), 0);
+        const calculateProfit = (entry: TransportEntry) => (entry.amount || 0) - ((entry.cost || 0) * (entry.quantity || 1));
+        
+        const todayProfit = transportEntries.filter(s => isSameDay(s.date, now)).reduce((sum, s) => sum + calculateProfit(s), 0);
+        const thisMonthProfit = transportEntries.filter(s => isSameMonth(s.date, now)).reduce((sum, s) => sum + calculateProfit(s), 0);
+        const thisYearProfit = transportEntries.filter(s => isSameYear(s.date, now)).reduce((sum, s) => sum + calculateProfit(s), 0);
         return { todayProfit, thisMonthProfit, thisYearProfit };
-    }, [sales]);
+    }, [transportEntries]);
 
-    const filteredSales = useMemo(() => {
-        return sales.filter(sale => {
-            const saleYear = getYear(sale.date);
-            const saleMonth = getMonth(sale.date);
-            if (filter.year && saleYear !== filter.year) return false;
-            if (filter.month !== null && saleMonth !== filter.month) return false;
+    const filteredEntries = useMemo(() => {
+        return transportEntries.filter(entry => {
+            const entryYear = getYear(entry.date);
+            const entryMonth = getMonth(entry.date);
+            if (filter.year && entryYear !== filter.year) return false;
+            if (filter.month !== null && entryMonth !== filter.month) return false;
             return true;
         });
-    }, [sales, filter]);
+    }, [transportEntries, filter]);
 
-    const groupedSales = useMemo(() => {
-        return filteredSales.reduce((acc, sale) => {
-            const dayKey = format(sale.date, 'yyyy-MM-dd');
-            if (!acc[dayKey]) {
-                acc[dayKey] = {
-                    date: sale.date,
-                    sales: []
-                };
+    const groupedEntries = useMemo(() => {
+        return filteredEntries.reduce((acc, entry) => {
+            const companyKey = entry.type || 'Unknown';
+            if (!acc[companyKey]) {
+                acc[companyKey] = [];
             }
-            acc[dayKey].sales.push(sale);
+            acc[companyKey].push(entry);
             return acc;
-        }, {} as Record<string, { date: Date, sales: Sale[] }>);
-    }, [filteredSales]);
+        }, {} as Record<string, TransportEntry[]>);
+    }, [filteredEntries]);
 
-    const sortedGroupedSales = Object.values(groupedSales).sort((a, b) => b.date.getTime() - a.date.getTime());
-    
     const filteredTotalSales = useMemo(() => {
-        return filteredSales.reduce((sum, s) => sum + (s.subtotal || 0), 0);
-    }, [filteredSales]);
+        return filteredEntries.reduce((sum, s) => sum + (s.amount || 0), 0);
+    }, [filteredEntries]);
     
      const filteredTotalProfit = useMemo(() => {
-        return filteredSales.reduce((sum, s) => sum + (s.totalProfit || 0), 0);
-    }, [filteredSales]);
+        return filteredEntries.reduce((sum, s) => sum + ((s.amount || 0) - ((s.cost || 0) * (s.quantity || 1))), 0);
+    }, [filteredEntries]);
 
     const availableYears = useMemo(() => {
-        const years = new Set(sales.map(s => getYear(s.date)));
+        const years = new Set(transportEntries.map(s => getYear(s.date)));
         return Array.from(years).sort((a, b) => b - a);
-    }, [sales]);
+    }, [transportEntries]);
 
     const months = Array.from({ length: 12 }, (_, i) => ({
         value: i,
         label: format(setMonth(new Date(), i), 'LLLL', { locale: lo }),
     }));
     
-    const handleDeleteSale = async (e: React.MouseEvent, saleId: string) => {
+    const handleDeleteEntry = async (e: React.MouseEvent, entryId: string) => {
         e.stopPropagation();
         try {
-            await deleteAutoPartsSale(saleId);
-            toast({ title: 'ລຶບການຂາຍສຳເລັດ', description: 'ສະຕັອກສິນຄ້າໄດ້ຖືກອັບເດດຄືນແລ້ວ' });
+            await deleteAutoPartsTransportEntry(entryId);
+            toast({ title: 'ລຶບລາຍການສຳເລັດ'});
         } catch (error: any) {
             toast({ title: 'ເກີດຂໍ້ຜິດພາດ', description: error.message, variant: 'destructive' });
         }
@@ -136,8 +121,8 @@ export default function AutoPartsSalesPage() {
                         <History className="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                        <h1 className="text-xl font-bold tracking-tight">ປະຫວັດການຂາຍທັງໝົດ (ອາໄຫຼລົດ)</h1>
-                        <p className="text-xs text-muted-foreground">ລາຍການບິນທັງໝົດທີ່ໄດ້ຊຳລະເງິນແລ້ວ</p>
+                        <h1 className="text-xl font-bold tracking-tight">ປະຫວັດການຂາຍ (ອີງຕາມຂົນສົ່ງ)</h1>
+                        <p className="text-xs text-muted-foreground">ລາຍການທັງໝົດທີ່ໄດ້ບັນທຶກໃນລະບົບຂົນສົ່ງ</p>
                     </div>
                 </div>
             </header>
@@ -181,84 +166,49 @@ export default function AutoPartsSalesPage() {
                             </div>
                         </div>
                     </CardHeader>
-                    <CardContent className="space-y-2">
-                        {sortedGroupedSales.length > 0 ? (
-                           <Accordion type="multiple" className="w-full space-y-2">
-                            {sortedGroupedSales.map(group => (
-                                <AccordionItem value={group.date.toISOString()} key={group.date.toISOString()} className="border-none">
-                                    <AccordionTrigger className="bg-muted/50 p-3 rounded-md hover:no-underline font-semibold text-base">
+                    <CardContent className="space-y-4">
+                        {Object.keys(groupedEntries).length > 0 ? (
+                           <Accordion type="multiple" className="w-full space-y-4">
+                            {Object.entries(groupedEntries).map(([company, entries]) => (
+                                <AccordionItem value={company} key={company} className="border rounded-lg">
+                                    <AccordionTrigger className="bg-muted/50 p-3 rounded-t-md hover:no-underline font-semibold text-lg">
                                         <div className="flex justify-between w-full pr-2">
-                                            <h3>{format(group.date, 'EEEE, d MMMM yyyy', { locale: lo })}</h3>
-                                            <p className="text-sm text-muted-foreground">{group.sales.length} ທຸລະກຳ</p>
+                                            <h3>{company}</h3>
+                                            <p className="text-sm text-muted-foreground">{entries.length} ລາຍການ</p>
                                         </div>
                                     </AccordionTrigger>
-                                    <AccordionContent className="pt-2">
-                                         <Accordion type="single" collapsible>
-                                            {group.sales.map(sale => (
-                                                <AccordionItem value={sale.id} key={sale.id} className="border-b last:border-b-0">
-                                                    <AccordionTrigger className="p-3 hover:bg-muted/30 hover:no-underline">
-                                                        <div className="flex items-center justify-between w-full">
-                                                            <div className="flex flex-col text-left">
-                                                                <span className="text-sm">ຍອດຂາຍ: <span className="font-mono">{formatCurrency(sale.subtotal)} LAK</span></span>
-                                                                <span className="text-sm text-green-600">ກຳໄລ: <span className="font-mono">{formatCurrency(sale.totalProfit || 0)} LAK</span></span>
-                                                            </div>
-                                                            <div className='flex items-center gap-2'>
-                                                                <AlertDialog>
-                                                                    <AlertDialogTrigger asChild>
-                                                                        <Button variant="ghost" size="icon" onClick={(e) => e.stopPropagation()}><Trash2 className="h-4 w-4 text-red-500" /></Button>
-                                                                    </AlertDialogTrigger>
-                                                                    <AlertDialogContent>
-                                                                        <AlertDialogHeader>
-                                                                            <AlertDialogTitle>ທ່ານແນ່ໃຈບໍ່?</AlertDialogTitle>
-                                                                            <AlertDialogDescription>ການກະທຳນີ້ຈະລຶບການຂາຍ ແລະ ສົ່ງສິນຄ້າຄືນສູ່ສະຕັອກ. ບໍ່ສາມາດຍົກເລີກໄດ້.</AlertDialogDescription>
-                                                                        </AlertDialogHeader>
-                                                                        <AlertDialogFooter>
-                                                                            <AlertDialogCancel onClick={(e) => e.stopPropagation()}>ຍົກເລີກ</AlertDialogCancel>
-                                                                            <AlertDialogAction onClick={(e) => handleDeleteSale(e, sale.id)}>ລຶບ</AlertDialogAction>
-                                                                        </AlertDialogFooter>
-                                                                    </AlertDialogContent>
-                                                                </AlertDialog>
-                                                                {/* Dynamic link will be added later if needed */}
-                                                                {/* <Button variant="ghost" size="icon" asChild>
-                                                                    <Link href={`/autoparts/reports/sales/${sale.id}`} onClick={(e) => e.stopPropagation()}>
-                                                                        <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                                                                    </Link>
-                                                                </Button> */}
-                                                            </div>
-                                                        </div>
-                                                    </AccordionTrigger>
-                                                    <AccordionContent className="p-4 bg-white">
-                                                        <Table>
-                                                            <TableHeader>
-                                                                <TableRow>
-                                                                    <TableHead>ສິນຄ້າ</TableHead>
-                                                                    <TableHead className="text-center">ຈຳນວນ</TableHead>
-                                                                    <TableHead className="text-right">ຕົ້ນທຶນ</TableHead>
-                                                                    <TableHead className="text-right">ລາຄາຕໍ່ໜ່ວຍ</TableHead>
-                                                                    <TableHead className="text-right">ລາຄາລວມ</TableHead>
-                                                                    <TableHead className="text-right">ກຳໄລ</TableHead>
-                                                                </TableRow>
-                                                            </TableHeader>
-                                                            <TableBody>
-                                                                {sale.items.map((item, index) => {
-                                                                    const itemProfit = (item.price * item.quantity) - (item.costPrice * item.quantity);
-                                                                    return (
-                                                                        <TableRow key={index}>
-                                                                            <TableCell className="font-medium">{item.name}</TableCell>
-                                                                            <TableCell className="text-center">{item.quantity}</TableCell>
-                                                                            <TableCell className="text-right">{formatCurrency(item.costPrice || 0)}</TableCell>
-                                                                            <TableCell className="text-right">{formatCurrency(item.price)}</TableCell>
-                                                                            <TableCell className="text-right">{formatCurrency(item.total)}</TableCell>
-                                                                            <TableCell className="text-right font-medium text-green-600">{formatCurrency(itemProfit)}</TableCell>
-                                                                        </TableRow>
-                                                                    )
-                                                                })}
-                                                            </TableBody>
-                                                        </Table>
-                                                    </AccordionContent>
-                                                </AccordionItem>
-                                            ))}
-                                        </Accordion>
+                                    <AccordionContent className="p-2">
+                                         <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead>ວັນທີ</TableHead>
+                                                    <TableHead>ລາຍລະອຽດ</TableHead>
+                                                    <TableHead className="text-center">ຈຳນວນ</TableHead>
+                                                    <TableHead className="text-right">ຕົ້ນທຶນ</TableHead>
+                                                    <TableHead className="text-right">ລາຄາຂາຍ</TableHead>
+                                                    <TableHead className="text-right">ກຳໄລ</TableHead>
+                                                    <TableHead className="text-center">ສະຖານະ</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {entries.map((entry) => {
+                                                    const profit = (entry.amount || 0) - ((entry.cost || 0) * (entry.quantity || 1));
+                                                    return (
+                                                         <TableRow key={entry.id}>
+                                                            <TableCell>{format(entry.date, 'dd/MM/yy')}</TableCell>
+                                                            <TableCell className="font-medium">{entry.detail}</TableCell>
+                                                            <TableCell className="text-center">{entry.quantity}</TableCell>
+                                                            <TableCell className="text-right">{formatCurrency(entry.cost)}</TableCell>
+                                                            <TableCell className="text-right">{formatCurrency(entry.amount)}</TableCell>
+                                                            <TableCell className={`text-right font-medium ${profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>{formatCurrency(profit)}</TableCell>
+                                                             <TableCell className="text-center">
+                                                                <Badge variant={entry.finished ? 'default' : 'secondary'}>{entry.finished ? 'ສຳເລັດ' : 'ຄ້າງ'}</Badge>
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    )
+                                                })}
+                                            </TableBody>
+                                         </Table>
                                     </AccordionContent>
                                 </AccordionItem>
                             ))}
