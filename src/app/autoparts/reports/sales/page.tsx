@@ -274,6 +274,3 @@ export default function AutoPartsSalesPage() {
         </div>
     );
 }
-
-
-    
