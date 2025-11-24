@@ -11,7 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Package, Trash2, PlusCircle, DollarSign, ArrowDown, ArrowUp, Printer, Search, ChevronDown, Calendar as CalendarIcon, CheckCheck } from "lucide-react";
+import { ArrowLeft, Package, Trash2, PlusCircle, DollarSign, ArrowDown, ArrowUp, Printer, Search, ChevronDown, Calendar as CalendarIcon, CheckCheck, Edit } from "lucide-react";
 import Link from 'next/link';
 import {
   Table,
@@ -295,12 +295,59 @@ const StockAdjustmentDialog = ({
     )
 }
 
+const EditSlaughterRoundDialog = ({ round, onUpdate }: {
+    round: { id: string, date: Date, name: string };
+    onUpdate: (id: string, newDate: Date) => void;
+}) => {
+    const [open, setOpen] = useState(false);
+    const [newDate, setNewDate] = useState<Date | undefined>(round.date);
+
+    const handleSave = () => {
+        if (newDate) {
+            onUpdate(round.id, newDate);
+            setOpen(false);
+        }
+    };
+
+    return (
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => e.stopPropagation()}>
+                    <Edit className="h-4 w-4" />
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                    <DialogTitle>ແກ້ໄຂວັນທີຮອບຂ້າ</DialogTitle>
+                    <DialogDescription>
+                        ປ່ຽນວັນທີຂອງຮອບຂ້າ: {round.name}
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="py-4">
+                    <Calendar
+                        mode="single"
+                        selected={newDate}
+                        onSelect={setNewDate}
+                        className="rounded-md border"
+                    />
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => setOpen(false)}>ຍົກເລີກ</Button>
+                    <Button onClick={handleSave}>ບັນທຶກ</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+};
+
+
 export default function SpsMeatStockPage() {
     const [stockItems, setStockItems] = useState<MeatStockItem[]>([]);
     const [stockLogs, setStockLogs] = useState<MeatStockLog[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [displayMonth, setDisplayMonth] = useState<Date>(new Date());
     const [selectedSkusForPrint, setSelectedSkusForPrint] = useState<Record<string, boolean>>({});
+    const { toast } = useToast();
 
     useEffect(() => {
         const unsubscribeItems = listenToSpsMeatStockItems(setStockItems);
@@ -320,7 +367,7 @@ export default function SpsMeatStockPage() {
     }, [stockItems]);
 
     const slaughterRounds = useMemo(() => {
-        const rounds: Record<string, { date: Date, items: MeatStockItem[], id: string, isFinished: boolean, totalCost: number, totalSale: number }> = {};
+        const rounds: Record<string, { date: Date, items: MeatStockItem[], id: string, isFinished: boolean, totalCost: number, totalSale: number, name: string }> = {};
         const start = startOfMonth(displayMonth);
         const end = endOfMonth(displayMonth);
         
@@ -344,7 +391,7 @@ export default function SpsMeatStockPage() {
                 const roundDate = dateMatch ? parse(dateMatch[1], 'dd/MM/yyyy', new Date()) : item.createdAt;
 
                 if (isWithinInterval(roundDate, { start, end }) && !rounds[roundName]) {
-                    rounds[roundName] = { date: roundDate, items: [], id: item.id, isFinished: !!item.isFinished, totalCost: 0, totalSale: 0 };
+                    rounds[roundName] = { date: roundDate, items: [], id: item.id, isFinished: !!item.isFinished, totalCost: 0, totalSale: 0, name: roundName };
                 }
             }
         });
@@ -370,7 +417,8 @@ export default function SpsMeatStockPage() {
                         id: 'default-round',
                         isFinished: false,
                         totalCost: 0,
-                        totalSale: 0
+                        totalSale: 0,
+                        name: 'Uncategorized'
                     };
                 }
                 rounds[defaultRoundName].items.push(item);
@@ -419,6 +467,26 @@ export default function SpsMeatStockPage() {
     const handleSetItemFinished = async (itemId: string, isFinished: boolean) => {
         await updateSpsMeatStockItem(itemId, { isFinished });
     };
+    
+    const handleUpdateRoundDate = async (roundId: string, newDate: Date) => {
+        try {
+            const newName = `ຮອບຂ້າ ${format(newDate, 'dd/MM/yyyy')}`;
+            await updateSpsMeatStockItem(roundId, { name: newName, createdAt: newDate });
+            toast({ title: 'ສຳເລັດ', description: 'ອັບເດດວັນທີຮອບຂ້າສຳເລັດແລ້ວ' });
+        } catch (error) {
+            toast({ title: 'ຜິດພາດ', description: 'ບໍ່ສາມາດອັບເດດວັນທີໄດ້', variant: 'destructive' });
+        }
+    };
+
+    const handleDeleteRound = async (roundId: string) => {
+        try {
+            await deleteSpsMeatStockItem(roundId);
+            toast({ title: 'ສຳເລັດ', description: 'ລຶບຮອບຂ້າສຳເລັດແລ້ວ' });
+        } catch (error) {
+            toast({ title: 'ຜິດພາດ', description: 'ບໍ່ສາມາດລຶບຮອບຂ້າໄດ້', variant: 'destructive' });
+        }
+    };
+
 
     const handleSelectSkuForPrint = (sku: string, isSelected: boolean) => {
         setSelectedSkusForPrint(prev => ({ ...prev, [sku]: isSelected }));
@@ -592,7 +660,7 @@ export default function SpsMeatStockPage() {
                                     <AccordionTrigger className={`text-lg font-semibold px-4 rounded-md hover:no-underline ${round.isFinished ? 'bg-green-100' : 'bg-muted/50'}`}>
                                         <div className="flex justify-between items-center w-full">
                                             <span>{detail}</span>
-                                            <div className="flex items-center gap-4" onClick={(e) => e.stopPropagation()}>
+                                            <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                                                 <div className="text-sm font-normal text-muted-foreground space-x-4 hidden md:block">
                                                     <span>ມູນຄ່າສະຕັອກ: <span className="font-semibold text-primary">{formatCurrency(round.totalCost)}</span></span>
                                                     <span>ມູນຄ່າຂາຍ: <span className="font-semibold text-green-600">{formatCurrency(round.totalSale)}</span></span>
@@ -602,6 +670,26 @@ export default function SpsMeatStockPage() {
                                                     <Label htmlFor={`finish-round-${round.id}`}>ສຳເລັດຮອບ</Label>
                                                 </div>
                                                 <AddItemDialog onAddItem={addSpsMeatStockItem} slaughterRoundDetail={detail} />
+                                                <EditSlaughterRoundDialog round={round} onUpdate={handleUpdateRoundDate} />
+                                                <AlertDialog>
+                                                    <AlertDialogTrigger asChild>
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => e.stopPropagation()}>
+                                                            <Trash2 className="h-4 w-4 text-red-500" />
+                                                        </Button>
+                                                    </AlertDialogTrigger>
+                                                    <AlertDialogContent>
+                                                        <AlertDialogHeader>
+                                                            <AlertDialogTitle>ທ່ານແນ່ໃຈບໍ່?</AlertDialogTitle>
+                                                            <AlertDialogDescription>
+                                                                ການກະທຳນີ້ຈະລຶບຮອບຂ້າ ແລະ ສິນຄ້າທັງໝົດທີ່ຢູ່ໃນຮອບນີ້. ຂໍ້ມູນນີ້ບໍ່ສາມາດກູ້ຄືນໄດ້.
+                                                            </AlertDialogDescription>
+                                                        </AlertDialogHeader>
+                                                        <AlertDialogFooter>
+                                                            <AlertDialogCancel onClick={(e) => e.stopPropagation()}>ຍົກເລີກ</AlertDialogCancel>
+                                                            <AlertDialogAction onClick={() => handleDeleteRound(round.id)}>ຢືນຢັນລຶບ</AlertDialogAction>
+                                                        </AlertDialogFooter>
+                                                    </AlertDialogContent>
+                                                </AlertDialog>
                                             </div>
                                         </div>
                                     </AccordionTrigger>
@@ -675,9 +763,3 @@ export default function SpsMeatStockPage() {
     );
 }
 
-
-
-    
-
-
-    
