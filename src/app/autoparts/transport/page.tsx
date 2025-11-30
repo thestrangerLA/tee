@@ -33,7 +33,7 @@ const formatCurrency = (value: number) => {
 }
 
 const AddEntriesDialog = ({ onAddMultipleEntries, stockItems, lastOrderNumber }: { 
-    onAddMultipleEntries: (entries: Omit<TransportEntry, 'id'|'createdAt'|'date'|'type'|'order'>[], date: Date, company: 'ANS' | 'HAL' | 'MX' | 'NH', order: number) => Promise<void>;
+    onAddMultipleEntries: (entries: Omit<TransportEntry, 'id'|'createdAt'|'date'|'type'|'order'|'sender'>[], date: Date, company: 'ANS' | 'HAL' | 'MX' | 'NH', order: number, sender: 'Tee' | 'YU') => Promise<void>;
     stockItems: StockItem[];
     lastOrderNumber: number;
 }) => {
@@ -42,7 +42,8 @@ const AddEntriesDialog = ({ onAddMultipleEntries, stockItems, lastOrderNumber }:
     const [entryDate, setEntryDate] = useState<Date | undefined>(new Date());
     const [company, setCompany] = useState<'ANS' | 'HAL' | 'MX' | 'NH'>('ANS');
     const [order, setOrder] = useState<number>(lastOrderNumber + 1);
-    const [entries, setEntries] = useState<Omit<TransportEntry, 'id'|'createdAt'|'date'|'type'|'order'>[]>([]);
+    const [sender, setSender] = useState<'Tee' | 'YU'>('Tee');
+    const [entries, setEntries] = useState<Omit<TransportEntry, 'id'|'createdAt'|'date'|'type'|'order'|'sender'>[]>([]);
 
     useEffect(() => {
         setOrder(lastOrderNumber + 1);
@@ -53,7 +54,7 @@ const AddEntriesDialog = ({ onAddMultipleEntries, stockItems, lastOrderNumber }:
         setEntries(prev => [...prev, { detail: '', cost: 0, quantity: 1, amount: 0, finished: false }]);
     };
 
-    const handleItemChange = (index: number, field: keyof Omit<TransportEntry, 'id'|'createdAt'|'date'|'type'>, value: any) => {
+    const handleItemChange = (index: number, field: keyof Omit<TransportEntry, 'id'|'createdAt'|'date'|'type'|'sender'>, value: any) => {
         setEntries(prev => prev.map((item, i) => i === index ? { ...item, [field]: value } : item));
     };
 
@@ -75,7 +76,7 @@ const AddEntriesDialog = ({ onAddMultipleEntries, stockItems, lastOrderNumber }:
         }
 
         try {
-            await onAddMultipleEntries(entries, entryDate, company, order);
+            await onAddMultipleEntries(entries, entryDate, company, order, sender);
             toast({ title: "ເພີ່ມລາຍການຂົນສົ່ງສຳເລັດ" });
             setOpen(false);
             setEntries([]);
@@ -95,7 +96,7 @@ const AddEntriesDialog = ({ onAddMultipleEntries, stockItems, lastOrderNumber }:
                 <DialogHeader>
                     <DialogTitle>ເພີ່ມລາຍການຂົນສົ່ງໃໝ່</DialogTitle>
                 </DialogHeader>
-                <div className="grid grid-cols-3 gap-4 py-4">
+                <div className="grid grid-cols-4 gap-4 py-4">
                      <div className="grid gap-2">
                         <Label>ວັນທີ</Label>
                         <Popover>
@@ -123,6 +124,16 @@ const AddEntriesDialog = ({ onAddMultipleEntries, stockItems, lastOrderNumber }:
                      <div className="grid gap-2">
                         <Label>ລຳດັບ</Label>
                         <Input type="number" value={order} onChange={e => setOrder(Number(e.target.value))} />
+                    </div>
+                    <div className="grid gap-2">
+                        <Label>ຄົນຝາກ</Label>
+                        <Select value={sender} onValueChange={(v) => setSender(v as 'Tee' | 'YU')}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="Tee">Tee</SelectItem>
+                                <SelectItem value="YU">YU</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
                 </div>
 
@@ -304,6 +315,7 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, stockI
                                                             <div className="flex justify-between w-full items-center pr-4">
                                                                 <div className="font-semibold">ລຳດັບ: {order}</div>
                                                                 <div className="flex gap-4 items-center text-sm">
+                                                                    <span className="font-medium text-purple-600">{entries[0]?.sender}</span>
                                                                     <span className={`font-medium ${unfinishedCount > 0 ? 'text-red-500' : 'text-green-500'}`}>
                                                                         ຄ້າງ {unfinishedCount}/{entries.length}
                                                                     </span>

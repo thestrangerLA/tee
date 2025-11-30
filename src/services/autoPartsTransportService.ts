@@ -19,17 +19,6 @@ import { startOfDay } from 'date-fns';
 
 const transportCollectionRef = collection(db, 'autoparts-transportEntries');
 
-const createInitialRowState = (type: 'ANS' | 'HAL' | 'MX', date: Date): Omit<TransportEntry, 'id' | 'createdAt' | 'order'> => ({
-    type: type,
-    date: startOfDay(date),
-    detail: '',
-    cost: 0,
-    quantity: 1,
-    amount: 0,
-    finished: false,
-});
-
-
 export const listenToAutoPartsTransportEntries = (callback: (items: TransportEntry[]) => void) => {
     const q = query(transportCollectionRef, orderBy('createdAt', 'desc'));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
@@ -55,7 +44,7 @@ export const listenToAutoPartsTransportEntries = (callback: (items: TransportEnt
     return unsubscribe;
 };
 
-export const addMultipleAutoPartsTransportEntries = async (entries: Omit<TransportEntry, 'id'|'createdAt'|'date'|'type'>[], entryDate: Date, company: 'ANS' | 'HAL' | 'MX', order: number) => {
+export const addMultipleAutoPartsTransportEntries = async (entries: Omit<TransportEntry, 'id'|'createdAt'|'date'|'type'|'sender'>[], entryDate: Date, company: 'ANS' | 'HAL' | 'MX' | 'NH', order: number, sender: 'Tee' | 'YU') => {
     const batch = writeBatch(db);
     const date = startOfDay(entryDate);
 
@@ -66,6 +55,7 @@ export const addMultipleAutoPartsTransportEntries = async (entries: Omit<Transpo
             date: Timestamp.fromDate(date),
             type: company,
             order: order,
+            sender: sender,
             createdAt: serverTimestamp(),
         });
     });
@@ -87,3 +77,4 @@ export const deleteAutoPartsTransportEntry = async (id: string) => {
     const transportDoc = doc(db, 'autoparts-transportEntries', id);
     await deleteDoc(transportDoc);
 };
+
