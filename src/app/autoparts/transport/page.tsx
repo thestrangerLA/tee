@@ -1,5 +1,4 @@
 
-
 "use client"
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
@@ -33,7 +32,7 @@ const formatCurrency = (value: number) => {
 }
 
 const AddEntriesDialog = ({ onAddMultipleEntries, stockItems, lastOrderNumber }: { 
-    onAddMultipleEntries: (entries: Omit<TransportEntry, 'id'|'createdAt'|'date'|'type'|'order'|'sender'>[], date: Date, company: 'ANS' | 'HAL' | 'MX' | 'NH', order: number, sender: 'Tee' | 'YU') => Promise<void>;
+    onAddMultipleEntries: (entries: Omit<TransportEntry, 'id'|'createdAt'|'date'|'type'|'sender'|'order'>[], date: Date, company: 'ANS' | 'HAL' | 'MX' | 'NH', order: number, sender: 'Tee' | 'YU') => Promise<void>;
     stockItems: StockItem[];
     lastOrderNumber: number;
 }) => {
@@ -54,7 +53,7 @@ const AddEntriesDialog = ({ onAddMultipleEntries, stockItems, lastOrderNumber }:
         setEntries(prev => [...prev, { detail: '', cost: 0, quantity: 1, amount: 0, finished: false }]);
     };
 
-    const handleItemChange = (index: number, field: keyof Omit<TransportEntry, 'id'|'createdAt'|'date'|'type'|'sender'>, value: any) => {
+    const handleItemChange = (index: number, field: keyof Omit<TransportEntry, 'id'|'createdAt'|'date'|'type'|'order'|'sender'>, value: any) => {
         setEntries(prev => prev.map((item, i) => i === index ? { ...item, [field]: value } : item));
     };
 
@@ -71,7 +70,7 @@ const AddEntriesDialog = ({ onAddMultipleEntries, stockItems, lastOrderNumber }:
 
     const handleSave = async () => {
         if (!entryDate || entries.length === 0 || !order) {
-            toast({ title: "ຂໍ້ມູນບໍ່ຄົບຖ້ວນ", description: "ກະລຸນາເລືອກວັນທີ, ໃສ່ລຳດັບ ແລະ ເພີ່ມລາຍການຢ່າງໜ້ອຍໜຶ່ງລາຍການ", variant: "destructive" });
+            toast({ title: "ຂໍ້ມູນບໍ່ຄົບຖ້ວນ", description: "ກະລຸນາເລືອກວັນທີ, ໃສ່ລຳດັບ และ ເພີ່ມລາຍການຢ່າງໜ້ອຍໜຶ່ງລາຍການ", variant: "destructive" });
             return;
         }
 
@@ -313,9 +312,11 @@ const TransportTable = ({ type, title, entries, onRowChange, onRowDelete, stockI
                                                     <AccordionItem value={`order-${order}`} key={order}>
                                                         <AccordionTrigger className="py-2">
                                                             <div className="flex justify-between w-full items-center pr-4">
-                                                                <div className="font-semibold">ລຳດັບ: {order}</div>
+                                                                <div className="font-semibold flex items-center gap-2">
+                                                                    <span>ລຳດັບ: {order}</span>
+                                                                    <span className="font-medium text-purple-600 text-xs">({entries[0]?.sender})</span>
+                                                                </div>
                                                                 <div className="flex gap-4 items-center text-sm">
-                                                                    <span className="font-medium text-purple-600">{entries[0]?.sender}</span>
                                                                     <span className={`font-medium ${unfinishedCount > 0 ? 'text-red-500' : 'text-green-500'}`}>
                                                                         ຄ້າງ {unfinishedCount}/{entries.length}
                                                                     </span>
@@ -602,3 +603,4 @@ export default function AutoPartsTransportPage() {
     );
 }
 
+    
