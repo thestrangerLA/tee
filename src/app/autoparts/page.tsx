@@ -2,7 +2,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, Landmark, Package, FilePieChart, Wrench, Truck, HandCoins } from "lucide-react"
+import { ArrowLeft, Landmark, Package, FilePieChart, Wrench, Truck, HandCoins, Users } from "lucide-react"
 import Link from 'next/link'
 import { Button } from "@/components/ui/button"
 
@@ -32,7 +32,7 @@ export default function AutoPartsPage() {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  ຈັດການສະຕັອກອາໄຫຼລົດ และ ຕິດຕາມລະດັບສະຕັອກ
+                  ຈັດການສະຕັອກອາໄຫຼລົດ ແລະ ຕິດຕາມລະດັບສະຕັອກ
                 </p>
               </CardContent>
             </Card>
@@ -63,6 +63,19 @@ export default function AutoPartsPage() {
               </CardContent>
             </Card>
           </Link>
+          <Link href="/autoparts/cod">
+            <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-2xl font-bold font-headline">ລະບົບ COD</CardTitle>
+                <HandCoins className="h-8 w-8 text-primary" />
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  ຕິດຕາມລາຍການເກັບເງິນປາຍທາງ (COD)
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
            <Link href="/autoparts/reports">
             <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -72,6 +85,19 @@ export default function AutoPartsPage() {
               <CardContent>
                 <p className="text-muted-foreground">
                   ເບິ່ງສະຫຼຸບຜົນປະກອບການ ແລະ ປະຫວັດຮັບ-ຈ່າຍທົ່ວໄປ
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+          <Link href="/autoparts/debtors">
+            <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-2xl font-bold font-headline">ລູກໜີ້/ເຈົ້າໜີ້</CardTitle>
+                <Users className="h-8 w-8 text-primary" />
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  ຈັດການ ແລະ ຕິດຕາມລາຍການລູກໜີ້ ແລະ ເຈົ້າໜີ້
                 </p>
               </CardContent>
             </Card>
