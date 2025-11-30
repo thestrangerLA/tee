@@ -24,19 +24,6 @@ export default function AutoPartsPage() {
       </header>
       <main className="flex flex-1 flex-col items-center justify-center gap-8 p-4">
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 w-full max-w-6xl">
-          <Link href="/autoparts/invoice">
-            <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-2xl font-bold font-headline">ອອກໃບເກັບເງິນ</CardTitle>
-                <FileText className="h-8 w-8 text-primary" />
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  ສ້າງ ແລະ ພິມໃບເກັບເງິນສຳລັບລູກຄ້າ
-                </p>
-              </CardContent>
-            </Card>
-          </Link>
           <Link href="/autoparts/stock">
             <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -72,6 +59,19 @@ export default function AutoPartsPage() {
               <CardContent>
                 <p className="text-muted-foreground">
                   ບັນທຶກ ແລະ ຕິດຕາມຄ່າໃຊ້ຈ່າຍໃນການຂົນສົ່ງສິນຄ້າ
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+          <Link href="/autoparts/cod">
+            <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-2xl font-bold font-headline">ລະບົບ COD</CardTitle>
+                <HandCoins className="h-8 w-8 text-primary" />
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  ຕິດຕາມລາຍການເກັບເງິນປາຍທາງ (COD)
                 </p>
               </CardContent>
             </Card>
