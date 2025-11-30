@@ -44,7 +44,7 @@ export const listenToAutoPartsTransportEntries = (callback: (items: TransportEnt
     return unsubscribe;
 };
 
-export const addMultipleAutoPartsTransportEntries = async (entries: Omit<TransportEntry, 'id'|'createdAt'|'date'|'type'>[], entryDate: Date, company: 'ANS' | 'HAL' | 'MX' | 'NH', order: number) => {
+export const addMultipleAutoPartsTransportEntries = async (entries: Omit<TransportEntry, 'id'|'createdAt'|'date'|'type'|'sender'>[], entryDate: Date, company: 'ANS' | 'HAL' | 'MX' | 'NH', order: number, sender: 'Tee' | 'YU') => {
     const batch = writeBatch(db);
     const date = startOfDay(entryDate);
 
@@ -55,6 +55,7 @@ export const addMultipleAutoPartsTransportEntries = async (entries: Omit<Transpo
             date: Timestamp.fromDate(date),
             type: company,
             order: order,
+            sender: sender,
             createdAt: serverTimestamp(),
         });
     });

@@ -45,6 +45,7 @@ export interface TransportEntry {
     quantity: number;
     finished: boolean;
     createdAt: Date; 
+    sender?: 'Tee' | 'YU';
 }
 
 export interface CodEntry {
