@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Landmark, Wallet, PlusCircle, Calendar as CalendarIcon, ChevronDown, ChevronUp, MoreHorizontal, Pencil, Trash2, Briefcase, Combine, ArrowUpCircle, ArrowDownCircle, Scale, FileText, Banknote, Minus, Equal, Coins, MinusCircle, Truck, PiggyBank } from "lucide-react"
+import { ArrowLeft, Landmark, Wallet, PlusCircle, Calendar as CalendarIcon, ChevronDown, ChevronUp, MoreHorizontal, Pencil, Trash2, Briefcase, Combine, ArrowUpCircle, ArrowDownCircle, Scale, FileText, Banknote, Minus, Equal, Coins, MinusCircle, Truck, PiggyBank, Users } from "lucide-react"
 import Link from 'next/link'
 import { useToast } from "@/hooks/use-toast"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
@@ -20,28 +20,38 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { listenToAutoPartsAccountSummary, updateAutoPartsAccountSummary, listenToAutoPartsTransactions, addAutoPartsTransaction, updateAutoPartsTransaction, deleteAutoPartsTransaction } from '@/services/autoPartsAccountancyService';
-import type { AccountSummary, Transaction, CashCalculatorState, TransportEntry } from '@/lib/types';
+import type { AccountSummary, Transaction, CashCalculatorState, DebtorCreditorEntry, TransportEntry } from '@/lib/types';
 import { listenToAutoPartsCashCalculatorState, updateAutoPartsCashCalculatorState } from '@/services/autoPartsCashCalculatorService';
 import { listenToAutoPartsTransportEntries } from '@/services/autoPartsTransportService';
+import { listenToAutoPartsDebtorCreditorEntries } from '@/services/autoPartsDebtorCreditorService';
 
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('lo-LA', { minimumFractionDigits: 0 }).format(value);
 }
 
-const SummaryCard = ({ title, value, icon, onClick, className }: { title: string, value: string, icon: React.ReactNode, onClick?: () => void, className?: string }) => (
-    <Card className={`${onClick ? 'cursor-pointer hover:bg-muted/80' : ''} ${className || ''}`} onClick={onClick}>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <div className="flex items-center gap-2">
-               <CardTitle className="text-sm font-medium">{title}</CardTitle>
-               {onClick && <Pencil className="h-3 w-3 text-muted-foreground" />}
-            </div>
-            {icon}
-        </CardHeader>
-        <CardContent>
-            <div className="text-2xl font-bold">{value}</div>
-        </CardContent>
-    </Card>
-);
+const SummaryCard = ({ title, value, icon, onClick, className, href }: { title: string, value: string, icon: React.ReactNode, onClick?: () => void, className?: string, href?: string }) => {
+    const cardContent = (
+        <Card className={`${onClick || href ? 'cursor-pointer hover:bg-muted/80' : ''} ${className || ''}`} onClick={onClick}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div className="flex items-center gap-2">
+                   <CardTitle className="text-sm font-medium">{title}</CardTitle>
+                   {onClick && <Pencil className="h-3 w-3 text-muted-foreground" />}
+                </div>
+                {icon}
+            </CardHeader>
+            <CardContent>
+                <div className="text-2xl font-bold">{value}</div>
+            </CardContent>
+        </Card>
+    );
+
+    if (href) {
+        return <Link href={href}>{cardContent}</Link>;
+    }
+    
+    return cardContent;
+};
+
 
 const CashCalculatorCard = ({ onTotalChange }: { onTotalChange: (total: number) => void }) => {
     const denominations = [100000, 50000, 20000, 10000, 5000, 2000, 1000];
@@ -144,6 +154,7 @@ export default function AutoPartsAccountancyPage() {
     const [date, setDate] = useState<Date | undefined>();
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [transportEntries, setTransportEntries] = useState<TransportEntry[]>([]);
+    const [debtorEntries, setDebtorEntries] = useState<DebtorCreditorEntry[]>([]);
     const [newTransaction, setNewTransaction] = useState<Partial<Transaction>>({ type: 'expense', description: '', amount: 0 });
     const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
     const [isFormVisible, setFormVisible] = useState(true);
@@ -157,11 +168,13 @@ export default function AutoPartsAccountancyPage() {
         const unsubscribeSummary = listenToAutoPartsAccountSummary(setSummary);
         const unsubscribeTransactions = listenToAutoPartsTransactions(setTransactions);
         const unsubscribeTransport = listenToAutoPartsTransportEntries(setTransportEntries);
+        const unsubscribeDebtors = listenToAutoPartsDebtorCreditorEntries(setDebtorEntries);
         setDate(new Date());
         return () => {
             unsubscribeSummary();
             unsubscribeTransactions();
             unsubscribeTransport();
+            unsubscribeDebtors();
         };
     }, []);
 
@@ -180,9 +193,15 @@ export default function AutoPartsAccountancyPage() {
         return transportEntries.filter(e => !e.finished).reduce((total, row) => total + (row.amount || 0), 0);
     }, [transportEntries]);
 
+    const totalDebtors = useMemo(() => {
+        return debtorEntries
+            .filter(e => e.type === 'debtor' && !e.isPaid)
+            .reduce((sum, entry) => sum + entry.amount, 0);
+    }, [debtorEntries]);
+
     const grandTotalMoney = useMemo(() => {
-        return totalBalance + transportRemaining;
-    }, [totalBalance, transportRemaining]);
+        return totalBalance + transportRemaining + totalDebtors;
+    }, [totalBalance, transportRemaining, totalDebtors]);
 
     const performanceData = useMemo(() => {
         const startOfSelectedMonth = startOfMonth(historyDisplayMonth);
@@ -388,14 +407,14 @@ export default function AutoPartsAccountancyPage() {
                 <h1 className="text-xl font-bold tracking-tight">ຈັດການບັນຊີ (ທຸລະກິດອາໄຫຼລົດ)</h1>
             </header>
             <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
                      <SummaryCard title="ເງິນທຶນ" value={formatCurrency(summary.capital || 0)} icon={<Briefcase className="h-5 w-5 text-primary" />} onClick={() => openEditDialog('capital')} />
-                     <SummaryCard title="ເງິນສົດ" value={formatCurrency(summary.cash || 0)} icon={<Wallet className="h-5 w-5 text-primary" />} onClick={() => openEditDialog('cash')} />
+                     <SummaryCard title="ເງິນສົດ" value={formatCurrency(summary.cash || 0)} icon={<Wallet className="h-5 w-5 text-primary" />} />
                      <SummaryCard title="ເງິນໂອນ" value={formatCurrency(summary.transfer || 0)} icon={<Landmark className="h-5 w-5 text-primary" />} onClick={() => openEditDialog('transfer')} />
                      <SummaryCard title="ລວມເງິນ" value={formatCurrency(totalBalance)} icon={<Combine className="h-5 w-5 text-green-600" />} />
-                     <SummaryCard title="ຄົງເຫຼືອຈາກຂົນສົ່ງ" value={formatCurrency(transportRemaining)} icon={<Truck className="h-5 w-5 text-red-600" />} />
-                     <SummaryCard title="ລວມເງິນທັງໝົດ" value={formatCurrency(grandTotalMoney)} icon={<PiggyBank className="h-5 w-5 text-blue-600" />} />
-                     <SummaryCard title="ສ່ວນຕ່າງ" value={formatCurrency(differenceAmount)} icon={<MinusCircle className="h-5 w-5 text-indigo-500" />} />
+                     <SummaryCard title="ຄົງເຫຼືອຈາກຂົນສົ່ງ" value={formatCurrency(transportRemaining)} icon={<Truck className="h-5 w-5 text-red-600" />} href="/autoparts/transport" />
+                     <SummaryCard title="ລູກໜີ້/ເຈົ້າໜີ້" value={formatCurrency(totalDebtors)} icon={<Users className="h-5 w-5 text-yellow-600" />} href="/autoparts/debtors" />
+                     <SummaryCard title="ລວມທັງໝົດ" value={formatCurrency(grandTotalMoney)} icon={<PiggyBank className="h-5 w-5 text-blue-600" />} />
                 </div>
                  <Card>
                     <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
@@ -577,3 +596,6 @@ export default function AutoPartsAccountancyPage() {
         </div>
     );
 }
+
+
+    
