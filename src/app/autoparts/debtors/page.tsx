@@ -359,7 +359,6 @@ export default function AutoPartsDebtorsPage() {
                             </CardContent>
                         </Card>
                     </div>
-                </div>
             </main>
         </div>
     );
