@@ -63,19 +63,6 @@ export default function AutoPartsPage() {
               </CardContent>
             </Card>
           </Link>
-          <Link href="/autoparts/cod">
-            <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-2xl font-bold font-headline">ລະບົບ COD</CardTitle>
-                <HandCoins className="h-8 w-8 text-primary" />
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  ຕິດຕາມລາຍການເກັບເງິນປາຍທາງ (COD)
-                </p>
-              </CardContent>
-            </Card>
-          </Link>
            <Link href="/autoparts/reports">
             <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
